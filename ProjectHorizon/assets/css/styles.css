@@ -198,4 +198,16 @@ body {
 
 .disabled {
     display: none;
+}/* ====================================== */
+/* =========== VIEW CONTAINER =========== */
+/* ====================================== */
+.view-container {
+    display: flex; /* Usamos flex para que ocupe el espacio */
+    flex: 1;
+    width: 100%;
+    height: 100%;
+}
+
+.view-container.disabled {
+    display: none; /* Ocultamos la vista que no está activa */
 }
