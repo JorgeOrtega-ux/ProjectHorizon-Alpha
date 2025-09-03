@@ -11,6 +11,7 @@ import { navigateToUrl, setupPopStateHandler, setInitialHistoryState } from './u
 export function initMainController() {
     // --- DOM Element Selectors ---
     const menuButton = document.querySelector('[data-action="toggleModuleSurface"]');
+    const settingsButton = document.querySelector('[data-action="toggleSettings"]'); // <-- AÑADIDO
     const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
     const allMenuLinks = document.querySelectorAll('.menu-link');
 
@@ -61,7 +62,10 @@ export function initMainController() {
         });
         
         // Special case: Ensure the "back" button is never highlighted as active.
-        document.querySelector('[data-action="toggleMainView"]').classList.remove('active');
+        const backButton = document.querySelector('[data-action="toggleMainView"]');
+        if (backButton) {
+            backButton.classList.remove('active');
+        }
     }
 
     // --- Event Listeners Setup ---
@@ -71,6 +75,14 @@ export function initMainController() {
         menuButton.addEventListener('click', () => {
             moduleSurface.classList.toggle('disabled');
             moduleSurface.classList.toggle('active');
+        });
+    }
+
+    // --- AÑADIDO: Event Listener para el botón de Settings ---
+    if (settingsButton) {
+        settingsButton.addEventListener('click', () => {
+            // Navega a la vista de settings y a su primera sección por defecto.
+            handleNavigation('settings', 'accessibility');
         });
     }
 
@@ -85,13 +97,15 @@ export function initMainController() {
                 return;
             }
 
-            const sectionName = action.substring("toggleSection".length);
-            const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
-            
-            const parentMenu = this.closest('[data-menu]');
-            const targetView = parentMenu ? parentMenu.dataset.menu : 'main';
-
-            handleNavigation(targetView, targetSection);
+            if (action.startsWith('toggleSection')) {
+                const sectionName = action.substring("toggleSection".length);
+                const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
+                
+                const parentMenu = this.closest('[data-menu]');
+                const targetView = parentMenu ? parentMenu.dataset.menu : 'main';
+    
+                handleNavigation(targetView, targetSection);
+            }
         });
     });
 
