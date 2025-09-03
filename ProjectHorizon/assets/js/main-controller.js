@@ -15,6 +15,9 @@ export function initMainController() {
     const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
     const allMenuLinks = document.querySelectorAll('.menu-link');
 
+    // --- State Variables ---
+    let canCloseWithEsc = true; // Permite o no desactivar el módulo presionando ESC
+
     /**
      * The core function for handling navigation and UI updates.
      * @param {string} view - The target data-view to show.
@@ -108,6 +111,30 @@ export function initMainController() {
             }
         });
     });
+
+    // --- MODIFICADO: Listeners para cerrar el module surface ---
+    
+    // Cerrar al hacer clic fuera del módulo
+    document.addEventListener('click', function(event) {
+        if (moduleSurface.classList.contains('active')) {
+            const isClickInsideModule = moduleSurface.contains(event.target);
+            const isClickOnMenuButton = menuButton.contains(event.target);
+
+            if (!isClickInsideModule && !isClickOnMenuButton) {
+                moduleSurface.classList.add('disabled');
+                moduleSurface.classList.remove('active');
+            }
+        }
+    });
+
+    // Cerrar con la tecla ESC
+    document.addEventListener('keydown', function(event) {
+        if (canCloseWithEsc && event.key === 'Escape' && moduleSurface.classList.contains('active')) {
+            moduleSurface.classList.add('disabled');
+            moduleSurface.classList.remove('active');
+        }
+    });
+
 
     // --- Initialization ---
 

@@ -42,9 +42,9 @@ $currentPath = Router::getCurrentPath();
 // Find the matching route configuration
 $routeConfig = Router::getRouteConfig($currentPath);
 
-// If the URL doesn't match any route, default to the home page
+// If the URL doesn't match any route, default to the 404 page
 if ($routeConfig === null) {
-    $routeConfig = ['view' => 'main', 'section' => 'home'];
+    $routeConfig = ['view' => 'main', 'section' => '404'];
 }
 
 // These variables will be used in index.php to show the correct content

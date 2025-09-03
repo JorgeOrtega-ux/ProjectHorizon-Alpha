@@ -9,7 +9,8 @@ const urlMap = {
     'main-explore': 'explore',
     'settings-accessibility': 'settings/accessibility',
     // LÍNEA MODIFICADA
-    'settings-historyPrivacy': 'settings/history-privacy'
+    'settings-historyPrivacy': 'settings/history-privacy',
+    'main-404': '404'
 };
 
 let BASE_PATH = '';
