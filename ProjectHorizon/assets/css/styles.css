@@ -130,3 +130,72 @@ body {
 .header-button:hover {
     background-color: #f5f5fa;
 }
+
+
+
+.module-content.module-surface {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    padding: 8px;
+    z-index: 999;
+}
+
+.module-surface .menu-content {
+    width: 280px;
+    height: 100%;
+    background-color: #ffffff;
+    padding: 8px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #00000020;
+}.menu-list {
+    display: flex
+;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    gap: 4px;
+    user-select: none;
+}.menu-link {
+    display: flex
+;
+    flex: 0 0 auto;
+    flex-direction: row;
+    width: 100%;
+    height: 40px;
+    color: #000000;
+    position: relative;
+    border-radius: 8px;
+    cursor: pointer;
+}.menu-link-icon {
+    display: flex
+;
+    flex: 0 0 auto;
+    justify-content: center;
+    align-items: center;
+    width: 45px;
+    height: 100%;
+}.menu-link-text {
+    display: block;
+    flex: 1 1 auto;
+    text-align: start;
+    overflow: hidden;
+    align-self: center;
+}
+
+.menu-link:hover {
+    background-color: #f5f5fa;
+}
+
+.menu-link.active {
+    background-color: #f5f5fa;
+}
+
+.active {
+    display: flex;
+}
+
+.disabled {
+    display: none;
+}
