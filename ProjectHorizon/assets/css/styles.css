@@ -419,3 +419,23 @@ body {
 .section-container {
     overflow: auto;
 }
+
+
+.module-content.module-select {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    width: 100%;
+    z-index: 10;
+}
+
+.module-select .menu-content {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px #00000020;
+    max-height: 200px;
+    display: flex
+;
+    flex-direction: column;
+}
