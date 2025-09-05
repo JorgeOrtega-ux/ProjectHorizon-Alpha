@@ -290,7 +290,27 @@ body {
     width: 100%;
     text-align: left;
     height: 42px;
+    transition: border-color 0.2s ease;
 }
+
+/* --- NUEVO: Estilos para el borde y la rotación del icono --- */
+.custom-select-trigger:hover {
+    border-color: #000;
+}
+
+.custom-select-trigger.active-trigger {
+    border-color: #000;
+}
+
+.select-trigger-icon .material-symbols-rounded {
+    transition: transform 0.2s ease-in-out;
+}
+
+.custom-select-trigger.active-trigger .select-trigger-icon .material-symbols-rounded {
+    transform: rotate(180deg);
+}
+/* --- FIN de los nuevos estilos --- */
+
 
 .select-section {
     flex-direction: column;
@@ -326,7 +346,6 @@ body {
     justify-content: center;
     width: 45px;
     flex-shrink: 0;
-    transition: transform 0.2s ease;
 }
 
 .settings-page-container>.content-section:last-of-type {
@@ -434,6 +453,8 @@ body {
     border: 1px solid #e0e0e0;
     border-radius: 12px;
     box-shadow: 0 4px 12px #00000020;
+    width: 100%;
+    padding: 8px;
     max-height: 200px;
     display: flex
 ;

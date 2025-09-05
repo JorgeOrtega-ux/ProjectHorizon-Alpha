@@ -11,12 +11,12 @@ import { navigateToUrl, setupPopStateHandler, setInitialHistoryState } from './u
 export function initMainController() {
     // --- DOM Element Selectors ---
     const menuButton = document.querySelector('[data-action="toggleModuleSurface"]');
-    const settingsButton = document.querySelector('[data-action="toggleSettings"]'); // <-- AÑADIDO
+    const settingsButton = document.querySelector('[data-action="toggleSettings"]');
     const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
     const allMenuLinks = document.querySelectorAll('.menu-link');
 
     // --- State Variables ---
-    let canCloseWithEsc = true; // Permite o no desactivar el módulo presionando ESC
+    let canCloseWithEsc = true;
 
     /**
      * The core function for handling navigation and UI updates.
@@ -25,24 +25,20 @@ export function initMainController() {
      * @param {boolean} [pushState=true] - Whether to push a new state to the browser's history.
      */
     function handleNavigation(view, section, pushState = true) {
-        // 1. Update the URL if required
         if (pushState) {
             navigateToUrl(view, section);
         }
 
-        // 2. Update visibility of main containers (views)
         document.querySelectorAll('.section-container').forEach(v => {
             v.classList.toggle('active', v.dataset.view === view);
             v.classList.toggle('disabled', v.dataset.view !== view);
         });
 
-        // 3. Update visibility of menus
         document.querySelectorAll('[data-menu]').forEach(menu => {
             menu.classList.toggle('active', menu.dataset.menu === view);
             menu.classList.toggle('disabled', menu.dataset.menu !== view);
         });
 
-        // 4. Update visibility of content sections within the active view
         const activeViewContainer = document.querySelector(`.section-container[data-view="${view}"]`);
         if (activeViewContainer) {
             activeViewContainer.querySelectorAll('.section-content').forEach(s => {
@@ -51,12 +47,11 @@ export function initMainController() {
             });
         }
         
-        // 5. Update the 'active' state on all menu links for visual feedback
         allMenuLinks.forEach(link => {
             const linkAction = link.dataset.action;
             let linkSection = '';
 
-            if (linkAction.startsWith('toggleSection')) {
+            if (linkAction && linkAction.startsWith('toggleSection')) {
                 const sectionName = linkAction.substring("toggleSection".length);
                 linkSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
             }
@@ -64,7 +59,6 @@ export function initMainController() {
             link.classList.toggle('active', linkSection === section);
         });
         
-        // Special case: Ensure the "back" button is never highlighted as active.
         const backButton = document.querySelector('[data-action="toggleMainView"]');
         if (backButton) {
             backButton.classList.remove('active');
@@ -73,7 +67,6 @@ export function initMainController() {
 
     // --- Event Listeners Setup ---
 
-    // Toggle for the main side menu
     if (menuButton) {
         menuButton.addEventListener('click', () => {
             moduleSurface.classList.toggle('disabled');
@@ -81,26 +74,26 @@ export function initMainController() {
         });
     }
 
-    // --- AÑADIDO: Event Listener para el botón de Settings ---
     if (settingsButton) {
         settingsButton.addEventListener('click', () => {
-            // Navega a la vista de settings y a su primera sección por defecto.
             handleNavigation('settings', 'accessibility');
         });
     }
 
-    // Attach click handlers to all navigation links
     allMenuLinks.forEach(link => {
         link.addEventListener('click', function(e) {
-            e.preventDefault(); // Prevent full page reload
             const action = this.dataset.action;
+
+            if (action && action !== 'toggle-select') {
+                 e.preventDefault(); 
+            }
 
             if (action === 'toggleMainView') {
                 handleNavigation('main', 'home');
                 return;
             }
 
-            if (action.startsWith('toggleSection')) {
+            if (action && action.startsWith('toggleSection')) {
                 const sectionName = action.substring("toggleSection".length);
                 const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
                 
@@ -112,13 +105,73 @@ export function initMainController() {
         });
     });
 
-    // --- MODIFICADO: Listeners para cerrar el module surface ---
-    
-    // Cerrar al hacer clic fuera del módulo
+    // --- Custom Select Dropdown Logic ---
     document.addEventListener('click', function(event) {
-        if (moduleSurface.classList.contains('active')) {
+        const trigger = event.target.closest('[data-action="toggle-select"]');
+        const allSelects = document.querySelectorAll('.module-select');
+        const allTriggers = document.querySelectorAll('[data-action="toggle-select"]');
+
+        // If a trigger was clicked
+        if (trigger) {
+            const targetId = trigger.dataset.target;
+            const targetSelect = document.getElementById(targetId);
+            const wasActive = trigger.classList.contains('active-trigger');
+
+            // First, close everything
+            allTriggers.forEach(t => t.classList.remove('active-trigger'));
+            allSelects.forEach(s => {
+                s.classList.add('disabled');
+                s.classList.remove('active');
+            });
+
+            // If it wasn't already active, open it
+            if (!wasActive) {
+                trigger.classList.add('active-trigger');
+                if (targetSelect) {
+                    targetSelect.classList.remove('disabled');
+                    targetSelect.classList.add('active');
+                }
+            }
+        } else {
+            // If the click was not on a trigger, check if it's inside a select component at all
+            const selectWrapper = event.target.closest('.select-wrapper');
+
+            // If the click is inside a select wrapper (likely on an option)
+            if (selectWrapper) {
+                const option = event.target.closest('.module-select .menu-link');
+                if (option) {
+                    const selectContainer = option.closest('.module-select');
+                    const wrapper = selectContainer.closest('.select-wrapper');
+                    const currentTrigger = wrapper.querySelector('[data-action="toggle-select"]');
+                    const triggerText = currentTrigger.querySelector('.select-trigger-text');
+                    
+                    // Update the trigger text with the selected option's text
+                    const optionText = option.querySelector('.menu-link-text span');
+                    if(triggerText && optionText) {
+                        triggerText.textContent = optionText.textContent;
+                    }
+                    
+                    // Close the dropdown and deactivate the trigger
+                    selectContainer.classList.add('disabled');
+                    selectContainer.classList.remove('active');
+                    if (currentTrigger) {
+                        currentTrigger.classList.remove('active-trigger');
+                    }
+                }
+            } else {
+                 // If the click was completely outside any select component, close all
+                allTriggers.forEach(t => t.classList.remove('active-trigger'));
+                allSelects.forEach(select => {
+                    select.classList.add('disabled');
+                    select.classList.remove('active');
+                });
+            }
+        }
+
+        // Logic to close the main module surface
+        if (moduleSurface && moduleSurface.classList.contains('active')) {
             const isClickInsideModule = moduleSurface.contains(event.target);
-            const isClickOnMenuButton = menuButton.contains(event.target);
+            const isClickOnMenuButton = menuButton && menuButton.contains(event.target);
 
             if (!isClickInsideModule && !isClickOnMenuButton) {
                 moduleSurface.classList.add('disabled');
@@ -127,27 +180,21 @@ export function initMainController() {
         }
     });
 
-    // Cerrar con la tecla ESC
     document.addEventListener('keydown', function(event) {
-        if (canCloseWithEsc && event.key === 'Escape' && moduleSurface.classList.contains('active')) {
+        if (canCloseWithEsc && event.key === 'Escape' && moduleSurface && moduleSurface.classList.contains('active')) {
             moduleSurface.classList.add('disabled');
             moduleSurface.classList.remove('active');
         }
     });
 
-
     // --- Initialization ---
-
-    // Set up the handler for browser back/forward buttons
     setupPopStateHandler((view, section) => {
-        handleNavigation(view, section, false); // false = don't update URL history again
+        handleNavigation(view, section, false);
     });
 
-    // Get the initial state from the classes rendered by PHP
     const initialView = document.querySelector('.section-container.active')?.dataset.view;
     const initialSection = document.querySelector('.section-container.active .section-content.active')?.dataset.section;
 
-    // Set the initial history state so the back button works from the start
     if (initialView && initialSection) {
         setInitialHistoryState(initialView, initialSection);
         console.log(`Main Controller Initialized. Initial state: ${initialView} / ${initialSection}`);

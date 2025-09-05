@@ -13,10 +13,28 @@
             </div>
             <div class="form-controls">
                 <div class="select-wrapper body-title">
-                    <div class="custom-select-trigger" data-module="moduleLanguage">
+                    <div class="custom-select-trigger" data-action="toggle-select" data-target="language-select">
                         <span class="select-trigger-text">Español (Latinoamérica)</span>
                         <div class="select-trigger-icon">
                             <span class="material-symbols-rounded">expand_more</span>
+                        </div>
+                    </div>
+                    <div class="module-content module-select disabled" id="language-select">
+                        <div class="menu-content">
+                            <div class="menu-list">
+                                <div class="menu-link" data-value="es-LA">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">language</span></div>
+                                    <div class="menu-link-text"><span>Español (Latinoamérica)</span></div>
+                                </div>
+                                <div class="menu-link" data-value="en-US">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">language</span></div>
+                                    <div class="menu-link-text"><span>English (United States)</span></div>
+                                </div>
+                                <div class="menu-link" data-value="fr-FR">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">language</span></div>
+                                    <div class="menu-link-text"><span>Français (France)</span></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -29,10 +47,28 @@
             </div>
             <div class="form-controls">
                 <div class="select-wrapper body-title">
-                    <div class="custom-select-trigger" data-module="moduleLanguage">
+                    <div class="custom-select-trigger" data-action="toggle-select" data-target="theme-select">
                         <span class="select-trigger-text">Sincronizar con el sistema</span>
                         <div class="select-trigger-icon">
                             <span class="material-symbols-rounded">expand_more</span>
+                        </div>
+                    </div>
+                    <div class="module-content module-select disabled" id="theme-select">
+                        <div class="menu-content">
+                            <div class="menu-list">
+                                <div class="menu-link" data-value="system">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">desktop_windows</span></div>
+                                    <div class="menu-link-text"><span>Sincronizar con el sistema</span></div>
+                                </div>
+                                <div class="menu-link" data-value="dark">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">dark_mode</span></div>
+                                    <div class="menu-link-text"><span>Tema oscuro</span></div>
+                                </div>
+                                <div class="menu-link" data-value="light">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">light_mode</span></div>
+                                    <div class="menu-link-text"><span>Tema claro</span></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
