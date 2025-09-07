@@ -1,4 +1,49 @@
- <div class="section-content <?php echo ($CURRENT_SECTION === 'home') ? 'active' : 'disabled'; ?>" data-section="home">
-     <div class="section-content-header"></div>
-     <div class="section-content-block"></div>
- </div>
+<div class="section-content <?php echo ($CURRENT_SECTION === 'home') ? 'active' : 'disabled'; ?>" data-section="home">
+    <div class="section-content-header">
+        <div class="content-header-wrapper">
+            <div class="content-header-left">
+                <div class="search-input-wrapper">
+                    <span class="material-symbols-rounded">search</span>
+                    <input type="text" placeholder="Buscar...">
+                </div>
+            </div>
+            <div class="content-header-right">
+                <div class="header-item">
+                    <div class="select-wrapper body-title">
+                        <div class="custom-select-trigger" data-action="toggle-select" data-target="relevance-select">
+                            <div class="select-trigger-icon">
+                                <span class="material-symbols-rounded">swap_vert</span>
+                            </div>
+                            <span class="select-trigger-text">Más relevante</span>
+                            <div class="select-trigger-icon">
+                                <span class="material-symbols-rounded">expand_more</span>
+                            </div>
+                        </div>
+                        <div class="module-content module-select disabled" id="relevance-select">
+                            <div class="menu-content">
+                                <div class="menu-list">
+                                    <div class="menu-link" data-value="relevant">
+                                        <div class="menu-link-text"><span>Más relevante</span></div>
+                                    </div>
+                                    <div class="menu-link" data-value="newest">
+                                        <div class="menu-link-text"><span>Más nuevo</span></div>
+                                    </div>
+                                    <div class="menu-link" data-value="oldest">
+                                        <div class="menu-link-text"><span>Más antiguo</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-item">
+                   <div class="header-button">
+                       <span class="material-symbols-rounded">view_list</span>
+                   </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="section-content-block">
+       </div>
+</div>
