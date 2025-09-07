@@ -1,29 +1,13 @@
-/**
- * main-controller.js
- * Handles all UI logic, event listeners, and state changes for the application.
- */
-
 import { navigateToUrl, setupPopStateHandler, setInitialHistoryState } from './url-manager.js';
 
-/**
- * Main function to initialize the controller.
- */
 export function initMainController() {
-    // --- DOM Element Selectors ---
     const menuButton = document.querySelector('[data-action="toggleModuleSurface"]');
     const settingsButton = document.querySelector('[data-action="toggleSettings"]');
     const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
     const allMenuLinks = document.querySelectorAll('.menu-link');
 
-    // --- State Variables ---
     let canCloseWithEsc = true;
 
-    /**
-     * The core function for handling navigation and UI updates.
-     * @param {string} view - The target data-view to show.
-     * @param {string} section - The target data-section to show.
-     * @param {boolean} [pushState=true] - Whether to push a new state to the browser's history.
-     */
     function handleNavigation(view, section, pushState = true) {
         if (pushState) {
             navigateToUrl(view, section);
@@ -65,8 +49,6 @@ export function initMainController() {
         }
     }
 
-    // --- Event Listeners Setup ---
-
     if (menuButton) {
         menuButton.addEventListener('click', () => {
             moduleSurface.classList.toggle('disabled');
@@ -105,26 +87,22 @@ export function initMainController() {
         });
     });
 
-    // --- Custom Select Dropdown Logic ---
     document.addEventListener('click', function(event) {
         const trigger = event.target.closest('[data-action="toggle-select"]');
         const allSelects = document.querySelectorAll('.module-select');
         const allTriggers = document.querySelectorAll('[data-action="toggle-select"]');
 
-        // If a trigger was clicked
         if (trigger) {
             const targetId = trigger.dataset.target;
             const targetSelect = document.getElementById(targetId);
             const wasActive = trigger.classList.contains('active-trigger');
 
-            // First, close everything
             allTriggers.forEach(t => t.classList.remove('active-trigger'));
             allSelects.forEach(s => {
                 s.classList.add('disabled');
                 s.classList.remove('active');
             });
 
-            // If it wasn't already active, open it
             if (!wasActive) {
                 trigger.classList.add('active-trigger');
                 if (targetSelect) {
@@ -133,10 +111,8 @@ export function initMainController() {
                 }
             }
         } else {
-            // If the click was not on a trigger, check if it's inside a select component at all
             const selectWrapper = event.target.closest('.select-wrapper');
 
-            // If the click is inside a select wrapper (likely on an option)
             if (selectWrapper) {
                 const option = event.target.closest('.module-select .menu-link');
                 if (option) {
@@ -146,7 +122,6 @@ export function initMainController() {
                     const triggerText = currentTrigger.querySelector('.select-trigger-text');
                     const triggerIcon = currentTrigger.querySelector('.select-trigger-icon .material-symbols-rounded');
                     
-                    // Update the trigger text with the selected option's text
                     const optionText = option.querySelector('.menu-link-text span');
                     if(triggerText && optionText) {
                         triggerText.textContent = optionText.textContent;
@@ -157,7 +132,6 @@ export function initMainController() {
                         triggerIcon.textContent = optionIcon.textContent;
                     }
                     
-                    // Close the dropdown and deactivate the trigger
                     selectContainer.classList.add('disabled');
                     selectContainer.classList.remove('active');
                     if (currentTrigger) {
@@ -165,7 +139,6 @@ export function initMainController() {
                     }
                 }
             } else {
-                 // If the click was completely outside any select component, close all
                 allTriggers.forEach(t => t.classList.remove('active-trigger'));
                 allSelects.forEach(select => {
                     select.classList.add('disabled');
@@ -174,7 +147,6 @@ export function initMainController() {
             }
         }
 
-        // Logic to close the main module surface
         if (moduleSurface && moduleSurface.classList.contains('active')) {
             const isClickInsideModule = moduleSurface.contains(event.target);
             const isClickOnMenuButton = menuButton && menuButton.contains(event.target);
@@ -193,7 +165,6 @@ export function initMainController() {
         }
     });
     
-    // --- Toggle Switch Logic ---
     const allToggleSwitches = document.querySelectorAll('.toggle-switch');
     allToggleSwitches.forEach(toggle => {
         toggle.addEventListener('click', function() {
@@ -201,8 +172,6 @@ export function initMainController() {
         });
     });
 
-
-    // --- Initialization ---
     setupPopStateHandler((view, section) => {
         handleNavigation(view, section, false);
     });

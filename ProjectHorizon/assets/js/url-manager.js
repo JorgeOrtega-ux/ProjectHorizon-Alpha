@@ -1,23 +1,12 @@
-/**
- * url-manager.js
- * Manages all client-side routing, URL generation, and History API interactions.
- */
-
-// A map to associate view/section combinations with their URL paths.
 const urlMap = {
     'main-home': '',
     'main-explore': 'explore',
     'settings-accessibility': 'settings/accessibility',
-    // LÍNEA MODIFICADA
     'settings-historyPrivacy': 'settings/history-privacy',
     'main-404': '404'
 };
 
 let BASE_PATH = '';
-
-// ... (El resto del archivo no necesita cambios)
-// Puedes dejar el resto del código como está.
-// La función initUrlManager leerá el BASE_PATH de la variable global que configuramos.
 
 function generateUrl(view, section) {
     const urlKey = `${view}-${section}`;
