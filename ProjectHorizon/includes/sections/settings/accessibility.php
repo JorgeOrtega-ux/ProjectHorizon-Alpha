@@ -78,34 +78,21 @@
             <div class="data-item">
                 <div class="view-container active">
                     <div class="item-details">
+                        <h4>Abrir los enlaces en una pestaña nueva</h4>
+                        <p>Al activar esta opción, todos los enlaces se abrirán en una nueva pestaña para no interrumpir tu navegación actual.</p>
+                    </div>
+                    <div class="item-actions">
+                        <div class="toggle-switch">
+                            <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="data-item">
+                <div class="view-container active">
+                    <div class="item-details">
                         <h4>Los atajos necesitan un modificador</h4>
                         <p>Para crear atajos, es necesario usar la tecla modificadora Alt.</p>
-                    </div>
-                    <div class="item-actions">
-                        <div class="toggle-switch">
-                            <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="data-item">
-                <div class="view-container active">
-                    <div class="item-details">
-                        <h4>Contraste alto de colores</h4>
-                        <p>Se mantiene un mayor contraste entre el texto y el fondo, incluidos los fondos con degradados.</p>
-                    </div>
-                    <div class="item-actions">
-                        <div class="toggle-switch">
-                            <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="data-item">
-                <div class="view-container active">
-                    <div class="item-details">
-                        <h4>Subtítulos</h4>
-                        <p>Los subtítulos se generarán y se mostrarán en todo el contenido que tenga audios o videos con diálogo.</p>
                     </div>
                     <div class="item-actions">
                         <div class="toggle-switch">

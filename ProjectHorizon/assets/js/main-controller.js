@@ -186,6 +186,15 @@ export function initMainController() {
             moduleSurface.classList.remove('active');
         }
     });
+    
+    // --- Toggle Switch Logic ---
+    const allToggleSwitches = document.querySelectorAll('.toggle-switch');
+    allToggleSwitches.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            this.classList.toggle('active');
+        });
+    });
+
 
     // --- Initialization ---
     setupPopStateHandler((view, section) => {

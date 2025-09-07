@@ -21,52 +21,9 @@
                     <?php include 'includes/layouts/header.php'; ?>
                 </div>
                 <div class="general-content-bottom">
-                    <div class="module-content module-surface disabled" data-module="moduleSurface">
-                        <div class="menu-content <?php echo ($CURRENT_VIEW === 'main') ? 'active' : 'disabled'; ?>" data-menu="main">
-                            <div class="menu-list">
-                                <div class="menu-link <?php echo ($CURRENT_SECTION === 'home') ? 'active' : ''; ?>" data-action="toggleSectionHome">
-                                    <div class="menu-link-icon"><span class="material-symbols-rounded">home</span></div>
-                                    <div class="menu-link-text"><span>Pagina principal</span></div>
-                                </div>
-                                <div class="menu-link <?php echo ($CURRENT_SECTION === 'explore') ? 'active' : ''; ?>" data-action="toggleSectionExplore">
-                                    <div class="menu-link-icon"><span class="material-symbols-rounded">explore</span></div>
-                                    <div class="menu-link-text"><span>Explorar categorias</span></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="menu-content <?php echo ($CURRENT_VIEW === 'settings') ? 'active' : 'disabled'; ?>" data-menu="settings">
-                            <div class="menu-list">
-                                <div class="menu-link" data-action="toggleMainView">
-                                    <div class="menu-link-icon"><span class="material-symbols-rounded">arrow_back</span></div>
-                                    <div class="menu-link-text"><span>Volver a inicio</span></div>
-                                </div>
-                                <div class="menu-link <?php echo ($CURRENT_SECTION === 'accessibility') ? 'active' : ''; ?>" data-action="toggleSectionAccessibility">
-                                    <div class="menu-link-icon"><span class="material-symbols-rounded">accessibility</span></div>
-                                    <div class="menu-link-text"><span>Accesibilidad</span></div>
-                                </div>
-                                <div class="menu-link <?php echo ($CURRENT_SECTION === 'historyPrivacy') ? 'active' : ''; ?>" data-action="toggleSectionHistoryPrivacy">
-                                    <div class="menu-link-icon"><span class="material-symbols-rounded">history</span></div>
-                                    <div class="menu-link-text"><span>Historial y Privacidad</span></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
+                    <?php include 'includes/modules/module-surface.php'; ?>
                     <div class="general-content-scrolleable">
-                        <div class="section-container <?php echo ($CURRENT_VIEW === 'main') ? 'active' : 'disabled'; ?>" data-view="main">
-                            <div class="section-content <?php echo ($CURRENT_SECTION === 'home') ? 'active' : 'disabled'; ?>" data-section="home">Contenido de Home</div>
-                            <div class="section-content <?php echo ($CURRENT_SECTION === 'explore') ? 'active' : 'disabled'; ?>" data-section="explore">Contenido de Explorar</div>
-                            <div class="section-content <?php echo ($CURRENT_SECTION === '404') ? 'active' : 'disabled'; ?>" data-section="404">
-                                <h1>404 - Not Found</h1>
-                                <p>The page you are looking for does not exist.</p>
-                            </div>
-                        </div>
-
-                        <div class="section-container <?php echo ($CURRENT_VIEW === 'settings') ? 'active' : 'disabled'; ?>" data-view="settings">
-                            <?php include 'includes/sections/settings/accessibility.php'; ?>
-                            <div class="section-content <?php echo ($CURRENT_SECTION === 'historyPrivacy') ? 'active' : 'disabled'; ?>" data-section="historyPrivacy">Contenido de Historial y Privacidad</div>
-                        </div>
+                        <?php include 'includes/sections/generalSections.php'; ?>
                     </div>
                 </div>
             </div>

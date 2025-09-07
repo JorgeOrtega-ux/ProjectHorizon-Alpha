@@ -220,7 +220,7 @@ body {
 
 .section-content {
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
 }
 
 
@@ -431,6 +431,18 @@ body {
     color: transparent;
 }
 
+.toggle-switch.active {
+    background-color: #000000; 
+}
+
+.toggle-switch.active .toggle-handle {
+    transform: translateX(20px);
+}
+
+.toggle-switch.active .toggle-handle .material-symbols-rounded {
+    color: #000000;
+}
+
 .data-group-section .data-item+.data-item {
     border-top: 1px solid #00000020;
 }
@@ -459,4 +471,17 @@ body {
     display: flex
 ;
     flex-direction: column;
+}
+
+
+
+
+
+
+
+.section-content-header {
+    width: 100%;
+    height: auto;
+    padding: 8px;
+    border-bottom: 1px solid #00000020;
 }
