@@ -14,8 +14,11 @@
             <div class="form-controls">
                 <div class="select-wrapper body-title">
                     <div class="custom-select-trigger" data-action="toggle-select" data-target="language-select">
-                        <span class="select-trigger-text">Español (Latinoamérica)</span>
                         <div class="select-trigger-icon">
+                            <span class="material-symbols-rounded">language</span>
+                        </div>
+                        <span class="select-trigger-text">Español (Latinoamérica)</span>
+                        <div class="select-trigger-icon select-trigger-arrow">
                             <span class="material-symbols-rounded">expand_more</span>
                         </div>
                     </div>
@@ -48,8 +51,11 @@
             <div class="form-controls">
                 <div class="select-wrapper body-title">
                     <div class="custom-select-trigger" data-action="toggle-select" data-target="theme-select">
-                        <span class="select-trigger-text">Sincronizar con el sistema</span>
                         <div class="select-trigger-icon">
+                            <span class="material-symbols-rounded">desktop_windows</span>
+                        </div>
+                        <span class="select-trigger-text">Sincronizar con el sistema</span>
+                        <div class="select-trigger-icon select-trigger-arrow">
                             <span class="material-symbols-rounded">expand_more</span>
                         </div>
                     </div>

@@ -144,11 +144,17 @@ export function initMainController() {
                     const wrapper = selectContainer.closest('.select-wrapper');
                     const currentTrigger = wrapper.querySelector('[data-action="toggle-select"]');
                     const triggerText = currentTrigger.querySelector('.select-trigger-text');
+                    const triggerIcon = currentTrigger.querySelector('.select-trigger-icon .material-symbols-rounded');
                     
                     // Update the trigger text with the selected option's text
                     const optionText = option.querySelector('.menu-link-text span');
                     if(triggerText && optionText) {
                         triggerText.textContent = optionText.textContent;
+                    }
+                    
+                    const optionIcon = option.querySelector('.menu-link-icon .material-symbols-rounded');
+                    if (triggerIcon && optionIcon) {
+                        triggerIcon.textContent = optionIcon.textContent;
                     }
                     
                     // Close the dropdown and deactivate the trigger

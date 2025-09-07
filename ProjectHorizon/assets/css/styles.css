@@ -254,34 +254,44 @@ body {
     display: flex;
     align-items: center;
     position: relative;
-    max-width: 400px; /* Puedes ajustar este valor */
+    max-width: 400px;
+    border-radius: 8px;
+    border: 1px solid #00000020;
+    height: 40px;
+    transition: border-color 0.2s ease;
 }
 
-.search-input-wrapper .material-symbols-rounded {
-    position: absolute;
-    left: 12px;
+.search-input-wrapper:hover {
+    border-color: #a0a0a0;
+}
+
+.search-input-wrapper:focus-within {
+    border-color: #000000;
+}
+
+.search-input-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
     color: #6c757d;
-    font-size: 20px;
+}
+
+.search-input-text {
+    flex: 1;
 }
 
 .search-input-wrapper input {
     width: 100%;
-    height: 40px;
-    border-radius: 8px;
-    border: 1px solid #00000020;
-    padding: 0 12px 0 40px;
+    height: 100%;
+    border: none;
+    padding: 0;
+    padding-right: 12px;
     font-size: 0.9rem;
     outline: none;
-    transition: border-color 0.2s ease;
+    background-color: transparent;
 }
 
-.search-input-wrapper input:hover {
-    border-color: #a0a0a0;
-}
-
-.search-input-wrapper input:focus {
-    border-color: #000000;
-}
 
 /* Ajustes al trigger del select para el header */
 .content-header-right .select-wrapper {
@@ -371,7 +381,7 @@ body {
     transition: transform 0.2s ease-in-out;
 }
 
-.custom-select-trigger.active-trigger .select-trigger-icon .material-symbols-rounded {
+.custom-select-trigger.active-trigger .select-trigger-arrow .material-symbols-rounded {
     transform: rotate(180deg);
 }
 /* --- FIN de los nuevos estilos --- */
