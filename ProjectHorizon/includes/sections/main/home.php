@@ -16,7 +16,7 @@
                     <div class="select-wrapper body-title">
                         <div class="custom-select-trigger" data-action="toggle-select" data-target="relevance-select">
                             <div class="select-trigger-icon">
-                                <span class="material-symbols-rounded">reorder</span>
+                                <span class="material-symbols-rounded">swap_vert</span>
                             </div>
                             <span class="select-trigger-text">Más relevante</span>
                             <div class="select-trigger-icon select-trigger-arrow">
@@ -27,7 +27,7 @@
                             <div class="menu-content">
                                 <div class="menu-list">
                                     <div class="menu-link" data-value="relevant">
-                                        <div class="menu-link-icon"><span class="material-symbols-rounded">reorder</span></div>
+                                        <div class="menu-link-icon"><span class="material-symbols-rounded">star_shine</span></div>
                                         <div class="menu-link-text"><span>Más relevante</span></div>
                                     </div>
                                     <div class="menu-link" data-value="newest">
@@ -35,15 +35,15 @@
                                         <div class="menu-link-text"><span>Ediciones más recientes</span></div>
                                     </div>
                                     <div class="menu-link" data-value="oldest">
-                                        <div class="menu-link-icon"><span class="material-symbols-rounded">history</span></div>
-                                        <div class="menu-link-text"><span>Más antiguos</span></div>
+                                        <div class="menu-link-icon"><span class="material-symbols-rounded">schedule</span></div>
+                                        <div class="menu-link-text"><span>Ediciones más antiguas</span></div>
                                     </div>
                                     <div class="menu-link" data-value="alpha-asc">
-                                        <div class="menu-link-icon"><span class="material-symbols-rounded">sort_by_alpha</span></div>
+                                        <div class="menu-link-icon"><span class="material-symbols-rounded">arrow_upward</span></div>
                                         <div class="menu-link-text"><span>Ordenar alfabéticamente (A-Z)</span></div>
                                     </div>
                                     <div class="menu-link" data-value="alpha-desc">
-                                        <div class="menu-link-icon"><span class="material-symbols-rounded">sort_by_alpha</span></div>
+                                        <div class="menu-link-icon"><span class="material-symbols-rounded">arrow_downward</span></div>
                                         <div class="menu-link-text"><span>Ordenar alfabéticamente (Z-A)</span></div>
                                     </div>
                                 </div>
