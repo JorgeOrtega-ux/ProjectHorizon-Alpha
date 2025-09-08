@@ -2,6 +2,7 @@
     <?php include 'includes/sections/main/home.php'; ?>
     <?php include 'includes/sections/main/explore.php'; ?>
     <?php include 'includes/sections/main/404.php'; ?>
+    <?php include 'includes/sections/main/user-photos.php'; ?>
 </div>
 
 <div class="section-container <?php echo ($CURRENT_VIEW === 'settings') ? 'active' : 'disabled'; ?>" data-view="settings">

@@ -658,6 +658,104 @@ body {
         width: 100%;
         justify-content: flex-end;
     }
+}.card {
+    /* Aseguramos que el posicionamiento del overlay sea relativo a la tarjeta */
+    position: relative; 
+}
+
+.card-hover-overlay {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    opacity: 0; /* Oculto por defecto */
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    z-index: 2;
+}
+
+.card:hover .card-hover-overlay {
+    opacity: 1; /* Visible en hover */
+    visibility: visible;
+}
+
+.card-hover-icons {
+    display: flex;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    overflow: hidden; /* Para que los bordes redondeados se apliquen a los hijos */
+}
+
+.card-hover-icons .icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    cursor: pointer;
+    color: #000000;
+}
+
+.card-hover-icons .icon-wrapper:hover {
+    background-color: #f0f0f0;
+}
+
+/* Agrega un separador visual entre los iconos */
+.card-hover-icons .icon-wrapper:first-child {
+    border-right: 1px solid #00000020;
+}
+
+.card-hover-icons .material-symbols-rounded {
+    font-size: 24px;
+}/* --- Estilos para el hover de las tarjetas de fotos --- */
+
+.card {
+    /* Aseguramos que el posicionamiento del overlay sea relativo a la tarjeta */
+    position: relative; 
+}
+
+.card-hover-overlay {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    opacity: 0; /* Oculto por defecto */
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    z-index: 2;
+}
+
+.card:hover .card-hover-overlay {
+    opacity: 1; /* Visible en hover */
+    visibility: visible;
+}
+
+.card-hover-icons {
+    display: flex;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    overflow: hidden; /* Para que los bordes redondeados se apliquen a los hijos */
+}
+
+.card-hover-icons .icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    cursor: pointer;
+    color: #000000;
+}
+
+.card-hover-icons .icon-wrapper:hover {
+    background-color: #f0f0f0;
+}
+
+/* Agrega un separador visual entre los iconos */
+.card-hover-icons .icon-wrapper:first-child {
+    border-right: 1px solid #00000020;
+}
+
+.card-hover-icons .material-symbols-rounded {
+    font-size: 24px;
 }
 
 

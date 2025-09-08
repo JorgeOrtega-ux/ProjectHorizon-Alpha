@@ -6,7 +6,6 @@ class Router {
         ''                         => ['view' => 'main', 'section' => 'home'],
         'explore'                  => ['view' => 'main', 'section' => 'explore'],
         'settings/accessibility'   => ['view' => 'settings', 'section' => 'accessibility'],
-        // LÍNEA MODIFICADA
         'settings/history-privacy' => ['view' => 'settings', 'section' => 'historyPrivacy']
     ];
 
@@ -14,9 +13,16 @@ class Router {
      * Gets the configuration for a given URL path.
      */
     public static function getRouteConfig($path) {
+        // Check static routes first
         if (array_key_exists($path, self::$routes)) {
             return self::$routes[$path];
         }
+
+        // Check for dynamic user route pattern: user/{uuid}
+        if (preg_match('/^user\/[a-f0-9-]{36}$/', $path)) {
+            return ['view' => 'main', 'section' => 'userPhotos'];
+        }
+
         return null; // Route not found
     }
 

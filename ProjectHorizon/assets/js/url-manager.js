@@ -3,39 +3,47 @@ const urlMap = {
     'main-explore': 'explore',
     'settings-accessibility': 'settings/accessibility',
     'settings-historyPrivacy': 'settings/history-privacy',
+    'main-userPhotos': 'user/{uuid}', // Plantilla para la nueva URL
     'main-404': '404'
 };
 
 let BASE_PATH = '';
 
-function generateUrl(view, section) {
+function generateUrl(view, section, data = null) {
     const urlKey = `${view}-${section}`;
-    const pathSegment = urlMap[urlKey];
+    let pathSegment = urlMap[urlKey] || '';
+
+    // Si hay datos, reemplaza los placeholders en la URL
+    if (data) {
+        for (const key in data) {
+            pathSegment = pathSegment.replace(`{${key}}`, data[key]);
+        }
+    }
+
     const newPath = pathSegment ? `${BASE_PATH}/${pathSegment}` : BASE_PATH;
-    
     return `${window.location.protocol}//${window.location.host}${newPath || '/'}`;
 }
 
-export function navigateToUrl(view, section) {
-    const url = generateUrl(view, section);
+export function navigateToUrl(view, section, data = null) {
+    const url = generateUrl(view, section, data);
     const title = document.title; 
 
     if (window.location.href !== url) {
-        history.pushState({ view, section }, title, url);
+        history.pushState({ view, section, data }, title, url);
     }
 }
 
 export function setupPopStateHandler(callback) {
     window.addEventListener('popstate', (event) => {
         if (event.state) {
-            const { view, section } = event.state;
-            callback(view, section, false);
+            const { view, section, data } = event.state;
+            callback(view, section, false, data); // Pasamos los datos extra
         }
     });
 }
 
-export function setInitialHistoryState(initialView, initialSection) {
-    history.replaceState({ view: initialView, section: initialSection }, document.title, window.location.href);
+export function setInitialHistoryState(initialView, initialSection, data = null) {
+    history.replaceState({ view: initialView, section: initialSection, data }, document.title, window.location.href);
 }
 
 export function initUrlManager() {
