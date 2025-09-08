@@ -1,13 +1,139 @@
 import { navigateToUrl, setupPopStateHandler, setInitialHistoryState } from './url-manager.js';
 
+let currentView = 'grid'; // 'grid' o 'table'
+
+// --- Renderiza las tarjetas (antes displayUsers) ---
+function displayUsersAsGrid(users, container) {
+    container.innerHTML = '';
+    if (users.length > 0) {
+        users.forEach(user => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            // ... (el resto del código para crear la tarjeta no cambia)
+            const overlay = document.createElement('div');
+            overlay.className = 'card-content-overlay';
+            const icon = document.createElement('div');
+            icon.className = 'card-icon';
+            const textContainer = document.createElement('div');
+            textContainer.className = 'card-text';
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = user.name;
+            const editedSpan = document.createElement('span');
+            editedSpan.textContent = `Editado: ${new Date(user.last_edited).toLocaleDateString()}`;
+            editedSpan.style.fontSize = '0.8rem';
+            editedSpan.style.display = 'block';
+            textContainer.appendChild(nameSpan);
+            textContainer.appendChild(editedSpan);
+            overlay.appendChild(icon);
+            overlay.appendChild(textContainer);
+            card.appendChild(overlay);
+            container.appendChild(card);
+        });
+    } else {
+        container.innerHTML = '<p>No se encontraron usuarios.</p>';
+    }
+}
+
+// --- NUEVO: Renderiza la tabla ---
+function displayUsersAsTable(users, container) {
+    const tbody = container.querySelector('tbody');
+    tbody.innerHTML = '';
+    if (users.length > 0) {
+        users.forEach(user => {
+            const row = document.createElement('tr');
+
+            // Columna 1: Nombre y Avatar
+            const nameCell = document.createElement('td');
+            nameCell.innerHTML = `
+                <div class="user-info">
+                    <div class="user-avatar"></div>
+                    <span>${user.name}</span>
+                </div>
+            `;
+
+            // Columna 2: Privacidad
+            const privacyCell = document.createElement('td');
+            privacyCell.textContent = user.privacy == "1" ? 'Privado' : 'Público';
+
+            // Columna 3: Tipo
+            const typeCell = document.createElement('td');
+            typeCell.textContent = 'Perfil';
+
+            // Columna 4: Editado
+            const editedCell = document.createElement('td');
+            editedCell.textContent = new Date(user.last_edited).toLocaleDateString();
+
+            row.appendChild(nameCell);
+            row.appendChild(privacyCell);
+            row.appendChild(typeCell);
+            row.appendChild(editedCell);
+            tbody.appendChild(row);
+        });
+    } else {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 4;
+        cell.textContent = 'No se encontraron usuarios.';
+        cell.style.textAlign = 'center';
+        row.appendChild(cell);
+        tbody.appendChild(row);
+    }
+}
+
+
+function fetchAndDisplayUsers(sortBy = 'relevant') {
+    fetch(`/ProjectHorizon/api/get_users.php?sort=${sortBy}`)
+        .then(response => response.json())
+        .then(data => {
+            const gridContainer = document.getElementById('grid-view');
+            const tableContainer = document.getElementById('table-view');
+
+            if (gridContainer) displayUsersAsGrid(data, gridContainer);
+            if (tableContainer) displayUsersAsTable(data, tableContainer);
+        })
+        .catch(error => {
+            console.error('Error al obtener los usuarios:', error);
+            // ... (código de manejo de errores)
+        });
+}
+
 export function initMainController() {
-    const menuButton = document.querySelector('[data-action="toggleModuleSurface"]');
+    // ... (el código existente se mantiene igual)
+    const toggleViewBtn = document.querySelector('[data-action="toggle-view"]');
+
+    // --- NUEVO: Listener para el botón de alternar vista ---
+    if (toggleViewBtn) {
+        toggleViewBtn.addEventListener('click', () => {
+            const gridView = document.getElementById('grid-view');
+            const tableView = document.getElementById('table-view');
+            const icon = toggleViewBtn.querySelector('.material-symbols-rounded');
+
+            if (currentView === 'grid') {
+                // Cambiar a vista de tabla
+                gridView.classList.remove('active');
+                gridView.classList.add('disabled');
+                tableView.classList.remove('disabled');
+                tableView.classList.add('active');
+                icon.textContent = 'grid_view';
+                currentView = 'table';
+            } else {
+                // Cambiar a vista de grid
+                tableView.classList.remove('active');
+                tableView.classList.add('disabled');
+                gridView.classList.remove('disabled');
+                gridView.classList.add('active');
+                icon.textContent = 'view_list';
+                currentView = 'grid';
+            }
+        });
+    }
+
+    // El resto del código de initMainController, incluyendo la carga inicial de usuarios
+    // y los otros listeners, permanece igual.
+     const menuButton = document.querySelector('[data-action="toggleModuleSurface"]');
     const settingsButton = document.querySelector('[data-action="toggleSettings"]');
     const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
     const allMenuLinks = document.querySelectorAll('.menu-link');
-
-    let canCloseWithEsc = true;
-
     function handleNavigation(view, section, pushState = true) {
         if (pushState) {
             navigateToUrl(view, section);
@@ -153,7 +279,7 @@ export function initMainController() {
     });
 
     document.addEventListener('keydown', function(event) {
-        if (canCloseWithEsc && event.key === 'Escape' && moduleSurface && moduleSurface.classList.contains('active')) {
+        if (event.key === 'Escape' && moduleSurface && moduleSurface.classList.contains('active')) {
             moduleSurface.classList.add('disabled');
             moduleSurface.classList.remove('active');
         }
@@ -165,6 +291,18 @@ export function initMainController() {
             this.classList.toggle('active');
         });
     });
+
+    // --- NUEVO: Event listener para las opciones de ordenamiento ---
+    const sortOptions = document.querySelectorAll('#relevance-select .menu-link');
+    sortOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const sortBy = this.dataset.value;
+            fetchAndDisplayUsers(sortBy);
+        });
+    });
+    
+    // Carga inicial de usuarios
+    fetchAndDisplayUsers('relevant');
 
     setupPopStateHandler((view, section) => {
         handleNavigation(view, section, false);

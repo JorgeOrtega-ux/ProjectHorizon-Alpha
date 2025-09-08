@@ -52,23 +52,29 @@
                     </div>
                 </div>
                 <div class="header-item">
-                   <div class="header-button">
-                       <span class="material-symbols-rounded">view_list</span>
-                   </div>
+                    <div class="header-button" data-action="toggle-view">
+                        <span class="material-symbols-rounded">view_list</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="section-content-block">
-       <div class="card-grid">
-            <?php for ($i = 0; $i < 4; $i++): ?>
-            <div class="card">
-                <div class="card-content-overlay">
-                    <div class="card-icon"></div>
-                    <div class="card-text"><span>Lorem imsus</span></div>
-                </div>
-            </div>
-            <?php endfor; ?>
-       </div>
+        <div class="card-grid active" id="grid-view"></div>
+
+        <div class="table-view-container disabled" id="table-view">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Privacidad</th>
+                        <th>Tipo</th>
+                        <th>Editado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
