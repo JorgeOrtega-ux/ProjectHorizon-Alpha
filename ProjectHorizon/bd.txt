@@ -1,0 +1,107 @@
+-- Borra la base de datos si ya existe para empezar desde cero
+DROP DATABASE IF EXISTS project_horizon;
+
+-- Crea la base de datos
+CREATE DATABASE project_horizon;
+
+-- Selecciona la base de datos para usarla
+USE project_horizon;
+
+-- --------------------------------------------------------
+--
+-- Estructura de la tabla `users`
+--
+-- --------------------------------------------------------
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    privacy BOOLEAN DEFAULT FALSE
+);
+
+-- --------------------------------------------------------
+--
+-- Estructura de la tabla `users_metadata`
+--
+-- --------------------------------------------------------
+CREATE TABLE users_metadata (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_uuid VARCHAR(36) NOT NULL,
+    total_likes INT DEFAULT 0,
+    total_saves INT DEFAULT 0,
+    total_interactions INT DEFAULT 0,
+    last_edited TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_uuid) REFERENCES users(uuid)
+);
+
+-- --------------------------------------------------------
+--
+-- Volcado de datos para la tabla `users`
+--
+-- --------------------------------------------------------
+INSERT INTO `users` (`uuid`, `name`, `privacy`) VALUES
+('a1b2c3d4-e5f6-7890-1234-567890abcdef', 'Alejandro García', 0),
+('b2c3d4e5-f6a7-8901-2345-67890abcdef0', 'Sofía Rodríguez', 1),
+('c3d4e5f6-a7b8-9012-3456-7890abcdef01', 'Mateo Martínez', 0),
+('d4e5f6a7-b8c9-0123-4567-890abcdef012', 'Valentina Hernández', 0),
+('e5f6a7b8-c9d0-1234-5678-90abcdef0123', 'Santiago López', 1),
+('f6a7b8c9-d0e1-2345-6789-0abcdef01234', 'Isabella González', 0),
+('a7b8c9d0-e1f2-3456-7890-bcdef0123456', 'Leonardo Pérez', 0),
+('b8c9d0e1-f2a3-4567-8901-cdef01234567', 'Camila Sánchez', 1),
+('c9d0e1f2-a3b4-5678-9012-def012345678', 'Matías Ramírez', 0),
+('d0e1f2a3-b4c5-6789-0123-ef0123456789', 'Luciana Torres', 0),
+('e1f2a3b4-c5d6-7890-1234-f01234567890', 'Benjamín Flores', 1),
+('f2a3b4c5-d6e7-8901-2345-01234567890a', 'Emilia Díaz', 0),
+('a3b4c5d6-e7f8-9012-3456-1234567890ab', 'Daniel Vargas', 0),
+('b4c5d6e7-f8a9-0123-4567-234567890abc', 'Victoria Romero', 1),
+('c5d6e7f8-a9b0-1234-5678-34567890abcd', 'Joaquín Morales', 0),
+('d6e7f8a9-b0c1-2345-6789-4567890abcde', 'Renata Castillo', 0),
+('e7f8a9b0-c1d2-3456-7890-567890abcdef', 'Gabriel Jiménez', 1),
+('f8a9b0c1-d2e3-4567-8901-67890abcdef0', 'Julieta Álvarez', 0),
+('a9b0c1d2-e3f4-5678-9012-7890abcdef01', 'Lucas Moreno', 0),
+('b0c1d2e3-f4a5-6789-0123-890abcdef012', 'Martina Muñoz', 1),
+('c1d2e3f4-a5b6-7890-1234-90abcdef0123', 'Emiliano Silva', 0),
+('d2e3f4a5-b6c7-8901-2345-abcdef012345', 'Elena Rojas', 0),
+('e3f4a5b6-c7d8-9012-3456-bcdef0123456', 'Thiago Sosa', 1),
+('f4a5b6c7-d8e9-0123-4567-cdef01234567', 'Abril Acosta', 0),
+('a5b6c7d8-e9f0-1234-5678-def0123456789', 'Felipe Ortiz', 0);
+
+-- --------------------------------------------------------
+--
+-- Volcado de datos para la tabla `users_metadata`
+--
+-- --------------------------------------------------------
+INSERT INTO `users_metadata` (`user_uuid`, `total_likes`, `total_saves`, `total_interactions`) VALUES
+('a1b2c3d4-e5f6-7890-1234-567890abcdef', 150, 30, 180),
+('b2c3d4e5-f6a7-8901-2345-67890abcdef0', 200, 50, 250),
+('c3d4e5f6-a7b8-9012-3456-7890abcdef01', 95, 15, 110),
+('d4e5f6a7-b8c9-0123-4567-890abcdef012', 300, 100, 400),
+('e5f6a7b8-c9d0-1234-5678-90abcdef0123', 50, 10, 60),
+('f6a7b8c9-d0e1-2345-6789-0abcdef01234', 120, 25, 145),
+('a7b8c9d0-e1f2-3456-7890-bcdef0123456', 210, 70, 280),
+('b8c9d0e1-f2a3-4567-8901-cdef01234567', 80, 20, 100),
+('c9d0e1f2-a3b4-5678-9012-def012345678', 180, 40, 220),
+('d0e1f2a3-b4c5-6789-0123-ef0123456789', 250, 80, 330),
+('e1f2a3b4-c5d6-7890-1234-f01234567890', 60, 5, 65),
+('f2a3b4c5-d6e7-8901-2345-01234567890a', 140, 35, 175),
+('a3b4c5d6-e7f8-9012-3456-1234567890ab', 220, 60, 280),
+('b4c5d6e7-f8a9-0123-4567-234567890abc', 70, 12, 82),
+('c5d6e7f8-a9b0-1234-5678-34567890abcd', 190, 45, 235),
+('d6e7f8a9-b0c1-2345-6789-4567890abcde', 280, 90, 370),
+('e7f8a9b0-c1d2-3456-7890-567890abcdef', 40, 8, 48),
+('f8a9b0c1-d2e3-4567-8901-67890abcdef0', 160, 38, 198),
+('a9b0c1d2-e3f4-5678-9012-7890abcdef01', 230, 65, 295),
+('b0c1d2e3-f4a5-6789-0123-890abcdef012', 110, 22, 132),
+('c1d2e3f4-a5b6-7890-1234-90abcdef0123', 200, 55, 255),
+('d2e3f4a5-b6c7-8901-2345-abcdef012345', 260, 85, 345),
+('e3f4a5b6-c7d8-9012-3456-bcdef0123456', 30, 3, 33),
+('f4a5b6c7-d8e9-0123-4567-cdef01234567', 170, 42, 212),
+('a5b6c7d8-e9f0-1234-5678-def0123456789', 240, 75, 315);
+
+-- --------------------------------------------------------
+--
+-- Actualiza las fechas de `last_edited` con valores aleatorios
+-- para simular un historial de ediciones.
+--
+-- --------------------------------------------------------
+UPDATE users_metadata SET last_edited = NOW() - INTERVAL FLOOR(RAND() * 365) DAY - INTERVAL FLOOR(RAND() * 24) HOUR - INTERVAL FLOOR(RAND() * 60) MINUTE;

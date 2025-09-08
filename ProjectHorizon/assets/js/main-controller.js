@@ -1,29 +1,40 @@
 import { navigateToUrl, setupPopStateHandler, setInitialHistoryState } from './url-manager.js';
 
 let currentView = 'grid'; // 'grid' o 'table'
+let currentSortBy = 'relevant';
+let searchDebounceTimer;
 
-// --- Renderiza las tarjetas (antes displayUsers) ---
-function displayUsersAsGrid(users, container) {
+// --- MODIFICADO: Renderiza las tarjetas (ahora acepta sortBy) ---
+function displayUsersAsGrid(users, container, sortBy) {
     container.innerHTML = '';
     if (users.length > 0) {
         users.forEach(user => {
             const card = document.createElement('div');
             card.className = 'card';
-            // ... (el resto del código para crear la tarjeta no cambia)
+            
             const overlay = document.createElement('div');
             overlay.className = 'card-content-overlay';
+            
             const icon = document.createElement('div');
             icon.className = 'card-icon';
+            
             const textContainer = document.createElement('div');
             textContainer.className = 'card-text';
+            
             const nameSpan = document.createElement('span');
             nameSpan.textContent = user.name;
-            const editedSpan = document.createElement('span');
-            editedSpan.textContent = `Editado: ${new Date(user.last_edited).toLocaleDateString()}`;
-            editedSpan.style.fontSize = '0.8rem';
-            editedSpan.style.display = 'block';
             textContainer.appendChild(nameSpan);
-            textContainer.appendChild(editedSpan);
+
+            // --- LÓGICA CONDICIONAL AÑADIDA ---
+            // Solo muestra la fecha de edición si el filtro es el adecuado
+            if (sortBy === 'newest' || sortBy === 'oldest') {
+                const editedSpan = document.createElement('span');
+                editedSpan.textContent = `Editado: ${new Date(user.last_edited).toLocaleDateString()}`;
+                editedSpan.style.fontSize = '0.8rem';
+                editedSpan.style.display = 'block';
+                textContainer.appendChild(editedSpan);
+            }
+            
             overlay.appendChild(icon);
             overlay.appendChild(textContainer);
             card.appendChild(overlay);
@@ -34,7 +45,7 @@ function displayUsersAsGrid(users, container) {
     }
 }
 
-// --- NUEVO: Renderiza la tabla ---
+// --- Renderiza la tabla ---
 function displayUsersAsTable(users, container) {
     const tbody = container.querySelector('tbody');
     tbody.innerHTML = '';
@@ -42,7 +53,6 @@ function displayUsersAsTable(users, container) {
         users.forEach(user => {
             const row = document.createElement('tr');
 
-            // Columna 1: Nombre y Avatar
             const nameCell = document.createElement('td');
             nameCell.innerHTML = `
                 <div class="user-info">
@@ -51,15 +61,12 @@ function displayUsersAsTable(users, container) {
                 </div>
             `;
 
-            // Columna 2: Privacidad
             const privacyCell = document.createElement('td');
             privacyCell.textContent = user.privacy == "1" ? 'Privado' : 'Público';
 
-            // Columna 3: Tipo
             const typeCell = document.createElement('td');
             typeCell.textContent = 'Perfil';
 
-            // Columna 4: Editado
             const editedCell = document.createElement('td');
             editedCell.textContent = new Date(user.last_edited).toLocaleDateString();
 
@@ -80,28 +87,30 @@ function displayUsersAsTable(users, container) {
     }
 }
 
-
-function fetchAndDisplayUsers(sortBy = 'relevant') {
-    fetch(`/ProjectHorizon/api/get_users.php?sort=${sortBy}`)
+// --- MODIFICADO: fetchAndDisplayUsers ahora pasa sortBy a displayUsersAsGrid ---
+function fetchAndDisplayUsers(sortBy = 'relevant', searchTerm = '') {
+    const encodedSearchTerm = encodeURIComponent(searchTerm);
+    fetch(`/ProjectHorizon/api/get_users.php?sort=${sortBy}&search=${encodedSearchTerm}`)
         .then(response => response.json())
         .then(data => {
             const gridContainer = document.getElementById('grid-view');
             const tableContainer = document.getElementById('table-view');
 
-            if (gridContainer) displayUsersAsGrid(data, gridContainer);
+            if (gridContainer) displayUsersAsGrid(data, gridContainer, sortBy); // Se pasa sortBy
             if (tableContainer) displayUsersAsTable(data, tableContainer);
         })
         .catch(error => {
             console.error('Error al obtener los usuarios:', error);
-            // ... (código de manejo de errores)
+            const gridContainer = document.getElementById('grid-view');
+            if (gridContainer) gridContainer.innerHTML = '<p>Error al cargar usuarios.</p>';
         });
 }
 
-export function initMainController() {
-    // ... (el código existente se mantiene igual)
-    const toggleViewBtn = document.querySelector('[data-action="toggle-view"]');
 
-    // --- NUEVO: Listener para el botón de alternar vista ---
+export function initMainController() {
+    const toggleViewBtn = document.querySelector('[data-action="toggle-view"]');
+    const searchInput = document.querySelector('.search-input-text input');
+
     if (toggleViewBtn) {
         toggleViewBtn.addEventListener('click', () => {
             const gridView = document.getElementById('grid-view');
@@ -109,7 +118,6 @@ export function initMainController() {
             const icon = toggleViewBtn.querySelector('.material-symbols-rounded');
 
             if (currentView === 'grid') {
-                // Cambiar a vista de tabla
                 gridView.classList.remove('active');
                 gridView.classList.add('disabled');
                 tableView.classList.remove('disabled');
@@ -117,7 +125,6 @@ export function initMainController() {
                 icon.textContent = 'grid_view';
                 currentView = 'table';
             } else {
-                // Cambiar a vista de grid
                 tableView.classList.remove('active');
                 tableView.classList.add('disabled');
                 gridView.classList.remove('disabled');
@@ -127,10 +134,18 @@ export function initMainController() {
             }
         });
     }
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                const searchTerm = searchInput.value.trim();
+                fetchAndDisplayUsers(currentSortBy, searchTerm);
+            }, 300);
+        });
+    }
 
-    // El resto del código de initMainController, incluyendo la carga inicial de usuarios
-    // y los otros listeners, permanece igual.
-     const menuButton = document.querySelector('[data-action="toggleModuleSurface"]');
+    const menuButton = document.querySelector('[data-action="toggleModuleSurface"]');
     const settingsButton = document.querySelector('[data-action="toggleSettings"]');
     const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
     const allMenuLinks = document.querySelectorAll('.menu-link');
@@ -292,17 +307,17 @@ export function initMainController() {
         });
     });
 
-    // --- NUEVO: Event listener para las opciones de ordenamiento ---
     const sortOptions = document.querySelectorAll('#relevance-select .menu-link');
     sortOptions.forEach(option => {
         option.addEventListener('click', function() {
-            const sortBy = this.dataset.value;
-            fetchAndDisplayUsers(sortBy);
+            currentSortBy = this.dataset.value;
+            const searchTerm = searchInput ? searchInput.value.trim() : '';
+            fetchAndDisplayUsers(currentSortBy, searchTerm);
         });
     });
     
     // Carga inicial de usuarios
-    fetchAndDisplayUsers('relevant');
+    fetchAndDisplayUsers(currentSortBy);
 
     setupPopStateHandler((view, section) => {
         handleNavigation(view, section, false);

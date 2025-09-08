@@ -640,7 +640,9 @@ body {
     background-color: #e0e0e0;
     flex-shrink: 0;
 }
-
+.card-grid.disabled {
+    display: none;
+}
 @media (max-width: 768px) {
     .content-header-wrapper {
         flex-direction: column;
