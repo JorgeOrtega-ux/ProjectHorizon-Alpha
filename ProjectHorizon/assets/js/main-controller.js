@@ -145,8 +145,6 @@ export function initMainController() {
             });
     }
 
-   // Dentro de la función initMainController...
-
     // --- OBTENCIÓN DE FOTOS DE USUARIO ---
     function fetchAndDisplayUserPhotos(uuid, userName) {
         handleNavigation('main', 'userPhotos', true, { uuid: uuid });
@@ -166,24 +164,38 @@ export function initMainController() {
                         const card = document.createElement('div');
                         card.className = 'card';
                         card.style.backgroundImage = `url('${photo.photo_url}')`;
+                        card.dataset.photoUrl = photo.photo_url;
 
-                        // --- NUEVO CÓDIGO AÑADIDO ---
-                        // Crea el contenedor del hover
-                        const hoverOverlay = document.createElement('div');
-                        hoverOverlay.className = 'card-hover-overlay';
-
-                        // Crea el botón con los iconos
-                        const iconContainer = document.createElement('div');
-                        iconContainer.className = 'card-hover-icons';
-                        iconContainer.innerHTML = `
-                            <div class="icon-wrapper"><span class="material-symbols-rounded">star</span></div>
-                            <div class="icon-wrapper"><span class="material-symbols-rounded">more_horiz</span></div>
+                        const cardContent = `
+                            <div class="card-actions-container">
+                                <div class="card-hover-overlay">
+                                    <div class="card-hover-icons">
+                                        <div class="icon-wrapper"><span class="material-symbols-rounded">star</span></div>
+                                        <div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div>
+                                    </div>
+                                </div>
+                                <div class="module-content module-select photo-context-menu disabled">
+                                    <div class="menu-content">
+                                        <div class="menu-list">
+                                            <a class="menu-link" href="${photo.photo_url}" target="_blank">
+                                                <div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div>
+                                                <div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div>
+                                            </a>
+                                            <div class="menu-link" data-action="copy-link">
+                                                <div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div>
+                                                <div class="menu-link-text"><span>Copiar el enlace</span></div>
+                                            </div>
+                                            <a class="menu-link" href="${photo.photo_url}" download>
+                                                <div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div>
+                                                <div class="menu-link-text"><span>Descargar</span></div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         `;
                         
-                        hoverOverlay.appendChild(iconContainer);
-                        card.appendChild(hoverOverlay);
-                        // --- FIN DEL NUEVO CÓDIGO ---
-
+                        card.innerHTML += cardContent;
                         grid.appendChild(card);
                     });
                 } else {
@@ -195,8 +207,6 @@ export function initMainController() {
                 grid.innerHTML = '<p>Error al cargar las fotos.</p>';
             });
     }
-
-// ... el resto del archivo main-controller.js
 
     // --- INICIALIZACIÓN DE EVENTOS ---
     const toggleViewBtn = document.querySelector('[data-action="toggle-view"]');
@@ -255,7 +265,7 @@ export function initMainController() {
     allMenuLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             const action = this.dataset.action;
-            if (action && action !== 'toggle-select') { e.preventDefault(); }
+            if (action && action !== 'toggle-select' && !this.closest('.photo-context-menu')) { e.preventDefault(); }
             if (action === 'toggleMainView') { handleNavigation('main', 'home'); return; }
             if (action && action.startsWith('toggleSection')) {
                 const sectionName = action.substring("toggleSection".length);
@@ -268,31 +278,99 @@ export function initMainController() {
     });
 
     document.addEventListener('click', function(event) {
+        const actionTarget = event.target.closest('[data-action]');
+        
+        // --- CERRAR MENÚS AL HACER CLIC FUERA ---
+        if (!actionTarget || !actionTarget.dataset.action.includes('toggle')) {
+            document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
+                menu.classList.remove('active');
+                menu.classList.add('disabled');
+                menu.closest('.card-actions-container').classList.remove('force-visible');
+            });
+            document.querySelectorAll('.module-select:not(.photo-context-menu).active').forEach(menu => {
+                 menu.classList.remove('active');
+                 menu.classList.add('disabled');
+            });
+            document.querySelectorAll('.active-trigger').forEach(trigger => {
+                trigger.classList.remove('active-trigger');
+            });
+        }
+
+        if (!actionTarget) return;
+
+        const action = actionTarget.dataset.action;
+        
+        // --- LÓGICA PARA EL MENÚ DE FOTOS ---
+        if (action === 'toggle-photo-menu') {
+            const currentContainer = actionTarget.closest('.card-actions-container');
+            const currentMenu = currentContainer.querySelector('.photo-context-menu');
+            const isOpening = currentMenu.classList.contains('disabled');
+
+            // 1. Cerrar todos los otros menús de fotos
+            document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
+                if (menu !== currentMenu) {
+                    menu.classList.remove('active');
+                    menu.classList.add('disabled');
+                    menu.closest('.card-actions-container').classList.remove('force-visible');
+                }
+            });
+
+            // 2. Abrir o cerrar el menú actual
+            currentMenu.classList.toggle('disabled', !isOpening);
+            currentMenu.classList.toggle('active', isOpening);
+            currentContainer.classList.toggle('force-visible', isOpening);
+        }
+
+        if (action === 'copy-link') {
+            const card = actionTarget.closest('.card');
+            const url = card.dataset.photoUrl;
+            navigator.clipboard.writeText(url).then(() => {
+                console.log('Enlace copiado!');
+                actionTarget.closest('.photo-context-menu').classList.add('disabled');
+                actionTarget.closest('.photo-context-menu').classList.remove('active');
+                actionTarget.closest('.card-actions-container').classList.remove('force-visible');
+            }).catch(err => {
+                console.error('Error al copiar el enlace: ', err);
+            });
+        }
+        
+        // --- LÓGICA PARA OTROS ELEMENTOS ---
         const userElement = event.target.closest('.card, tr[data-uuid]');
-        if (userElement && userElement.dataset.uuid) {
+        if (userElement && userElement.dataset.uuid && !event.target.closest('.card-actions-container')) {
             if (!userElement.closest('[data-section="userPhotos"]')) {
                 fetchAndDisplayUserPhotos(userElement.dataset.uuid, userElement.dataset.name);
             }
         }
 
         const trigger = event.target.closest('[data-action="toggle-select"]');
-        const allSelects = document.querySelectorAll('.module-select');
-        const allTriggers = document.querySelectorAll('[data-action="toggle-select"]');
-
         if (trigger) {
             const targetId = trigger.dataset.target;
             const targetSelect = document.getElementById(targetId);
             const wasActive = trigger.classList.contains('active-trigger');
-            allTriggers.forEach(t => t.classList.remove('active-trigger'));
-            allSelects.forEach(s => { s.classList.add('disabled'); s.classList.remove('active'); });
+            
+            document.querySelectorAll('[data-action="toggle-select"]').forEach(t => t.classList.remove('active-trigger'));
+            document.querySelectorAll('.module-select').forEach(s => {
+                if(s.id !== targetId) {
+                    s.classList.add('disabled');
+                    s.classList.remove('active');
+                }
+            });
+
             if (!wasActive) {
                 trigger.classList.add('active-trigger');
                 if (targetSelect) {
                     targetSelect.classList.remove('disabled');
                     targetSelect.classList.add('active');
                 }
+            } else {
+                 if (targetSelect) {
+                    targetSelect.classList.add('disabled');
+                    targetSelect.classList.remove('active');
+                }
             }
-        } else if (event.target.closest('.select-wrapper')) {
+        }
+        
+        if (event.target.closest('.select-wrapper')) {
             const option = event.target.closest('.module-select .menu-link');
             if (option) {
                  const selectContainer = option.closest('.module-select');
@@ -303,15 +381,7 @@ export function initMainController() {
                  if(triggerText && optionText) {
                     triggerText.textContent = optionText.textContent;
                  }
-                 selectContainer.classList.add('disabled');
-                 selectContainer.classList.remove('active');
-                 if (currentTrigger) {
-                    currentTrigger.classList.remove('active-trigger');
-                 }
             }
-        } else {
-            allTriggers.forEach(t => t.classList.remove('active-trigger'));
-            allSelects.forEach(s => { s.classList.add('disabled'); s.classList.remove('active'); });
         }
 
         if (moduleSurface && moduleSurface.classList.contains('active')) {
