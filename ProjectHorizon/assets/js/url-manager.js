@@ -3,7 +3,8 @@ const urlMap = {
     'main-explore': 'explore',
     'settings-accessibility': 'settings/accessibility',
     'settings-historyPrivacy': 'settings/history-privacy',
-    'main-userPhotos': 'user/{uuid}', // Plantilla para la nueva URL
+    'main-userPhotos': 'user/{uuid}', // Plantilla para galería de usuario
+    'main-photoView': 'user/{uuid}/photo/{photoId}', // Plantilla para foto individual
     'main-404': '404'
 };
 

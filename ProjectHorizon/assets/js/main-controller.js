@@ -4,6 +4,8 @@ export function initMainController() {
     let currentView = 'grid';
     let currentSortBy = 'relevant';
     let searchDebounceTimer;
+    let currentUserForPhotoView = null;
+    let currentUserPhotoList = [];
 
     // --- MANEJADOR DE NAVEGACIÓN ---
     function handleNavigation(view, section, pushState = true, data = null) {
@@ -147,6 +149,7 @@ export function initMainController() {
 
     // --- OBTENCIÓN DE FOTOS DE USUARIO ---
     function fetchAndDisplayUserPhotos(uuid, userName) {
+        currentUserForPhotoView = uuid;
         handleNavigation('main', 'userPhotos', true, { uuid: uuid });
 
         const grid = document.getElementById('user-photos-grid');
@@ -158,13 +161,15 @@ export function initMainController() {
         fetch(`/ProjectHorizon/api/get_user_photos.php?uuid=${uuid}`)
             .then(response => response.json())
             .then(photos => {
+                currentUserPhotoList = photos;
                 grid.innerHTML = '';
                 if (photos.length > 0) {
                     photos.forEach(photo => {
                         const card = document.createElement('div');
-                        card.className = 'card';
+                        card.className = 'card photo-card';
                         card.style.backgroundImage = `url('${photo.photo_url}')`;
                         card.dataset.photoUrl = photo.photo_url;
+                        card.dataset.photoId = photo.id;
 
                         const cardContent = `
                             <div class="card-actions-container">
@@ -206,6 +211,42 @@ export function initMainController() {
                 console.error('Error al obtener las fotos:', error);
                 grid.innerHTML = '<p>Error al cargar las fotos.</p>';
             });
+    }
+
+    // --- MUESTRA UNA FOTO EN GRANDE ---
+    function displayPhoto(uuid, photoId) {
+        handleNavigation('main', 'photoView', true, { uuid: uuid, photoId: photoId });
+        const photoViewerImage = document.getElementById('photo-viewer-image');
+        const photoCounter = document.getElementById('photo-counter');
+        const prevButton = document.querySelector('[data-action="previous-photo"]');
+        const nextButton = document.querySelector('[data-action="next-photo"]');
+
+        const displayFetchedPhoto = () => {
+            const photoIndex = currentUserPhotoList.findIndex(p => p.id == photoId);
+            if (photoIndex !== -1) {
+                const photo = currentUserPhotoList[photoIndex];
+                photoViewerImage.src = photo.photo_url;
+                photoCounter.textContent = `${photoIndex + 1} / ${currentUserPhotoList.length}`;
+                currentUserForPhotoView = uuid;
+
+                // --- LÓGICA PARA DESHABILITAR BOTONES ---
+                prevButton.classList.toggle('disabled-nav', photoIndex === 0);
+                nextButton.classList.toggle('disabled-nav', photoIndex === currentUserPhotoList.length - 1);
+            } else {
+                handleNavigation('main', '404');
+            }
+        };
+
+        if (currentUserPhotoList.length === 0 || currentUserPhotoList[0].user_uuid !== uuid) {
+            fetch(`/ProjectHorizon/api/get_user_photos.php?uuid=${uuid}`)
+                .then(res => res.json())
+                .then(photos => {
+                    currentUserPhotoList = photos;
+                    displayFetchedPhoto();
+                });
+        } else {
+            displayFetchedPhoto();
+        }
     }
 
     // --- INICIALIZACIÓN DE EVENTOS ---
@@ -278,9 +319,20 @@ export function initMainController() {
     });
 
     document.addEventListener('click', function(event) {
+        const userElement = event.target.closest('.card:not(.photo-card), tr[data-uuid]');
+        if (userElement && userElement.dataset.uuid && !event.target.closest('.card-actions-container')) {
+            fetchAndDisplayUserPhotos(userElement.dataset.uuid, userElement.dataset.name);
+            return;
+        }
+
+        const photoCard = event.target.closest('.card.photo-card');
+        if (photoCard && !event.target.closest('.card-actions-container')) {
+            displayPhoto(currentUserForPhotoView, photoCard.dataset.photoId);
+            return;
+        }
+    
         const actionTarget = event.target.closest('[data-action]');
         
-        // --- CERRAR MENÚS AL HACER CLIC FUERA ---
         if (!actionTarget || !actionTarget.dataset.action.includes('toggle')) {
             document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
                 menu.classList.remove('active');
@@ -299,14 +351,42 @@ export function initMainController() {
         if (!actionTarget) return;
 
         const action = actionTarget.dataset.action;
+
+        if (action === 'returnToUserPhotos') {
+            fetch(`/ProjectHorizon/api/get_users.php?uuid=${currentUserForPhotoView}`)
+                .then(res => res.json())
+                .then(user => {
+                    if (user) {
+                        fetchAndDisplayUserPhotos(user.uuid, user.name);
+                    }
+                });
+        }
         
-        // --- LÓGICA PARA EL MENÚ DE FOTOS ---
+        if ((action === 'previous-photo' || action === 'next-photo') && !actionTarget.classList.contains('disabled-nav')) {
+            const path = window.location.pathname;
+            const photoMatch = path.match(/^.*\/photo\/(\d+)$/);
+            if (!photoMatch || currentUserPhotoList.length === 0) return;
+
+            const currentId = parseInt(photoMatch[1], 10);
+            const currentIndex = currentUserPhotoList.findIndex(p => p.id === currentId);
+
+            if (currentIndex !== -1) {
+                let nextIndex = currentIndex;
+                if (action === 'next-photo' && currentIndex < currentUserPhotoList.length - 1) {
+                    nextIndex = currentIndex + 1;
+                } else if (action === 'previous-photo' && currentIndex > 0) {
+                    nextIndex = currentIndex - 1;
+                }
+                const nextPhoto = currentUserPhotoList[nextIndex];
+                displayPhoto(currentUserForPhotoView, nextPhoto.id);
+            }
+        }
+        
         if (action === 'toggle-photo-menu') {
             const currentContainer = actionTarget.closest('.card-actions-container');
             const currentMenu = currentContainer.querySelector('.photo-context-menu');
             const isOpening = currentMenu.classList.contains('disabled');
 
-            // 1. Cerrar todos los otros menús de fotos
             document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
                 if (menu !== currentMenu) {
                     menu.classList.remove('active');
@@ -315,7 +395,6 @@ export function initMainController() {
                 }
             });
 
-            // 2. Abrir o cerrar el menú actual
             currentMenu.classList.toggle('disabled', !isOpening);
             currentMenu.classList.toggle('active', isOpening);
             currentContainer.classList.toggle('force-visible', isOpening);
@@ -323,9 +402,9 @@ export function initMainController() {
 
         if (action === 'copy-link') {
             const card = actionTarget.closest('.card');
-            const url = card.dataset.photoUrl;
+            const url = window.location.origin + window.BASE_PATH + `/user/${currentUserForPhotoView}/photo/${card.dataset.photoId}`;
             navigator.clipboard.writeText(url).then(() => {
-                console.log('Enlace copiado!');
+                console.log('Enlace copiado!', url);
                 actionTarget.closest('.photo-context-menu').classList.add('disabled');
                 actionTarget.closest('.photo-context-menu').classList.remove('active');
                 actionTarget.closest('.card-actions-container').classList.remove('force-visible');
@@ -334,14 +413,6 @@ export function initMainController() {
             });
         }
         
-        // --- LÓGICA PARA OTROS ELEMENTOS ---
-        const userElement = event.target.closest('.card, tr[data-uuid]');
-        if (userElement && userElement.dataset.uuid && !event.target.closest('.card-actions-container')) {
-            if (!userElement.closest('[data-section="userPhotos"]')) {
-                fetchAndDisplayUserPhotos(userElement.dataset.uuid, userElement.dataset.name);
-            }
-        }
-
         const trigger = event.target.closest('[data-action="toggle-select"]');
         if (trigger) {
             const targetId = trigger.dataset.target;
@@ -427,18 +498,25 @@ export function initMainController() {
             fetch(`/ProjectHorizon/api/get_users.php?uuid=${data.uuid}`)
              .then(res => res.json())
              .then(user => { if (user) fetchAndDisplayUserPhotos(user.uuid, user.name); });
+        } else if (section === 'photoView' && data && data.uuid && data.photoId) {
+            displayPhoto(data.uuid, data.photoId);
         }
     });
-
+    
     const initialView = document.querySelector('.section-container.active')?.dataset.view;
     const initialSection = document.querySelector('.section-container.active .section-content.active')?.dataset.section;
     const path = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1);
+    
+    const photoMatch = path.match(/^user\/([a-f0-9-]{36})\/photo\/(\d+)$/);
     const userMatch = path.match(/^user\/([a-f0-9-]{36})$/);
 
-    if (initialSection === 'userPhotos' && userMatch) {
+    if (photoMatch) {
+        const [, userUuid, photoId] = photoMatch;
+        setInitialHistoryState(initialView, 'photoView', { uuid: userUuid, photoId: photoId });
+        displayPhoto(userUuid, photoId);
+    } else if (userMatch) {
         const userUuid = userMatch[1];
-        setInitialHistoryState(initialView, initialSection, { uuid: userUuid });
-        
+        setInitialHistoryState(initialView, 'userPhotos', { uuid: userUuid });
         fetch(`/ProjectHorizon/api/get_users.php?uuid=${userUuid}`)
             .then(res => res.json())
             .then(user => {

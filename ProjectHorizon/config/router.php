@@ -18,6 +18,11 @@ class Router {
             return self::$routes[$path];
         }
 
+        // Check for dynamic photo route pattern: user/{uuid}/photo/{id}
+        if (preg_match('/^user\/[a-f0-9-]{36}\/photo\/\d+$/', $path)) {
+            return ['view' => 'main', 'section' => 'photoView'];
+        }
+
         // Check for dynamic user route pattern: user/{uuid}
         if (preg_match('/^user\/[a-f0-9-]{36}$/', $path)) {
             return ['view' => 'main', 'section' => 'userPhotos'];
