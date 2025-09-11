@@ -401,6 +401,16 @@ export function initMainController() {
     });
 
     document.addEventListener('click', function(event) {
+        // --- [CORRECCIÓN] Cierra el menú lateral si se hace clic fuera de él ---
+        if (moduleSurface && moduleSurface.classList.contains('active')) {
+            const isClickInsideModule = moduleSurface.contains(event.target);
+            const isClickOnMenuButton = menuButton && menuButton.contains(event.target);
+            if (!isClickInsideModule && !isClickOnMenuButton) {
+                moduleSurface.classList.add('disabled');
+                moduleSurface.classList.remove('active');
+            }
+        }
+    
         const userElement = event.target.closest('.card:not(.photo-card), tr[data-uuid]');
         if (userElement && userElement.dataset.uuid && !event.target.closest('.card-actions-container')) {
             fetchAndDisplayUserPhotos(userElement.dataset.uuid, userElement.dataset.name);
@@ -557,15 +567,6 @@ export function initMainController() {
                  if(triggerText && optionText) {
                     triggerText.textContent = optionText.textContent;
                  }
-            }
-        }
-
-        if (moduleSurface && moduleSurface.classList.contains('active')) {
-            const isClickInsideModule = moduleSurface.contains(event.target);
-            const isClickOnMenuButton = menuButton && menuButton.contains(event.target);
-            if (!isClickInsideModule && !isClickOnMenuButton) {
-                moduleSurface.classList.add('disabled');
-                moduleSurface.classList.remove('active');
             }
         }
     });
