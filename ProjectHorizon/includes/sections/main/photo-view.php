@@ -21,7 +21,7 @@
                 </div>
         </div>
     </div>
-    <div class="section-content-block" id="photo-view-block">
+    <div class="section-content-block overflow-y" id="photo-view-block">
         <div class="photo-viewer-container">
             <img id="photo-viewer-image" src="" alt="Vista ampliada">
         </div>

@@ -9,7 +9,7 @@
             </div>
         </div>
     </div>
-    <div class="section-content-block">
+    <div class="section-content-block overflow-y">
         <div class="card-grid active" id="user-photos-grid">
             </div>
     </div>

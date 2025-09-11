@@ -524,7 +524,7 @@ body {
 }
 
 .section-content-block {
-    padding: 16px;
+    padding: 8px;
     width: 100%;
     flex-grow: 1;
     overflow-y: auto;
@@ -535,7 +535,15 @@ body {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 16px;
 }
-
+.overflow-y {
+    overflow-x: hidden;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    scrollbar-color: #00000080 transparent;
+    scrollbar-width: thin;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+}
 .card {
     position: relative;
     border-radius: 12px;
@@ -569,7 +577,12 @@ body {
     z-index: 1;
     position: relative;
 }
-
+.body-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.0178571429em;
+    color: #000000;
+}
 .card-icon {
     width: 40px;
     height: 40px;
@@ -578,7 +591,9 @@ body {
     flex-shrink: 0;
     background-color: #a0a0a0;
 }
-
+.user-table tr {
+    border-radius: 12px;
+}
 .card-text {
     margin-left: 12px;
     font-size: 1rem;
