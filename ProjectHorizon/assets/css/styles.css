@@ -221,6 +221,9 @@ body {
 .content-header-left {
     flex: 1 1 auto;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .content-header-right {
@@ -234,6 +237,7 @@ body {
     display: flex;
     align-items: center;
     position: relative;
+    width: 100%;
     max-width: 400px;
     border-radius: 8px;
     border: 1px solid #00000020;
@@ -823,6 +827,18 @@ body {
     cursor: not-allowed;
     background-color: #ffffff;
 }
+
+.header-title-container {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    padding: 0 16px;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
 /* --- FIN DE NUEVOS ESTILOS --- */
 
 .photo-nav-counter {
@@ -831,4 +847,29 @@ body {
     font-weight: 500;
     min-width: 70px;
     text-align: center;
+}/* ... (todo tu CSS existente va aquí) ... */
+
+.header-button[data-action="toggle-favorite"] .material-symbols-rounded {
+    color: #000000;
+}
+
+.header-button[data-action="toggle-favorite"].active {
+    background-color: #ffebee; /* Un rojo claro para el fondo */
+    border-color: #ffcdd2; /* Borde rojo claro */
+}
+
+.header-button[data-action="toggle-favorite"].active .material-symbols-rounded {
+    color: #e53935; /* Rojo intenso para el corazón */
+    font-variation-settings: 'FILL' 1; /* Rellena el ícono del corazón */
+}
+/* ... (todo tu CSS existente va aquí) ... */
+
+/* --- Estilos para el botón de favorito en la tarjeta --- */
+.card-hover-icons .icon-wrapper[data-action="toggle-favorite-card"] .material-symbols-rounded {
+    color: #000000;
+}
+
+.card-hover-icons .icon-wrapper[data-action="toggle-favorite-card"].active .material-symbols-rounded {
+    color: #e53935; /* Rojo intenso para el corazón */
+    font-variation-settings: 'FILL' 1; /* Rellena el ícono del corazón */
 }

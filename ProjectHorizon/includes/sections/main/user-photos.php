@@ -5,7 +5,9 @@
                 <div class="header-button" data-action="returnToHome">
                     <span class="material-symbols-rounded">arrow_back</span>
                 </div>
-                <h2 id="user-photos-title" style="margin-left: 16px;">Fotos de Usuario</h2>
+                <div class="header-title-container">
+                    <span id="user-photos-title">Fotos de Usuario</span>
+                </div>
             </div>
         </div>
     </div>

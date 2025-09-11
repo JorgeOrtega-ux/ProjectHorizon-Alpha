@@ -1,11 +1,59 @@
 import { navigateToUrl, setupPopStateHandler, setInitialHistoryState } from './url-manager.js';
 
+// --- MANEJO DE FAVORITOS ---
+function getFavorites() {
+    const favorites = localStorage.getItem('favoritePhotos');
+    return favorites ? JSON.parse(favorites) : [];
+}
+
 export function initMainController() {
+    // Muestra las fotos favoritas en la consola al cargar
+    console.log("Fotos favoritas guardadas:");
+    console.table(getFavorites());
+
     let currentView = 'grid';
     let currentSortBy = 'relevant';
     let searchDebounceTimer;
     let currentUserForPhotoView = null;
+    let currentUserNameForPhotoView = null;
     let currentUserPhotoList = [];
+    let currentPhotoData = null;
+
+    function isFavorite(photoId) {
+        const favorites = getFavorites();
+        return favorites.some(photo => photo.id == photoId);
+    }
+
+    function toggleFavorite(photoData) {
+        let favorites = getFavorites();
+        const photoIndex = favorites.findIndex(photo => photo.id == photoData.id);
+
+        if (photoIndex > -1) {
+            favorites.splice(photoIndex, 1);
+        } else {
+            favorites.push(photoData);
+        }
+
+        localStorage.setItem('favoritePhotos', JSON.stringify(favorites));
+        // Sincroniza ambos botones
+        updateFavoriteButtonState(photoData.id);
+        updateFavoriteCardState(photoData.id);
+    }
+    
+    function updateFavoriteButtonState(photoId) {
+        const favButton = document.querySelector('[data-action="toggle-favorite"]');
+        if (favButton) {
+            favButton.classList.toggle('active', isFavorite(photoId));
+        }
+    }
+
+    function updateFavoriteCardState(photoId) {
+        const cardFavButton = document.querySelector(`.icon-wrapper[data-photo-id="${photoId}"]`);
+        if (cardFavButton) {
+            cardFavButton.classList.toggle('active', isFavorite(photoId));
+        }
+    }
+
 
     // --- MANEJADOR DE NAVEGACIÓN ---
     function handleNavigation(view, section, pushState = true, data = null) {
@@ -150,13 +198,14 @@ export function initMainController() {
     // --- OBTENCIÓN DE FOTOS DE USUARIO ---
     function fetchAndDisplayUserPhotos(uuid, userName) {
         currentUserForPhotoView = uuid;
+        currentUserNameForPhotoView = userName;
         handleNavigation('main', 'userPhotos', true, { uuid: uuid });
 
         const grid = document.getElementById('user-photos-grid');
         const title = document.getElementById('user-photos-title');
 
         grid.innerHTML = '<p>Cargando fotos...</p>';
-        title.textContent = userName ? `Fotos de ${userName}` : 'Cargando...';
+        title.textContent = userName ? userName : 'Cargando...';
 
         fetch(`/ProjectHorizon/api/get_user_photos.php?uuid=${uuid}`)
             .then(response => response.json())
@@ -170,19 +219,23 @@ export function initMainController() {
                         card.style.backgroundImage = `url('${photo.photo_url}')`;
                         card.dataset.photoUrl = photo.photo_url;
                         card.dataset.photoId = photo.id;
+                        
+                        const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/user/${uuid}/photo/${photo.id}`;
 
                         const cardContent = `
                             <div class="card-actions-container">
                                 <div class="card-hover-overlay">
                                     <div class="card-hover-icons">
-                                        <div class="icon-wrapper"><span class="material-symbols-rounded">star</span></div>
+                                        <div class="icon-wrapper" data-action="toggle-favorite-card" data-photo-id="${photo.id}">
+                                            <span class="material-symbols-rounded">favorite</span>
+                                        </div>
                                         <div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div>
                                     </div>
                                 </div>
                                 <div class="module-content module-select photo-context-menu disabled">
                                     <div class="menu-content">
                                         <div class="menu-list">
-                                            <a class="menu-link" href="${photo.photo_url}" target="_blank">
+                                            <a class="menu-link" href="${photoPageUrl}" target="_blank">
                                                 <div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div>
                                                 <div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div>
                                             </a>
@@ -190,7 +243,7 @@ export function initMainController() {
                                                 <div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div>
                                                 <div class="menu-link-text"><span>Copiar el enlace</span></div>
                                             </div>
-                                            <a class="menu-link" href="${photo.photo_url}" download>
+                                            <a class="menu-link disabled-link" href="javascript:void(0);">
                                                 <div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div>
                                                 <div class="menu-link-text"><span>Descargar</span></div>
                                             </a>
@@ -202,6 +255,7 @@ export function initMainController() {
                         
                         card.innerHTML += cardContent;
                         grid.appendChild(card);
+                        updateFavoriteCardState(photo.id); // Asignar estado inicial
                     });
                 } else {
                     grid.innerHTML = '<p>Este usuario no tiene fotos.</p>';
@@ -218,6 +272,7 @@ export function initMainController() {
         handleNavigation('main', 'photoView', true, { uuid: uuid, photoId: photoId });
         const photoViewerImage = document.getElementById('photo-viewer-image');
         const photoCounter = document.getElementById('photo-counter');
+        const photoViewUserTitle = document.getElementById('photo-view-user-title');
         const prevButton = document.querySelector('[data-action="previous-photo"]');
         const nextButton = document.querySelector('[data-action="next-photo"]');
 
@@ -225,19 +280,45 @@ export function initMainController() {
             const photoIndex = currentUserPhotoList.findIndex(p => p.id == photoId);
             if (photoIndex !== -1) {
                 const photo = currentUserPhotoList[photoIndex];
+                
+                currentPhotoData = {
+                    id: photo.id,
+                    user_uuid: uuid,
+                    photo_url: photo.photo_url,
+                    user_name: currentUserNameForPhotoView
+                };
+                
                 photoViewerImage.src = photo.photo_url;
                 photoCounter.textContent = `${photoIndex + 1} / ${currentUserPhotoList.length}`;
                 currentUserForPhotoView = uuid;
+                
+                updateFavoriteButtonState(photo.id);
 
-                // --- LÓGICA PARA DESHABILITAR BOTONES ---
                 prevButton.classList.toggle('disabled-nav', photoIndex === 0);
                 nextButton.classList.toggle('disabled-nav', photoIndex === currentUserPhotoList.length - 1);
             } else {
                 handleNavigation('main', '404');
             }
         };
+        
+        const fetchAndSetUserName = (uuid) => {
+             fetch(`/ProjectHorizon/api/get_users.php?uuid=${uuid}`)
+                .then(res => res.json())
+                .then(user => {
+                    if (user && user.name) {
+                        currentUserNameForPhotoView = user.name;
+                        photoViewUserTitle.textContent = user.name;
+                    }
+                });
+        };
+        
+        if (currentUserNameForPhotoView) {
+            photoViewUserTitle.textContent = currentUserNameForPhotoView;
+        } else {
+            fetchAndSetUserName(uuid);
+        }
 
-        if (currentUserPhotoList.length === 0 || currentUserPhotoList[0].user_uuid !== uuid) {
+        if (currentUserPhotoList.length === 0 || currentUserForPhotoView !== uuid) {
             fetch(`/ProjectHorizon/api/get_user_photos.php?uuid=${uuid}`)
                 .then(res => res.json())
                 .then(photos => {
@@ -248,6 +329,7 @@ export function initMainController() {
             displayFetchedPhoto();
         }
     }
+
 
     // --- INICIALIZACIÓN DE EVENTOS ---
     const toggleViewBtn = document.querySelector('[data-action="toggle-view"]');
@@ -351,68 +433,91 @@ export function initMainController() {
         if (!actionTarget) return;
 
         const action = actionTarget.dataset.action;
+        
+        switch (action) {
+            case 'returnToUserPhotos':
+                if (currentUserForPhotoView && currentUserNameForPhotoView) {
+                    fetchAndDisplayUserPhotos(currentUserForPhotoView, currentUserNameForPhotoView);
+                }
+                break;
+            
+            case 'toggle-favorite':
+                if (currentPhotoData) {
+                    toggleFavorite(currentPhotoData);
+                }
+                break;
+            
+            case 'toggle-favorite-card':
+                const photoId = actionTarget.dataset.photoId;
+                const photoData = currentUserPhotoList.find(p => p.id == photoId);
+                if (photoData) {
+                    const fullPhotoData = {
+                        id: photoData.id,
+                        user_uuid: currentUserForPhotoView,
+                        photo_url: photoData.photo_url,
+                        user_name: currentUserNameForPhotoView
+                    };
+                    toggleFavorite(fullPhotoData);
+                }
+                break;
 
-        if (action === 'returnToUserPhotos') {
-            fetch(`/ProjectHorizon/api/get_users.php?uuid=${currentUserForPhotoView}`)
-                .then(res => res.json())
-                .then(user => {
-                    if (user) {
-                        fetchAndDisplayUserPhotos(user.uuid, user.name);
+            case 'previous-photo':
+            case 'next-photo':
+                if (!actionTarget.classList.contains('disabled-nav')) {
+                    const path = window.location.pathname;
+                    const photoMatch = path.match(/^.*\/photo\/(\d+)$/);
+                    if (!photoMatch || currentUserPhotoList.length === 0) return;
+
+                    const currentId = parseInt(photoMatch[1], 10);
+                    const currentIndex = currentUserPhotoList.findIndex(p => p.id === currentId);
+
+                    if (currentIndex !== -1) {
+                        let nextIndex = currentIndex;
+                        if (action === 'next-photo' && currentIndex < currentUserPhotoList.length - 1) {
+                            nextIndex = currentIndex + 1;
+                        } else if (action === 'previous-photo' && currentIndex > 0) {
+                            nextIndex = currentIndex - 1;
+                        }
+                        const nextPhoto = currentUserPhotoList[nextIndex];
+                        displayPhoto(currentUserForPhotoView, nextPhoto.id);
+                    }
+                }
+                break;
+
+            case 'toggle-photo-menu':
+                const currentContainer = actionTarget.closest('.card-actions-container');
+                const currentMenu = currentContainer.querySelector('.photo-context-menu');
+                const isOpening = currentMenu.classList.contains('disabled');
+
+                document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
+                    if (menu !== currentMenu) {
+                        menu.classList.remove('active');
+                        menu.classList.add('disabled');
+                        menu.closest('.card-actions-container').classList.remove('force-visible');
                     }
                 });
-        }
-        
-        if ((action === 'previous-photo' || action === 'next-photo') && !actionTarget.classList.contains('disabled-nav')) {
-            const path = window.location.pathname;
-            const photoMatch = path.match(/^.*\/photo\/(\d+)$/);
-            if (!photoMatch || currentUserPhotoList.length === 0) return;
 
-            const currentId = parseInt(photoMatch[1], 10);
-            const currentIndex = currentUserPhotoList.findIndex(p => p.id === currentId);
+                currentMenu.classList.toggle('disabled', !isOpening);
+                currentMenu.classList.toggle('active', isOpening);
+                currentContainer.classList.toggle('force-visible', isOpening);
+                break;
 
-            if (currentIndex !== -1) {
-                let nextIndex = currentIndex;
-                if (action === 'next-photo' && currentIndex < currentUserPhotoList.length - 1) {
-                    nextIndex = currentIndex + 1;
-                } else if (action === 'previous-photo' && currentIndex > 0) {
-                    nextIndex = currentIndex - 1;
+            case 'copy-link':
+                const card = actionTarget.closest('.card');
+                const url = window.location.origin + window.BASE_PATH + `/user/${currentUserForPhotoView}/photo/${card.dataset.photoId}`;
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(url).then(() => {
+                        console.log('Enlace copiado!', url);
+                        actionTarget.closest('.photo-context-menu').classList.add('disabled');
+                        actionTarget.closest('.photo-context-menu').classList.remove('active');
+                        actionTarget.closest('.card-actions-container').classList.remove('force-visible');
+                    }).catch(err => {
+                        console.error('Error al copiar el enlace: ', err);
+                    });
                 }
-                const nextPhoto = currentUserPhotoList[nextIndex];
-                displayPhoto(currentUserForPhotoView, nextPhoto.id);
-            }
-        }
-        
-        if (action === 'toggle-photo-menu') {
-            const currentContainer = actionTarget.closest('.card-actions-container');
-            const currentMenu = currentContainer.querySelector('.photo-context-menu');
-            const isOpening = currentMenu.classList.contains('disabled');
-
-            document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
-                if (menu !== currentMenu) {
-                    menu.classList.remove('active');
-                    menu.classList.add('disabled');
-                    menu.closest('.card-actions-container').classList.remove('force-visible');
-                }
-            });
-
-            currentMenu.classList.toggle('disabled', !isOpening);
-            currentMenu.classList.toggle('active', isOpening);
-            currentContainer.classList.toggle('force-visible', isOpening);
+                break;
         }
 
-        if (action === 'copy-link') {
-            const card = actionTarget.closest('.card');
-            const url = window.location.origin + window.BASE_PATH + `/user/${currentUserForPhotoView}/photo/${card.dataset.photoId}`;
-            navigator.clipboard.writeText(url).then(() => {
-                console.log('Enlace copiado!', url);
-                actionTarget.closest('.photo-context-menu').classList.add('disabled');
-                actionTarget.closest('.photo-context-menu').classList.remove('active');
-                actionTarget.closest('.card-actions-container').classList.remove('force-visible');
-            }).catch(err => {
-                console.error('Error al copiar el enlace: ', err);
-            });
-        }
-        
         const trigger = event.target.closest('[data-action="toggle-select"]');
         if (trigger) {
             const targetId = trigger.dataset.target;

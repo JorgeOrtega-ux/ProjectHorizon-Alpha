@@ -5,11 +5,17 @@
                 <div class="header-button" data-action="returnToUserPhotos">
                     <span class="material-symbols-rounded">arrow_back</span>
                 </div>
+                <div class="header-title-container">
+                    <span id="photo-view-user-title">Usuario</span>
+                </div>
             </div>
             <div class="content-header-center">
                
             </div>
             <div class="content-header-right">
+                 <div class="header-button" data-action="toggle-favorite">
+                    <span class="material-symbols-rounded">favorite</span>
+                </div>
                  <div class="photo-nav-control">
                     <div class="photo-nav-button" data-action="previous-photo">
                         <span class="material-symbols-rounded">chevron_left</span>
@@ -19,7 +25,7 @@
                         <span class="material-symbols-rounded">chevron_right</span>
                     </div>
                 </div>
-                </div>
+            </div>
         </div>
     </div>
     <div class="section-content-block overflow-y" id="photo-view-block">
