@@ -7,7 +7,10 @@
                 </div>
             </div>
             <div class="content-header-center">
-                <div class="photo-nav-control">
+               
+            </div>
+            <div class="content-header-right">
+                 <div class="photo-nav-control">
                     <div class="photo-nav-button" data-action="previous-photo">
                         <span class="material-symbols-rounded">chevron_left</span>
                     </div>
@@ -16,8 +19,6 @@
                         <span class="material-symbols-rounded">chevron_right</span>
                     </div>
                 </div>
-            </div>
-            <div class="content-header-right">
                 </div>
         </div>
     </div>
