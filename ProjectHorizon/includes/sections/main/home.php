@@ -14,6 +14,33 @@
             <div class="content-header-right">
                 <div class="header-item">
                     <div class="select-wrapper body-title">
+                        <div class="custom-select-trigger" data-action="toggle-select" data-target="view-select">
+                            <div class="select-trigger-icon">
+                                <span class="material-symbols-rounded">pageview</span>
+                            </div>
+                            <span class="select-trigger-text">Página principal</span>
+                            <div class="select-trigger-icon select-trigger-arrow">
+                                <span class="material-symbols-rounded">expand_more</span>
+                            </div>
+                        </div>
+                        <div class="module-content module-select disabled" id="view-select">
+                            <div class="menu-content">
+                                <div class="menu-list">
+                                    <div class="menu-link" data-value="home">
+                                        <div class="menu-link-icon"><span class="material-symbols-rounded">home</span></div>
+                                        <div class="menu-link-text"><span>Página principal</span></div>
+                                    </div>
+                                    <div class="menu-link" data-value="favorites">
+                                        <div class="menu-link-icon"><span class="material-symbols-rounded">favorite</span></div>
+                                        <div class="menu-link-text"><span>Mostrar favoritos</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-item" id="relevance-sorter">
+                    <div class="select-wrapper body-title">
                         <div class="custom-select-trigger" data-action="toggle-select" data-target="relevance-select">
                             <div class="select-trigger-icon">
                                 <span class="material-symbols-rounded">swap_vert</span>

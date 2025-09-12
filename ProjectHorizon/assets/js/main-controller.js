@@ -1,4 +1,4 @@
-import { navigateToUrl, setupPopStateHandler, setInitialHistoryState } from './url-manager.js';
+import { navigateToUrl, setupPopStateHandler, setInitialHistoryState, generateUrl } from './url-manager.js';
 
 // --- MANEJO DE FAVORITOS ---
 function getFavorites() {
@@ -18,6 +18,7 @@ export function initMainController() {
     let currentUserNameForPhotoView = null;
     let currentUserPhotoList = [];
     let currentPhotoData = null;
+    let lastVisitedView = null;
 
     function isFavorite(photoId) {
         const favorites = getFavorites();
@@ -51,6 +52,89 @@ export function initMainController() {
         const cardFavButton = document.querySelector(`.icon-wrapper[data-photo-id="${photoId}"]`);
         if (cardFavButton) {
             cardFavButton.classList.toggle('active', isFavorite(photoId));
+        }
+    }
+    
+    function displayFavoritePhotos(container) {
+        container.innerHTML = '';
+        const favorites = getFavorites();
+        if (favorites.length > 0) {
+            favorites.forEach(photo => {
+                const card = document.createElement('div');
+                card.className = 'card photo-card';
+                card.style.backgroundImage = `url('${photo.photo_url}')`;
+                card.dataset.photoUrl = photo.photo_url;
+                card.dataset.photoId = photo.id;
+                card.dataset.userUuid = photo.user_uuid;
+    
+                const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/user/${photo.user_uuid}/photo/${photo.id}`;
+    
+                const cardContent = `
+                    <div class="card-actions-container">
+                        <div class="card-hover-overlay">
+                            <div class="card-hover-icons">
+                                <div class="icon-wrapper active" data-action="toggle-favorite-card" data-photo-id="${photo.id}">
+                                    <span class="material-symbols-rounded">favorite</span>
+                                </div>
+                                <div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div>
+                            </div>
+                        </div>
+                        <div class="module-content module-select photo-context-menu disabled">
+                            <div class="menu-content">
+                                <div class="menu-list">
+                                    <a class="menu-link" href="${photoPageUrl}" target="_blank">
+                                        <div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div>
+                                        <div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div>
+                                    </a>
+                                    <div class="menu-link" data-action="copy-link">
+                                        <div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div>
+                                        <div class="menu-link-text"><span>Copiar el enlace</span></div>
+                                    </div>
+                                    <a class="menu-link disabled-link" href="javascript:void(0);">
+                                        <div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div>
+                                        <div class="menu-link-text"><span>Descargar</span></div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                card.innerHTML += cardContent;
+                container.appendChild(card);
+            });
+        } else {
+            container.innerHTML = '<p>No tienes fotos favoritas.</p>';
+        }
+    }
+
+    function updateHomeView() {
+        const path = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1);
+        const gridContainer = document.getElementById('grid-view');
+        const sorter = document.getElementById('relevance-sorter');
+        const viewToggler = document.querySelector('[data-action="toggle-view"]');
+        const searchInput = document.querySelector('.search-input-text input');
+        const viewSelectText = document.querySelector('#view-select .select-trigger-text');
+    
+        if (path === 'favorites') {
+            displayFavoritePhotos(gridContainer);
+            if (sorter) sorter.style.display = 'none';
+            if (viewToggler) viewToggler.style.display = 'none';
+            if (searchInput) searchInput.style.display = 'none';
+            if (viewSelectText) viewSelectText.textContent = 'Mostrar favoritos';
+            
+            gridContainer.classList.add('active');
+            gridContainer.classList.remove('disabled');
+            const tableView = document.getElementById('table-view');
+            if (tableView) {
+                tableView.classList.add('disabled');
+                tableView.classList.remove('active');
+            }
+        } else {
+            fetchAndDisplayUsers(currentSortBy);
+            if (sorter) sorter.style.display = 'flex';
+            if (viewToggler) viewToggler.style.display = 'flex';
+            if (searchInput) searchInput.style.display = 'block';
+            if (viewSelectText) viewSelectText.textContent = 'Página principal';
         }
     }
 
@@ -269,6 +353,7 @@ export function initMainController() {
 
     // --- MUESTRA UNA FOTO EN GRANDE ---
     function displayPhoto(uuid, photoId) {
+        lastVisitedView = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1) || 'home';
         handleNavigation('main', 'photoView', true, { uuid: uuid, photoId: photoId });
         const photoViewerImage = document.getElementById('photo-viewer-image');
         const photoCounter = document.getElementById('photo-counter');
@@ -419,7 +504,8 @@ export function initMainController() {
 
         const photoCard = event.target.closest('.card.photo-card');
         if (photoCard && !event.target.closest('.card-actions-container')) {
-            displayPhoto(currentUserForPhotoView, photoCard.dataset.photoId);
+            const userUuid = photoCard.dataset.userUuid || currentUserForPhotoView;
+            displayPhoto(userUuid, photoCard.dataset.photoId);
             return;
         }
     
@@ -446,8 +532,15 @@ export function initMainController() {
         
         switch (action) {
             case 'returnToUserPhotos':
-                if (currentUserForPhotoView && currentUserNameForPhotoView) {
+                if (lastVisitedView === 'favorites') {
+                    navigateToUrl('main', 'favorites');
+                    handleNavigation('main', 'home', false);
+                    updateHomeView();
+                } else if (currentUserForPhotoView && currentUserNameForPhotoView) {
                     fetchAndDisplayUserPhotos(currentUserForPhotoView, currentUserNameForPhotoView);
+                } else {
+                    handleNavigation('main', 'home');
+                    updateHomeView();
                 }
                 break;
             
@@ -459,15 +552,28 @@ export function initMainController() {
             
             case 'toggle-favorite-card':
                 const photoId = actionTarget.dataset.photoId;
-                const photoData = currentUserPhotoList.find(p => p.id == photoId);
+                let photoData;
+
+                const path = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1);
+                if (path === 'favorites') {
+                    const favorites = getFavorites();
+                    photoData = favorites.find(p => p.id == photoId);
+                } else {
+                    photoData = currentUserPhotoList.find(p => p.id == photoId);
+                }
+                
                 if (photoData) {
                     const fullPhotoData = {
                         id: photoData.id,
-                        user_uuid: currentUserForPhotoView,
+                        user_uuid: photoData.user_uuid || currentUserForPhotoView,
                         photo_url: photoData.photo_url,
-                        user_name: currentUserNameForPhotoView
+                        user_name: photoData.user_name || currentUserNameForPhotoView
                     };
                     toggleFavorite(fullPhotoData);
+
+                    if (path === 'favorites') {
+                        updateHomeView(); 
+                    }
                 }
                 break;
 
@@ -590,6 +696,15 @@ export function initMainController() {
         });
     });
 
+    document.querySelectorAll('#view-select .menu-link').forEach(option => {
+        option.addEventListener('click', function() {
+            const value = this.dataset.value;
+            const url = generateUrl('main', value);
+            history.pushState({view: 'main', section: 'home'}, '', url);
+            updateHomeView();
+        });
+    });
+
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape' && moduleSurface && moduleSurface.classList.contains('active')) {
             moduleSurface.classList.add('disabled');
@@ -600,7 +715,9 @@ export function initMainController() {
     // --- CARGA INICIAL Y ESTADO DEL HISTORIAL ---
     setupPopStateHandler((view, section, pushState, data) => {
         handleNavigation(view, section, false);
-        if (section === 'userPhotos' && data && data.uuid) {
+        if (section === 'home') {
+            updateHomeView();
+        } else if (section === 'userPhotos' && data && data.uuid) {
             fetch(`/ProjectHorizon/api/get_users.php?uuid=${data.uuid}`)
              .then(res => res.json())
              .then(user => { if (user) fetchAndDisplayUserPhotos(user.uuid, user.name); });
@@ -634,7 +751,9 @@ export function initMainController() {
             });
     } else if (initialView && initialSection) {
         setInitialHistoryState(initialView, initialSection);
-        fetchAndDisplayUsers(currentSortBy);
+        if (initialSection === 'home') {
+            updateHomeView();
+        }
     } else {
         console.error("Could not determine initial state from DOM.");
     }

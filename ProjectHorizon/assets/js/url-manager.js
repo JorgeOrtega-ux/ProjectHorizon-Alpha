@@ -1,5 +1,6 @@
 const urlMap = {
     'main-home': '',
+    'main-favorites': 'favorites',
     'main-explore': 'explore',
     'settings-accessibility': 'settings/accessibility',
     'settings-historyPrivacy': 'settings/history-privacy',
@@ -10,7 +11,7 @@ const urlMap = {
 
 let BASE_PATH = '';
 
-function generateUrl(view, section, data = null) {
+export function generateUrl(view, section, data = null) {
     const urlKey = `${view}-${section}`;
     let pathSegment = urlMap[urlKey] || '';
 
