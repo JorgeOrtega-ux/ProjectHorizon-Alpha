@@ -20,6 +20,13 @@ export function initMainController() {
     let currentPhotoData = null;
     let lastVisitedView = null;
 
+    // --- Variables para paginación ---
+    let usersCurrentPage = 1;
+    let photosCurrentPage = 1;
+    let isLoadingUsers = false;
+    let isLoadingPhotos = false;
+    const BATCH_SIZE = 20;
+
     function isFavorite(photoId) {
         const favorites = getFavorites();
         return favorites.some(photo => photo.id == photoId);
@@ -36,7 +43,6 @@ export function initMainController() {
         }
 
         localStorage.setItem('favoritePhotos', JSON.stringify(favorites));
-        // Sincroniza ambos botones
         updateFavoriteButtonState(photoData.id);
         updateFavoriteCardState(photoData.id);
     }
@@ -148,8 +154,10 @@ export function initMainController() {
     }
 
     // --- RENDERIZADO DE USUARIOS (GRID) ---
-    function displayUsersAsGrid(users, container, sortBy) {
-        container.innerHTML = '';
+    function displayUsersAsGrid(users, container, sortBy, append = false) {
+        if (!append) {
+            container.innerHTML = '';
+        }
         if (users.length > 0) {
             users.forEach(user => {
                 const card = document.createElement('div');
@@ -183,15 +191,17 @@ export function initMainController() {
                 card.appendChild(overlay);
                 container.appendChild(card);
             });
-        } else {
+        } else if (!append) {
             container.innerHTML = '<p>No se encontraron usuarios.</p>';
         }
     }
 
     // --- RENDERIZADO DE USUARIOS (TABLA) ---
-    function displayUsersAsTable(users, container) {
+    function displayUsersAsTable(users, container, append = false) {
         const tbody = container.querySelector('tbody');
-        tbody.innerHTML = '';
+        if (!append) {
+            tbody.innerHTML = '';
+        }
         if (users.length > 0) {
             users.forEach(user => {
                 const row = document.createElement('tr');
@@ -218,7 +228,7 @@ export function initMainController() {
                 row.appendChild(editedCell);
                 tbody.appendChild(row);
             });
-        } else {
+        } else if (!append) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
             cell.colSpan = 4;
@@ -229,41 +239,78 @@ export function initMainController() {
         }
     }
 
-    // --- OBTENCIÓN DE DATOS DE USUARIOS ---
-    function fetchAndDisplayUsers(sortBy = 'relevant', searchTerm = '') {
+    // --- OBTENCIÓN DE DATOS DE USUARIOS (PAGINADO) ---
+    function fetchAndDisplayUsers(sortBy = 'relevant', searchTerm = '', append = false) {
+        if (isLoadingUsers) return;
+        isLoadingUsers = true;
+
+        if (!append) {
+            usersCurrentPage = 1;
+        }
+
         const encodedSearchTerm = encodeURIComponent(searchTerm);
-        fetch(`/ProjectHorizon/api/get_users.php?sort=${sortBy}&search=${encodedSearchTerm}`)
+        const url = `/ProjectHorizon/api/get_users.php?sort=${sortBy}&search=${encodedSearchTerm}&page=${usersCurrentPage}&limit=${BATCH_SIZE}`;
+        
+        fetch(url)
             .then(response => response.json())
             .then(data => {
                 const gridContainer = document.getElementById('grid-view');
                 const tableContainer = document.getElementById('table-view');
-                if (gridContainer) displayUsersAsGrid(data, gridContainer, sortBy);
-                if (tableContainer) displayUsersAsTable(data, tableContainer);
+                const loadMoreContainer = document.getElementById('users-load-more-container');
+
+                if (gridContainer) displayUsersAsGrid(data, gridContainer, sortBy, append);
+                if (tableContainer) displayUsersAsTable(data, tableContainer, append);
+
+                if (data.length < BATCH_SIZE) {
+                    loadMoreContainer.classList.add('disabled');
+                } else {
+                    loadMoreContainer.classList.remove('disabled');
+                    usersCurrentPage++;
+                }
             })
             .catch(error => {
                 console.error('Error al obtener los usuarios:', error);
                 const gridContainer = document.getElementById('grid-view');
-                if (gridContainer) gridContainer.innerHTML = '<p>Error al cargar usuarios.</p>';
+                if (gridContainer && !append) gridContainer.innerHTML = '<p>Error al cargar usuarios.</p>';
+            })
+            .finally(() => {
+                isLoadingUsers = false;
             });
     }
 
-    // --- OBTENCIÓN DE FOTOS DE USUARIO ---
-    function fetchAndDisplayUserPhotos(uuid, userName) {
+    // --- OBTENCIÓN DE FOTOS DE USUARIO (PAGINADO) ---
+    function fetchAndDisplayUserPhotos(uuid, userName, append = false) {
+        if (!append) {
+            photosCurrentPage = 1;
+            currentUserPhotoList = [];
+            const grid = document.getElementById('user-photos-grid');
+            if (grid) grid.innerHTML = '';
+            
+            handleNavigation('main', 'userPhotos', true, { uuid: uuid });
+        }
+        
+        if (isLoadingPhotos) return;
+        isLoadingPhotos = true;
+        
         currentUserForPhotoView = uuid;
         currentUserNameForPhotoView = userName;
-        handleNavigation('main', 'userPhotos', true, { uuid: uuid });
 
         const grid = document.getElementById('user-photos-grid');
         const title = document.getElementById('user-photos-title');
+        const loadMoreContainer = document.getElementById('photos-load-more-container');
 
-        grid.innerHTML = '<p>Cargando fotos...</p>';
-        title.textContent = userName ? userName : 'Cargando...';
+        if (!append) {
+            grid.innerHTML = '<p>Cargando fotos...</p>';
+            title.textContent = userName ? userName : 'Cargando...';
+        }
 
-        fetch(`/ProjectHorizon/api/get_user_photos.php?uuid=${uuid}`)
+        fetch(`/ProjectHorizon/api/get_user_photos.php?uuid=${uuid}&page=${photosCurrentPage}&limit=${BATCH_SIZE}`)
             .then(response => response.json())
             .then(photos => {
-                currentUserPhotoList = photos;
-                grid.innerHTML = '';
+                if (!append) grid.innerHTML = '';
+                
+                currentUserPhotoList.push(...photos);
+                
                 if (photos.length > 0) {
                     photos.forEach(photo => {
                         const card = document.createElement('div');
@@ -271,6 +318,7 @@ export function initMainController() {
                         card.style.backgroundImage = `url('${photo.photo_url}')`;
                         card.dataset.photoUrl = photo.photo_url;
                         card.dataset.photoId = photo.id;
+                        card.dataset.userUuid = photo.user_uuid;
                         
                         const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/user/${uuid}/photo/${photo.id}`;
 
@@ -307,22 +355,30 @@ export function initMainController() {
                         
                         card.innerHTML += cardContent;
                         grid.appendChild(card);
-                        updateFavoriteCardState(photo.id); // Asignar estado inicial
+                        updateFavoriteCardState(photo.id);
                     });
-                } else {
+                } else if (!append) {
                     grid.innerHTML = '<p>Este usuario no tiene fotos.</p>';
+                }
+                
+                if (photos.length < BATCH_SIZE) {
+                    loadMoreContainer.classList.add('disabled');
+                } else {
+                    loadMoreContainer.classList.remove('disabled');
+                    photosCurrentPage++;
                 }
             })
             .catch(error => {
                 console.error('Error al obtener las fotos:', error);
-                grid.innerHTML = '<p>Error al cargar las fotos.</p>';
+                if (!append) grid.innerHTML = '<p>Error al cargar las fotos.</p>';
+            })
+            .finally(() => {
+                isLoadingPhotos = false;
             });
     }
 
     // --- MUESTRA UNA FOTO EN GRANDE ---
     function displayPhoto(uuid, photoId) {
-        // --- [CORRECCIÓN APLICADA AQUÍ] ---
-        // Se guarda la sección activa ANTES de navegar a la vista de la foto
         const activeSection = document.querySelector('.section-content.active')?.dataset.section || 'home';
         lastVisitedView = activeSection;
         
@@ -376,7 +432,7 @@ export function initMainController() {
         }
 
         if (currentUserPhotoList.length === 0 || currentUserForPhotoView !== uuid) {
-            fetch(`/ProjectHorizon/api/get_user_photos.php?uuid=${uuid}`)
+            fetch(`/ProjectHorizon/api/get_user_photos.php?uuid=${uuid}&limit=1000`) // Carga un gran número para la navegación
                 .then(res => res.json())
                 .then(photos => {
                     currentUserPhotoList = photos;
@@ -389,316 +445,327 @@ export function initMainController() {
 
 
     // --- INICIALIZACIÓN DE EVENTOS ---
-    const toggleViewBtn = document.querySelector('[data-action="toggle-view"]');
-    const searchInput = document.querySelector('.search-input-text input');
-    const menuButton = document.querySelector('[data-action="toggleModuleSurface"]');
-    const settingsButton = document.querySelector('[data-action="toggleSettings"]');
-    const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
-    const allMenuLinks = document.querySelectorAll('.menu-link');
+    function setupEventListeners() {
+        const toggleViewBtn = document.querySelector('[data-action="toggle-view"]');
+        const searchInput = document.querySelector('.search-input-text input');
+        const menuButton = document.querySelector('[data-action="toggleModuleSurface"]');
+        const settingsButton = document.querySelector('[data-action="toggleSettings"]');
+        const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
+        const allMenuLinks = document.querySelectorAll('.menu-link');
 
-    if (toggleViewBtn) {
-        toggleViewBtn.addEventListener('click', () => {
-            const gridView = document.getElementById('grid-view');
-            const tableView = document.getElementById('table-view');
-            const icon = toggleViewBtn.querySelector('.material-symbols-rounded');
-            if (currentView === 'grid') {
-                gridView.classList.remove('active');
-                gridView.classList.add('disabled');
-                tableView.classList.remove('disabled');
-                tableView.classList.add('active');
-                icon.textContent = 'grid_view';
-                currentView = 'table';
-            } else {
-                tableView.classList.remove('active');
-                tableView.classList.add('disabled');
-                gridView.classList.remove('disabled');
-                gridView.classList.add('active');
-                icon.textContent = 'view_list';
-                currentView = 'grid';
-            }
-        });
-    }
-    
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            clearTimeout(searchDebounceTimer);
-            searchDebounceTimer = setTimeout(() => {
-                const searchTerm = searchInput.value.trim();
-                fetchAndDisplayUsers(currentSortBy, searchTerm);
-            }, 300);
-        });
-    }
-    
-    if (menuButton) {
-        menuButton.addEventListener('click', () => {
-            moduleSurface.classList.toggle('disabled');
-            moduleSurface.classList.toggle('active');
-        });
-    }
-
-    if (settingsButton) {
-        settingsButton.addEventListener('click', () => {
-            handleNavigation('settings', 'accessibility');
-        });
-    }
-
-    allMenuLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            const action = this.dataset.action;
-            if (action && action !== 'toggle-select' && !this.closest('.photo-context-menu')) { e.preventDefault(); }
-            if (action === 'toggleMainView') { handleNavigation('main', 'home'); return; }
-            if (action && action.startsWith('toggleSection')) {
-                const sectionName = action.substring("toggleSection".length);
-                const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
-                const parentMenu = this.closest('[data-menu]');
-                const targetView = parentMenu ? parentMenu.dataset.menu : 'main';
-                handleNavigation(targetView, targetSection);
-            }
-        });
-    });
-
-    document.addEventListener('click', function(event) {
-        // --- [CORRECCIÓN] Cierra el menú lateral si se hace clic fuera de él ---
-        if (moduleSurface && moduleSurface.classList.contains('active')) {
-            const isClickInsideModule = moduleSurface.contains(event.target);
-            const isClickOnMenuButton = menuButton && menuButton.contains(event.target);
-            if (!isClickInsideModule && !isClickOnMenuButton) {
-                moduleSurface.classList.add('disabled');
-                moduleSurface.classList.remove('active');
-            }
-        }
-        
-        const selectedOption = event.target.closest('.module-select .menu-link');
-        if (selectedOption) {
-            if(!selectedOption.closest('#view-select') && !selectedOption.closest('#view-select-fav')) {
-                const selectContainer = selectedOption.closest('.module-select');
-                const wrapper = selectContainer.closest('.select-wrapper');
-                if (wrapper) {
-                    const currentTrigger = wrapper.querySelector('[data-action="toggle-select"]');
-                    const triggerText = currentTrigger.querySelector('.select-trigger-text');
-                    const triggerIcon = currentTrigger.querySelector('.select-trigger-icon:not(.select-trigger-arrow) .material-symbols-rounded');
-                    const optionText = selectedOption.querySelector('.menu-link-text span');
-                    const optionIcon = selectedOption.querySelector('.menu-link-icon .material-symbols-rounded');
-        
-                    if (triggerText && optionText) {
-                        triggerText.textContent = optionText.textContent;
-                    }
-        
-                    if (triggerIcon && optionIcon && currentTrigger.dataset.target !== 'relevance-select') {
-                        triggerIcon.textContent = optionIcon.textContent;
-                    }
-        
-                    selectContainer.classList.add('disabled');
-                    selectContainer.classList.remove('active');
-                    currentTrigger.classList.remove('active-trigger');
-                    
-                    return; 
-                }
-            }
-        }
-    
-        const userElement = event.target.closest('.card:not(.photo-card), tr[data-uuid]');
-        if (userElement && userElement.dataset.uuid && !event.target.closest('.card-actions-container')) {
-            fetchAndDisplayUserPhotos(userElement.dataset.uuid, userElement.dataset.name);
-            return;
-        }
-
-        const photoCard = event.target.closest('.card.photo-card');
-        if (photoCard && !event.target.closest('.card-actions-container')) {
-            const userUuid = photoCard.dataset.userUuid || currentUserForPhotoView;
-            displayPhoto(userUuid, photoCard.dataset.photoId);
-            return;
-        }
-    
-        const actionTarget = event.target.closest('[data-action]');
-        
-        if (!actionTarget || !actionTarget.dataset.action.includes('toggle')) {
-            document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
-                menu.classList.remove('active');
-                menu.classList.add('disabled');
-                menu.closest('.card-actions-container').classList.remove('force-visible');
-            });
-            document.querySelectorAll('.module-select:not(.photo-context-menu).active').forEach(menu => {
-                 menu.classList.remove('active');
-                 menu.classList.add('disabled');
-            });
-            document.querySelectorAll('.active-trigger').forEach(trigger => {
-                trigger.classList.remove('active-trigger');
-            });
-        }
-
-        if (!actionTarget) return;
-
-        const action = actionTarget.dataset.action;
-        
-        switch (action) {
-            // --- [CORRECCIÓN APLICADA AQUÍ] ---
-            case 'returnToUserPhotos':
-                if (lastVisitedView === 'favorites') {
-                    navigateToUrl('main', 'favorites');
-                    handleStateChange('main', 'favorites');
-                } else if (currentUserForPhotoView && currentUserNameForPhotoView) {
-                    fetchAndDisplayUserPhotos(currentUserForPhotoView, currentUserNameForPhotoView);
+        if (toggleViewBtn) {
+            toggleViewBtn.addEventListener('click', () => {
+                const gridView = document.getElementById('grid-view');
+                const tableView = document.getElementById('table-view');
+                const icon = toggleViewBtn.querySelector('.material-symbols-rounded');
+                if (currentView === 'grid') {
+                    gridView.classList.remove('active');
+                    gridView.classList.add('disabled');
+                    tableView.classList.remove('disabled');
+                    tableView.classList.add('active');
+                    icon.textContent = 'grid_view';
+                    currentView = 'table';
                 } else {
-                    navigateToUrl('main', 'home');
-                    handleStateChange('main', 'home');
+                    tableView.classList.remove('active');
+                    tableView.classList.add('disabled');
+                    gridView.classList.remove('disabled');
+                    gridView.classList.add('active');
+                    icon.textContent = 'view_list';
+                    currentView = 'grid';
                 }
-                break;
+            });
+        }
+        
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(() => {
+                    const searchTerm = searchInput.value.trim();
+                    fetchAndDisplayUsers(currentSortBy, searchTerm);
+                }, 300);
+            });
+        }
+        
+        if (menuButton) {
+            menuButton.addEventListener('click', () => {
+                moduleSurface.classList.toggle('disabled');
+                moduleSurface.classList.toggle('active');
+            });
+        }
+
+        if (settingsButton) {
+            settingsButton.addEventListener('click', () => {
+                handleNavigation('settings', 'accessibility');
+            });
+        }
+
+        allMenuLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                const action = this.dataset.action;
+                if (action && action !== 'toggle-select' && !this.closest('.photo-context-menu')) { e.preventDefault(); }
+                if (action === 'toggleMainView') { handleNavigation('main', 'home'); return; }
+                if (action && action.startsWith('toggleSection')) {
+                    const sectionName = action.substring("toggleSection".length);
+                    const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
+                    const parentMenu = this.closest('[data-menu]');
+                    const targetView = parentMenu ? parentMenu.dataset.menu : 'main';
+                    handleNavigation(targetView, targetSection);
+                }
+            });
+        });
+
+        document.addEventListener('click', function(event) {
+            if (moduleSurface && moduleSurface.classList.contains('active')) {
+                const isClickInsideModule = moduleSurface.contains(event.target);
+                const isClickOnMenuButton = menuButton && menuButton.contains(event.target);
+                if (!isClickInsideModule && !isClickOnMenuButton) {
+                    moduleSurface.classList.add('disabled');
+                    moduleSurface.classList.remove('active');
+                }
+            }
             
-            case 'toggle-favorite':
-                if (currentPhotoData) {
-                    toggleFavorite(currentPhotoData);
-                }
-                break;
+            const selectedOption = event.target.closest('.module-select .menu-link');
+            if (selectedOption) {
+                if(!selectedOption.closest('#view-select') && !selectedOption.closest('#view-select-fav')) {
+                    const selectContainer = selectedOption.closest('.module-select');
+                    const wrapper = selectContainer.closest('.select-wrapper');
+                    if (wrapper) {
+                        const currentTrigger = wrapper.querySelector('[data-action="toggle-select"]');
+                        const triggerText = currentTrigger.querySelector('.select-trigger-text');
+                        const triggerIcon = currentTrigger.querySelector('.select-trigger-icon:not(.select-trigger-arrow) .material-symbols-rounded');
+                        const optionText = selectedOption.querySelector('.menu-link-text span');
+                        const optionIcon = selectedOption.querySelector('.menu-link-icon .material-symbols-rounded');
             
-            case 'toggle-favorite-card':
-                const photoId = actionTarget.dataset.photoId;
-                let photoData;
-                
-                const currentSection = document.querySelector('.section-content.active')?.dataset.section;
-                if (currentSection === 'favorites') {
-                    const favorites = getFavorites();
-                    photoData = favorites.find(p => p.id == photoId);
-                } else {
-                    photoData = currentUserPhotoList.find(p => p.id == photoId);
-                }
-                
-                if (photoData) {
-                    const fullPhotoData = {
-                        id: photoData.id,
-                        user_uuid: photoData.user_uuid || currentUserForPhotoView,
-                        photo_url: photoData.photo_url,
-                        user_name: photoData.user_name || currentUserNameForPhotoView
-                    };
-                    toggleFavorite(fullPhotoData);
-
-                    if (currentSection === 'favorites') {
-                        const favoritesContainer = document.getElementById('favorites-grid-view');
-                        if (favoritesContainer) displayFavoritePhotos(favoritesContainer);
-                    }
-                }
-                break;
-
-            case 'previous-photo':
-            case 'next-photo':
-                if (!actionTarget.classList.contains('disabled-nav')) {
-                    const path = window.location.pathname;
-                    const photoMatch = path.match(/^.*\/photo\/(\d+)$/);
-                    if (!photoMatch || currentUserPhotoList.length === 0) return;
-
-                    const currentId = parseInt(photoMatch[1], 10);
-                    const currentIndex = currentUserPhotoList.findIndex(p => p.id === currentId);
-
-                    if (currentIndex !== -1) {
-                        let nextIndex = currentIndex;
-                        if (action === 'next-photo' && currentIndex < currentUserPhotoList.length - 1) {
-                            nextIndex = currentIndex + 1;
-                        } else if (action === 'previous-photo' && currentIndex > 0) {
-                            nextIndex = currentIndex - 1;
+                        if (triggerText && optionText) {
+                            triggerText.textContent = optionText.textContent;
                         }
-                        const nextPhoto = currentUserPhotoList[nextIndex];
-                        displayPhoto(currentUserForPhotoView, nextPhoto.id);
+            
+                        if (triggerIcon && optionIcon && currentTrigger.dataset.target !== 'relevance-select') {
+                            triggerIcon.textContent = optionIcon.textContent;
+                        }
+            
+                        selectContainer.classList.add('disabled');
+                        selectContainer.classList.remove('active');
+                        currentTrigger.classList.remove('active-trigger');
+                        
+                        return; 
                     }
                 }
-                break;
+            }
+        
+            const userElement = event.target.closest('.card:not(.photo-card), tr[data-uuid]');
+            if (userElement && userElement.dataset.uuid && !event.target.closest('.card-actions-container')) {
+                fetchAndDisplayUserPhotos(userElement.dataset.uuid, userElement.dataset.name);
+                return;
+            }
 
-            case 'toggle-photo-menu':
-                const currentContainer = actionTarget.closest('.card-actions-container');
-                const currentMenu = currentContainer.querySelector('.photo-context-menu');
-                const isOpening = currentMenu.classList.contains('disabled');
-
+            const photoCard = event.target.closest('.card.photo-card');
+            if (photoCard && !event.target.closest('.card-actions-container')) {
+                const userUuid = photoCard.dataset.userUuid || currentUserForPhotoView;
+                displayPhoto(userUuid, photoCard.dataset.photoId);
+                return;
+            }
+        
+            const actionTarget = event.target.closest('[data-action]');
+            
+            if (!actionTarget || !actionTarget.dataset.action.includes('toggle')) {
                 document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
-                    if (menu !== currentMenu) {
-                        menu.classList.remove('active');
-                        menu.classList.add('disabled');
-                        menu.closest('.card-actions-container').classList.remove('force-visible');
+                    menu.classList.remove('active');
+                    menu.classList.add('disabled');
+                    menu.closest('.card-actions-container').classList.remove('force-visible');
+                });
+                document.querySelectorAll('.module-select:not(.photo-context-menu).active').forEach(menu => {
+                     menu.classList.remove('active');
+                     menu.classList.add('disabled');
+                });
+                document.querySelectorAll('.active-trigger').forEach(trigger => {
+                    trigger.classList.remove('active-trigger');
+                });
+            }
+
+            if (!actionTarget) return;
+
+            const action = actionTarget.dataset.action;
+            
+            switch (action) {
+                case 'load-more-users':
+                    const searchTerm = searchInput ? searchInput.value.trim() : '';
+                    fetchAndDisplayUsers(currentSortBy, searchTerm, true);
+                    break;
+                
+                case 'load-more-photos':
+                    if (currentUserForPhotoView && currentUserNameForPhotoView) {
+                        fetchAndDisplayUserPhotos(currentUserForPhotoView, currentUserNameForPhotoView, true);
+                    }
+                    break;
+
+                case 'returnToUserPhotos':
+                    if (lastVisitedView === 'favorites') {
+                        navigateToUrl('main', 'favorites');
+                        handleStateChange('main', 'favorites');
+                    } else if (currentUserForPhotoView && currentUserNameForPhotoView) {
+                        fetchAndDisplayUserPhotos(currentUserForPhotoView, currentUserNameForPhotoView);
+                    } else {
+                        navigateToUrl('main', 'home');
+                        handleStateChange('main', 'home');
+                    }
+                    break;
+                
+                case 'toggle-favorite':
+                    if (currentPhotoData) {
+                        toggleFavorite(currentPhotoData);
+                    }
+                    break;
+                
+                case 'toggle-favorite-card':
+                    const photoId = actionTarget.dataset.photoId;
+                    let photoData;
+                    
+                    const currentSection = document.querySelector('.section-content.active')?.dataset.section;
+                    if (currentSection === 'favorites') {
+                        const favorites = getFavorites();
+                        photoData = favorites.find(p => p.id == photoId);
+                    } else {
+                        photoData = currentUserPhotoList.find(p => p.id == photoId);
+                    }
+                    
+                    if (photoData) {
+                        const fullPhotoData = {
+                            id: photoData.id,
+                            user_uuid: photoData.user_uuid || currentUserForPhotoView,
+                            photo_url: photoData.photo_url,
+                            user_name: photoData.user_name || currentUserNameForPhotoView
+                        };
+                        toggleFavorite(fullPhotoData);
+
+                        if (currentSection === 'favorites') {
+                            const favoritesContainer = document.getElementById('favorites-grid-view');
+                            if (favoritesContainer) displayFavoritePhotos(favoritesContainer);
+                        }
+                    }
+                    break;
+
+                case 'previous-photo':
+                case 'next-photo':
+                    if (!actionTarget.classList.contains('disabled-nav')) {
+                        const path = window.location.pathname;
+                        const photoMatch = path.match(/^.*\/photo\/(\d+)$/);
+                        if (!photoMatch || currentUserPhotoList.length === 0) return;
+
+                        const currentId = parseInt(photoMatch[1], 10);
+                        const currentIndex = currentUserPhotoList.findIndex(p => p.id === currentId);
+
+                        if (currentIndex !== -1) {
+                            let nextIndex = currentIndex;
+                            if (action === 'next-photo' && currentIndex < currentUserPhotoList.length - 1) {
+                                nextIndex = currentIndex + 1;
+                            } else if (action === 'previous-photo' && currentIndex > 0) {
+                                nextIndex = currentIndex - 1;
+                            }
+                            const nextPhoto = currentUserPhotoList[nextIndex];
+                            displayPhoto(currentUserForPhotoView, nextPhoto.id);
+                        }
+                    }
+                    break;
+
+                case 'toggle-photo-menu':
+                    const currentContainer = actionTarget.closest('.card-actions-container');
+                    const currentMenu = currentContainer.querySelector('.photo-context-menu');
+                    const isOpening = currentMenu.classList.contains('disabled');
+
+                    document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
+                        if (menu !== currentMenu) {
+                            menu.classList.remove('active');
+                            menu.classList.add('disabled');
+                            menu.closest('.card-actions-container').classList.remove('force-visible');
+                        }
+                    });
+
+                    currentMenu.classList.toggle('disabled', !isOpening);
+                    currentMenu.classList.toggle('active', isOpening);
+                    currentContainer.classList.toggle('force-visible', isOpening);
+                    break;
+
+                case 'copy-link':
+                    const card = actionTarget.closest('.card');
+                    const url = window.location.origin + window.BASE_PATH + `/user/${currentUserForPhotoView}/photo/${card.dataset.photoId}`;
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(url).then(() => {
+                            console.log('Enlace copiado!', url);
+                            actionTarget.closest('.photo-context-menu').classList.add('disabled');
+                            actionTarget.closest('.photo-context-menu').classList.remove('active');
+                            actionTarget.closest('.card-actions-container').classList.remove('force-visible');
+                        }).catch(err => {
+                            console.error('Error al copiar el enlace: ', err);
+                        });
+                    }
+                    break;
+            }
+
+            const trigger = event.target.closest('[data-action="toggle-select"]');
+            if (trigger) {
+                const targetId = trigger.dataset.target;
+                const targetSelect = document.getElementById(targetId);
+                const wasActive = trigger.classList.contains('active-trigger');
+                
+                document.querySelectorAll('[data-action="toggle-select"]').forEach(t => t.classList.remove('active-trigger'));
+                document.querySelectorAll('.module-select').forEach(s => {
+                    if(s.id !== targetId) {
+                        s.classList.add('disabled');
+                        s.classList.remove('active');
                     }
                 });
 
-                currentMenu.classList.toggle('disabled', !isOpening);
-                currentMenu.classList.toggle('active', isOpening);
-                currentContainer.classList.toggle('force-visible', isOpening);
-                break;
-
-            case 'copy-link':
-                const card = actionTarget.closest('.card');
-                const url = window.location.origin + window.BASE_PATH + `/user/${currentUserForPhotoView}/photo/${card.dataset.photoId}`;
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(url).then(() => {
-                        console.log('Enlace copiado!', url);
-                        actionTarget.closest('.photo-context-menu').classList.add('disabled');
-                        actionTarget.closest('.photo-context-menu').classList.remove('active');
-                        actionTarget.closest('.card-actions-container').classList.remove('force-visible');
-                    }).catch(err => {
-                        console.error('Error al copiar el enlace: ', err);
-                    });
-                }
-                break;
-        }
-
-        const trigger = event.target.closest('[data-action="toggle-select"]');
-        if (trigger) {
-            const targetId = trigger.dataset.target;
-            const targetSelect = document.getElementById(targetId);
-            const wasActive = trigger.classList.contains('active-trigger');
-            
-            document.querySelectorAll('[data-action="toggle-select"]').forEach(t => t.classList.remove('active-trigger'));
-            document.querySelectorAll('.module-select').forEach(s => {
-                if(s.id !== targetId) {
-                    s.classList.add('disabled');
-                    s.classList.remove('active');
-                }
-            });
-
-            if (!wasActive) {
-                trigger.classList.add('active-trigger');
-                if (targetSelect) {
-                    targetSelect.classList.remove('disabled');
-                    targetSelect.classList.add('active');
-                }
-            } else {
-                 if (targetSelect) {
-                    targetSelect.classList.add('disabled');
-                    targetSelect.classList.remove('active');
+                if (!wasActive) {
+                    trigger.classList.add('active-trigger');
+                    if (targetSelect) {
+                        targetSelect.classList.remove('disabled');
+                        targetSelect.classList.add('active');
+                    }
+                } else {
+                     if (targetSelect) {
+                        targetSelect.classList.add('disabled');
+                        targetSelect.classList.remove('active');
+                    }
                 }
             }
-        }
-    });
+        });
 
-    const returnToHomeBtn = document.querySelector('[data-action="returnToHome"]');
-    if (returnToHomeBtn) {
-        returnToHomeBtn.addEventListener('click', () => {
-            handleNavigation('main', 'home');
+        const returnToHomeBtn = document.querySelector('[data-action="returnToHome"]');
+        if (returnToHomeBtn) {
+            returnToHomeBtn.addEventListener('click', () => {
+                handleNavigation('main', 'home');
+            });
+        }
+
+        document.querySelectorAll('.toggle-switch').forEach(toggle => {
+            toggle.addEventListener('click', function() { this.classList.toggle('active'); });
+        });
+
+        document.querySelectorAll('#relevance-select .menu-link').forEach(option => {
+            option.addEventListener('click', function() {
+                currentSortBy = this.dataset.value;
+                const searchTerm = searchInput ? searchInput.value.trim() : '';
+                fetchAndDisplayUsers(currentSortBy, searchTerm);
+            });
+        });
+        
+        document.querySelectorAll('#view-select .menu-link, #view-select-fav .menu-link').forEach(option => {
+            option.addEventListener('click', function() {
+                const section = this.dataset.value;
+                const view = 'main';
+                navigateToUrl(view, section);
+                handleStateChange(view, section);
+            });
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && moduleSurface && moduleSurface.classList.contains('active')) {
+                moduleSurface.classList.add('disabled');
+                moduleSurface.classList.remove('active');
+            }
         });
     }
-
-    document.querySelectorAll('.toggle-switch').forEach(toggle => {
-        toggle.addEventListener('click', function() { this.classList.toggle('active'); });
-    });
-
-    document.querySelectorAll('#relevance-select .menu-link').forEach(option => {
-        option.addEventListener('click', function() {
-            currentSortBy = this.dataset.value;
-            const searchTerm = searchInput ? searchInput.value.trim() : '';
-            fetchAndDisplayUsers(currentSortBy, searchTerm);
-        });
-    });
-    
-    document.querySelectorAll('#view-select .menu-link, #view-select-fav .menu-link').forEach(option => {
-        option.addEventListener('click', function() {
-            const section = this.dataset.value;
-            const view = 'main';
-            navigateToUrl(view, section);
-            handleStateChange(view, section);
-        });
-    });
-
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape' && moduleSurface && moduleSurface.classList.contains('active')) {
-            moduleSurface.classList.add('disabled');
-            moduleSurface.classList.remove('active');
-        }
-    });
 
     // --- CARGA INICIAL Y ESTADO DEL HISTORIAL ---
     function handleStateChange(view, section, data) {
@@ -727,6 +794,9 @@ export function initMainController() {
         }
     }
     
+    // --- INICIALIZACIÓN ---
+    setupEventListeners();
+
     setupPopStateHandler((view, section, pushState, data) => {
         handleStateChange(view, section, data);
     });

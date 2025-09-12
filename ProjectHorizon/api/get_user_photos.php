@@ -3,8 +3,9 @@ require_once '../config/db.php';
 
 header('Content-Type: application/json');
 
-// --- LÓGICA PARA OBTENER UNA SOLA FOTO POR SU ID ---
+// --- LÓGICA PARA OBTENER UNA SOLA FOTO (sin cambios) ---
 if (isset($_GET['photo_id'])) {
+    // ... (código existente sin cambios)
     $photo_id = $_GET['photo_id'];
     $sql = "SELECT id, user_uuid, photo_url FROM user_photos WHERE id = ?";
     $stmt = $conn->prepare($sql);
@@ -18,8 +19,11 @@ if (isset($_GET['photo_id'])) {
     exit;
 }
 
-// --- LÓGICA EXISTENTE PARA OBTENER TODAS LAS FOTOS DE UN USUARIO ---
+// --- LÓGICA DE LISTA DE FOTOS CON PAGINACIÓN ---
 $user_uuid = isset($_GET['uuid']) ? $_GET['uuid'] : '';
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 20;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
 
 if (empty($user_uuid)) {
     http_response_code(400);
@@ -27,10 +31,10 @@ if (empty($user_uuid)) {
     exit;
 }
 
-// Se añade `id` a la consulta SQL
-$sql = "SELECT id, photo_url FROM user_photos WHERE user_uuid = ?";
+// Se añade `id` y la paginación (LIMIT y OFFSET) a la consulta SQL
+$sql = "SELECT id, photo_url, user_uuid FROM user_photos WHERE user_uuid = ? ORDER BY id DESC LIMIT ? OFFSET ?";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("s", $user_uuid);
+$stmt->bind_param("sii", $user_uuid, $limit, $offset);
 $stmt->execute();
 $result = $stmt->get_result();
 $photos = array();

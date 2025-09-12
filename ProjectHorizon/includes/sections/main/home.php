@@ -103,5 +103,8 @@
                 </tbody>
             </table>
         </div>
+         <div class="load-more-container" id="users-load-more-container">
+            <button class="load-more-btn" data-action="load-more-users">Mostrar más</button>
+        </div>
     </div>
 </div>

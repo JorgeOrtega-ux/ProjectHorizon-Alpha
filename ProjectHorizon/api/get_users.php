@@ -3,8 +3,9 @@ require_once '../config/db.php';
 
 header('Content-Type: application/json');
 
-// --- NUEVA LÓGICA: Obtener un solo usuario por UUID ---
+// --- LÓGICA PARA UN SOLO USUARIO (sin cambios) ---
 if (isset($_GET['uuid'])) {
+    // ... (código existente sin cambios)
     $uuid = $_GET['uuid'];
     $sql = "SELECT u.uuid, u.name, u.privacy, um.last_edited 
             FROM users u
@@ -21,9 +22,12 @@ if (isset($_GET['uuid'])) {
     exit;
 }
 
-// --- Lógica existente para obtener la lista de usuarios ---
+// --- LÓGICA DE LISTA CON PAGINACIÓN ---
 $sort_by = isset($_GET['sort']) ? $_GET['sort'] : 'relevant';
 $search_term = isset($_GET['search']) ? $_GET['search'] : '';
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 20;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
 
 $order_clause = "";
 $where_clause = "";
@@ -44,15 +48,26 @@ switch ($sort_by) {
     default: $order_clause = "ORDER BY (um.total_likes * 0.5 + um.total_saves * 0.3 + um.total_interactions * 0.2) DESC"; break;
 }
 
+// Se añade LIMIT y OFFSET a la consulta
 $sql = "SELECT u.uuid, u.name, u.privacy, um.last_edited 
         FROM users u
         JOIN users_metadata um ON u.uuid = um.user_uuid
         $where_clause
-        $order_clause";
+        $order_clause
+        LIMIT ? OFFSET ?";
 
 $stmt = $conn->prepare($sql);
+
+// Se añaden los nuevos parámetros de limit y offset al bind_param
+$types .= "ii";
+$params[] = $limit;
+$params[] = $offset;
+
 if (!empty($search_term)) {
     $stmt->bind_param($types, ...$params);
+} else {
+    // Si no hay búsqueda, solo se bindean limit y offset
+    $stmt->bind_param("ii", $limit, $offset);
 }
 
 $stmt->execute();

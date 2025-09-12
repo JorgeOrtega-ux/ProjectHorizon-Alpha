@@ -874,4 +874,28 @@ body {
 .card-hover-icons .icon-wrapper[data-action="toggle-favorite-card"].active .material-symbols-rounded {
     color: #e53935; /* Rojo intenso para el corazón */
     font-variation-settings: 'FILL' 1; /* Rellena el ícono del corazón */
+}/* --- Estilos para el botón "Mostrar más" --- */
+.load-more-container {
+    padding: 24px;
+    text-align: center;
+}
+
+.load-more-btn {
+    padding: 10px 24px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #000000;
+    background-color: transparent;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.load-more-btn:hover {
+    background-color: #f5f5fa;
+}
+
+.load-more-container.disabled {
+    display: none;
 }
