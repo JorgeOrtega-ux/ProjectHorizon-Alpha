@@ -19,6 +19,9 @@ export function initMainController() {
     let currentUserPhotoList = [];
     let currentPhotoData = null;
     let lastVisitedView = null;
+    
+    // --- NUEVO: Almacenamiento de usuarios con acceso concedido ---
+    let grantedAccess = {}; // { 'user_uuid': true }
 
     // --- Variables para paginación ---
     let usersCurrentPage = 1;
@@ -164,6 +167,7 @@ export function initMainController() {
                 card.className = 'card';
                 card.dataset.uuid = user.uuid;
                 card.dataset.name = user.name;
+                card.dataset.privacy = user.privacy;
                 
                 const overlay = document.createElement('div');
                 overlay.className = 'card-content-overlay';
@@ -207,6 +211,7 @@ export function initMainController() {
                 const row = document.createElement('tr');
                 row.dataset.uuid = user.uuid;
                 row.dataset.name = user.name;
+                row.dataset.privacy = user.privacy;
 
                 const nameCell = document.createElement('td');
                 nameCell.innerHTML = `
@@ -276,6 +281,55 @@ export function initMainController() {
             .finally(() => {
                 isLoadingUsers = false;
             });
+    }
+    
+    // --- NUEVO: LÓGICA DE CÓDIGO DE ACCESO ---
+    function showAccessCodePrompt(uuid, userName) {
+        handleNavigation('main', 'accessCodePrompt');
+        const title = document.getElementById('access-code-title');
+        const input = document.getElementById('access-code-input');
+        const submitBtn = document.getElementById('access-code-submit');
+        const errorMsg = document.getElementById('access-code-error');
+
+        title.textContent = `Galería de ${userName}`;
+        input.value = '';
+        errorMsg.textContent = '';
+        
+        const submitHandler = () => {
+            const code = input.value.trim();
+            if (code) {
+                verifyAccessCode(uuid, code, userName);
+            }
+        };
+
+        submitBtn.onclick = submitHandler;
+    }
+
+    function verifyAccessCode(uuid, code, userName) {
+        const formData = new FormData();
+        formData.append('uuid', uuid);
+        formData.append('code', code);
+
+        fetch('/ProjectHorizon/api/verify_access_code.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                grantedAccess[uuid] = true;
+                sessionStorage.setItem('grantedAccess', JSON.stringify(grantedAccess));
+                fetchAndDisplayUserPhotos(uuid, userName);
+            } else {
+                const errorMsg = document.getElementById('access-code-error');
+                errorMsg.textContent = data.message || 'Error desconocido.';
+            }
+        })
+        .catch(error => {
+            console.error('Error al verificar el código:', error);
+            const errorMsg = document.getElementById('access-code-error');
+            errorMsg.textContent = 'Ocurrió un error al conectar con el servidor.';
+        });
     }
 
     // --- OBTENCIÓN DE FOTOS DE USUARIO (PAGINADO) ---
@@ -555,7 +609,15 @@ export function initMainController() {
         
             const userElement = event.target.closest('.card:not(.photo-card), tr[data-uuid]');
             if (userElement && userElement.dataset.uuid && !event.target.closest('.card-actions-container')) {
-                fetchAndDisplayUserPhotos(userElement.dataset.uuid, userElement.dataset.name);
+                const isPrivate = userElement.dataset.privacy === '1';
+                const uuid = userElement.dataset.uuid;
+                const name = userElement.dataset.name;
+
+                if (isPrivate && !grantedAccess[uuid]) {
+                    showAccessCodePrompt(uuid, name);
+                } else {
+                    fetchAndDisplayUserPhotos(uuid, name);
+                }
                 return;
             }
 
@@ -611,6 +673,10 @@ export function initMainController() {
                     }
                     break;
                 
+                 case 'returnToHome': // --- [CORRECCIÓN] ---
+                    handleNavigation('main', 'home');
+                    break;
+
                 case 'toggle-favorite':
                     if (currentPhotoData) {
                         toggleFavorite(currentPhotoData);
@@ -731,13 +797,6 @@ export function initMainController() {
             }
         });
 
-        const returnToHomeBtn = document.querySelector('[data-action="returnToHome"]');
-        if (returnToHomeBtn) {
-            returnToHomeBtn.addEventListener('click', () => {
-                handleNavigation('main', 'home');
-            });
-        }
-
         document.querySelectorAll('.toggle-switch').forEach(toggle => {
             toggle.addEventListener('click', function() { this.classList.toggle('active'); });
         });
@@ -795,6 +854,11 @@ export function initMainController() {
     }
     
     // --- INICIALIZACIÓN ---
+    const storedGrantedAccess = sessionStorage.getItem('grantedAccess');
+    if (storedGrantedAccess) {
+        grantedAccess = JSON.parse(storedGrantedAccess);
+    }
+    
     setupEventListeners();
 
     setupPopStateHandler((view, section, pushState, data) => {
@@ -805,7 +869,7 @@ export function initMainController() {
     const initialSection = document.querySelector('.section-container.active .section-content.active')?.dataset.section;
     const path = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1);
     
-    const photoMatch = path.match(/^user\/([a-f0-9-]{36})\/photo\/(\d+)$/);
+    const photoMatch = path.match(/^user\/([a-f0-f-]{36})\/photo\/(\d+)$/);
     const userMatch = path.match(/^user\/([a-f0-9-]{36})$/);
 
     if (photoMatch) {
@@ -819,7 +883,11 @@ export function initMainController() {
             .then(res => res.json())
             .then(user => {
                 if (user && user.uuid) {
-                    fetchAndDisplayUserPhotos(user.uuid, user.name);
+                     if (user.privacy === "1" && !grantedAccess[user.uuid]) {
+                        showAccessCodePrompt(user.uuid, user.name);
+                    } else {
+                        fetchAndDisplayUserPhotos(user.uuid, user.name);
+                    }
                 } else {
                     handleNavigation('main', '404');
                 }

@@ -898,4 +898,63 @@ body {
 
 .load-more-container.disabled {
     display: none;
+}/* ... (todo tu CSS existente va aquí) ... */
+
+/* --- Estilos para el formulario de código de acceso --- */
+.access-code-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 24px;
+    height: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.access-code-container h2 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.access-code-container p {
+    color: #6c757d;
+    margin-bottom: 24px;
+}
+
+.access-code-form {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+#access-code-input {
+    flex-grow: 1;
+    height: 42px;
+    padding: 0 16px;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    font-size: 1rem;
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+#access-code-input:focus {
+    outline: none;
+    border-color: #000;
+}
+
+.error-message {
+    color: #e53935;
+    font-size: 0.875rem;
+    height: 20px;
+}
+
+.access-code-container .header-button {
+    display: inline-flex;
+    gap: 8px;
+    width: auto;
+    padding: 0 16px;
 }
