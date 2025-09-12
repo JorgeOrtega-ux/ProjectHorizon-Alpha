@@ -107,38 +107,6 @@ export function initMainController() {
         }
     }
 
-    function updateHomeView() {
-        const path = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1);
-        const gridContainer = document.getElementById('grid-view');
-        const sorter = document.getElementById('relevance-sorter');
-        const viewToggler = document.querySelector('[data-action="toggle-view"]');
-        const searchInput = document.querySelector('.search-input-text input');
-        const viewSelectText = document.querySelector('#view-select .select-trigger-text');
-    
-        if (path === 'favorites') {
-            displayFavoritePhotos(gridContainer);
-            if (sorter) sorter.style.display = 'none';
-            if (viewToggler) viewToggler.style.display = 'none';
-            if (searchInput) searchInput.style.display = 'none';
-            if (viewSelectText) viewSelectText.textContent = 'Mostrar favoritos';
-            
-            gridContainer.classList.add('active');
-            gridContainer.classList.remove('disabled');
-            const tableView = document.getElementById('table-view');
-            if (tableView) {
-                tableView.classList.add('disabled');
-                tableView.classList.remove('active');
-            }
-        } else {
-            fetchAndDisplayUsers(currentSortBy);
-            if (sorter) sorter.style.display = 'flex';
-            if (viewToggler) viewToggler.style.display = 'flex';
-            if (searchInput) searchInput.style.display = 'block';
-            if (viewSelectText) viewSelectText.textContent = 'Página principal';
-        }
-    }
-
-
     // --- MANEJADOR DE NAVEGACIÓN ---
     function handleNavigation(view, section, pushState = true, data = null) {
         if (pushState) {
@@ -353,7 +321,11 @@ export function initMainController() {
 
     // --- MUESTRA UNA FOTO EN GRANDE ---
     function displayPhoto(uuid, photoId) {
-        lastVisitedView = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1) || 'home';
+        // --- [CORRECCIÓN APLICADA AQUÍ] ---
+        // Se guarda la sección activa ANTES de navegar a la vista de la foto
+        const activeSection = document.querySelector('.section-content.active')?.dataset.section || 'home';
+        lastVisitedView = activeSection;
+        
         handleNavigation('main', 'photoView', true, { uuid: uuid, photoId: photoId });
         const photoViewerImage = document.getElementById('photo-viewer-image');
         const photoCounter = document.getElementById('photo-counter');
@@ -495,6 +467,35 @@ export function initMainController() {
                 moduleSurface.classList.remove('active');
             }
         }
+        
+        const selectedOption = event.target.closest('.module-select .menu-link');
+        if (selectedOption) {
+            if(!selectedOption.closest('#view-select') && !selectedOption.closest('#view-select-fav')) {
+                const selectContainer = selectedOption.closest('.module-select');
+                const wrapper = selectContainer.closest('.select-wrapper');
+                if (wrapper) {
+                    const currentTrigger = wrapper.querySelector('[data-action="toggle-select"]');
+                    const triggerText = currentTrigger.querySelector('.select-trigger-text');
+                    const triggerIcon = currentTrigger.querySelector('.select-trigger-icon:not(.select-trigger-arrow) .material-symbols-rounded');
+                    const optionText = selectedOption.querySelector('.menu-link-text span');
+                    const optionIcon = selectedOption.querySelector('.menu-link-icon .material-symbols-rounded');
+        
+                    if (triggerText && optionText) {
+                        triggerText.textContent = optionText.textContent;
+                    }
+        
+                    if (triggerIcon && optionIcon && currentTrigger.dataset.target !== 'relevance-select') {
+                        triggerIcon.textContent = optionIcon.textContent;
+                    }
+        
+                    selectContainer.classList.add('disabled');
+                    selectContainer.classList.remove('active');
+                    currentTrigger.classList.remove('active-trigger');
+                    
+                    return; 
+                }
+            }
+        }
     
         const userElement = event.target.closest('.card:not(.photo-card), tr[data-uuid]');
         if (userElement && userElement.dataset.uuid && !event.target.closest('.card-actions-container')) {
@@ -531,16 +532,16 @@ export function initMainController() {
         const action = actionTarget.dataset.action;
         
         switch (action) {
+            // --- [CORRECCIÓN APLICADA AQUÍ] ---
             case 'returnToUserPhotos':
                 if (lastVisitedView === 'favorites') {
                     navigateToUrl('main', 'favorites');
-                    handleNavigation('main', 'home', false);
-                    updateHomeView();
+                    handleStateChange('main', 'favorites');
                 } else if (currentUserForPhotoView && currentUserNameForPhotoView) {
                     fetchAndDisplayUserPhotos(currentUserForPhotoView, currentUserNameForPhotoView);
                 } else {
-                    handleNavigation('main', 'home');
-                    updateHomeView();
+                    navigateToUrl('main', 'home');
+                    handleStateChange('main', 'home');
                 }
                 break;
             
@@ -553,9 +554,9 @@ export function initMainController() {
             case 'toggle-favorite-card':
                 const photoId = actionTarget.dataset.photoId;
                 let photoData;
-
-                const path = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1);
-                if (path === 'favorites') {
+                
+                const currentSection = document.querySelector('.section-content.active')?.dataset.section;
+                if (currentSection === 'favorites') {
                     const favorites = getFavorites();
                     photoData = favorites.find(p => p.id == photoId);
                 } else {
@@ -571,8 +572,9 @@ export function initMainController() {
                     };
                     toggleFavorite(fullPhotoData);
 
-                    if (path === 'favorites') {
-                        updateHomeView(); 
+                    if (currentSection === 'favorites') {
+                        const favoritesContainer = document.getElementById('favorites-grid-view');
+                        if (favoritesContainer) displayFavoritePhotos(favoritesContainer);
                     }
                 }
                 break;
@@ -661,20 +663,6 @@ export function initMainController() {
                 }
             }
         }
-        
-        if (event.target.closest('.select-wrapper')) {
-            const option = event.target.closest('.module-select .menu-link');
-            if (option) {
-                 const selectContainer = option.closest('.module-select');
-                 const wrapper = selectContainer.closest('.select-wrapper');
-                 const currentTrigger = wrapper.querySelector('[data-action="toggle-select"]');
-                 const triggerText = currentTrigger.querySelector('.select-trigger-text');
-                 const optionText = option.querySelector('.menu-link-text span');
-                 if(triggerText && optionText) {
-                    triggerText.textContent = optionText.textContent;
-                 }
-            }
-        }
     });
 
     const returnToHomeBtn = document.querySelector('[data-action="returnToHome"]');
@@ -695,13 +683,13 @@ export function initMainController() {
             fetchAndDisplayUsers(currentSortBy, searchTerm);
         });
     });
-
-    document.querySelectorAll('#view-select .menu-link').forEach(option => {
+    
+    document.querySelectorAll('#view-select .menu-link, #view-select-fav .menu-link').forEach(option => {
         option.addEventListener('click', function() {
-            const value = this.dataset.value;
-            const url = generateUrl('main', value);
-            history.pushState({view: 'main', section: 'home'}, '', url);
-            updateHomeView();
+            const section = this.dataset.value;
+            const view = 'main';
+            navigateToUrl(view, section);
+            handleStateChange(view, section);
         });
     });
 
@@ -713,10 +701,23 @@ export function initMainController() {
     });
 
     // --- CARGA INICIAL Y ESTADO DEL HISTORIAL ---
-    setupPopStateHandler((view, section, pushState, data) => {
-        handleNavigation(view, section, false);
-        if (section === 'home') {
-            updateHomeView();
+    function handleStateChange(view, section, data) {
+        handleNavigation(view, section, false, data);
+
+        const homeTriggerText = document.querySelector('[data-target="view-select"] .select-trigger-text');
+        const favTriggerText = document.querySelector('[data-target="view-select-fav"] .select-trigger-text');
+        const homeTriggerIcon = document.querySelector('[data-target="view-select"] .select-trigger-icon:not(.select-trigger-arrow) .material-symbols-rounded');
+        const favTriggerIcon = document.querySelector('[data-target="view-select-fav"] .select-trigger-icon:not(.select-trigger-arrow) .material-symbols-rounded');
+
+        if (section === 'favorites') {
+            if (favTriggerText) favTriggerText.textContent = 'Mostrar favoritos';
+            if (favTriggerIcon) favTriggerIcon.textContent = 'favorite';
+            const favoritesContainer = document.getElementById('favorites-grid-view');
+            if(favoritesContainer) displayFavoritePhotos(favoritesContainer);
+        } else if (section === 'home') {
+            if (homeTriggerText) homeTriggerText.textContent = 'Página principal';
+            if (homeTriggerIcon) homeTriggerIcon.textContent = 'home';
+            fetchAndDisplayUsers(currentSortBy);
         } else if (section === 'userPhotos' && data && data.uuid) {
             fetch(`/ProjectHorizon/api/get_users.php?uuid=${data.uuid}`)
              .then(res => res.json())
@@ -724,6 +725,10 @@ export function initMainController() {
         } else if (section === 'photoView' && data && data.uuid && data.photoId) {
             displayPhoto(data.uuid, data.photoId);
         }
+    }
+    
+    setupPopStateHandler((view, section, pushState, data) => {
+        handleStateChange(view, section, data);
     });
     
     const initialView = document.querySelector('.section-container.active')?.dataset.view;
@@ -751,9 +756,7 @@ export function initMainController() {
             });
     } else if (initialView && initialSection) {
         setInitialHistoryState(initialView, initialSection);
-        if (initialSection === 'home') {
-            updateHomeView();
-        }
+        handleStateChange(initialView, initialSection);
     } else {
         console.error("Could not determine initial state from DOM.");
     }

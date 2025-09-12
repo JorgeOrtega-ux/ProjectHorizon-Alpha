@@ -5,7 +5,7 @@ class Router {
         // URL Path => ['view' => 'data-view', 'section' => 'data-section']
         ''                         => ['view' => 'main', 'section' => 'home'],
         'explore'                  => ['view' => 'main', 'section' => 'explore'],
-        'favorites'                => ['view' => 'main', 'section' => 'home'],
+        'favorites'                => ['view' => 'main', 'section' => 'favorites'],
         'settings/accessibility'   => ['view' => 'settings', 'section' => 'accessibility'],
         'settings/history-privacy' => ['view' => 'settings', 'section' => 'historyPrivacy']
     ];
