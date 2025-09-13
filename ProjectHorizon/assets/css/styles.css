@@ -95,6 +95,7 @@ body {
     width: auto;
     height: 100%;
     gap: 8px;
+    position: relative;
 }
 
 .header-button {
@@ -1052,4 +1053,26 @@ body {
     color: #000000;
     text-decoration: underline;
     cursor: pointer;
+}
+
+/* User Avatar Button */
+.user-avatar-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    background-color: #e0e0e0;
+    border-radius: 50%;
+    cursor: pointer;
+    outline: none;
+    user-select: none;
+    font-weight: 500;
+    color: #333;
+}
+
+#user-menu {
+    right: 0;
+    left: auto;
+    width: 220px; /* Ancho del menú desplegable */
 }

@@ -11,7 +11,7 @@
                 <input type="password" id="login-password" placeholder=" ">
                 <label for="login-password">Contraseña</label>
             </div>
-            <button class="auth-button">Acceder</button>
+            <button class="auth-button login-button">Acceder</button>
             <p class="auth-link">¿No tienes una cuenta? <a href="#" data-action="navigateToRegister">Crea una aquí</a>.</p>
         </div>
     </div>

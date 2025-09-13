@@ -1,4 +1,7 @@
-<?php require_once 'config/router.php'; ?>
+<?php
+session_start();
+require_once 'config/router.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 

@@ -521,6 +521,44 @@ export function initMainController() {
             displayFetchedPhoto();
         }
     }
+    
+    // --- MANEJO DE SESIÓN ---
+    function checkSessionStatus() {
+        fetch('/ProjectHorizon/api/session_status.php')
+            .then(response => response.json())
+            .then(data => {
+                updateHeaderUI(data.loggedIn, data.user);
+            })
+            .catch(error => console.error('Error checking session status:', error));
+    }
+
+    function updateHeaderUI(isLoggedIn, user) {
+        const userSessionContainer = document.getElementById('user-session-container');
+        const loginButtonContainer = document.getElementById('login-button-container');
+        const userInitials = document.getElementById('user-initials');
+
+        if (isLoggedIn) {
+            userSessionContainer.style.display = 'flex';
+            loginButtonContainer.style.display = 'none';
+            userInitials.textContent = user.name.charAt(0).toUpperCase();
+        } else {
+            userSessionContainer.style.display = 'none';
+            loginButtonContainer.style.display = 'flex';
+        }
+    }
+
+    function handleLogout() {
+        fetch('/ProjectHorizon/api/logout.php')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateHeaderUI(false);
+                    handleNavigation('main', 'home');
+                }
+            })
+            .catch(error => console.error('Error during logout:', error));
+    }
+
 
     // --- INICIALIZACIÓN DE EVENTOS ---
     function setupEventListeners() {
@@ -530,7 +568,17 @@ export function initMainController() {
         const settingsButton = document.querySelector('[data-action="toggleSettings"]');
         const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
         const allMenuLinks = document.querySelectorAll('.menu-link');
+        const loginButton = document.querySelector('.login-button');
+        const registerButton = document.querySelector('.register-button');
 
+        if (loginButton) {
+            loginButton.addEventListener('click', handleLoginSubmit);
+        }
+
+        if (registerButton) {
+            registerButton.addEventListener('click', handleRegisterSubmit);
+        }
+        
         if (toggleViewBtn) {
             toggleViewBtn.addEventListener('click', () => {
                 const gridView = document.getElementById('grid-view');
@@ -655,12 +703,7 @@ export function initMainController() {
             const actionTarget = event.target.closest('[data-action]');
             
             if (!actionTarget || !actionTarget.dataset.action.includes('toggle')) {
-                document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
-                    menu.classList.remove('active');
-                    menu.classList.add('disabled');
-                    menu.closest('.card-actions-container').classList.remove('force-visible');
-                });
-                document.querySelectorAll('.module-select:not(.photo-context-menu).active').forEach(menu => {
+                 document.querySelectorAll('.module-select:not(.photo-context-menu).active').forEach(menu => {
                      menu.classList.remove('active');
                      menu.classList.add('disabled');
                 });
@@ -798,6 +841,9 @@ export function initMainController() {
                         });
                     }
                     break;
+                case 'logout':
+                    handleLogout();
+                    break;
             }
 
             const trigger = event.target.closest('[data-action="toggle-select"]');
@@ -826,6 +872,12 @@ export function initMainController() {
                         targetSelect.classList.remove('active');
                     }
                 }
+            }
+             const userMenuTrigger = event.target.closest('[data-action="toggle-user-menu"]');
+            if(userMenuTrigger) {
+                const userMenu = document.getElementById('user-menu');
+                userMenu.classList.toggle('disabled');
+                userMenu.classList.toggle('active');
             }
         });
 
@@ -856,6 +908,54 @@ export function initMainController() {
                 moduleSurface.classList.remove('active');
             }
         });
+    }
+
+     function handleLoginSubmit() {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('password', password);
+
+        fetch('/ProjectHorizon/api/login_handler.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateHeaderUI(true, data.user);
+                handleNavigation('main', 'home');
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+    
+    function handleRegisterSubmit() {
+        const name = document.getElementById('register-name').value;
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('email', email);
+        formData.append('password', password);
+
+        fetch('/ProjectHorizon/api/register_handler.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Registro exitoso. Ahora puedes iniciar sesión.');
+                handleNavigation('main', 'login');
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
     }
 
     // --- CARGA INICIAL Y ESTADO DEL HISTORIAL ---
@@ -891,6 +991,7 @@ export function initMainController() {
         grantedAccess = JSON.parse(storedGrantedAccess);
     }
     
+    checkSessionStatus();
     setupEventListeners();
 
     setupPopStateHandler((view, section, pushState, data) => {
