@@ -32,6 +32,7 @@ export function initMainController() {
     function toggleFavorite(photoData) {
         let favorites = getFavorites();
         const photoIndex = favorites.findIndex(photo => photo.id == photoData.id);
+        const isLiked = photoIndex === -1;
 
         if (photoIndex > -1) {
             favorites.splice(photoIndex, 1);
@@ -42,6 +43,21 @@ export function initMainController() {
         localStorage.setItem('favoritePhotos', JSON.stringify(favorites));
         updateFavoriteButtonState(photoData.id);
         updateFavoriteCardState(photoData.id);
+
+        const formData = new FormData();
+        formData.append('action_type', 'toggle_like');
+        formData.append('photo_id', photoData.id);
+        formData.append('gallery_uuid', photoData.gallery_uuid);
+        formData.append('is_liked', isLiked);
+
+        fetch('/ProjectHorizon/api/main_handler.php', {
+            method: 'POST',
+            body: formData
+        }).then(res => res.json()).then(data => {
+            if (!data.success) {
+                console.error('Error al actualizar el like.');
+            }
+        });
     }
     
     function updateFavoriteButtonState(photoId) {
@@ -474,6 +490,17 @@ export function initMainController() {
             displayFetchedPhoto();
         }
     }
+
+    function incrementInteraction(uuid) {
+        const formData = new FormData();
+        formData.append('action_type', 'increment_interaction');
+        formData.append('uuid', uuid);
+
+        fetch('/ProjectHorizon/api/main_handler.php', {
+            method: 'POST',
+            body: formData
+        });
+    }
     
     function setupEventListeners() {
         const toggleViewBtn = document.querySelector('[data-action="toggle-view"]');
@@ -590,6 +617,8 @@ export function initMainController() {
                 const name = galleryElement.dataset.name;
                 const isPrivate = galleryElement.dataset.privacy === '1';
 
+                incrementInteraction(uuid);
+
                 if (isPrivate) {
                     promptForAccessCode(uuid, name);
                 } else {
@@ -601,6 +630,7 @@ export function initMainController() {
             const photoCard = event.target.closest('.card.photo-card');
             if (photoCard && !event.target.closest('.card-actions-container')) {
                 const galleryUuid = photoCard.dataset.galleryUuid || currentGalleryForPhotoView;
+                incrementInteraction(galleryUuid);
                 displayPhoto(galleryUuid, photoCard.dataset.photoId);
                 return;
             }

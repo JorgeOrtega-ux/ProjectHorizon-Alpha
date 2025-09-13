@@ -36,6 +36,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['success' => false, 'message' => 'No se encontró una galería privada con ese UUID.']);
         }
         $stmt->close();
+    } elseif ($action_type === 'increment_interaction') {
+        $uuid = isset($_POST['uuid']) ? $_POST['uuid'] : '';
+        if (!empty($uuid)) {
+            $sql = "UPDATE galleries_metadata SET total_interactions = total_interactions + 1 WHERE gallery_uuid = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("s", $uuid);
+            $stmt->execute();
+            $stmt->close();
+            echo json_encode(['success' => true]);
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Falta el UUID de la galería.']);
+        }
+    } elseif ($action_type === 'toggle_like') {
+        $photo_id = isset($_POST['photo_id']) ? (int)$_POST['photo_id'] : 0;
+        $gallery_uuid = isset($_POST['gallery_uuid']) ? $_POST['gallery_uuid'] : '';
+        $is_liked = isset($_POST['is_liked']) ? filter_var($_POST['is_liked'], FILTER_VALIDATE_BOOLEAN) : false;
+
+        if ($photo_id > 0 && !empty($gallery_uuid)) {
+            $conn->begin_transaction();
+            try {
+                // Actualizar likes de la foto
+                $sql_photo = "UPDATE gallery_photos_metadata SET likes = likes + 1, interactions = interactions + 1 WHERE photo_id = ?";
+                $stmt_photo = $conn->prepare($sql_photo);
+                $stmt_photo->bind_param("i", $photo_id);
+                $stmt_photo->execute();
+                $stmt_photo->close();
+
+                // Actualizar total_likes e total_interactions de la galería
+                $sql_gallery = "UPDATE galleries_metadata SET total_likes = total_likes + 1, total_interactions = total_interactions + 1 WHERE gallery_uuid = ?";
+                $stmt_gallery = $conn->prepare($sql_gallery);
+                $stmt_gallery->bind_param("s", $gallery_uuid);
+                $stmt_gallery->execute();
+                $stmt_gallery->close();
+
+                $conn->commit();
+                echo json_encode(['success' => true]);
+            } catch (mysqli_sql_exception $exception) {
+                $conn->rollback();
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error en la base de datos.']);
+            }
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Faltan datos de la foto o galería.']);
+        }
     } else {
         http_response_code(400);
         echo json_encode(['error' => 'Invalid POST action type']);
