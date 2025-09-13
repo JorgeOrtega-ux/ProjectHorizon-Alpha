@@ -4,12 +4,12 @@
             <h2>Iniciar Sesión</h2>
             <p>Introduce tus credenciales para acceder a tu cuenta.</p>
             <div class="form-field">
+                <input type="email" id="login-email" placeholder=" ">
                 <label for="login-email">Correo Electrónico</label>
-                <input type="email" id="login-email" placeholder="tucorreo@ejemplo.com">
             </div>
             <div class="form-field">
+                <input type="password" id="login-password" placeholder=" ">
                 <label for="login-password">Contraseña</label>
-                <input type="password" id="login-password" placeholder="Tu contraseña">
             </div>
             <button class="auth-button">Acceder</button>
             <p class="auth-link">¿No tienes una cuenta? <a href="#" data-action="navigateToRegister">Crea una aquí</a>.</p>
