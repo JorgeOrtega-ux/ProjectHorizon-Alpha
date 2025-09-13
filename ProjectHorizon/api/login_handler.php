@@ -19,7 +19,7 @@ if (empty($email) || empty($password)) {
     exit;
 }
 
-$sql = "SELECT id, uuid, name, password FROM users WHERE email = ?";
+$sql = "SELECT id, uuid, name, password, rank FROM users WHERE email = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $email);
 $stmt->execute();
@@ -31,7 +31,8 @@ if ($result->num_rows === 1) {
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_uuid'] = $user['uuid'];
         $_SESSION['user_name'] = $user['name'];
-        echo json_encode(['success' => true, 'message' => 'Inicio de sesión exitoso.', 'user' => ['name' => $user['name']]]);
+        $_SESSION['user_rank'] = $user['rank'];
+        echo json_encode(['success' => true, 'message' => 'Inicio de sesión exitoso.', 'user' => ['name' => $user['name'], 'rank' => $user['rank']]]);
     } else {
         http_response_code(401);
         echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas.']);

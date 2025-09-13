@@ -44,7 +44,7 @@ $stmt_check->close();
 $uuid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex(random_bytes(16)), 4));
 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-$sql = "INSERT INTO users (uuid, name, email, password) VALUES (?, ?, ?, ?)";
+$sql = "INSERT INTO users (uuid, name, email, password, rank) VALUES (?, ?, ?, ?, 'user')";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ssss", $uuid, $name, $email, $hashed_password);
 

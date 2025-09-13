@@ -9,6 +9,12 @@
                 <div class="menu-link-icon"><span class="material-symbols-rounded">explore</span></div>
                 <div class="menu-link-text"><span>Explorar categorias</span></div>
             </div>
+            <?php if (isset($_SESSION['user_rank']) && $_SESSION['user_rank'] === 'admin'): ?>
+            <div class="menu-link" data-action="toggleAdminView">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">admin_panel_settings</span></div>
+                <div class="menu-link-text"><span>Panel Administrativo</span></div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -25,6 +31,23 @@
             <div class="menu-link <?php echo ($CURRENT_SECTION === 'historyPrivacy') ? 'active' : ''; ?>" data-action="toggleSectionHistoryPrivacy">
                 <div class="menu-link-icon"><span class="material-symbols-rounded">history</span></div>
                 <div class="menu-link-text"><span>Historial y Privacidad</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="menu-content <?php echo ($CURRENT_VIEW === 'admin') ? 'active' : 'disabled'; ?>" data-menu="admin">
+        <div class="menu-list">
+            <div class="menu-link" data-action="toggleMainView">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">arrow_back</span></div>
+                <div class="menu-link-text"><span>Volver a inicio</span></div>
+            </div>
+            <div class="menu-link <?php echo ($CURRENT_SECTION === 'manageUsers') ? 'active' : ''; ?>" data-action="toggleSectionManageUsers">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">group</span></div>
+                <div class="menu-link-text"><span>Gestionar Usuarios</span></div>
+            </div>
+            <div class="menu-link <?php echo ($CURRENT_SECTION === 'manageGalleries') ? 'active' : ''; ?>" data-action="toggleSectionManageGalleries">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">photo_library</span></div>
+                <div class="menu-link-text"><span>Gestionar Galerías</span></div>
             </div>
         </div>
     </div>

@@ -536,14 +536,23 @@ export function initMainController() {
         const userSessionContainer = document.getElementById('user-session-container');
         const loginButtonContainer = document.getElementById('login-button-container');
         const userInitials = document.getElementById('user-initials');
+        const adminPanelLink = document.querySelector('[data-action="toggleAdminView"]');
 
         if (isLoggedIn) {
             userSessionContainer.style.display = 'flex';
             loginButtonContainer.style.display = 'none';
             userInitials.textContent = user.name.charAt(0).toUpperCase();
+
+            if (adminPanelLink) {
+                adminPanelLink.style.display = (user.rank === 'admin') ? 'flex' : 'none';
+            }
+
         } else {
             userSessionContainer.style.display = 'none';
             loginButtonContainer.style.display = 'flex';
+            if (adminPanelLink) {
+                adminPanelLink.style.display = 'none';
+            }
         }
     }
 
@@ -630,6 +639,7 @@ export function initMainController() {
                 const action = this.dataset.action;
                 if (action && action !== 'toggle-select' && !this.closest('.photo-context-menu')) { e.preventDefault(); }
                 if (action === 'toggleMainView') { handleNavigation('main', 'home'); return; }
+                if (action === 'toggleAdminView') { handleNavigation('admin', 'manageUsers'); return; }
                 if (action && action.startsWith('toggleSection')) {
                     const sectionName = action.substring("toggleSection".length);
                     const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
@@ -1004,6 +1014,8 @@ export function initMainController() {
     
     const photoMatch = path.match(/^gallery\/([a-f0-f-]{36})\/photo\/(\d+)$/);
     const galleryMatch = path.match(/^gallery\/([a-f0-9-]{36})$/);
+    const adminUsersMatch = path.match(/^admin\/users$/);
+    const adminGalleriesMatch = path.match(/^admin\/galleries$/);
 
     if (photoMatch) {
         const [, galleryUuid, photoId] = photoMatch;
@@ -1025,6 +1037,12 @@ export function initMainController() {
                     handleNavigation('main', '404');
                 }
             });
+    } else if (adminUsersMatch) {
+        setInitialHistoryState('admin', 'manageUsers');
+        handleStateChange('admin', 'manageUsers');
+    } else if (adminGalleriesMatch) {
+        setInitialHistoryState('admin', 'manageGalleries');
+        handleStateChange('admin', 'manageGalleries');
     } else if (initialView && initialSection) {
         setInitialHistoryState(initialView, initialSection);
         handleStateChange(initialView, initialSection);

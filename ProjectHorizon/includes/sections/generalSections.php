@@ -14,3 +14,8 @@
     <?php include 'includes/sections/settings/accessibility.php'; ?>
     <?php include 'includes/sections/settings/historyPrivacy.php'; ?>
 </div>
+
+<div class="section-container <?php echo ($CURRENT_VIEW === 'admin') ? 'active' : 'disabled'; ?>" data-view="admin">
+    <?php include 'includes/sections/admin/manage-users.php'; ?>
+    <?php include 'includes/sections/admin/manage-galleries.php'; ?>
+</div>
