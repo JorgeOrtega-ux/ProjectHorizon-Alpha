@@ -1,1 +1,0 @@
-<div class="section-content <?php echo ($CURRENT_SECTION === 'explore') ? 'active' : 'disabled'; ?>" data-section="explore">Contenido de Explorar</div>
