@@ -48,8 +48,16 @@ switch ($sort_by) {
     default: $order_clause = "ORDER BY (um.total_likes * 0.5 + um.total_saves * 0.3 + um.total_interactions * 0.2) DESC"; break;
 }
 
-// Se añade LIMIT y OFFSET a la consulta
-$sql = "SELECT u.uuid, u.name, u.privacy, um.last_edited 
+// Se modifica la consulta principal para incluir la foto de fondo más relevante
+$sql = "SELECT u.uuid, u.name, u.privacy, um.last_edited,
+               (
+                   SELECT up.photo_url
+                   FROM user_photos up
+                   JOIN user_photos_metadata upm ON up.id = upm.photo_id
+                   WHERE up.user_uuid = u.uuid
+                   ORDER BY (upm.likes * 0.5 + upm.saves * 0.3 + upm.interactions * 0.2) DESC
+                   LIMIT 1
+               ) AS background_photo_url
         FROM users u
         JOIN users_metadata um ON u.uuid = um.user_uuid
         $where_clause

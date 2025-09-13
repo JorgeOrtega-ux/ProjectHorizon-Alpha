@@ -1,12 +1,10 @@
 -- Borra la base de datos si ya existe para empezar desde cero
 DROP DATABASE IF EXISTS project_horizon;
-
 -- Crea la base de datos
 CREATE DATABASE project_horizon;
 
 -- Selecciona la base de datos para usarla
 USE project_horizon;
-
 -- --------------------------------------------------------
 --
 -- Estructura de la tabla `users`
@@ -18,7 +16,6 @@ CREATE TABLE users (
     name VARCHAR(255) NOT NULL,
     privacy BOOLEAN DEFAULT FALSE
 );
-
 -- --------------------------------------------------------
 --
 -- Estructura de la tabla `users_metadata`
@@ -33,7 +30,6 @@ CREATE TABLE users_metadata (
     last_edited TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_uuid) REFERENCES users(uuid)
 );
-
 -- --------------------------------------------------------
 --
 -- Volcado de datos para la tabla `users`
@@ -65,7 +61,6 @@ INSERT INTO `users` (`uuid`, `name`, `privacy`) VALUES
 ('e3f4a5b6-c7d8-9012-3456-bcdef0123456', 'Thiago Sosa', 1),
 ('f4a5b6c7-d8e9-0123-4567-cdef01234567', 'Abril Acosta', 0),
 ('a5b6c7d8-e9f0-1234-5678-def0123456789', 'Felipe Ortiz', 0);
-
 -- --------------------------------------------------------
 --
 -- Volcado de datos para la tabla `users_metadata`
@@ -97,7 +92,6 @@ INSERT INTO `users_metadata` (`user_uuid`, `total_likes`, `total_saves`, `total_
 ('e3f4a5b6-c7d8-9012-3456-bcdef0123456', 30, 3, 33),
 ('f4a5b6c7-d8e9-0123-4567-cdef01234567', 170, 42, 212),
 ('a5b6c7d8-e9f0-1234-5678-def0123456789', 240, 75, 315);
-
 -- --------------------------------------------------------
 --
 -- Actualiza las fechas de `last_edited` con valores aleatorios
@@ -106,11 +100,16 @@ INSERT INTO `users_metadata` (`user_uuid`, `total_likes`, `total_saves`, `total_
 -- --------------------------------------------------------
 UPDATE users_metadata SET last_edited = NOW() - INTERVAL FLOOR(RAND() * 365) DAY - INTERVAL FLOOR(RAND() * 24) HOUR - INTERVAL FLOOR(RAND() * 60) MINUTE;
 
-
+-- --------------------------------------------------------
+--
+-- Estructura de la tabla `user_photos`
+--
+-- --------------------------------------------------------
 CREATE TABLE `user_photos` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_uuid` varchar(36) NOT NULL,
-  `photo_url` varchar(255) NOT NULL
+  `photo_url` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -238,8 +237,39 @@ INSERT INTO `user_photos` (`id`, `user_uuid`, `photo_url`) VALUES
 (118, 'f4a5b6c7-d8e9-0123-4567-cdef01234567', 'https://images.unsplash.com/photo-1550684376-efcbd6e3f031?auto=format&fit=crop&w=800&q=60'),
 (119, 'f4a5b6c7-d8e9-0123-4567-cdef01234567', 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?auto=format&fit=crop&w=800&q=60'),
 (120, 'f4a5b6c7-d8e9-0123-4567-cdef01234567', 'https://images.unsplash.com/photo-1533038590840-1cde6e668a91?auto=format&fit=crop&w=800&q=60'),
-(121, 'a5b6c7d8-e9f0-1234-5678-def012345678', 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=800&q=60'),
-(122, 'a5b6c7d8-e9f0-1234-5678-def012345678', 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=60'),
-(123, 'a5b6c7d8-e9f0-1234-5678-def012345678', 'https://images.unsplash.com/photo-1504196658025-a1f5f3a25e1a?auto=format&fit=crop&w=800&q=60'),
-(124, 'a5b6c7d8-e9f0-1234-5678-def012345678', 'https://images.unsplash.com/photo-1464349153735-7db50ed83c84?auto=format&fit=crop&w=800&q=60'),
-(125, 'a5b6c7d8-e9f0-1234-5678-def012345678', 'https://images.unsplash.com/photo-1527487265873-35079a2a94a6?auto=format&fit=crop&w=800&q=60');
+(121, 'a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=800&q=60'),
+(122, 'a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=60'),
+(123, 'a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1504196658025-a1f5f3a25e1a?auto=format&fit=crop&w=800&q=60'),
+(124, 'a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1464349153735-7db50ed83c84?auto=format&fit=crop&w=800&q=60'),
+(125, 'a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1527487265873-35079a2a94a6?auto=format&fit=crop&w=800&q=60');
+
+-- --------------------------------------------------------
+--
+-- Estructura de la tabla `user_photos_metadata`
+--
+-- --------------------------------------------------------
+CREATE TABLE `user_photos_metadata` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `photo_id` int(11) NOT NULL,
+  `likes` int(11) DEFAULT 0,
+  `saves` int(11) DEFAULT 0,
+  `interactions` int(11) DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `photo_id` (`photo_id`),
+  CONSTRAINT `user_photos_metadata_ibfk_1` FOREIGN KEY (`photo_id`) REFERENCES `user_photos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+--
+-- Volcado de datos para la tabla `user_photos_metadata`
+--
+-- --------------------------------------------------------
+-- Se generan datos aleatorios para cada una de las 125 fotos
+INSERT INTO `user_photos_metadata` (`photo_id`, `likes`, `saves`, `interactions`)
+SELECT
+    id,
+    FLOOR(RAND() * 500) AS likes,
+    FLOOR(RAND() * 100) AS saves,
+    FLOOR(RAND() * 1000) AS interactions
+FROM
+    `user_photos`;

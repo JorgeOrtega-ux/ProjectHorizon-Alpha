@@ -172,6 +172,14 @@ export function initMainController() {
                 card.dataset.uuid = user.uuid;
                 card.dataset.name = user.name;
                 card.dataset.privacy = user.privacy;
+
+                // --- NUEVO: Añadir fondo de tarjeta ---
+                if (user.background_photo_url) {
+                    const background = document.createElement('div');
+                    background.className = 'card-background';
+                    background.style.backgroundImage = `url('${user.background_photo_url}')`;
+                    card.appendChild(background);
+                }
                 
                 const overlay = document.createElement('div');
                 overlay.className = 'card-content-overlay';
