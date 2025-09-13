@@ -24,7 +24,7 @@ export function initMainController() {
     let isLoadingPhotos = false;
     const BATCH_SIZE = 20;
 
-    let currentFavoritesSortBy = 'newest';
+    let currentFavoritesSortBy = 'user';
 
     function isFavorite(photoId) {
         const favorites = getFavorites();
@@ -160,6 +160,12 @@ export function initMainController() {
 
                 const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
                 card.innerHTML += `
+                    <div class="card-content-overlay">
+                        <div class="card-text">
+                            <span>${photo.gallery_name}</span>
+                            <span style="font-size: 0.8rem; display: block;">${new Date(photo.added_at).toLocaleString()}</span>
+                        </div>
+                    </div>
                     <div class="card-actions-container">
                         <div class="card-hover-overlay">
                             <div class="card-hover-icons">
