@@ -71,11 +71,15 @@ export function initMainController() {
             favorites.forEach(photo => {
                 const card = document.createElement('div');
                 card.className = 'card photo-card';
-                card.style.backgroundImage = `url('${photo.photo_url}')`;
                 card.dataset.photoUrl = photo.photo_url;
                 card.dataset.photoId = photo.id;
                 card.dataset.userUuid = photo.user_uuid;
     
+                const background = document.createElement('div');
+                background.className = 'card-background';
+                background.style.backgroundImage = `url('${photo.photo_url}')`;
+                card.appendChild(background);
+
                 const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/user/${photo.user_uuid}/photo/${photo.id}`;
     
                 const cardContent = `
@@ -369,11 +373,15 @@ export function initMainController() {
                     photos.forEach(photo => {
                         const card = document.createElement('div');
                         card.className = 'card photo-card';
-                        card.style.backgroundImage = `url('${photo.photo_url}')`;
                         card.dataset.photoUrl = photo.photo_url;
                         card.dataset.photoId = photo.id;
                         card.dataset.userUuid = photo.user_uuid;
                         
+                        const background = document.createElement('div');
+                        background.className = 'card-background';
+                        background.style.backgroundImage = `url('${photo.photo_url}')`;
+                        card.appendChild(background);
+
                         const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/user/${uuid}/photo/${photo.id}`;
 
                         const cardContent = `

@@ -536,10 +536,10 @@ body {
 
 .card-grid {
     display: grid;
-    /* --- [AJUSTE] Se reduce el ancho mínimo de las tarjetas --- */
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 16px;
 }
+
 .overflow-y {
     overflow-x: hidden;
     overflow-y: auto;
@@ -549,23 +549,34 @@ body {
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
 }
+
 .card {
     position: relative;
     border-radius: 12px;
-    /* --- [AJUSTE] Se reduce la altura de las tarjetas --- */
     height: 280px;
     background-color: #e0e0e0;
-    background-image: url('https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?q=80&w=1000&auto=format&fit=crop');
-    background-size: cover;
-    background-position: center;
-    overflow: hidden;
     color: #ffffff;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
+    /* overflow: hidden; se quitó de aquí */
 }
 
-.card::after {
+.card-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    border-radius: 12px;
+    overflow: hidden; /* Se mantiene aquí para recortar la imagen y la sombra */
+    z-index: 0;
+}
+
+/* --- CORRECCIÓN --- La sombra ahora se aplica al fondo */
+.card-background::after {
     content: '';
     position: absolute;
     top: 0;
@@ -580,15 +591,10 @@ body {
     display: flex;
     align-items: center;
     padding: 16px;
-    z-index: 1;
+    z-index: 1; /* Elevado para estar sobre la sombra */
     position: relative;
 }
-.body-title {
-    font-size: 0.875rem;
-    font-weight: 500;
-    letter-spacing: 0.0178571429em;
-    color: #000000;
-}
+
 .card-icon {
     width: 40px;
     height: 40px;
@@ -597,9 +603,7 @@ body {
     flex-shrink: 0;
     background-color: #a0a0a0;
 }
-.user-table tr {
-    border-radius: 8px;
-}
+
 .card-text {
     margin-left: 12px;
     font-size: 1rem;
@@ -610,7 +614,6 @@ body {
     background-color: transparent;
 }
 
-/* --- Estilos para la vista de tabla y el toggle --- */
 .view-container.disabled {
     display: none;
 }
@@ -619,7 +622,6 @@ body {
     display: block;
 }
 
-/* Corrección para que la cuadrícula funcione */
 .card-grid.active {
     display: grid;
 }
@@ -706,7 +708,7 @@ body {
     position: absolute;
     top: 12px;
     right: 12px;
-    z-index: 2;
+    z-index: 2; /* Elevado para estar sobre la sombra y el contenido */
 }
 
 .card-hover-overlay {
@@ -715,7 +717,6 @@ body {
     transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
-/* ** AQUÍ ESTÁ LA CORRECCIÓN ** */
 .card:hover .card-hover-overlay,
 .card-actions-container.force-visible .card-hover-overlay {
     opacity: 1;
@@ -773,9 +774,8 @@ body {
         border-top-right-radius: 0;
         box-shadow: unset;
     }
-}/* ... (todo tu CSS existente va aquí) ... */
+}
 
-/* --- Estilos para la vista de foto --- */
 .photo-viewer-container {
     display: flex;
     justify-content: center;
@@ -823,7 +823,6 @@ body {
     background-color: #f5f5fa;
 }
 
-/* --- NUEVOS ESTILOS --- */
 .photo-nav-button.disabled-nav {
     color: #00000040;
     cursor: not-allowed;
@@ -841,40 +840,37 @@ body {
     font-weight: 500;
 }
 
-/* --- FIN DE NUEVOS ESTILOS --- */
-
 .photo-nav-counter {
     padding: 0 16px;
     font-size: 0.875rem;
     font-weight: 500;
     min-width: 70px;
     text-align: center;
-}/* ... (todo tu CSS existente va aquí) ... */
+}
 
 .header-button[data-action="toggle-favorite"] .material-symbols-rounded {
     color: #000000;
 }
 
 .header-button[data-action="toggle-favorite"].active {
-    background-color: #ffebee; /* Un rojo claro para el fondo */
-    border-color: #ffcdd2; /* Borde rojo claro */
+    background-color: #ffebee;
+    border-color: #ffcdd2;
 }
 
 .header-button[data-action="toggle-favorite"].active .material-symbols-rounded {
-    color: #e53935; /* Rojo intenso para el corazón */
-    font-variation-settings: 'FILL' 1; /* Rellena el ícono del corazón */
+    color: #e53935;
+    font-variation-settings: 'FILL' 1;
 }
-/* ... (todo tu CSS existente va aquí) ... */
 
-/* --- Estilos para el botón de favorito en la tarjeta --- */
 .card-hover-icons .icon-wrapper[data-action="toggle-favorite-card"] .material-symbols-rounded {
     color: #000000;
 }
 
 .card-hover-icons .icon-wrapper[data-action="toggle-favorite-card"].active .material-symbols-rounded {
-    color: #e53935; /* Rojo intenso para el corazón */
-    font-variation-settings: 'FILL' 1; /* Rellena el ícono del corazón */
-}/* --- Estilos para el botón "Mostrar más" --- */
+    color: #e53935;
+    font-variation-settings: 'FILL' 1;
+}
+
 .load-more-container {
     padding: 24px;
     text-align: center;
@@ -898,9 +894,8 @@ body {
 
 .load-more-container.disabled {
     display: none;
-}/* ... (todo tu CSS existente va aquí) ... */
+}
 
-/* --- Estilos para el formulario de código de acceso --- */
 .access-code-container {
     display: flex;
     flex-direction: column;
