@@ -14,19 +14,19 @@ export function initMainController() {
     let currentView = 'grid';
     let currentSortBy = 'relevant';
     let searchDebounceTimer;
-    let currentUserForPhotoView = null;
-    let currentUserNameForPhotoView = null;
-    let currentUserPhotoList = [];
+    let currentGalleryForPhotoView = null;
+    let currentGalleryNameForPhotoView = null;
+    let currentGalleryPhotoList = [];
     let currentPhotoData = null;
     let lastVisitedView = null;
     
-    // --- NUEVO: Almacenamiento de usuarios con acceso concedido ---
-    let grantedAccess = {}; // { 'user_uuid': true }
+    // --- NUEVO: Almacenamiento de galerías con acceso concedido ---
+    let grantedAccess = {}; // { 'gallery_uuid': true }
 
     // --- Variables para paginación ---
-    let usersCurrentPage = 1;
+    let galleriesCurrentPage = 1;
     let photosCurrentPage = 1;
-    let isLoadingUsers = false;
+    let isLoadingGalleries = false;
     let isLoadingPhotos = false;
     const BATCH_SIZE = 20;
 
@@ -73,14 +73,14 @@ export function initMainController() {
                 card.className = 'card photo-card';
                 card.dataset.photoUrl = photo.photo_url;
                 card.dataset.photoId = photo.id;
-                card.dataset.userUuid = photo.user_uuid;
+                card.dataset.galleryUuid = photo.gallery_uuid;
     
                 const background = document.createElement('div');
                 background.className = 'card-background';
                 background.style.backgroundImage = `url('${photo.photo_url}')`;
                 card.appendChild(background);
 
-                const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/user/${photo.user_uuid}/photo/${photo.id}`;
+                const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
     
                 const cardContent = `
                     <div class="card-actions-container">
@@ -160,24 +160,23 @@ export function initMainController() {
         }
     }
 
-    // --- RENDERIZADO DE USUARIOS (GRID) ---
-    function displayUsersAsGrid(users, container, sortBy, append = false) {
+    // --- RENDERIZADO DE GALERÍAS (GRID) ---
+    function displayGalleriesAsGrid(galleries, container, sortBy, append = false) {
         if (!append) {
             container.innerHTML = '';
         }
-        if (users.length > 0) {
-            users.forEach(user => {
+        if (galleries.length > 0) {
+            galleries.forEach(gallery => {
                 const card = document.createElement('div');
                 card.className = 'card';
-                card.dataset.uuid = user.uuid;
-                card.dataset.name = user.name;
-                card.dataset.privacy = user.privacy;
+                card.dataset.uuid = gallery.uuid;
+                card.dataset.name = gallery.name;
+                card.dataset.privacy = gallery.privacy;
 
-                // --- NUEVO: Añadir fondo de tarjeta ---
-                if (user.background_photo_url) {
+                if (gallery.background_photo_url) {
                     const background = document.createElement('div');
                     background.className = 'card-background';
-                    background.style.backgroundImage = `url('${user.background_photo_url}')`;
+                    background.style.backgroundImage = `url('${gallery.background_photo_url}')`;
                     card.appendChild(background);
                 }
                 
@@ -186,20 +185,20 @@ export function initMainController() {
                 
                 const icon = document.createElement('div');
                 icon.className = 'card-icon';
-                 if (user.profile_picture_url) {
-                    icon.style.backgroundImage = `url('${user.profile_picture_url}')`;
+                 if (gallery.profile_picture_url) {
+                    icon.style.backgroundImage = `url('${gallery.profile_picture_url}')`;
                 }
                 
                 const textContainer = document.createElement('div');
                 textContainer.className = 'card-text';
                 
                 const nameSpan = document.createElement('span');
-                nameSpan.textContent = user.name;
+                nameSpan.textContent = gallery.name;
                 textContainer.appendChild(nameSpan);
                 
                 if (sortBy === 'newest' || sortBy === 'oldest') {
                     const editedSpan = document.createElement('span');
-                    editedSpan.textContent = `Editado: ${new Date(user.last_edited).toLocaleDateString()}`;
+                    editedSpan.textContent = `Editado: ${new Date(gallery.last_edited).toLocaleDateString()}`;
                     editedSpan.style.fontSize = '0.8rem';
                     editedSpan.style.display = 'block';
                     textContainer.appendChild(editedSpan);
@@ -211,42 +210,42 @@ export function initMainController() {
                 container.appendChild(card);
             });
         } else if (!append) {
-            container.innerHTML = '<p>No se encontraron usuarios.</p>';
+            container.innerHTML = '<p>No se encontraron galerías.</p>';
         }
     }
 
-    // --- RENDERIZADO DE USUARIOS (TABLA) ---
-    function displayUsersAsTable(users, container, append = false) {
+    // --- RENDERIZADO DE GALERÍAS (TABLA) ---
+    function displayGalleriesAsTable(galleries, container, append = false) {
         const tbody = container.querySelector('tbody');
         if (!append) {
             tbody.innerHTML = '';
         }
-        if (users.length > 0) {
-            users.forEach(user => {
+        if (galleries.length > 0) {
+            galleries.forEach(gallery => {
                 const row = document.createElement('tr');
-                row.dataset.uuid = user.uuid;
-                row.dataset.name = user.name;
-                row.dataset.privacy = user.privacy;
+                row.dataset.uuid = gallery.uuid;
+                row.dataset.name = gallery.name;
+                row.dataset.privacy = gallery.privacy;
 
                 const nameCell = document.createElement('td');
                 const avatar = document.createElement('div');
                 avatar.className = 'user-avatar';
-                if (user.profile_picture_url) {
-                    avatar.style.backgroundImage = `url('${user.profile_picture_url}')`;
+                if (gallery.profile_picture_url) {
+                    avatar.style.backgroundImage = `url('${gallery.profile_picture_url}')`;
                 }
 
                 nameCell.innerHTML = `
                     <div class="user-info">
-                        <div class="user-avatar" style="background-image: url('${user.profile_picture_url || ''}')"></div>
-                        <span>${user.name}</span>
+                        <div class="user-avatar" style="background-image: url('${gallery.profile_picture_url || ''}')"></div>
+                        <span>${gallery.name}</span>
                     </div>
                 `;
                 const privacyCell = document.createElement('td');
-                privacyCell.textContent = user.privacy == "1" ? 'Privado' : 'Público';
+                privacyCell.textContent = gallery.privacy == "1" ? 'Privado' : 'Público';
                 const typeCell = document.createElement('td');
-                typeCell.textContent = 'Perfil';
+                typeCell.textContent = 'Galería';
                 const editedCell = document.createElement('td');
-                editedCell.textContent = new Date(user.last_edited).toLocaleDateString();
+                editedCell.textContent = new Date(gallery.last_edited).toLocaleDateString();
 
                 row.appendChild(nameCell);
                 row.appendChild(privacyCell);
@@ -258,24 +257,24 @@ export function initMainController() {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
             cell.colSpan = 4;
-            cell.textContent = 'No se encontraron usuarios.';
+            cell.textContent = 'No se encontraron galerías.';
             cell.style.textAlign = 'center';
             row.appendChild(cell);
             tbody.appendChild(row);
         }
     }
 
-    // --- OBTENCIÓN DE DATOS DE USUARIOS (PAGINADO) ---
-    function fetchAndDisplayUsers(sortBy = 'relevant', searchTerm = '', append = false) {
-        if (isLoadingUsers) return;
-        isLoadingUsers = true;
+    // --- OBTENCIÓN DE DATOS DE GALERÍAS (PAGINADO) ---
+    function fetchAndDisplayGalleries(sortBy = 'relevant', searchTerm = '', append = false) {
+        if (isLoadingGalleries) return;
+        isLoadingGalleries = true;
 
         if (!append) {
-            usersCurrentPage = 1;
+            galleriesCurrentPage = 1;
         }
 
         const encodedSearchTerm = encodeURIComponent(searchTerm);
-        const url = `/ProjectHorizon/api/main_handler.php?request_type=users&sort=${sortBy}&search=${encodedSearchTerm}&page=${usersCurrentPage}&limit=${BATCH_SIZE}`;
+        const url = `/ProjectHorizon/api/main_handler.php?request_type=galleries&sort=${sortBy}&search=${encodedSearchTerm}&page=${galleriesCurrentPage}&limit=${BATCH_SIZE}`;
         
         fetch(url)
             .then(response => response.json())
@@ -284,55 +283,55 @@ export function initMainController() {
                 const tableContainer = document.getElementById('table-view');
                 const loadMoreContainer = document.getElementById('users-load-more-container');
 
-                if (gridContainer) displayUsersAsGrid(data, gridContainer, sortBy, append);
-                if (tableContainer) displayUsersAsTable(data, tableContainer, append);
+                if (gridContainer) displayGalleriesAsGrid(data, gridContainer, sortBy, append);
+                if (tableContainer) displayGalleriesAsTable(data, tableContainer, append);
 
                 if (data.length < BATCH_SIZE) {
                     loadMoreContainer.classList.add('disabled');
                 } else {
                     loadMoreContainer.classList.remove('disabled');
-                    usersCurrentPage++;
+                    galleriesCurrentPage++;
                 }
             })
             .catch(error => {
-                console.error('Error al obtener los usuarios:', error);
+                console.error('Error al obtener las galerías:', error);
                 const gridContainer = document.getElementById('grid-view');
-                if (gridContainer && !append) gridContainer.innerHTML = '<p>Error al cargar usuarios.</p>';
+                if (gridContainer && !append) gridContainer.innerHTML = '<p>Error al cargar galerías.</p>';
             })
             .finally(() => {
-                isLoadingUsers = false;
+                isLoadingGalleries = false;
             });
     }
     
-    // --- NUEVO: LÓGICA DE CÓDIGO DE ACCESO ---
-    function showAccessCodePrompt(uuid, userName) {
+    // --- LÓGICA DE CÓDIGO DE ACCESO ---
+    function showAccessCodePrompt(uuid, galleryName) {
         handleNavigation('main', 'accessCodePrompt');
         const title = document.getElementById('access-code-title');
         const input = document.getElementById('access-code-input');
         const submitBtn = document.getElementById('access-code-submit');
         const errorMsg = document.getElementById('access-code-error');
 
-        title.textContent = `Galería de ${userName}`;
+        title.textContent = `Galería de ${galleryName}`;
         input.value = '';
         errorMsg.textContent = '';
         
         const submitHandler = () => {
             const code = input.value.trim();
             if (code) {
-                verifyAccessCode(uuid, code, userName);
+                verifyAccessCode(uuid, code, galleryName);
             }
         };
 
         submitBtn.onclick = submitHandler;
     }
 
-    function verifyAccessCode(uuid, code, userName) {
+    function verifyAccessCode(uuid, code, galleryName) {
         const formData = new FormData();
-        formData.append('action_type', 'verify_code'); // Identificador para el backend
+        formData.append('action_type', 'verify_code');
         formData.append('uuid', uuid);
         formData.append('code', code);
 
-        fetch('/ProjectHorizon/api/main_handler.php', { // URL actualizada
+        fetch('/ProjectHorizon/api/main_handler.php', {
             method: 'POST',
             body: formData
         })
@@ -341,7 +340,7 @@ export function initMainController() {
             if (data.success) {
                 grantedAccess[uuid] = true;
                 sessionStorage.setItem('grantedAccess', JSON.stringify(grantedAccess));
-                fetchAndDisplayUserPhotos(uuid, userName);
+                fetchAndDisplayGalleryPhotos(uuid, galleryName);
             } else {
                 const errorMsg = document.getElementById('access-code-error');
                 errorMsg.textContent = data.message || 'Error desconocido.';
@@ -354,11 +353,11 @@ export function initMainController() {
         });
     }
 
-    // --- OBTENCIÓN DE FOTOS DE USUARIO (PAGINADO) ---
-    function fetchAndDisplayUserPhotos(uuid, userName, append = false) {
+    // --- OBTENCIÓN DE FOTOS DE GALERÍA (PAGINADO) ---
+    function fetchAndDisplayGalleryPhotos(uuid, galleryName, append = false) {
         if (!append) {
             photosCurrentPage = 1;
-            currentUserPhotoList = [];
+            currentGalleryPhotoList = [];
             const grid = document.getElementById('user-photos-grid');
             if (grid) grid.innerHTML = '';
             
@@ -368,8 +367,8 @@ export function initMainController() {
         if (isLoadingPhotos) return;
         isLoadingPhotos = true;
         
-        currentUserForPhotoView = uuid;
-        currentUserNameForPhotoView = userName;
+        currentGalleryForPhotoView = uuid;
+        currentGalleryNameForPhotoView = galleryName;
 
         const grid = document.getElementById('user-photos-grid');
         const title = document.getElementById('user-photos-title');
@@ -377,7 +376,7 @@ export function initMainController() {
 
         if (!append) {
             grid.innerHTML = '<p>Cargando fotos...</p>';
-            title.textContent = userName ? userName : 'Cargando...';
+            title.textContent = galleryName ? galleryName : 'Cargando...';
         }
 
         fetch(`/ProjectHorizon/api/main_handler.php?request_type=photos&uuid=${uuid}&page=${photosCurrentPage}&limit=${BATCH_SIZE}`)
@@ -385,7 +384,7 @@ export function initMainController() {
             .then(photos => {
                 if (!append) grid.innerHTML = '';
                 
-                currentUserPhotoList.push(...photos);
+                currentGalleryPhotoList.push(...photos);
                 
                 if (photos.length > 0) {
                     photos.forEach(photo => {
@@ -393,14 +392,14 @@ export function initMainController() {
                         card.className = 'card photo-card';
                         card.dataset.photoUrl = photo.photo_url;
                         card.dataset.photoId = photo.id;
-                        card.dataset.userUuid = photo.user_uuid;
+                        card.dataset.galleryUuid = photo.gallery_uuid;
                         
                         const background = document.createElement('div');
                         background.className = 'card-background';
                         background.style.backgroundImage = `url('${photo.photo_url}')`;
                         card.appendChild(background);
 
-                        const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/user/${uuid}/photo/${photo.id}`;
+                        const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${uuid}/photo/${photo.id}`;
 
                         const cardContent = `
                             <div class="card-actions-container">
@@ -438,7 +437,7 @@ export function initMainController() {
                         updateFavoriteCardState(photo.id);
                     });
                 } else if (!append) {
-                    grid.innerHTML = '<p>Este usuario no tiene fotos.</p>';
+                    grid.innerHTML = '<p>Esta galería no tiene fotos.</p>';
                 }
                 
                 if (photos.length < BATCH_SIZE) {
@@ -470,59 +469,58 @@ export function initMainController() {
         const nextButton = document.querySelector('[data-action="next-photo"]');
 
         const displayFetchedPhoto = () => {
-            const photoIndex = currentUserPhotoList.findIndex(p => p.id == photoId);
+            const photoIndex = currentGalleryPhotoList.findIndex(p => p.id == photoId);
             if (photoIndex !== -1) {
-                const photo = currentUserPhotoList[photoIndex];
+                const photo = currentGalleryPhotoList[photoIndex];
                 
                 currentPhotoData = {
                     id: photo.id,
-                    user_uuid: uuid,
+                    gallery_uuid: uuid,
                     photo_url: photo.photo_url,
-                    user_name: currentUserNameForPhotoView
+                    gallery_name: currentGalleryNameForPhotoView
                 };
                 
                 photoViewerImage.src = photo.photo_url;
-                photoCounter.textContent = `${photoIndex + 1} / ${currentUserPhotoList.length}`;
-                currentUserForPhotoView = uuid;
+                photoCounter.textContent = `${photoIndex + 1} / ${currentGalleryPhotoList.length}`;
+                currentGalleryForPhotoView = uuid;
                 
                 updateFavoriteButtonState(photo.id);
 
                 prevButton.classList.toggle('disabled-nav', photoIndex === 0);
-                nextButton.classList.toggle('disabled-nav', photoIndex === currentUserPhotoList.length - 1);
+                nextButton.classList.toggle('disabled-nav', photoIndex === currentGalleryPhotoList.length - 1);
             } else {
                 handleNavigation('main', '404');
             }
         };
         
-        const fetchAndSetUserName = (uuid) => {
-             fetch(`/ProjectHorizon/api/main_handler.php?request_type=users&uuid=${uuid}`)
+        const fetchAndSetGalleryName = (uuid) => {
+             fetch(`/ProjectHorizon/api/main_handler.php?request_type=galleries&uuid=${uuid}`)
                 .then(res => res.json())
-                .then(user => {
-                    if (user && user.name) {
-                        currentUserNameForPhotoView = user.name;
-                        photoViewUserTitle.textContent = user.name;
+                .then(gallery => {
+                    if (gallery && gallery.name) {
+                        currentGalleryNameForPhotoView = gallery.name;
+                        photoViewUserTitle.textContent = gallery.name;
                     }
                 });
         };
         
-        if (currentUserNameForPhotoView) {
-            photoViewUserTitle.textContent = currentUserNameForPhotoView;
+        if (currentGalleryNameForPhotoView) {
+            photoViewUserTitle.textContent = currentGalleryNameForPhotoView;
         } else {
-            fetchAndSetUserName(uuid);
+            fetchAndSetGalleryName(uuid);
         }
 
-        if (currentUserPhotoList.length === 0 || currentUserForPhotoView !== uuid) {
+        if (currentGalleryPhotoList.length === 0 || currentGalleryForPhotoView !== uuid) {
             fetch(`/ProjectHorizon/api/main_handler.php?request_type=photos&uuid=${uuid}&limit=1000`) // Carga un gran número para la navegación
                 .then(res => res.json())
                 .then(photos => {
-                    currentUserPhotoList = photos;
+                    currentGalleryPhotoList = photos;
                     displayFetchedPhoto();
                 });
         } else {
             displayFetchedPhoto();
         }
     }
-
 
     // --- INICIALIZACIÓN DE EVENTOS ---
     function setupEventListeners() {
@@ -561,7 +559,7 @@ export function initMainController() {
                 clearTimeout(searchDebounceTimer);
                 searchDebounceTimer = setTimeout(() => {
                     const searchTerm = searchInput.value.trim();
-                    fetchAndDisplayUsers(currentSortBy, searchTerm);
+                    fetchAndDisplayGalleries(currentSortBy, searchTerm);
                 }, 300);
             });
         }
@@ -633,24 +631,24 @@ export function initMainController() {
                 }
             }
         
-            const userElement = event.target.closest('.card:not(.photo-card), tr[data-uuid]');
-            if (userElement && userElement.dataset.uuid && !event.target.closest('.card-actions-container')) {
-                const isPrivate = userElement.dataset.privacy === '1';
-                const uuid = userElement.dataset.uuid;
-                const name = userElement.dataset.name;
+            const galleryElement = event.target.closest('.card:not(.photo-card), tr[data-uuid]');
+            if (galleryElement && galleryElement.dataset.uuid && !event.target.closest('.card-actions-container')) {
+                const isPrivate = galleryElement.dataset.privacy === '1';
+                const uuid = galleryElement.dataset.uuid;
+                const name = galleryElement.dataset.name;
 
                 if (isPrivate && !grantedAccess[uuid]) {
                     showAccessCodePrompt(uuid, name);
                 } else {
-                    fetchAndDisplayUserPhotos(uuid, name);
+                    fetchAndDisplayGalleryPhotos(uuid, name);
                 }
                 return;
             }
 
             const photoCard = event.target.closest('.card.photo-card');
             if (photoCard && !event.target.closest('.card-actions-container')) {
-                const userUuid = photoCard.dataset.userUuid || currentUserForPhotoView;
-                displayPhoto(userUuid, photoCard.dataset.photoId);
+                const galleryUuid = photoCard.dataset.galleryUuid || currentGalleryForPhotoView;
+                displayPhoto(galleryUuid, photoCard.dataset.photoId);
                 return;
             }
         
@@ -686,12 +684,12 @@ export function initMainController() {
                 
                 case 'load-more-users':
                     const searchTerm = searchInput ? searchInput.value.trim() : '';
-                    fetchAndDisplayUsers(currentSortBy, searchTerm, true);
+                    fetchAndDisplayGalleries(currentSortBy, searchTerm, true);
                     break;
                 
                 case 'load-more-photos':
-                    if (currentUserForPhotoView && currentUserNameForPhotoView) {
-                        fetchAndDisplayUserPhotos(currentUserForPhotoView, currentUserNameForPhotoView, true);
+                    if (currentGalleryForPhotoView && currentGalleryNameForPhotoView) {
+                        fetchAndDisplayGalleryPhotos(currentGalleryForPhotoView, currentGalleryNameForPhotoView, true);
                     }
                     break;
 
@@ -699,15 +697,15 @@ export function initMainController() {
                     if (lastVisitedView === 'favorites') {
                         navigateToUrl('main', 'favorites');
                         handleStateChange('main', 'favorites');
-                    } else if (currentUserForPhotoView && currentUserNameForPhotoView) {
-                        fetchAndDisplayUserPhotos(currentUserForPhotoView, currentUserNameForPhotoView);
+                    } else if (currentGalleryForPhotoView && currentGalleryNameForPhotoView) {
+                        fetchAndDisplayGalleryPhotos(currentGalleryForPhotoView, currentGalleryNameForPhotoView);
                     } else {
                         navigateToUrl('main', 'home');
                         handleStateChange('main', 'home');
                     }
                     break;
                 
-                 case 'returnToHome': // --- [CORRECCIÓN] ---
+                 case 'returnToHome':
                     handleNavigation('main', 'home');
                     break;
 
@@ -726,15 +724,15 @@ export function initMainController() {
                         const favorites = getFavorites();
                         photoData = favorites.find(p => p.id == photoId);
                     } else {
-                        photoData = currentUserPhotoList.find(p => p.id == photoId);
+                        photoData = currentGalleryPhotoList.find(p => p.id == photoId);
                     }
                     
                     if (photoData) {
                         const fullPhotoData = {
                             id: photoData.id,
-                            user_uuid: photoData.user_uuid || currentUserForPhotoView,
+                            gallery_uuid: photoData.gallery_uuid || currentGalleryForPhotoView,
                             photo_url: photoData.photo_url,
-                            user_name: photoData.user_name || currentUserNameForPhotoView
+                            gallery_name: photoData.gallery_name || currentGalleryNameForPhotoView
                         };
                         toggleFavorite(fullPhotoData);
 
@@ -750,20 +748,20 @@ export function initMainController() {
                     if (!actionTarget.classList.contains('disabled-nav')) {
                         const path = window.location.pathname;
                         const photoMatch = path.match(/^.*\/photo\/(\d+)$/);
-                        if (!photoMatch || currentUserPhotoList.length === 0) return;
+                        if (!photoMatch || currentGalleryPhotoList.length === 0) return;
 
                         const currentId = parseInt(photoMatch[1], 10);
-                        const currentIndex = currentUserPhotoList.findIndex(p => p.id === currentId);
+                        const currentIndex = currentGalleryPhotoList.findIndex(p => p.id === currentId);
 
                         if (currentIndex !== -1) {
                             let nextIndex = currentIndex;
-                            if (action === 'next-photo' && currentIndex < currentUserPhotoList.length - 1) {
+                            if (action === 'next-photo' && currentIndex < currentGalleryPhotoList.length - 1) {
                                 nextIndex = currentIndex + 1;
                             } else if (action === 'previous-photo' && currentIndex > 0) {
                                 nextIndex = currentIndex - 1;
                             }
-                            const nextPhoto = currentUserPhotoList[nextIndex];
-                            displayPhoto(currentUserForPhotoView, nextPhoto.id);
+                            const nextPhoto = currentGalleryPhotoList[nextIndex];
+                            displayPhoto(currentGalleryForPhotoView, nextPhoto.id);
                         }
                     }
                     break;
@@ -788,7 +786,7 @@ export function initMainController() {
 
                 case 'copy-link':
                     const card = actionTarget.closest('.card');
-                    const url = window.location.origin + window.BASE_PATH + `/user/${currentUserForPhotoView}/photo/${card.dataset.photoId}`;
+                    const url = window.location.origin + window.BASE_PATH + `/gallery/${currentGalleryForPhotoView}/photo/${card.dataset.photoId}`;
                     if (navigator.clipboard) {
                         navigator.clipboard.writeText(url).then(() => {
                             console.log('Enlace copiado!', url);
@@ -839,7 +837,7 @@ export function initMainController() {
             option.addEventListener('click', function() {
                 currentSortBy = this.dataset.value;
                 const searchTerm = searchInput ? searchInput.value.trim() : '';
-                fetchAndDisplayUsers(currentSortBy, searchTerm);
+                fetchAndDisplayGalleries(currentSortBy, searchTerm);
             });
         });
         
@@ -877,11 +875,11 @@ export function initMainController() {
         } else if (section === 'home') {
             if (homeTriggerText) homeTriggerText.textContent = 'Página principal';
             if (homeTriggerIcon) homeTriggerIcon.textContent = 'home';
-            fetchAndDisplayUsers(currentSortBy);
+            fetchAndDisplayGalleries(currentSortBy);
         } else if (section === 'userPhotos' && data && data.uuid) {
-            fetch(`/ProjectHorizon/api/main_handler.php?request_type=users&uuid=${data.uuid}`)
+            fetch(`/ProjectHorizon/api/main_handler.php?request_type=galleries&uuid=${data.uuid}`)
              .then(res => res.json())
-             .then(user => { if (user) fetchAndDisplayUserPhotos(user.uuid, user.name); });
+             .then(gallery => { if (gallery) fetchAndDisplayGalleryPhotos(gallery.uuid, gallery.name); });
         } else if (section === 'photoView' && data && data.uuid && data.photoId) {
             displayPhoto(data.uuid, data.photoId);
         }
@@ -903,24 +901,24 @@ export function initMainController() {
     const initialSection = document.querySelector('.section-container.active .section-content.active')?.dataset.section;
     const path = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1);
     
-    const photoMatch = path.match(/^user\/([a-f0-f-]{36})\/photo\/(\d+)$/);
-    const userMatch = path.match(/^user\/([a-f0-9-]{36})$/);
+    const photoMatch = path.match(/^gallery\/([a-f0-f-]{36})\/photo\/(\d+)$/);
+    const galleryMatch = path.match(/^gallery\/([a-f0-9-]{36})$/);
 
     if (photoMatch) {
-        const [, userUuid, photoId] = photoMatch;
-        setInitialHistoryState(initialView, 'photoView', { uuid: userUuid, photoId: photoId });
-        displayPhoto(userUuid, photoId);
-    } else if (userMatch) {
-        const userUuid = userMatch[1];
-        setInitialHistoryState(initialView, 'userPhotos', { uuid: userUuid });
-        fetch(`/ProjectHorizon/api/main_handler.php?request_type=users&uuid=${userUuid}`)
+        const [, galleryUuid, photoId] = photoMatch;
+        setInitialHistoryState(initialView, 'photoView', { uuid: galleryUuid, photoId: photoId });
+        displayPhoto(galleryUuid, photoId);
+    } else if (galleryMatch) {
+        const galleryUuid = galleryMatch[1];
+        setInitialHistoryState(initialView, 'userPhotos', { uuid: galleryUuid });
+        fetch(`/ProjectHorizon/api/main_handler.php?request_type=galleries&uuid=${galleryUuid}`)
             .then(res => res.json())
-            .then(user => {
-                if (user && user.uuid) {
-                     if (user.privacy === "1" && !grantedAccess[user.uuid]) {
-                        showAccessCodePrompt(user.uuid, user.name);
+            .then(gallery => {
+                if (gallery && gallery.uuid) {
+                     if (gallery.privacy === "1" && !grantedAccess[gallery.uuid]) {
+                        showAccessCodePrompt(gallery.uuid, gallery.name);
                     } else {
-                        fetchAndDisplayUserPhotos(user.uuid, user.name);
+                        fetchAndDisplayGalleryPhotos(gallery.uuid, gallery.name);
                     }
                 } else {
                     handleNavigation('main', '404');
