@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'oldest': $order_clause = "ORDER BY gm.last_edited ASC"; break;
             case 'alpha-asc': $order_clause = "ORDER BY g.name ASC"; break;
             case 'alpha-desc': $order_clause = "ORDER BY g.name DESC"; break;
-            default: $order_clause = "ORDER BY (gm.total_likes * 0.5 + gm.total_saves * 0.3 + gm.total_interactions * 0.2) DESC"; break;
+            default: $order_clause = "ORDER BY (gm.total_likes * 0.5 + gm.total_interactions * 0.2) DESC"; break;
         }
         $sql = "SELECT g.uuid, g.name, g.privacy, gm.last_edited, gpp.profile_picture_url,
                        (
@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                            FROM gallery_photos gp
                            JOIN gallery_photos_metadata gpm ON gp.id = gpm.photo_id
                            WHERE gp.gallery_uuid = g.uuid
-                           ORDER BY (gpm.likes * 0.5 + gpm.saves * 0.3 + gpm.interactions * 0.2) DESC
+                           ORDER BY (gpm.likes * 0.5 + gpm.interactions * 0.2) DESC
                            LIMIT 1
                        ) AS background_photo_url
                 FROM galleries g
