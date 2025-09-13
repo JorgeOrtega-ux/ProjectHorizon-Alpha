@@ -7,9 +7,10 @@ header('Content-Type: application/json');
 if (isset($_GET['uuid'])) {
     // ... (código existente sin cambios)
     $uuid = $_GET['uuid'];
-    $sql = "SELECT u.uuid, u.name, u.privacy, um.last_edited 
+    $sql = "SELECT u.uuid, u.name, u.privacy, um.last_edited, upp.profile_picture_url
             FROM users u
             JOIN users_metadata um ON u.uuid = um.user_uuid
+            LEFT JOIN user_profile_pictures upp ON u.uuid = upp.user_uuid
             WHERE u.uuid = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $uuid);
@@ -49,7 +50,7 @@ switch ($sort_by) {
 }
 
 // Se modifica la consulta principal para incluir la foto de fondo más relevante
-$sql = "SELECT u.uuid, u.name, u.privacy, um.last_edited,
+$sql = "SELECT u.uuid, u.name, u.privacy, um.last_edited, upp.profile_picture_url,
                (
                    SELECT up.photo_url
                    FROM user_photos up
@@ -60,6 +61,7 @@ $sql = "SELECT u.uuid, u.name, u.privacy, um.last_edited,
                ) AS background_photo_url
         FROM users u
         JOIN users_metadata um ON u.uuid = um.user_uuid
+        LEFT JOIN user_profile_pictures upp ON u.uuid = upp.user_uuid
         $where_clause
         $order_clause
         LIMIT ? OFFSET ?";

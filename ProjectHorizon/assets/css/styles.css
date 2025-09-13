@@ -602,6 +602,8 @@ body {
     border: 2px solid #ffffff;
     flex-shrink: 0;
     background-color: #a0a0a0;
+    background-size: cover;
+    background-position: center;
 }
 
 .card-text {
@@ -683,6 +685,8 @@ body {
     border-radius: 50%;
     background-color: #e0e0e0;
     flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
 }
 .card-grid.disabled {
     display: none;

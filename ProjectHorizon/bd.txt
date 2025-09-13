@@ -99,7 +99,6 @@ INSERT INTO `users_metadata` (`user_uuid`, `total_likes`, `total_saves`, `total_
 --
 -- --------------------------------------------------------
 UPDATE users_metadata SET last_edited = NOW() - INTERVAL FLOOR(RAND() * 365) DAY - INTERVAL FLOOR(RAND() * 24) HOUR - INTERVAL FLOOR(RAND() * 60) MINUTE;
-
 -- --------------------------------------------------------
 --
 -- Estructura de la tabla `user_photos`
@@ -111,7 +110,6 @@ CREATE TABLE `user_photos` (
   `photo_url` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 --
 -- Volcado de datos para la tabla `user_photos`
 --
@@ -160,7 +158,8 @@ INSERT INTO `user_photos` (`id`, `user_uuid`, `photo_url`) VALUES
 (41, 'c9d0e1f2-a3b4-5678-9012-def012345678', 'https://images.unsplash.com/photo-1536924430914-94f41bd9c394?auto=format&fit=crop&w=800&q=60'),
 (42, 'c9d0e1f2-a3b4-5678-9012-def012345678', 'https://images.unsplash.com/photo-1501426026826-31c667bdf23d?auto=format&fit=crop&w=800&q=60'),
 (43, 'c9d0e1f2-a3b4-5678-9012-def012345678', 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=800&q=60'),
-(44, 'c9d0e1f2-a3b4-5678-9012-def012345678', 'https://images.unsplash.com/photo-1482160549825-59ac1b23a9c8?auto=format&fit=crop&w=800&q=60'),
+(44, 
+'c9d0e1f2-a3b4-5678-9012-def012345678', 'https://images.unsplash.com/photo-1482160549825-59ac1b23a9c8?auto=format&fit=crop&w=800&q=60'),
 (45, 'c9d0e1f2-a3b4-5678-9012-def012345678', 'https://images.unsplash.com/photo-1547891654-e66ed7ebb968?auto=format&fit=crop&w=800&q=60'),
 (46, 'd0e1f2a3-b4c5-6789-0123-ef0123456789', 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=60'),
 (47, 'd0e1f2a3-b4c5-6789-0123-ef0123456789', 'https://images.unsplash.com/photo-1551489186-cf8726f514f8?auto=format&fit=crop&w=800&q=60'),
@@ -210,7 +209,8 @@ INSERT INTO `user_photos` (`id`, `user_uuid`, `photo_url`) VALUES
 (91, 'a9b0c1d2-e3f4-5678-9012-7890abcdef01', 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=60'),
 (92, 'a9b0c1d2-e3f4-5678-9012-7890abcdef01', 'https://images.unsplash.com/photo-1574974635109-c636611c5217?auto=format&fit=crop&w=800&q=60'),
 (93, 'a9b0c1d2-e3f4-5678-9012-7890abcdef01', 'https://images.unsplash.com/photo-1554475901-4538ddfbccc2?auto=format&fit=crop&w=800&q=60'),
-(94, 'a9b0c1d2-e3f4-5678-9012-7890abcdef01', 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&w=800&q=60'),
+(94, 
+'a9b0c1d2-e3f4-5678-9012-7890abcdef01', 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&w=800&q=60'),
 (95, 'a9b0c1d2-e3f4-5678-9012-7890abcdef01', 'https://images.unsplash.com/photo-1614935151651-0bea6508db6b?auto=format&fit=crop&w=800&q=60'),
 (96, 'b0c1d2e3-f4a5-6789-0123-890abcdef012', 'https://images.unsplash.com/photo-1566275529824-cca6d008f3da?auto=format&fit=crop&w=800&q=60'),
 (97, 'b0c1d2e3-f4a5-6789-0123-890abcdef012', 'https://images.unsplash.com/photo-1599423300042-c4a475d0a5f3?auto=format&fit=crop&w=800&q=60'),
@@ -242,7 +242,6 @@ INSERT INTO `user_photos` (`id`, `user_uuid`, `photo_url`) VALUES
 (123, 'a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1504196658025-a1f5f3a25e1a?auto=format&fit=crop&w=800&q=60'),
 (124, 'a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1464349153735-7db50ed83c84?auto=format&fit=crop&w=800&q=60'),
 (125, 'a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1527487265873-35079a2a94a6?auto=format&fit=crop&w=800&q=60');
-
 -- --------------------------------------------------------
 --
 -- Estructura de la tabla `user_photos_metadata`
@@ -258,7 +257,6 @@ CREATE TABLE `user_photos_metadata` (
   KEY `photo_id` (`photo_id`),
   CONSTRAINT `user_photos_metadata_ibfk_1` FOREIGN KEY (`photo_id`) REFERENCES `user_photos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- --------------------------------------------------------
 --
 -- Volcado de datos para la tabla `user_photos_metadata`
@@ -273,3 +271,45 @@ SELECT
     FLOOR(RAND() * 1000) AS interactions
 FROM
     `user_photos`;
+-- --------------------------------------------------------
+--
+-- Estructura de la tabla `user_profile_pictures`
+--
+-- --------------------------------------------------------
+CREATE TABLE `user_profile_pictures` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_uuid` varchar(36) NOT NULL,
+  `profile_picture_url` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_uuid` (`user_uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `user_profile_pictures`
+--
+INSERT INTO `user_profile_pictures` (`user_uuid`, `profile_picture_url`) VALUES
+('a1b2c3d4-e5f6-7890-1234-567890abcdef', 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=60'),
+('b2c3d4e5-f6a7-8901-2345-67890abcdef0', 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=200&q=60'),
+('c3d4e5f6-a7b8-9012-3456-7890abcdef01', 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=200&q=60'),
+('d4e5f6a7-b8c9-0123-4567-890abcdef012', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=60'),
+('e5f6a7b8-c9d0-1234-5678-90abcdef0123', 'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&w=200&q=60'),
+('f6a7b8c9-d0e1-2345-6789-0abcdef01234', 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=200&q=60'),
+('a7b8c9d0-e1f2-3456-7890-bcdef0123456', 'https://images.unsplash.com/photo-1489599849927-2ee91e356462?auto=format&fit=crop&w=200&q=60'),
+('b8c9d0e1-f2a3-4567-8901-cdef01234567', 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?auto=format&fit=crop&w=200&q=60'),
+('c9d0e1f2-a3b4-5678-9012-def012345678', 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&w=200&q=60'),
+('d0e1f2a3-b4c5-6789-0123-ef0123456789', 'https://images.unsplash.com/photo-1604975701397-1cf25b5168b8?auto=format&fit=crop&w=200&q=60'),
+('e1f2a3b4-c5d6-7890-1234-f01234567890', 'https://images.unsplash.com/photo-1524995767962-b1f4b889aa3b?auto=format&fit=crop&w=200&q=60'),
+('f2a3b4c5-d6e7-8901-2345-01234567890a', 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=200&q=60'),
+('a3b4c5d6-e7f8-9012-3456-1234567890ab', 'https://images.unsplash.com/photo-1550399105-c4db5fb85c18?auto=format&fit=crop&w=200&q=60'),
+('b4c5d6e7-f8a9-0123-4567-234567890abc', 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=200&q=60'),
+('c5d6e7f8-a9b0-1234-5678-34567890abcd', 'https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=200&q=60'),
+('d6e7f8a9-b0c1-2345-6789-4567890abcde', 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?auto=format&fit=crop&w=200&q=60'),
+('e7f8a9b0-c1d2-3456-7890-567890abcdef', 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=200&q=60'),
+('f8a9b0c1-d2e3-4567-8901-67890abcdef0', 'https://images.unsplash.com/photo-1506443432602-ac2fcd6f5439?auto=format&fit=crop&w=200&q=60'),
+('a9b0c1d2-e3f4-5678-9012-7890abcdef01', 'https://images.unsplash.com/photo-1528722828814-77b9b83aafb2?auto=format&fit=crop&w=200&q=60'),
+('b0c1d2e3-f4a5-6789-0123-890abcdef012', 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=200&q=60'),
+('c1d2e3f4-a5b6-7890-1234-90abcdef0123', 'https://images.unsplash.com/photo-1524492412937-b28074a5371b?auto=format&fit=crop&w=200&q=60'),
+('d2e3f4a5-b6c7-8901-2345-abcdef012345', 'https://images.unsplash.com/photo-1483794344563-d27a8d18014e?auto=format&fit=crop&w=200&q=60'),
+('e3f4a5b6-c7d8-9012-3456-bcdef0123456', 'https://images.unsplash.com/photo-1555448248-2571daf6344b?auto=format&fit=crop&w=200&q=60'),
+('f4a5b6c7-d8e9-0123-4567-cdef01234567', 'https://images.unsplash.com/photo-1569954432138-3b3207233261?auto=format&fit=crop&w=200&q=60'),
+('a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1505671715339-6de38c2a3e29?auto=format&fit=crop&w=200&q=60');

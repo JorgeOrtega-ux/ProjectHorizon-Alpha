@@ -186,6 +186,9 @@ export function initMainController() {
                 
                 const icon = document.createElement('div');
                 icon.className = 'card-icon';
+                 if (user.profile_picture_url) {
+                    icon.style.backgroundImage = `url('${user.profile_picture_url}')`;
+                }
                 
                 const textContainer = document.createElement('div');
                 textContainer.className = 'card-text';
@@ -226,9 +229,15 @@ export function initMainController() {
                 row.dataset.privacy = user.privacy;
 
                 const nameCell = document.createElement('td');
+                const avatar = document.createElement('div');
+                avatar.className = 'user-avatar';
+                if (user.profile_picture_url) {
+                    avatar.style.backgroundImage = `url('${user.profile_picture_url}')`;
+                }
+
                 nameCell.innerHTML = `
                     <div class="user-info">
-                        <div class="user-avatar"></div>
+                        <div class="user-avatar" style="background-image: url('${user.profile_picture_url || ''}')"></div>
                         <span>${user.name}</span>
                     </div>
                 `;
