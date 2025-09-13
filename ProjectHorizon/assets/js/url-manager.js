@@ -2,6 +2,8 @@ const urlMap = {
     'main-home': '',
     'main-favorites': 'favorites',
     'main-explore': 'explore',
+    'main-login': 'login',
+    'main-register': 'register',
     'settings-accessibility': 'settings/accessibility',
     'settings-historyPrivacy': 'settings/history-privacy',
     'main-userPhotos': 'user/{uuid}', // Plantilla para galería de usuario

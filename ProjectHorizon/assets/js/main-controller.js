@@ -658,6 +658,14 @@ export function initMainController() {
             const action = actionTarget.dataset.action;
             
             switch (action) {
+                case 'navigateToLogin':
+                    handleNavigation('main', 'login');
+                    break;
+
+                case 'navigateToRegister':
+                    handleNavigation('main', 'register');
+                    break;
+                
                 case 'load-more-users':
                     const searchTerm = searchInput ? searchInput.value.trim() : '';
                     fetchAndDisplayUsers(currentSortBy, searchTerm, true);

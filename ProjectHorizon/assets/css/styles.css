@@ -952,4 +952,83 @@ body {
     gap: 8px;
     width: auto;
     padding: 0 16px;
+}/* ... (Estilos existentes) ... */
+
+/* --- AUTH STYLES --- */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 24px;
+}
+
+.auth-form {
+    width: 100%;
+    max-width: 400px;
+    padding: 32px;
+    border: 1px solid #00000020;
+    border-radius: 12px;
+    background-color: #ffffff;
+    text-align: center;
+}
+
+.auth-form h2 {
+    font-size: 1.75rem;
+    margin-bottom: 8px;
+}
+
+.auth-form p {
+    color: #6c757d;
+    margin-bottom: 24px;
+}
+
+.form-field {
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.form-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.form-field input {
+    width: 100%;
+    height: 42px;
+    padding: 0 16px;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    font-size: 1rem;
+}
+
+.form-field input:focus {
+    outline: none;
+    border-color: #000;
+}
+
+.auth-button {
+    width: 100%;
+    height: 42px;
+    border: none;
+    border-radius: 8px;
+    background-color: #000000;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.auth-link {
+    margin-top: 24px;
+    font-size: 0.875rem;
+}
+
+.auth-link a {
+    color: #000000;
+    text-decoration: underline;
+    cursor: pointer;
 }

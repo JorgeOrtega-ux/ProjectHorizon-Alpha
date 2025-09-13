@@ -6,6 +6,8 @@ class Router {
         ''                         => ['view' => 'main', 'section' => 'home'],
         'explore'                  => ['view' => 'main', 'section' => 'explore'],
         'favorites'                => ['view' => 'main', 'section' => 'favorites'],
+        'login'                    => ['view' => 'main', 'section' => 'login'],
+        'register'                 => ['view' => 'main', 'section' => 'register'],
         'settings/accessibility'   => ['view' => 'settings', 'section' => 'accessibility'],
         'settings/history-privacy' => ['view' => 'settings', 'section' => 'historyPrivacy']
     ];
