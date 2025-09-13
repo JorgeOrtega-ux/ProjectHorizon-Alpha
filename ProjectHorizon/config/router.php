@@ -20,8 +20,12 @@ class Router {
         if (preg_match('/^gallery\/[a-f0-9-]{36}$/', $path)) {
             return ['view' => 'main', 'section' => 'galleryPhotos'];
         }
+
+        // --- AÑADIDO: Nueva regla para las URLs de favoritos por usuario. ---
+        if (preg_match('/^favorites\/[a-f0-9-]{36}$/', $path)) {
+            return ['view' => 'main', 'section' => 'userSpecificFavorites'];
+        }
         
-        // CAMBIO: Nueva regla para las URLs de galerías privadas.
         if (preg_match('/^reedem\/[a-f0-9-]{36}$/', $path)) {
             return ['view' => 'main', 'section' => 'accessCodePrompt'];
         }
