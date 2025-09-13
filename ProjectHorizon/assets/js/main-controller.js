@@ -275,7 +275,7 @@ export function initMainController() {
         }
 
         const encodedSearchTerm = encodeURIComponent(searchTerm);
-        const url = `/ProjectHorizon/api/get_users.php?sort=${sortBy}&search=${encodedSearchTerm}&page=${usersCurrentPage}&limit=${BATCH_SIZE}`;
+        const url = `/ProjectHorizon/api/main_handler.php?request_type=users&sort=${sortBy}&search=${encodedSearchTerm}&page=${usersCurrentPage}&limit=${BATCH_SIZE}`;
         
         fetch(url)
             .then(response => response.json())
@@ -328,10 +328,11 @@ export function initMainController() {
 
     function verifyAccessCode(uuid, code, userName) {
         const formData = new FormData();
+        formData.append('action_type', 'verify_code'); // Identificador para el backend
         formData.append('uuid', uuid);
         formData.append('code', code);
 
-        fetch('/ProjectHorizon/api/verify_access_code.php', {
+        fetch('/ProjectHorizon/api/main_handler.php', { // URL actualizada
             method: 'POST',
             body: formData
         })
@@ -379,7 +380,7 @@ export function initMainController() {
             title.textContent = userName ? userName : 'Cargando...';
         }
 
-        fetch(`/ProjectHorizon/api/get_user_photos.php?uuid=${uuid}&page=${photosCurrentPage}&limit=${BATCH_SIZE}`)
+        fetch(`/ProjectHorizon/api/main_handler.php?request_type=photos&uuid=${uuid}&page=${photosCurrentPage}&limit=${BATCH_SIZE}`)
             .then(response => response.json())
             .then(photos => {
                 if (!append) grid.innerHTML = '';
@@ -494,7 +495,7 @@ export function initMainController() {
         };
         
         const fetchAndSetUserName = (uuid) => {
-             fetch(`/ProjectHorizon/api/get_users.php?uuid=${uuid}`)
+             fetch(`/ProjectHorizon/api/main_handler.php?request_type=users&uuid=${uuid}`)
                 .then(res => res.json())
                 .then(user => {
                     if (user && user.name) {
@@ -511,7 +512,7 @@ export function initMainController() {
         }
 
         if (currentUserPhotoList.length === 0 || currentUserForPhotoView !== uuid) {
-            fetch(`/ProjectHorizon/api/get_user_photos.php?uuid=${uuid}&limit=1000`) // Carga un gran número para la navegación
+            fetch(`/ProjectHorizon/api/main_handler.php?request_type=photos&uuid=${uuid}&limit=1000`) // Carga un gran número para la navegación
                 .then(res => res.json())
                 .then(photos => {
                     currentUserPhotoList = photos;
@@ -878,7 +879,7 @@ export function initMainController() {
             if (homeTriggerIcon) homeTriggerIcon.textContent = 'home';
             fetchAndDisplayUsers(currentSortBy);
         } else if (section === 'userPhotos' && data && data.uuid) {
-            fetch(`/ProjectHorizon/api/get_users.php?uuid=${data.uuid}`)
+            fetch(`/ProjectHorizon/api/main_handler.php?request_type=users&uuid=${data.uuid}`)
              .then(res => res.json())
              .then(user => { if (user) fetchAndDisplayUserPhotos(user.uuid, user.name); });
         } else if (section === 'photoView' && data && data.uuid && data.photoId) {
@@ -912,7 +913,7 @@ export function initMainController() {
     } else if (userMatch) {
         const userUuid = userMatch[1];
         setInitialHistoryState(initialView, 'userPhotos', { uuid: userUuid });
-        fetch(`/ProjectHorizon/api/get_users.php?uuid=${userUuid}`)
+        fetch(`/ProjectHorizon/api/main_handler.php?request_type=users&uuid=${userUuid}`)
             .then(res => res.json())
             .then(user => {
                 if (user && user.uuid) {
