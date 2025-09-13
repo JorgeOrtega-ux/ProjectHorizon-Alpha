@@ -830,7 +830,6 @@ body {
 }
 
 .header-title-container {
-    display: flex;
     align-items: center;
     height: 40px;
     border: 1px solid #00000020;
