@@ -163,6 +163,7 @@ export function initMainController() {
                 card.className = 'card';
                 card.dataset.uuid = gallery.uuid;
                 card.dataset.name = gallery.name;
+                card.dataset.privacy = gallery.privacy;
 
                 if (gallery.background_photo_url) {
                     const background = document.createElement('div');
@@ -215,6 +216,7 @@ export function initMainController() {
                 const row = document.createElement('tr');
                 row.dataset.uuid = gallery.uuid;
                 row.dataset.name = gallery.name;
+                row.dataset.privacy = gallery.privacy;
 
                 const nameCell = document.createElement('td');
                 const avatar = document.createElement('div');
@@ -230,7 +232,7 @@ export function initMainController() {
                     </div>
                 `;
                 const privacyCell = document.createElement('td');
-                privacyCell.textContent = 'Público';
+                privacyCell.textContent = gallery.privacy == 1 ? 'Privado' : 'Público';
                 const typeCell = document.createElement('td');
                 typeCell.textContent = 'Galería';
                 const editedCell = document.createElement('td');
@@ -251,6 +253,21 @@ export function initMainController() {
             row.appendChild(cell);
             tbody.appendChild(row);
         }
+    }
+
+    // CAMBIO: La función ahora navega a la nueva URL dinámica.
+    function promptForAccessCode(uuid, name) {
+        handleNavigation('main', 'accessCodePrompt', true, { uuid: uuid });
+
+        const title = document.getElementById('access-code-title');
+        const promptContainer = document.querySelector('[data-section="accessCodePrompt"]');
+        const input = document.getElementById('access-code-input');
+        const error = document.getElementById('access-code-error');
+
+        title.textContent = `Galería de ${name}`;
+        promptContainer.dataset.galleryUuid = uuid;
+        input.value = '';
+        error.textContent = '';
     }
 
     function fetchAndDisplayGalleries(sortBy = 'relevant', searchTerm = '', append = false) {
@@ -465,6 +482,7 @@ export function initMainController() {
         const settingsButton = document.querySelector('[data-action="toggleSettings"]');
         const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
         const allMenuLinks = document.querySelectorAll('.menu-link');
+        const accessCodeSubmitBtn = document.getElementById('access-code-submit');
 
         if (toggleViewBtn) {
             toggleViewBtn.addEventListener('click', () => {
@@ -570,7 +588,13 @@ export function initMainController() {
             if (galleryElement && galleryElement.dataset.uuid && !event.target.closest('.card-actions-container')) {
                 const uuid = galleryElement.dataset.uuid;
                 const name = galleryElement.dataset.name;
-                fetchAndDisplayGalleryPhotos(uuid, name);
+                const isPrivate = galleryElement.dataset.privacy === '1';
+
+                if (isPrivate) {
+                    promptForAccessCode(uuid, name);
+                } else {
+                    fetchAndDisplayGalleryPhotos(uuid, name);
+                }
                 return;
             }
 
@@ -745,6 +769,44 @@ export function initMainController() {
             }
         });
 
+        if (accessCodeSubmitBtn) {
+            accessCodeSubmitBtn.addEventListener('click', () => {
+                const promptContainer = document.querySelector('[data-section="accessCodePrompt"]');
+                const uuid = promptContainer.dataset.galleryUuid;
+                const codeInput = document.getElementById('access-code-input');
+                const error = document.getElementById('access-code-error');
+                const code = codeInput.value;
+
+                if (!uuid || !code) {
+                    error.textContent = 'Por favor, introduce un código.';
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('action_type', 'verify_code');
+                formData.append('uuid', uuid);
+                formData.append('code', code);
+
+                fetch('/ProjectHorizon/api/main_handler.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const galleryTitle = document.getElementById('access-code-title').textContent.replace('Galería de ', '');
+                        fetchAndDisplayGalleryPhotos(uuid, galleryTitle);
+                    } else {
+                        error.textContent = data.message || 'Error al verificar el código.';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error en la petición:', err);
+                    error.textContent = 'Ocurrió un error de red.';
+                });
+            });
+        }
+
         document.querySelectorAll('.toggle-switch').forEach(toggle => {
             toggle.addEventListener('click', function() { this.classList.toggle('active'); });
         });
@@ -812,6 +874,8 @@ export function initMainController() {
     
     const photoMatch = path.match(/^gallery\/([a-f0-9-]{36})\/photo\/(\d+)$/);
     const galleryMatch = path.match(/^gallery\/([a-f0-9-]{36})$/);
+    // CAMBIO: Nueva constante para detectar la URL de canjeo de código.
+    const reedemMatch = path.match(/^reedem\/([a-f0-9-]{36})$/);
 
     if (photoMatch) {
         const [, galleryUuid, photoId] = photoMatch;
@@ -824,7 +888,30 @@ export function initMainController() {
             .then(res => res.json())
             .then(gallery => {
                 if (gallery && gallery.uuid) {
-                    fetchAndDisplayGalleryPhotos(gallery.uuid, gallery.name);
+                    if (gallery.privacy == 1) {
+                        promptForAccessCode(gallery.uuid, gallery.name);
+                    } else {
+                        fetchAndDisplayGalleryPhotos(gallery.uuid, gallery.name);
+                    }
+                } else {
+                    handleNavigation('main', '404');
+                }
+            });
+    // CAMBIO: Nueva lógica para manejar la URL /reedem/ al cargar la página.
+    } else if (reedemMatch) {
+        const galleryUuid = reedemMatch[1];
+        setInitialHistoryState(initialView, 'accessCodePrompt', { uuid: galleryUuid });
+        fetch(`/ProjectHorizon/api/main_handler.php?request_type=galleries&uuid=${galleryUuid}`)
+            .then(res => res.json())
+            .then(gallery => {
+                if (gallery && gallery.uuid) {
+                    if (gallery.privacy == 1) {
+                        // Es privada, así que mostramos la pantalla de código.
+                        promptForAccessCode(gallery.uuid, gallery.name);
+                    } else {
+                        // Es pública, redirigimos a su galería.
+                        window.location.replace(`${window.BASE_PATH}/gallery/${gallery.uuid}`);
+                    }
                 } else {
                     handleNavigation('main', '404');
                 }

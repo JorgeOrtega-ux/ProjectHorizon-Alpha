@@ -6,6 +6,8 @@ const urlMap = {
     'settings-historyPrivacy': 'settings/history-privacy',
     'main-galleryPhotos': 'gallery/{uuid}', // Plantilla para galería de usuario
     'main-photoView': 'gallery/{uuid}/photo/{photoId}', // Plantilla para foto individual
+    // CAMBIO: Nueva plantilla para la vista de código de acceso.
+    'main-accessCodePrompt': 'reedem/{uuid}',
     'main-404': '404'
 };
 

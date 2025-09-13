@@ -1,4 +1,4 @@
-<div class="section-content <?php echo ($CURRENT_SECTION === 'userPhotos') ? 'active' : 'disabled'; ?>" data-section="userPhotos">
+<div class="section-content <?php echo ($CURRENT_SECTION === 'galleryPhotos') ? 'active' : 'disabled'; ?>" data-section="galleryPhotos">
     <div class="section-content-header">
         <div class="content-header-wrapper">
             <div class="content-header-left">
