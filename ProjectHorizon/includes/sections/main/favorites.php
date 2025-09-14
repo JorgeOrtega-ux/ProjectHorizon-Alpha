@@ -51,7 +51,7 @@
                             <div class="select-trigger-icon">
                                 <span class="material-symbols-rounded">swap_vert</span>
                             </div>
-                            <span class="select-trigger-text">Agregados recientemente</span>
+                            <span class="select-trigger-text">Agrupar por usuario</span>
                             <div class="select-trigger-icon select-trigger-arrow">
                                 <span class="material-symbols-rounded">expand_more</span>
                             </div>
