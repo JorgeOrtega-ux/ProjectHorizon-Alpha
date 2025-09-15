@@ -21,6 +21,7 @@ export function initMainController() {
     let currentGalleryPhotoList = [];
     let currentPhotoData = null;
     let lastVisitedView = null;
+    let lastVisitedData = null;
 
     let galleriesCurrentPage = 1;
     let photosCurrentPage = 1;
@@ -230,6 +231,11 @@ export function initMainController() {
         const backButton = document.querySelector('[data-action="toggleMainView"]');
         if (backButton) {
             backButton.classList.remove('active');
+        }
+        
+        if(section !== 'photoView') {
+            lastVisitedView = section;
+            lastVisitedData = data;
         }
     }
 
@@ -465,9 +471,6 @@ export function initMainController() {
     }
 
 function displayPhoto(uuid, photoId, photoList = null) {
-    const activeSection = document.querySelector('.section-content.active')?.dataset.section || 'home';
-    lastVisitedView = activeSection;
-    
     handleNavigation('main', 'photoView', true, { uuid: uuid, photoId: photoId });
     const photoViewerImage = document.getElementById('photo-viewer-image');
     const photoCounter = document.getElementById('photo-counter');
@@ -658,7 +661,6 @@ function displayPhoto(uuid, photoId, photoList = null) {
                 if (isPrivate) {
                     promptForAccessCode(uuid, name);
                 } else {
-                    lastVisitedView = 'home';
                     fetchAndDisplayGalleryPhotos(uuid, name);
                 }
                 return;
@@ -722,13 +724,11 @@ function displayPhoto(uuid, photoId, photoList = null) {
                     }
                     break;
                 case 'returnToUserPhotos':
-                    if (lastVisitedView === 'favorites' || lastVisitedView === 'userSpecificFavorites') {
-                        navigateToUrl('main', 'favorites');
-                        handleStateChange('main', 'favorites');
-                    } else if (currentGalleryForPhotoView && currentGalleryNameForPhotoView) {
-                        fetchAndDisplayGalleryPhotos(currentGalleryForPhotoView, currentGalleryNameForPhotoView);
+                    if (lastVisitedView && lastVisitedView !== 'photoView') {
+                        handleNavigation('main', lastVisitedView, true, lastVisitedData);
+                        handleStateChange('main', lastVisitedView, lastVisitedData);
                     } else {
-                        navigateToUrl('main', 'home');
+                        handleNavigation('main', 'home', true);
                         handleStateChange('main', 'home');
                     }
                     break;
@@ -1008,13 +1008,17 @@ function displayPhoto(uuid, photoId, photoList = null) {
     const favoritesMatch = path.match(/^favorites\/([a-f0-9-]{36})$/);
     const reedemMatch = path.match(/^reedem\/([a-f0-9-]{36})$/);
 
+    let initialStateData = null;
+
     if (photoMatch) {
         const [, galleryUuid, photoId] = photoMatch;
-        setInitialHistoryState(initialView, 'photoView', { uuid: galleryUuid, photoId: photoId });
+        initialStateData = { uuid: galleryUuid, photoId: photoId };
+        setInitialHistoryState(initialView, 'photoView', initialStateData);
         displayPhoto(galleryUuid, photoId);
     } else if (galleryMatch) {
         const galleryUuid = galleryMatch[1];
-        setInitialHistoryState(initialView, 'galleryPhotos', { uuid: galleryUuid });
+        initialStateData = { uuid: galleryUuid };
+        setInitialHistoryState(initialView, 'galleryPhotos', initialStateData);
         fetch(`/ProjectHorizon/api/main_handler.php?request_type=galleries&uuid=${galleryUuid}`)
             .then(res => res.json())
             .then(gallery => {
@@ -1030,11 +1034,13 @@ function displayPhoto(uuid, photoId, photoList = null) {
             });
     } else if (favoritesMatch) {
         const galleryUuid = favoritesMatch[1];
-        setInitialHistoryState(initialView, 'userSpecificFavorites', { uuid: galleryUuid });
-        handleStateChange(initialView, 'userSpecificFavorites', { uuid: galleryUuid });
+        initialStateData = { uuid: galleryUuid };
+        setInitialHistoryState(initialView, 'userSpecificFavorites', initialStateData);
+        handleStateChange(initialView, 'userSpecificFavorites', initialStateData);
     } else if (reedemMatch) {
         const galleryUuid = reedemMatch[1];
-        setInitialHistoryState(initialView, 'accessCodePrompt', { uuid: galleryUuid });
+        initialStateData = { uuid: galleryUuid };
+        setInitialHistoryState(initialView, 'accessCodePrompt', initialStateData);
         fetch(`/ProjectHorizon/api/main_handler.php?request_type=galleries&uuid=${galleryUuid}`)
             .then(res => res.json())
             .then(gallery => {
@@ -1053,5 +1059,10 @@ function displayPhoto(uuid, photoId, photoList = null) {
         handleStateChange(initialView, initialSection);
     } else {
         console.error("Could not determine initial state from DOM.");
+    }
+    
+    if (initialSection !== 'photoView') {
+        lastVisitedView = initialSection;
+        lastVisitedData = initialStateData;
     }
 }
