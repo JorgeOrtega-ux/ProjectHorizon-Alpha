@@ -25,7 +25,17 @@ export function generateUrl(view, section, data = null) {
     }
 
     const newPath = pathSegment ? `${BASE_PATH}/${pathSegment}` : BASE_PATH;
-    return `${window.location.protocol}//${window.location.host}${newPath || '/'}`;
+    
+    // Construimos la URL base
+    const finalUrl = `${window.location.protocol}//${window.location.host}${newPath || '/'}`;
+
+    // Si la URL es la de inicio (es decir, no hay un 'pathSegment') y
+    // no termina con una barra, se la añadimos.
+    if (!pathSegment && !finalUrl.endsWith('/')) {
+        return finalUrl + '/';
+    }
+
+    return finalUrl;
 }
 
 export function navigateToUrl(view, section, data = null) {
