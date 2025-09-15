@@ -1,4 +1,8 @@
+// assets/js/main-controller.js
+
 import { navigateToUrl, setupPopStateHandler, setInitialHistoryState, generateUrl } from './url-manager.js';
+import { setTheme } from './theme-manager.js';
+import { setLanguage } from './language-manager.js'; // Añadido
 
 function getFavorites() {
     const favorites = localStorage.getItem('favoritePhotos');
@@ -460,7 +464,6 @@ export function initMainController() {
             });
     }
 
-    // CÓDIGO CORREGIDO
 function displayPhoto(uuid, photoId, photoList = null) {
     const activeSection = document.querySelector('.section-content.active')?.dataset.section || 'home';
     lastVisitedView = activeSection;
@@ -477,16 +480,12 @@ function displayPhoto(uuid, photoId, photoList = null) {
         if (photoIndex !== -1) {
             const photo = list[photoIndex];
             
-            // --- LÓGICA DE ACTUALIZACIÓN DEL TÍTULO MEJORADA ---
-            // Si el nombre de la galería ya viene en el objeto de la foto (desde favoritos), lo usamos.
             if (photo.gallery_name) {
                 currentGalleryNameForPhotoView = photo.gallery_name;
                 photoViewUserTitle.textContent = photo.gallery_name;
             } else if (currentGalleryForPhotoView !== uuid) {
-                // Si no viene y el UUID de la galería ha cambiado, lo buscamos.
                 fetchAndSetGalleryName(uuid);
             } else if (currentGalleryNameForPhotoView) {
-                // Si no ha cambiado, usamos el que ya teníamos.
                 photoViewUserTitle.textContent = currentGalleryNameForPhotoView;
             }
 
@@ -624,7 +623,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
             }
 
             const selectedOption = event.target.closest('.module-select .menu-link');
-            if (selectedOption && !selectedOption.closest('#view-select') && !selectedOption.closest('#view-select-fav')) {
+            if (selectedOption && !selectedOption.closest('#view-select') && !selectedOption.closest('#view-select-fav') && !selectedOption.closest('#theme-select') && !selectedOption.closest('#language-select')) {
                 const selectContainer = selectedOption.closest('.module-select');
                 const wrapper = selectContainer.closest('.select-wrapper');
                 if (wrapper) {
@@ -676,7 +675,6 @@ function displayPhoto(uuid, photoId, photoList = null) {
                     let photoList = getFavorites();
                     const searchTerm = document.getElementById('favorites-search-input').value.trim().toLowerCase();
 
-                    // Re-create the currently visible list of favorites
                     if (searchTerm) {
                         photoList = photoList.filter(p => p.gallery_name.toLowerCase().includes(searchTerm));
                     }
@@ -687,7 +685,6 @@ function displayPhoto(uuid, photoId, photoList = null) {
                         const uuid = favoritesMatch[1];
                         photoList = photoList.filter(p => p.gallery_uuid === uuid);
                     } else {
-                        // Apply sorting if not in a user-specific view
                         if (currentFavoritesSortBy === 'oldest') {
                             photoList.sort((a, b) => (a.added_at || 0) - (b.added_at || 0));
                         } else if (currentFavoritesSortBy !== 'user') {
@@ -760,7 +757,6 @@ function displayPhoto(uuid, photoId, photoList = null) {
                         }
                     }
                     break;
-                // CÓDIGO CORREGIDO
                 case 'previous-photo':
                 case 'next-photo':
                     if (!actionTarget.classList.contains('disabled-nav')) {
@@ -774,9 +770,6 @@ function displayPhoto(uuid, photoId, photoList = null) {
                             let nextIndex = (action === 'next-photo') ? currentIndex + 1 : currentIndex - 1;
                             if (nextIndex >= 0 && nextIndex < currentGalleryPhotoList.length) {
                                 const nextPhoto = currentGalleryPhotoList[nextIndex];
-                                // --- CORRECCIÓN ---
-                                // Se pasa el UUID de la galería de la SIGUIENTE foto,
-                                // que puede ser diferente en la vista de favoritos.
                                 displayPhoto(nextPhoto.gallery_uuid, nextPhoto.id, currentGalleryPhotoList);
                             }
                         }
@@ -878,6 +871,38 @@ function displayPhoto(uuid, photoId, photoList = null) {
                 handleStateChange('main', this.dataset.value);
             });
         });
+        
+        document.querySelectorAll('#theme-select .menu-link').forEach(option => {
+            option.addEventListener('click', function (e) {
+                 e.stopPropagation();
+                const theme = this.dataset.value;
+                setTheme(theme);
+                const selectContainer = this.closest('.module-select');
+                const trigger = document.querySelector(`[data-target="${selectContainer.id}"]`);
+                if (selectContainer && trigger) {
+                    selectContainer.classList.add('disabled');
+                    selectContainer.classList.remove('active');
+                    trigger.classList.remove('active-trigger');
+                }
+            });
+        });
+        
+        // --- AÑADIDO: Event listener para el selector de idioma ---
+        document.querySelectorAll('#language-select .menu-link').forEach(option => {
+            option.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const lang = this.dataset.value;
+                setLanguage(lang);
+                const selectContainer = this.closest('.module-select');
+                const trigger = document.querySelector(`[data-target="${selectContainer.id}"]`);
+                if (selectContainer && trigger) {
+                    selectContainer.classList.add('disabled');
+                    selectContainer.classList.remove('active');
+                    trigger.classList.remove('active-trigger');
+                }
+            });
+        });
+
 
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape' && moduleSurface && moduleSurface.classList.contains('active')) {
