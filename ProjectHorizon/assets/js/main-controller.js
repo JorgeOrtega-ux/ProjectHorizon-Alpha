@@ -30,6 +30,9 @@ export function initMainController() {
     const BATCH_SIZE = 20;
 
     let currentFavoritesSortBy = 'user';
+    
+    const loaderHTML = '<div class="loader-container"><div class="spinner"></div></div>';
+
 
     function isFavorite(photoId) {
         const favorites = getFavorites();
@@ -348,8 +351,13 @@ export function initMainController() {
         if (isLoadingGalleries) return;
         isLoadingGalleries = true;
 
+        const gridContainer = document.getElementById('grid-view');
+        const tableContainer = document.getElementById('table-view');
+
         if (!append) {
             galleriesCurrentPage = 1;
+            if(gridContainer) gridContainer.innerHTML = loaderHTML;
+            if(tableContainer) tableContainer.querySelector('tbody').innerHTML = `<tr><td colspan="4">${loaderHTML}</td></tr>`;
         }
 
         const encodedSearchTerm = encodeURIComponent(searchTerm);
@@ -358,8 +366,6 @@ export function initMainController() {
         fetch(url)
             .then(response => response.json())
             .then(data => {
-                const gridContainer = document.getElementById('grid-view');
-                const tableContainer = document.getElementById('table-view');
                 const loadMoreContainer = document.getElementById('users-load-more-container');
 
                 if (gridContainer) displayGalleriesAsGrid(data, gridContainer, sortBy, append);
@@ -374,7 +380,6 @@ export function initMainController() {
             })
             .catch(error => {
                 console.error('Error al obtener las galerías:', error);
-                const gridContainer = document.getElementById('grid-view');
                 if (gridContainer && !append) gridContainer.innerHTML = '<p>Error al cargar galerías.</p>';
             })
             .finally(() => {
@@ -383,11 +388,13 @@ export function initMainController() {
     }
 
     function fetchAndDisplayGalleryPhotos(uuid, galleryName, append = false) {
+         const grid = document.getElementById('user-photos-grid');
+
         if (!append) {
             photosCurrentPage = 1;
             currentGalleryPhotoList = [];
-            const grid = document.getElementById('user-photos-grid');
-            if (grid) grid.innerHTML = '';
+            
+            if (grid) grid.innerHTML = loaderHTML;
 
             handleNavigation('main', 'galleryPhotos', true, { uuid: uuid });
         }
@@ -398,12 +405,10 @@ export function initMainController() {
         currentGalleryForPhotoView = uuid;
         currentGalleryNameForPhotoView = galleryName;
 
-        const grid = document.getElementById('user-photos-grid');
         const title = document.getElementById('user-photos-title');
         const loadMoreContainer = document.getElementById('photos-load-more-container');
 
         if (!append) {
-            grid.innerHTML = '<p>Cargando fotos...</p>';
             title.textContent = galleryName ? galleryName : 'Cargando...';
         }
 

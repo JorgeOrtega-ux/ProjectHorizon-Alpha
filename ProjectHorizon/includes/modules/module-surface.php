@@ -1,4 +1,4 @@
-<div class="module-content module-surface disabled" data-module="moduleSurface">
+<div class="module-content module-surface body-title disabled" data-module="moduleSurface">
     <div class="menu-content <?php echo ($CURRENT_VIEW === 'main') ? 'active' : 'disabled'; ?>" data-menu="main">
         <div class="menu-list">
             <div class="menu-link <?php echo ($CURRENT_SECTION === 'home') ? 'active' : ''; ?>" data-action="toggleSectionHome">

@@ -103,7 +103,7 @@
                 </tbody>
             </table>
         </div>
-         <div class="load-more-container" id="users-load-more-container">
+         <div class="load-more-container disabled" id="users-load-more-container">
             <button class="load-more-btn" data-action="load-more-users">Mostrar más</button>
         </div>
     </div>
