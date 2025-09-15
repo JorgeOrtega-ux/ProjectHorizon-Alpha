@@ -908,7 +908,6 @@ function displayPhoto(uuid, photoId, photoList = null) {
             });
         });
         
-        // --- AÑADIDO: Event listener para el selector de idioma ---
         document.querySelectorAll('#language-select .menu-link').forEach(option => {
             option.addEventListener('click', function (e) {
                 e.stopPropagation();
@@ -929,6 +928,27 @@ function displayPhoto(uuid, photoId, photoList = null) {
             if (event.key === 'Escape' && moduleSurface && moduleSurface.classList.contains('active')) {
                 moduleSurface.classList.add('disabled');
                 moduleSurface.classList.remove('active');
+            }
+        });
+    }
+
+    function setupScrollShadows() {
+        const mainScrolleable = document.querySelector('.general-content-scrolleable');
+        const mainHeader = document.querySelector('.general-content-top');
+    
+        if (mainScrolleable && mainHeader) {
+            mainScrolleable.addEventListener('scroll', () => {
+                mainHeader.classList.toggle('shadow', mainScrolleable.scrollTop > 0);
+            });
+        }
+    
+        const scrollableBlocks = document.querySelectorAll('.section-content-block.overflow-y');
+        scrollableBlocks.forEach(block => {
+            const header = block.previousElementSibling;
+            if (header && header.classList.contains('section-content-header')) {
+                block.addEventListener('scroll', () => {
+                    header.classList.toggle('shadow', block.scrollTop > 0);
+                });
             }
         });
     }
@@ -1019,6 +1039,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
     }
 
     setupEventListeners();
+    setupScrollShadows();
 
     setupPopStateHandler((view, section, pushState, data) => {
         handleStateChange(view, section, data);
