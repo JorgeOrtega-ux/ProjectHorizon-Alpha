@@ -32,6 +32,17 @@ function updateThemeSelectorUI(theme) {
             themeText.textContent = options[theme];
         }
     }
+    const themeOptionsContainer = document.getElementById('theme-select');
+    if (themeOptionsContainer) {
+        const allThemeLinks = themeOptionsContainer.querySelectorAll('.menu-link');
+        allThemeLinks.forEach(link => {
+            link.classList.remove('active');
+        });
+        const activeLink = themeOptionsContainer.querySelector(`.menu-link[data-value="${theme}"]`);
+        if (activeLink) {
+            activeLink.classList.add('active');
+        }
+    }
 }
 
 

@@ -39,6 +39,17 @@ function updateLanguageSelectorUI(langCode) {
             langText.textContent = availableLanguages[langCode];
         }
     }
+    const langOptionsContainer = document.getElementById('language-select');
+    if (langOptionsContainer) {
+        const allLangLinks = langOptionsContainer.querySelectorAll('.menu-link');
+        allLangLinks.forEach(link => {
+            link.classList.remove('active');
+        });
+        const activeLink = langOptionsContainer.querySelector(`.menu-link[data-value="${langCode}"]`);
+        if (activeLink) {
+            activeLink.classList.add('active');
+        }
+    }
 }
 
 export function setLanguage(langCode) {

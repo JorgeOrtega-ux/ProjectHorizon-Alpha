@@ -218,7 +218,7 @@ export function initMainController() {
             });
         }
 
-        document.querySelectorAll('.menu-link').forEach(link => {
+        document.querySelectorAll('[data-module="moduleSurface"] .menu-link').forEach(link => {
             const linkAction = link.dataset.action;
             let linkSection = '';
             if (linkAction && linkAction.startsWith('toggleSection')) {
@@ -541,6 +541,20 @@ function displayPhoto(uuid, photoId, photoList = null) {
         fetch('/ProjectHorizon/api/main_handler.php', { method: 'POST', body: formData });
     }
 
+    function updateSelectActiveState(selectId, value) {
+        const selectContainer = document.getElementById(selectId);
+        if (selectContainer) {
+            const allLinks = selectContainer.querySelectorAll('.menu-link');
+            allLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+            const activeLink = selectContainer.querySelector(`.menu-link[data-value="${value}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+        }
+    }
+
     function setupEventListeners() {
         const toggleViewBtn = document.querySelector('[data-action="toggle-view"]');
         const searchInput = document.querySelector('.search-input-text input');
@@ -855,6 +869,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
             option.addEventListener('click', function () {
                 currentSortBy = this.dataset.value;
                 fetchAndDisplayGalleries(currentSortBy, searchInput.value.trim());
+                updateSelectActiveState('relevance-select', currentSortBy);
             });
         });
 
@@ -862,6 +877,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
             option.addEventListener('click', function () {
                 currentFavoritesSortBy = this.dataset.value;
                 displayFavoritePhotos();
+                updateSelectActiveState('favorites-sort-select', currentFavoritesSortBy);
             });
         });
 
@@ -934,10 +950,14 @@ function displayPhoto(uuid, photoId, photoList = null) {
             favTitle.innerHTML = '';
             favSearchWrapper.classList.remove('disabled');
             favControlsWrapper.classList.remove('disabled');
-
+            
+            updateSelectActiveState('view-select-fav', 'favorites');
+            updateSelectActiveState('favorites-sort-select', currentFavoritesSortBy);
             displayFavoritePhotos();
         } else if (section === 'home') {
             document.querySelector('[data-target="view-select"] .select-trigger-text').textContent = 'Página principal';
+            updateSelectActiveState('view-select', 'home');
+            updateSelectActiveState('relevance-select', currentSortBy);
             fetchAndDisplayGalleries(currentSortBy);
         } else if (section === 'galleryPhotos' && data && data.uuid) {
             fetch(`/ProjectHorizon/api/main_handler.php?request_type=galleries&uuid=${data.uuid}`)
