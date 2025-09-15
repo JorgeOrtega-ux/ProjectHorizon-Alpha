@@ -642,6 +642,17 @@ function displayPhoto(uuid, photoId, photoList = null) {
                     moduleSurface.classList.remove('active');
                 }
             }
+            
+            // --- INICIO DE LA CORRECCIÓN ---
+            // Cierra los menús contextuales de las tarjetas si se hace clic fuera
+            if (!event.target.closest('.card-actions-container')) {
+                document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
+                    menu.classList.remove('active');
+                    menu.classList.add('disabled');
+                    menu.closest('.card-actions-container').classList.remove('force-visible');
+                });
+            }
+            // --- FIN DE LA CORRECCIÓN ---
 
             const selectedOption = event.target.closest('.module-select .menu-link');
             if (selectedOption && !selectedOption.closest('#view-select') && !selectedOption.closest('#view-select-fav') && !selectedOption.closest('#theme-select') && !selectedOption.closest('#language-select')) {
@@ -663,9 +674,8 @@ function displayPhoto(uuid, photoId, photoList = null) {
             const userCardFavorite = event.target.closest('#favorites-grid-view-by-user .user-card');
             if (userCardFavorite) {
                 const uuid = userCardFavorite.dataset.uuid;
-                // --- CORRECCIÓN ---
                 navigateToUrl('main', 'userSpecificFavorites', { uuid: uuid });
-                handleStateChange('main', 'userSpecificFavorites', { uuid: uuid }); // Llamar a handleStateChange para cargar el contenido
+                handleStateChange('main', 'userSpecificFavorites', { uuid: uuid });
                 return;
             }
 
