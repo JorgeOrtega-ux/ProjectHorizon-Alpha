@@ -2,12 +2,6 @@
     <div class="section-content-header">
         <div class="content-header-wrapper">
             <div class="content-header-left">
-                <div class="header-button disabled" id="favorites-back-btn" data-action="returnToFavorites">
-                    <span class="material-symbols-rounded">arrow_back</span>
-                </div>
-                <div class="header-title-container disabled" id="favorites-user-title-container">
-                    <span id="user-specific-favorites-title"></span>
-                </div>
                 <div class="search-input-wrapper" id="favorites-search-wrapper">
                     <div class="search-input-icon">
                         <span class="material-symbols-rounded">search</span>

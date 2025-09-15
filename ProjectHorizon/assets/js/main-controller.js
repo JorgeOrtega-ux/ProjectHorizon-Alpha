@@ -2,7 +2,7 @@
 
 import { navigateToUrl, setupPopStateHandler, setInitialHistoryState, generateUrl } from './url-manager.js';
 import { setTheme } from './theme-manager.js';
-import { setLanguage } from './language-manager.js'; // Añadido
+import { setLanguage } from './language-manager.js';
 
 function getFavorites() {
     const favorites = localStorage.getItem('favoritePhotos');
@@ -215,9 +215,8 @@ export function initMainController() {
         const activeViewContainer = document.querySelector(`.section-container[data-view="${view}"]`);
         if (activeViewContainer) {
             activeViewContainer.querySelectorAll('.section-content').forEach(s => {
-                const isCorrectSection = (s.dataset.section === section) || (section === 'userSpecificFavorites' && s.dataset.section === 'favorites');
-                s.classList.toggle('active', isCorrectSection);
-                s.classList.toggle('disabled', !isCorrectSection);
+                s.classList.toggle('active', s.dataset.section === section);
+                s.classList.toggle('disabled', s.dataset.section !== section);
             });
         }
 
@@ -664,8 +663,9 @@ function displayPhoto(uuid, photoId, photoList = null) {
             const userCardFavorite = event.target.closest('#favorites-grid-view-by-user .user-card');
             if (userCardFavorite) {
                 const uuid = userCardFavorite.dataset.uuid;
+                // --- CORRECCIÓN ---
                 navigateToUrl('main', 'userSpecificFavorites', { uuid: uuid });
-                handleStateChange('main', 'userSpecificFavorites', { uuid: uuid });
+                handleStateChange('main', 'userSpecificFavorites', { uuid: uuid }); // Llamar a handleStateChange para cargar el contenido
                 return;
             }
 
@@ -692,31 +692,16 @@ function displayPhoto(uuid, photoId, photoList = null) {
                 incrementInteraction(galleryUuid);
 
                 const activeSection = document.querySelector('.section-content.active')?.dataset.section;
-                if (activeSection === 'favorites') {
-                    let photoList = getFavorites();
-                    const searchTerm = document.getElementById('favorites-search-input').value.trim().toLowerCase();
+                
+                let photoList = (activeSection === 'favorites' || activeSection === 'userSpecificFavorites') 
+                    ? getFavorites() 
+                    : currentGalleryPhotoList;
 
-                    if (searchTerm) {
-                        photoList = photoList.filter(p => p.gallery_name.toLowerCase().includes(searchTerm));
-                    }
-
-                    const path = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1);
-                    const favoritesMatch = path.match(/^favorites\/([a-f0-9-]{36})$/);
-                    if (favoritesMatch) {
-                        const uuid = favoritesMatch[1];
-                        photoList = photoList.filter(p => p.gallery_uuid === uuid);
-                    } else {
-                        if (currentFavoritesSortBy === 'oldest') {
-                            photoList.sort((a, b) => (a.added_at || 0) - (b.added_at || 0));
-                        } else if (currentFavoritesSortBy !== 'user') {
-                            photoList.sort((a, b) => (b.added_at || 0) - (a.added_at || 0));
-                        }
-                    }
-
-                    displayPhoto(galleryUuid, photoId, photoList);
-                } else {
-                    displayPhoto(galleryUuid, photoId);
+                if (activeSection === 'userSpecificFavorites') {
+                    photoList = photoList.filter(p => p.gallery_uuid === galleryUuid);
                 }
+
+                displayPhoto(galleryUuid, photoId, photoList);
                 return;
             }
 
@@ -744,16 +729,18 @@ function displayPhoto(uuid, photoId, photoList = null) {
                     break;
                 case 'returnToUserPhotos':
                     if (lastVisitedView && lastVisitedView !== 'photoView') {
-                        handleNavigation('main', lastVisitedView, true, lastVisitedData);
+                        navigateToUrl('main', lastVisitedView, lastVisitedData);
                         handleStateChange('main', lastVisitedView, lastVisitedData);
                     } else {
-                        handleNavigation('main', 'home', true);
+                        navigateToUrl('main', 'home');
                         handleStateChange('main', 'home');
                     }
                     break;
-                case 'returnToHome': handleNavigation('main', 'home'); break;
+                case 'returnToHome': 
+                    navigateToUrl('main', 'home');
+                    handleStateChange('main', 'home'); 
+                    break;
                 case 'returnToFavorites':
-                    currentFavoritesSortBy = 'user';
                     navigateToUrl('main', 'favorites');
                     handleStateChange('main', 'favorites');
                     break;
@@ -767,11 +754,11 @@ function displayPhoto(uuid, photoId, photoList = null) {
                         const fullPhotoData = { id: photoData.id, gallery_uuid: photoData.gallery_uuid || currentGalleryForPhotoView, photo_url: photoData.photo_url, gallery_name: photoData.gallery_name || currentGalleryNameForPhotoView };
                         toggleFavorite(fullPhotoData);
 
-                        const path = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1);
-                        const favoritesMatch = path.match(/^favorites\/([a-f0-9-]{36})$/);
-                        if (favoritesMatch) {
-                            handleStateChange('main', 'userSpecificFavorites', { uuid: favoritesMatch[1] });
-                        } else {
+                        const activeSection = document.querySelector('.section-content.active')?.dataset.section;
+                        if (activeSection === 'userSpecificFavorites') {
+                            const uuid = document.querySelector('[data-section="userSpecificFavorites"]').dataset.uuid;
+                            handleStateChange('main', 'userSpecificFavorites', { uuid: uuid });
+                        } else if (activeSection === 'favorites') {
                             displayFavoritePhotos();
                         }
                     }
@@ -956,25 +943,9 @@ function displayPhoto(uuid, photoId, photoList = null) {
     function handleStateChange(view, section, data) {
         handleNavigation(view, section, false, data);
 
-        const favSection = document.querySelector('[data-section="favorites"]');
-        if (!favSection) return;
-
-        const favBackButton = favSection.querySelector('#favorites-back-btn');
-        const favTitleContainer = favSection.querySelector('#favorites-user-title-container');
-        const favTitle = favSection.querySelector('#user-specific-favorites-title');
-        const favSearchWrapper = favSection.querySelector('#favorites-search-wrapper');
-        const favControlsWrapper = favSection.querySelector('#favorites-controls-wrapper');
-
-
         if (section === 'favorites') {
             document.querySelector('[data-target="view-select-fav"] .select-trigger-text').textContent = 'Mostrar favoritos';
             if (document.getElementById('favorites-search-input')) document.getElementById('favorites-search-input').value = '';
-
-            favBackButton.classList.add('disabled');
-            favTitleContainer.classList.add('disabled');
-            favTitle.innerHTML = '';
-            favSearchWrapper.classList.remove('disabled');
-            favControlsWrapper.classList.remove('disabled');
             
             updateSelectActiveState('view-select-fav', 'favorites');
             updateSelectActiveState('favorites-sort-select', currentFavoritesSortBy);
@@ -991,33 +962,23 @@ function displayPhoto(uuid, photoId, photoList = null) {
         } else if (section === 'photoView' && data && data.uuid && data.photoId) {
             let photoList = null;
             if (lastVisitedView === 'favorites' || lastVisitedView === 'userSpecificFavorites') {
-                const favorites = getFavorites();
-                const url = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1);
-                const favoritesMatch = url.match(/^favorites\/([a-f0-9-]{36})$/);
-                if (favoritesMatch) {
-                    photoList = favorites.filter(p => p.gallery_uuid === data.uuid);
-                } else {
-                    photoList = favorites;
+                photoList = getFavorites();
+                if (lastVisitedView === 'userSpecificFavorites' && lastVisitedData && lastVisitedData.uuid) {
+                    photoList = photoList.filter(p => p.gallery_uuid === lastVisitedData.uuid);
                 }
             }
             displayPhoto(data.uuid, data.photoId, photoList);
         } else if (section === 'userSpecificFavorites' && data && data.uuid) {
-            const favorites = getFavorites();
-            const userFavorites = favorites.filter(p => p.gallery_uuid === data.uuid);
-            const grid = document.getElementById('favorites-grid-view');
-            const byUserGrid = document.getElementById('favorites-grid-view-by-user');
-
+            const userFavorites = getFavorites().filter(p => p.gallery_uuid === data.uuid);
+            const grid = document.getElementById('user-specific-favorites-grid');
+            const title = document.getElementById('user-specific-favorites-title');
+            
             grid.innerHTML = '';
-            byUserGrid.classList.remove('active'); byUserGrid.classList.add('disabled');
-            grid.classList.remove('disabled'); grid.classList.add('active');
+            document.querySelector('[data-section="userSpecificFavorites"]').dataset.uuid = data.uuid;
 
-            favBackButton.classList.remove('disabled');
-            favTitleContainer.classList.remove('disabled');
-            favSearchWrapper.classList.add('disabled');
-            favControlsWrapper.classList.add('disabled');
 
             if (userFavorites.length > 0) {
-                favTitle.textContent = `Favoritos de ${userFavorites[0].gallery_name}`;
+                title.textContent = `Favoritos de ${userFavorites[0].gallery_name}`;
                 userFavorites.forEach(photo => {
                     const card = document.createElement('div');
                     card.className = 'card photo-card';
@@ -1033,7 +994,8 @@ function displayPhoto(uuid, photoId, photoList = null) {
                     grid.appendChild(card);
                 });
             } else {
-                handleNavigation('main', 'favorites');
+                title.textContent = 'Sin favoritos';
+                grid.innerHTML = '<p>Este usuario no tiene fotos en tus favoritos.</p>';
             }
         }
     }
@@ -1060,7 +1022,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
         const [, galleryUuid, photoId] = photoMatch;
         initialStateData = { uuid: galleryUuid, photoId: photoId };
         setInitialHistoryState(initialView, 'photoView', initialStateData);
-        displayPhoto(galleryUuid, photoId);
+        handleStateChange(initialView, 'photoView', initialStateData);
     } else if (galleryMatch) {
         const galleryUuid = galleryMatch[1];
         initialStateData = { uuid: galleryUuid };
