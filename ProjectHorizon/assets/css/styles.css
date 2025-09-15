@@ -536,7 +536,7 @@ body {
 .card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 16px;
+    gap: 8px;
 }
 
 .overflow-y {
@@ -553,11 +553,12 @@ body {
     position: relative;
     border-radius: 12px;
     height: 280px;
-    background-color: #e0e0e0;
+    background-color: #f5f5fa;
     color: #ffffff;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
+    cursor: pointer;
 }
 
 .card-background {
@@ -645,6 +646,7 @@ body {
 
 .user-table tbody tr {
     border-radius: 8px;
+    cursor: pointer;
 }
 
 .user-table tbody tr:hover {
@@ -868,7 +870,8 @@ body {
 }
 
 .load-more-container {
-    padding: 24px;
+    padding: 16px;
+    padding-bottom: 8px;
     text-align: center;
 }
 
