@@ -89,7 +89,7 @@
     <div class="section-content-block overflow-y">
         <div class="card-grid active" id="grid-view"></div>
 
-        <div class="table-view-container disabled" id="table-view">
+        <div class="table-view-container body-title disabled" id="table-view">
             <table class="user-table">
                 <thead>
                     <tr>
