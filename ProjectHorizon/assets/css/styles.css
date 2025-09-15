@@ -513,7 +513,6 @@ body {
     box-shadow: 0 4px 12px #00000020;
     width: 100%;
     padding: 8px;
-    max-height: 200px;
     display: flex;
     flex-direction: column;
 }

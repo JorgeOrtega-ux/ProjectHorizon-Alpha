@@ -61,7 +61,7 @@ export function initMainController() {
         formData.append('gallery_uuid', photoData.gallery_uuid);
         formData.append('is_liked', isLiked);
 
-        fetch('/ProjectHorizon/api/main_handler.php', {
+        fetch(`${window.BASE_PATH}/api/main_handler.php`, {
             method: 'POST',
             body: formData
         }).then(res => res.json()).then(data => {
@@ -361,7 +361,7 @@ export function initMainController() {
         }
 
         const encodedSearchTerm = encodeURIComponent(searchTerm);
-        const url = `/ProjectHorizon/api/main_handler.php?request_type=galleries&sort=${sortBy}&search=${encodedSearchTerm}&page=${galleriesCurrentPage}&limit=${BATCH_SIZE}`;
+        const url = `${window.BASE_PATH}/api/main_handler.php?request_type=galleries&sort=${sortBy}&search=${encodedSearchTerm}&page=${galleriesCurrentPage}&limit=${BATCH_SIZE}`;
 
         fetch(url)
             .then(response => response.json())
@@ -412,7 +412,7 @@ export function initMainController() {
             title.textContent = galleryName ? galleryName : 'Cargando...';
         }
 
-        fetch(`/ProjectHorizon/api/main_handler.php?request_type=photos&uuid=${uuid}&page=${photosCurrentPage}&limit=${BATCH_SIZE}`)
+        fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=photos&uuid=${uuid}&page=${photosCurrentPage}&limit=${BATCH_SIZE}`)
             .then(response => response.json())
             .then(photos => {
                 if (!append) grid.innerHTML = '';
@@ -513,7 +513,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
     };
     
     const fetchAndSetGalleryName = (galleryUuid) => {
-         fetch(`/ProjectHorizon/api/main_handler.php?request_type=galleries&uuid=${galleryUuid}`)
+         fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${galleryUuid}`)
             .then(res => res.json())
             .then(gallery => {
                 if (gallery && gallery.name) {
@@ -527,7 +527,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
         currentGalleryPhotoList = photoList;
         displayFetchedPhoto(photoList);
     } else if (currentGalleryPhotoList.length === 0 || currentGalleryForPhotoView !== uuid) {
-        fetch(`/ProjectHorizon/api/main_handler.php?request_type=photos&uuid=${uuid}&limit=1000`)
+        fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=photos&uuid=${uuid}&limit=1000`)
             .then(res => res.json())
             .then(photos => {
                 currentGalleryPhotoList = photos;
@@ -543,7 +543,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
         formData.append('action_type', 'increment_interaction');
         formData.append('uuid', uuid);
 
-        fetch('/ProjectHorizon/api/main_handler.php', { method: 'POST', body: formData });
+        fetch(`${window.BASE_PATH}/api/main_handler.php`, { method: 'POST', body: formData });
     }
 
     function updateSelectActiveState(selectId, value) {
@@ -853,7 +853,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
                 formData.append('uuid', uuid);
                 formData.append('code', code);
 
-                fetch('/ProjectHorizon/api/main_handler.php', { method: 'POST', body: formData })
+                fetch(`${window.BASE_PATH}/api/main_handler.php`, { method: 'POST', body: formData })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
@@ -965,7 +965,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
             updateSelectActiveState('relevance-select', currentSortBy);
             fetchAndDisplayGalleries(currentSortBy);
         } else if (section === 'galleryPhotos' && data && data.uuid) {
-            fetch(`/ProjectHorizon/api/main_handler.php?request_type=galleries&uuid=${data.uuid}`)
+            fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${data.uuid}`)
                 .then(res => res.json())
                 .then(gallery => { if (gallery) fetchAndDisplayGalleryPhotos(gallery.uuid, gallery.name); });
         } else if (section === 'photoView' && data && data.uuid && data.photoId) {
@@ -1044,7 +1044,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
         const galleryUuid = galleryMatch[1];
         initialStateData = { uuid: galleryUuid };
         setInitialHistoryState(initialView, 'galleryPhotos', initialStateData);
-        fetch(`/ProjectHorizon/api/main_handler.php?request_type=galleries&uuid=${galleryUuid}`)
+        fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${galleryUuid}`)
             .then(res => res.json())
             .then(gallery => {
                 if (gallery && gallery.uuid) {
@@ -1066,7 +1066,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
         const galleryUuid = reedemMatch[1];
         initialStateData = { uuid: galleryUuid };
         setInitialHistoryState(initialView, 'accessCodePrompt', initialStateData);
-        fetch(`/ProjectHorizon/api/main_handler.php?request_type=galleries&uuid=${galleryUuid}`)
+        fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${galleryUuid}`)
             .then(res => res.json())
             .then(gallery => {
                 if (gallery && gallery.uuid) {
