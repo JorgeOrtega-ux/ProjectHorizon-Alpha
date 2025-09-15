@@ -558,7 +558,6 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    /* overflow: hidden; se quitó de aquí */
 }
 
 .card-background {
@@ -570,11 +569,10 @@ body {
     background-size: cover;
     background-position: center;
     border-radius: 12px;
-    overflow: hidden; /* Se mantiene aquí para recortar la imagen y la sombra */
+    overflow: hidden;
     z-index: 0;
 }
 
-/* --- CORRECCIÓN --- La sombra ahora se aplica al fondo */
 .card-background::after {
     content: '';
     position: absolute;
@@ -590,7 +588,7 @@ body {
     display: flex;
     align-items: center;
     padding: 16px;
-    z-index: 1; /* Elevado para estar sobre la sombra */
+    z-index: 1;
     position: relative;
 }
 
@@ -615,10 +613,6 @@ body {
 
 .view-container.disabled {
     display: none;
-}
-
-.view-container.active {
-    display: block;
 }
 
 .card-grid.active {
@@ -707,7 +701,7 @@ body {
     position: absolute;
     top: 12px;
     right: 12px;
-    z-index: 2; /* Elevado para estar sobre la sombra y el contenido */
+    z-index: 2;
 }
 
 .card-hover-overlay {
@@ -946,4 +940,20 @@ body {
     gap: 8px;
     width: auto;
     padding: 0 16px;
+}@media (max-width: 768px) {
+    .view-container.active {
+        /* Cambia la dirección a columna para apilar los elementos */
+        flex-direction: column;
+        /* Alinea el texto a la izquierda */
+        align-items: flex-start;
+        /* Añade un espacio entre el texto y el interruptor */
+        gap: 16px;
+    }
+
+    .item-actions {
+        /* Asegura que el contenedor del interruptor ocupe todo el ancho */
+        width: 100%;
+        /* Empuja el interruptor hacia la derecha */
+        justify-content: flex-end;
+    }
 }
