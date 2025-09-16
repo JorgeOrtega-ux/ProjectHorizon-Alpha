@@ -87,134 +87,135 @@ export function initMainController() {
     }
 
     function displayFavoritePhotos() {
-        const allPhotosContainer = document.getElementById('favorites-grid-view');
-        const byUserContainer = document.getElementById('favorites-grid-view-by-user');
-        const searchInput = document.getElementById('favorites-search-input');
-        const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    const allPhotosContainer = document.getElementById('favorites-grid-view');
+    const byUserContainer = document.getElementById('favorites-grid-view-by-user');
+    const searchInput = document.getElementById('favorites-search-input');
+    const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
-        allPhotosContainer.innerHTML = '';
-        byUserContainer.innerHTML = '';
+    allPhotosContainer.innerHTML = '';
+    byUserContainer.innerHTML = '';
 
-        let favorites = getFavorites();
+    let favorites = getFavorites();
 
-        if (searchTerm) {
-            favorites = favorites.filter(photo =>
-                photo.gallery_name.toLowerCase().includes(searchTerm)
-            );
-        }
-        
-        if (currentFavoritesSortBy === 'oldest') {
-            favorites.sort((a, b) => (a.added_at || 0) - (b.added_at || 0));
-        } else if (currentFavoritesSortBy === 'newest') {
-            favorites.sort((a, b) => (b.added_at || 0) - (a.added_at || 0));
-        }
-        
-        currentFavoritesList = favorites;
+    if (searchTerm) {
+        favorites = favorites.filter(photo =>
+            photo.gallery_name.toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    if (currentFavoritesSortBy === 'oldest') {
+        favorites.sort((a, b) => (a.added_at || 0) - (b.added_at || 0));
+    } else if (currentFavoritesSortBy === 'newest') {
+        favorites.sort((a, b) => (b.added_at || 0) - (a.added_at || 0));
+    }
+    
+    currentFavoritesList = favorites;
 
-        if (currentFavoritesSortBy === 'user') {
-            allPhotosContainer.classList.remove('active');
-            allPhotosContainer.classList.add('disabled');
-            byUserContainer.classList.add('active');
-            byUserContainer.classList.remove('disabled');
+    if (currentFavoritesSortBy === 'user') {
+        allPhotosContainer.classList.remove('active');
+        allPhotosContainer.classList.add('disabled');
+        byUserContainer.classList.add('active');
+        byUserContainer.classList.remove('disabled');
 
-            // --- INICIO DE LA MODIFICACIÓN ---
-            const galleries = favorites.reduce((acc, photo) => {
-                if (!acc[photo.gallery_uuid]) {
-                    acc[photo.gallery_uuid] = { 
-                        name: photo.gallery_name, 
-                        photos: [],
-                        profile_picture_url: photo.profile_picture_url 
-                    };
-                }
-                acc[photo.gallery_uuid].photos.push(photo);
-                return acc;
-            }, {});
-
-            if (Object.keys(galleries).length > 0) {
-                for (const uuid in galleries) {
-                    const gallery = galleries[uuid];
-                    const card = document.createElement('div');
-                    card.className = 'card user-card';
-                    card.dataset.uuid = uuid;
-                    card.dataset.name = gallery.name;
-
-                    const background = document.createElement('div');
-                    background.className = 'card-background';
-                    background.style.backgroundImage = `url('${gallery.photos[0].photo_url}')`;
-                    card.appendChild(background);
-
-                    const overlay = document.createElement('div');
-                    overlay.className = 'card-content-overlay';
-                    
-                    const icon = document.createElement('div');
-                    icon.className = 'card-icon';
-                    if (gallery.profile_picture_url) {
-                        icon.style.backgroundImage = `url('${gallery.profile_picture_url}')`;
-                    }
-                    overlay.appendChild(icon);
-                    
-                    const textContainer = document.createElement('div');
-                    textContainer.className = 'card-text';
-                    textContainer.innerHTML = `<span>${gallery.name}</span><span style="font-size: 0.8rem; display: block;">${gallery.photos.length} ${gallery.photos.length > 1 ? 'fotos' : 'foto'}</span>`;
-                    overlay.appendChild(textContainer);
-                    
-                    card.appendChild(overlay);
-                    byUserContainer.appendChild(card);
-                }
-            } else {
-                byUserContainer.innerHTML = '<p>No se encontraron favoritos.</p>';
+        // --- INICIO DE LA MODIFICACIÓN ---
+        const galleries = favorites.reduce((acc, photo) => {
+            if (!acc[photo.gallery_uuid]) {
+                acc[photo.gallery_uuid] = { 
+                    name: photo.gallery_name, 
+                    photos: [],
+                    profile_picture_url: photo.profile_picture_url 
+                };
             }
-            // --- FIN DE LA MODIFICACIÓN ---
+            acc[photo.gallery_uuid].photos.push(photo);
+            return acc;
+        }, {});
 
+        if (Object.keys(galleries).length > 0) {
+            for (const uuid in galleries) {
+                const gallery = galleries[uuid];
+                const card = document.createElement('div');
+                card.className = 'card user-card';
+                card.dataset.uuid = uuid;
+                card.dataset.name = gallery.name;
+
+                const background = document.createElement('div');
+                background.className = 'card-background';
+                background.style.backgroundImage = `url('${gallery.photos[0].photo_url}')`;
+                card.appendChild(background);
+
+                const overlay = document.createElement('div');
+                overlay.className = 'card-content-overlay';
+                
+                const icon = document.createElement('div');
+                icon.className = 'card-icon';
+                if (gallery.profile_picture_url) {
+                    icon.style.backgroundImage = `url('${gallery.profile_picture_url}')`;
+                }
+                overlay.appendChild(icon);
+                
+                const textContainer = document.createElement('div');
+                textContainer.className = 'card-text';
+                textContainer.innerHTML = `<span>${gallery.name}</span><span style="font-size: 0.8rem; display: block;">${gallery.photos.length} ${gallery.photos.length > 1 ? 'fotos' : 'foto'}</span>`;
+                overlay.appendChild(textContainer);
+                
+                card.appendChild(overlay);
+                byUserContainer.appendChild(card);
+            }
         } else {
-            allPhotosContainer.classList.add('active');
-            allPhotosContainer.classList.remove('disabled');
-            byUserContainer.classList.remove('active');
-            byUserContainer.classList.add('disabled');
-            
-            if (favorites.length > 0) {
-                favorites.forEach(photo => {
-                    const card = document.createElement('div');
-                    card.className = 'card photo-card';
-                    card.dataset.photoUrl = photo.photo_url;
-                    card.dataset.photoId = photo.id;
-                    card.dataset.galleryUuid = photo.gallery_uuid;
+            byUserContainer.innerHTML = '<p>No se encontraron favoritos.</p>';
+        }
+        // --- FIN DE LA MODIFICACIÓN ---
 
-                    const background = document.createElement('div');
-                    background.className = 'card-background';
-                    background.style.backgroundImage = `url('${photo.photo_url}')`;
-                    card.appendChild(background);
+    } else {
+        allPhotosContainer.classList.add('active');
+        allPhotosContainer.classList.remove('disabled');
+        byUserContainer.classList.remove('active');
+        byUserContainer.classList.add('disabled');
+        
+        if (favorites.length > 0) {
+            favorites.forEach(photo => {
+                const card = document.createElement('div');
+                card.className = 'card photo-card';
+                card.dataset.photoUrl = photo.photo_url;
+                card.dataset.photoId = photo.id;
+                card.dataset.galleryUuid = photo.gallery_uuid;
 
-                    const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
-                    card.innerHTML += `
-                    <div class="card-content-overlay">
-                        <div class="card-text">
-                            <span>${photo.gallery_name}</span>
-                            <span style="font-size: 0.8rem; display: block;">${new Date(photo.added_at).toLocaleString()}</span>
+                const background = document.createElement('div');
+                background.className = 'card-background';
+                background.style.backgroundImage = `url('${photo.photo_url}')`;
+                card.appendChild(background);
+
+                const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
+                card.innerHTML += `
+                <div class="card-content-overlay">
+                    <div class="card-icon" style="background-image: url('${photo.profile_picture_url || ''}')"></div>
+                    <div class="card-text">
+                        <span>${photo.gallery_name}</span>
+                        <span style="font-size: 0.8rem; display: block;">${new Date(photo.added_at).toLocaleString()}</span>
+                    </div>
+                </div>
+                <div class="card-actions-container">
+                    <div class="card-hover-overlay">
+                        <div class="card-hover-icons">
+                            <div class="icon-wrapper active" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div>
+                            <div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div>
                         </div>
                     </div>
-                    <div class="card-actions-container">
-                        <div class="card-hover-overlay">
-                            <div class="card-hover-icons">
-                                <div class="icon-wrapper active" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div>
-                                <div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div>
-                            </div>
-                        </div>
-                        <div class="module-content module-select photo-context-menu disabled">
-                            <div class="menu-content"><div class="menu-list">
-                                <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
-                                <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
-                                <a class="menu-link disabled-link" href="javascript:void(0);"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
-                            </div></div>
-                        </div>
-                    </div>`;
-                    allPhotosContainer.appendChild(card);
-                });
-            } else {
-                allPhotosContainer.innerHTML = '<p>No se encontraron favoritos.</p>';
-            }
+                    <div class="module-content module-select photo-context-menu disabled">
+                        <div class="menu-content"><div class="menu-list">
+                            <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
+                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
+                            <a class="menu-link disabled-link" href="javascript:void(0);"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
+                        </div></div>
+                    </div>
+                </div>`;
+                allPhotosContainer.appendChild(card);
+            });
+        } else {
+            allPhotosContainer.innerHTML = '<p>No se encontraron favoritos.</p>';
         }
     }
+}
 
     function handleNavigation(view, section, pushState = true, data = null) {
         if (pushState) {
