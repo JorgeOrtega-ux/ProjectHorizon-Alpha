@@ -554,6 +554,12 @@ body {
     flex-direction: column;
     justify-content: flex-end;
     cursor: pointer;
+    box-shadow: none;
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .card-background {
@@ -578,6 +584,13 @@ body {
     height: 100%;
     background: linear-gradient(180deg, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.6) 100%);
     pointer-events: none;
+    opacity: 0; /* --- MODIFICACIÓN: El gradiente es transparente por defecto --- */
+    transition: opacity 0.2s ease-in-out; /* --- MODIFICACIÓN: Se añade transición para la opacidad --- */
+}
+
+/* --- MODIFICACIÓN: Se añade una nueva regla para mostrar el gradiente en hover --- */
+.card:hover .card-background::after {
+    opacity: 1;
 }
 
 .card-content-overlay {

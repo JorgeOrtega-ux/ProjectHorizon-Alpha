@@ -190,7 +190,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode(['error' => 'Gallery UUID is required']);
             exit;
         }
-        $sql = "SELECT id, photo_url, gallery_uuid FROM gallery_photos WHERE gallery_uuid = ? ORDER BY id DESC LIMIT ? OFFSET ?";
+
+        // --- INICIO DE LA CORRECCIÓN ---
+        $sql = "SELECT p.id, p.photo_url, p.gallery_uuid, g.name AS gallery_name, gpp.profile_picture_url
+                FROM gallery_photos p
+                JOIN galleries g ON p.gallery_uuid = g.uuid
+                LEFT JOIN gallery_profile_pictures gpp ON p.gallery_uuid = gpp.gallery_uuid
+                WHERE p.gallery_uuid = ?
+                ORDER BY p.id DESC
+                LIMIT ? OFFSET ?";
+        // --- FIN DE LA CORRECCIÓN ---
+                
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("sii", $gallery_uuid, $limit, $offset);
         $stmt->execute();

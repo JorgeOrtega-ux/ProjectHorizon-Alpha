@@ -30,7 +30,8 @@ export function initMainController() {
     const BATCH_SIZE = 20;
 
     let currentFavoritesSortBy = 'user';
-    
+    let currentFavoritesList = [];
+
     const loaderHTML = '<div class="loader-container"><div class="spinner"></div></div>';
 
 
@@ -101,6 +102,14 @@ export function initMainController() {
                 photo.gallery_name.toLowerCase().includes(searchTerm)
             );
         }
+        
+        if (currentFavoritesSortBy === 'oldest') {
+            favorites.sort((a, b) => (a.added_at || 0) - (b.added_at || 0));
+        } else if (currentFavoritesSortBy === 'newest') {
+            favorites.sort((a, b) => (b.added_at || 0) - (a.added_at || 0));
+        }
+        
+        currentFavoritesList = favorites;
 
         if (currentFavoritesSortBy === 'user') {
             allPhotosContainer.classList.remove('active');
@@ -108,9 +117,14 @@ export function initMainController() {
             byUserContainer.classList.add('active');
             byUserContainer.classList.remove('disabled');
 
+            // --- INICIO DE LA MODIFICACIÓN ---
             const galleries = favorites.reduce((acc, photo) => {
                 if (!acc[photo.gallery_uuid]) {
-                    acc[photo.gallery_uuid] = { name: photo.gallery_name, photos: [] };
+                    acc[photo.gallery_uuid] = { 
+                        name: photo.gallery_name, 
+                        photos: [],
+                        profile_picture_url: photo.profile_picture_url 
+                    };
                 }
                 acc[photo.gallery_uuid].photos.push(photo);
                 return acc;
@@ -131,28 +145,33 @@ export function initMainController() {
 
                     const overlay = document.createElement('div');
                     overlay.className = 'card-content-overlay';
+                    
+                    const icon = document.createElement('div');
+                    icon.className = 'card-icon';
+                    if (gallery.profile_picture_url) {
+                        icon.style.backgroundImage = `url('${gallery.profile_picture_url}')`;
+                    }
+                    overlay.appendChild(icon);
+                    
                     const textContainer = document.createElement('div');
                     textContainer.className = 'card-text';
                     textContainer.innerHTML = `<span>${gallery.name}</span><span style="font-size: 0.8rem; display: block;">${gallery.photos.length} ${gallery.photos.length > 1 ? 'fotos' : 'foto'}</span>`;
                     overlay.appendChild(textContainer);
+                    
                     card.appendChild(overlay);
                     byUserContainer.appendChild(card);
                 }
             } else {
                 byUserContainer.innerHTML = '<p>No se encontraron favoritos.</p>';
             }
+            // --- FIN DE LA MODIFICACIÓN ---
+
         } else {
             allPhotosContainer.classList.add('active');
             allPhotosContainer.classList.remove('disabled');
             byUserContainer.classList.remove('active');
             byUserContainer.classList.add('disabled');
-
-            if (currentFavoritesSortBy === 'oldest') {
-                favorites.sort((a, b) => (a.added_at || 0) - (b.added_at || 0));
-            } else {
-                favorites.sort((a, b) => (b.added_at || 0) - (a.added_at || 0));
-            }
-
+            
             if (favorites.length > 0) {
                 favorites.forEach(photo => {
                     const card = document.createElement('div');
@@ -496,7 +515,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
                 photoViewUserTitle.textContent = currentGalleryNameForPhotoView;
             }
 
-            currentPhotoData = { id: photo.id, gallery_uuid: uuid, photo_url: photo.photo_url, gallery_name: photo.gallery_name || currentGalleryNameForPhotoView };
+            currentPhotoData = { id: photo.id, gallery_uuid: uuid, photo_url: photo.photo_url, gallery_name: photo.gallery_name || currentGalleryNameForPhotoView, profile_picture_url: photo.profile_picture_url };
             
             photoViewerImage.src = photo.photo_url;
             photoCounter.textContent = `${photoIndex + 1} / ${list.length}`;
@@ -643,8 +662,6 @@ function displayPhoto(uuid, photoId, photoList = null) {
                 }
             }
             
-            // --- INICIO DE LA CORRECCIÓN ---
-            // Cierra los menús contextuales de las tarjetas si se hace clic fuera
             if (!event.target.closest('.card-actions-container')) {
                 document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
                     menu.classList.remove('active');
@@ -652,7 +669,6 @@ function displayPhoto(uuid, photoId, photoList = null) {
                     menu.closest('.card-actions-container').classList.remove('force-visible');
                 });
             }
-            // --- FIN DE LA CORRECCIÓN ---
 
             const selectedOption = event.target.closest('.module-select .menu-link');
             if (selectedOption && !selectedOption.closest('#view-select') && !selectedOption.closest('#view-select-fav') && !selectedOption.closest('#theme-select') && !selectedOption.closest('#language-select')) {
@@ -694,7 +710,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
                 }
                 return;
             }
-
+            
             const photoCard = event.target.closest('.card.photo-card');
             if (photoCard && !event.target.closest('.card-actions-container')) {
                 const galleryUuid = photoCard.dataset.galleryUuid || currentGalleryForPhotoView;
@@ -703,12 +719,13 @@ function displayPhoto(uuid, photoId, photoList = null) {
 
                 const activeSection = document.querySelector('.section-content.active')?.dataset.section;
                 
-                let photoList = (activeSection === 'favorites' || activeSection === 'userSpecificFavorites') 
-                    ? getFavorites() 
-                    : currentGalleryPhotoList;
-
-                if (activeSection === 'userSpecificFavorites') {
-                    photoList = photoList.filter(p => p.gallery_uuid === galleryUuid);
+                let photoList;
+                if (activeSection === 'favorites') {
+                    photoList = currentFavoritesList;
+                } else if (activeSection === 'userSpecificFavorites') {
+                    photoList = currentFavoritesList.filter(p => p.gallery_uuid === galleryUuid);
+                } else {
+                    photoList = currentGalleryPhotoList;
                 }
 
                 displayPhoto(galleryUuid, photoId, photoList);
@@ -761,7 +778,13 @@ function displayPhoto(uuid, photoId, photoList = null) {
                     const photoData = favorites.find(p => p.id == photoId) || currentGalleryPhotoList.find(p => p.id == photoId);
 
                     if (photoData) {
-                        const fullPhotoData = { id: photoData.id, gallery_uuid: photoData.gallery_uuid || currentGalleryForPhotoView, photo_url: photoData.photo_url, gallery_name: photoData.gallery_name || currentGalleryNameForPhotoView };
+                        const fullPhotoData = { 
+                            id: photoData.id, 
+                            gallery_uuid: photoData.gallery_uuid || currentGalleryForPhotoView, 
+                            photo_url: photoData.photo_url, 
+                            gallery_name: photoData.gallery_name || currentGalleryNameForPhotoView,
+                            profile_picture_url: photoData.profile_picture_url
+                        };
                         toggleFavorite(fullPhotoData);
 
                         const activeSection = document.querySelector('.section-content.active')?.dataset.section;
