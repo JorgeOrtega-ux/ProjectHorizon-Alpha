@@ -578,6 +578,30 @@ function displayPhoto(uuid, photoId, photoList = null) {
             }
         }
     }
+    
+    // --- INICIO DE LA MODIFICACIÓN ---
+    function applyViewPreference() {
+        const savedView = localStorage.getItem('galleryView') || 'grid';
+        const gridView = document.getElementById('grid-view');
+        const tableView = document.getElementById('table-view');
+        const toggleViewBtn = document.querySelector('[data-action="toggle-view"]');
+        const icon = toggleViewBtn ? toggleViewBtn.querySelector('.material-symbols-rounded') : null;
+
+        if (gridView && tableView && icon) {
+            if (savedView === 'table') {
+                gridView.classList.remove('active'); gridView.classList.add('disabled');
+                tableView.classList.remove('disabled'); tableView.classList.add('active');
+                icon.textContent = 'grid_view';
+                currentView = 'table';
+            } else {
+                tableView.classList.remove('active'); tableView.classList.add('disabled');
+                gridView.classList.remove('disabled'); gridView.classList.add('active');
+                icon.textContent = 'view_list';
+                currentView = 'grid';
+            }
+        }
+    }
+    // --- FIN DE LA MODIFICACIÓN ---
 
     function setupEventListeners() {
         const toggleViewBtn = document.querySelector('[data-action="toggle-view"]');
@@ -597,12 +621,17 @@ function displayPhoto(uuid, photoId, photoList = null) {
                 if (currentView === 'grid') {
                     gridView.classList.remove('active'); gridView.classList.add('disabled');
                     tableView.classList.remove('disabled'); tableView.classList.add('active');
-                    icon.textContent = 'grid_view'; currentView = 'table';
+                    icon.textContent = 'grid_view'; 
+                    currentView = 'table';
                 } else {
                     tableView.classList.remove('active'); tableView.classList.add('disabled');
                     gridView.classList.remove('disabled'); gridView.classList.add('active');
-                    icon.textContent = 'view_list'; currentView = 'grid';
+                    icon.textContent = 'view_list'; 
+                    currentView = 'grid';
                 }
+                // --- INICIO DE LA MODIFICACIÓN ---
+                localStorage.setItem('galleryView', currentView);
+                // --- FIN DE LA MODIFICACIÓN ---
             });
         }
 
@@ -1024,6 +1053,9 @@ function displayPhoto(uuid, photoId, photoList = null) {
         }
     }
 
+    // --- INICIO DE LA MODIFICACIÓN ---
+    applyViewPreference();
+    // --- FIN DE LA MODIFICACIÓN ---
     setupEventListeners();
     setupScrollShadows();
 
