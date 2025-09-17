@@ -87,6 +87,7 @@
         </div>
     </div>
     <div class="section-content-block overflow-y">
+        <div class="status-message-container disabled"></div>
         <div class="card-grid active" id="grid-view"></div>
 
         <div class="table-view-container body-title disabled" id="table-view">
@@ -103,7 +104,7 @@
                 </tbody>
             </table>
         </div>
-         <div class="load-more-container disabled" id="users-load-more-container">
+        <div class="load-more-container disabled" id="users-load-more-container">
             <button class="load-more-btn" data-action="load-more-users">Mostrar más</button>
         </div>
     </div>

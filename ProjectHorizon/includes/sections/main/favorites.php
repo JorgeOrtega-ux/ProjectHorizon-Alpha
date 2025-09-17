@@ -74,8 +74,9 @@
         </div>
     </div>
     <div class="section-content-block overflow-y">
+        <div class="status-message-container disabled"></div>
         <div class="card-grid active" id="favorites-grid-view">
-            </div>
+        </div>
         <div class="card-grid disabled" id="favorites-grid-view-by-user">
         </div>
     </div>

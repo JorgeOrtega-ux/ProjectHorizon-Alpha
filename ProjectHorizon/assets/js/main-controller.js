@@ -48,7 +48,9 @@ export function initMainController() {
         if (photoIndex > -1) {
             favorites.splice(photoIndex, 1);
         } else {
-            const photoToAdd = { ...photoData, added_at: Date.now() };
+            const photoToAdd = { ...photoData,
+                added_at: Date.now()
+            };
             favorites.push(photoToAdd);
         }
 
@@ -87,106 +89,116 @@ export function initMainController() {
     }
 
     function displayFavoritePhotos() {
-    const allPhotosContainer = document.getElementById('favorites-grid-view');
-    const byUserContainer = document.getElementById('favorites-grid-view-by-user');
-    const searchInput = document.getElementById('favorites-search-input');
-    const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        const section = document.querySelector('[data-section="favorites"]');
+        const allPhotosContainer = section.querySelector('#favorites-grid-view');
+        const byUserContainer = section.querySelector('#favorites-grid-view-by-user');
+        const statusContainer = section.querySelector('.status-message-container');
+        const searchInput = document.getElementById('favorites-search-input');
+        const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
-    allPhotosContainer.innerHTML = '';
-    byUserContainer.innerHTML = '';
+        allPhotosContainer.innerHTML = '';
+        byUserContainer.innerHTML = '';
+        statusContainer.innerHTML = '';
+        statusContainer.classList.add('disabled');
 
-    let favorites = getFavorites();
+        let favorites = getFavorites();
 
-    if (searchTerm) {
-        favorites = favorites.filter(photo =>
-            photo.gallery_name.toLowerCase().includes(searchTerm)
-        );
-    }
-    
-    if (currentFavoritesSortBy === 'oldest') {
-        favorites.sort((a, b) => (a.added_at || 0) - (b.added_at || 0));
-    } else if (currentFavoritesSortBy === 'newest') {
-        favorites.sort((a, b) => (b.added_at || 0) - (a.added_at || 0));
-    }
-    
-    currentFavoritesList = favorites;
-
-    if (currentFavoritesSortBy === 'user') {
-        allPhotosContainer.classList.remove('active');
-        allPhotosContainer.classList.add('disabled');
-        byUserContainer.classList.add('active');
-        byUserContainer.classList.remove('disabled');
-
-        // --- INICIO DE LA MODIFICACIÓN ---
-        const galleries = favorites.reduce((acc, photo) => {
-            if (!acc[photo.gallery_uuid]) {
-                acc[photo.gallery_uuid] = { 
-                    name: photo.gallery_name, 
-                    photos: [],
-                    profile_picture_url: photo.profile_picture_url 
-                };
-            }
-            acc[photo.gallery_uuid].photos.push(photo);
-            return acc;
-        }, {});
-
-        if (Object.keys(galleries).length > 0) {
-            for (const uuid in galleries) {
-                const gallery = galleries[uuid];
-                const card = document.createElement('div');
-                card.className = 'card user-card';
-                card.dataset.uuid = uuid;
-                card.dataset.name = gallery.name;
-
-                const background = document.createElement('div');
-                background.className = 'card-background';
-                background.style.backgroundImage = `url('${gallery.photos[0].photo_url}')`;
-                card.appendChild(background);
-
-                const overlay = document.createElement('div');
-                overlay.className = 'card-content-overlay';
-                
-                const icon = document.createElement('div');
-                icon.className = 'card-icon';
-                if (gallery.profile_picture_url) {
-                    icon.style.backgroundImage = `url('${gallery.profile_picture_url}')`;
-                }
-                overlay.appendChild(icon);
-                
-                const textContainer = document.createElement('div');
-                textContainer.className = 'card-text';
-                textContainer.innerHTML = `<span>${gallery.name}</span><span style="font-size: 0.8rem; display: block;">${gallery.photos.length} ${gallery.photos.length > 1 ? 'fotos' : 'foto'}</span>`;
-                overlay.appendChild(textContainer);
-                
-                card.appendChild(overlay);
-                byUserContainer.appendChild(card);
-            }
-        } else {
-            byUserContainer.innerHTML = '<p>No se encontraron favoritos.</p>';
+        if (searchTerm) {
+            favorites = favorites.filter(photo =>
+                photo.gallery_name.toLowerCase().includes(searchTerm)
+            );
         }
-        // --- FIN DE LA MODIFICACIÓN ---
 
-    } else {
-        allPhotosContainer.classList.add('active');
-        allPhotosContainer.classList.remove('disabled');
-        byUserContainer.classList.remove('active');
-        byUserContainer.classList.add('disabled');
-        
-        if (favorites.length > 0) {
-            favorites.forEach(photo => {
-                const card = document.createElement('div');
-                card.className = 'card photo-card';
-                card.dataset.photoUrl = photo.photo_url;
-                card.dataset.photoId = photo.id;
-                card.dataset.galleryUuid = photo.gallery_uuid;
+        if (currentFavoritesSortBy === 'oldest') {
+            favorites.sort((a, b) => (a.added_at || 0) - (b.added_at || 0));
+        } else if (currentFavoritesSortBy === 'newest') {
+            favorites.sort((a, b) => (b.added_at || 0) - (a.added_at || 0));
+        }
 
-                const background = document.createElement('div');
-                background.className = 'card-background';
-                background.style.backgroundImage = `url('${photo.photo_url}')`;
-                card.appendChild(background);
+        currentFavoritesList = favorites;
 
-                const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
-                card.innerHTML += `
+        if (currentFavoritesSortBy === 'user') {
+            allPhotosContainer.classList.remove('active');
+            allPhotosContainer.classList.add('disabled');
+            byUserContainer.classList.add('active');
+            byUserContainer.classList.remove('disabled');
+
+            // --- INICIO DE LA MODIFICACIÓN ---
+            const galleries = favorites.reduce((acc, photo) => {
+                if (!acc[photo.gallery_uuid]) {
+                    acc[photo.gallery_uuid] = {
+                        name: photo.gallery_name,
+                        photos: [],
+                        profile_picture_url: photo.profile_picture_url
+                    };
+                }
+                acc[photo.gallery_uuid].photos.push(photo);
+                return acc;
+            }, {});
+
+            if (Object.keys(galleries).length > 0) {
+                byUserContainer.classList.remove('disabled');
+                statusContainer.classList.add('disabled');
+                for (const uuid in galleries) {
+                    const gallery = galleries[uuid];
+                    const card = document.createElement('div');
+                    card.className = 'card user-card';
+                    card.dataset.uuid = uuid;
+                    card.dataset.name = gallery.name;
+
+                    const background = document.createElement('div');
+                    background.className = 'card-background';
+                    background.style.backgroundImage = `url('${gallery.photos[0].photo_url}')`;
+                    card.appendChild(background);
+
+                    const overlay = document.createElement('div');
+                    overlay.className = 'card-content-overlay';
+
+                    const icon = document.createElement('div');
+                    icon.className = 'card-icon';
+                    if (gallery.profile_picture_url) {
+                        icon.style.backgroundImage = `url('${gallery.profile_picture_url}')`;
+                    }
+                    overlay.appendChild(icon);
+
+                    const textContainer = document.createElement('div');
+                    textContainer.className = 'card-text';
+                    textContainer.innerHTML = `<span>${gallery.name}</span><span style="font-size: 0.8rem; display: block;">${gallery.photos.length} ${gallery.photos.length > 1 ? 'fotos' : 'foto'}</span>`;
+                    overlay.appendChild(textContainer);
+
+                    card.appendChild(overlay);
+                    byUserContainer.appendChild(card);
+                }
+            } else {
+                byUserContainer.classList.add('disabled');
+                statusContainer.classList.remove('disabled');
+                statusContainer.innerHTML = '<div><h2>No se encontraron favoritos</h2><p>Prueba a buscar en otra sección o añade nuevas fotos a tu colección.</p></div>';
+            }
+            // --- FIN DE LA MODIFICACIÓN ---
+
+        } else {
+            allPhotosContainer.classList.add('active');
+            allPhotosContainer.classList.remove('disabled');
+            byUserContainer.classList.remove('active');
+            byUserContainer.classList.add('disabled');
+
+            if (favorites.length > 0) {
+                allPhotosContainer.classList.remove('disabled');
+                statusContainer.classList.add('disabled');
+                favorites.forEach(photo => {
+                    const card = document.createElement('div');
+                    card.className = 'card photo-card';
+                    card.dataset.photoUrl = photo.photo_url;
+                    card.dataset.photoId = photo.id;
+                    card.dataset.galleryUuid = photo.gallery_uuid;
+
+                    const background = document.createElement('div');
+                    background.className = 'card-background';
+                    background.style.backgroundImage = `url('${photo.photo_url}')`;
+                    card.appendChild(background);
+
+                    const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
+                    card.innerHTML += `
                 <div class="card-content-overlay">
                     <div class="card-icon" style="background-image: url('${photo.profile_picture_url || ''}')"></div>
                     <div class="card-text">
@@ -209,13 +221,15 @@ export function initMainController() {
                         </div></div>
                     </div>
                 </div>`;
-                allPhotosContainer.appendChild(card);
-            });
-        } else {
-            allPhotosContainer.innerHTML = '<p>No se encontraron favoritos.</p>';
+                    allPhotosContainer.appendChild(card);
+                });
+            } else {
+                allPhotosContainer.classList.add('disabled');
+                statusContainer.classList.remove('disabled');
+                statusContainer.innerHTML = '<div><h2>No se encontraron favoritos</h2><p>Prueba a buscar en otra sección o añade nuevas fotos a tu colección.</p></div>';
+            }
         }
     }
-}
 
     function handleNavigation(view, section, pushState = true, data = null) {
         if (pushState) {
@@ -254,8 +268,8 @@ export function initMainController() {
         if (backButton) {
             backButton.classList.remove('active');
         }
-        
-        if(section !== 'photoView') {
+
+        if (section !== 'photoView') {
             lastVisitedView = section;
             lastVisitedData = data;
         }
@@ -265,53 +279,49 @@ export function initMainController() {
         if (!append) {
             container.innerHTML = '';
         }
-        if (galleries.length > 0) {
-            galleries.forEach(gallery => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.dataset.uuid = gallery.uuid;
-                card.dataset.name = gallery.name;
-                card.dataset.privacy = gallery.privacy;
+        galleries.forEach(gallery => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.uuid = gallery.uuid;
+            card.dataset.name = gallery.name;
+            card.dataset.privacy = gallery.privacy;
 
-                if (gallery.background_photo_url) {
-                    const background = document.createElement('div');
-                    background.className = 'card-background';
-                    background.style.backgroundImage = `url('${gallery.background_photo_url}')`;
-                    card.appendChild(background);
-                }
+            if (gallery.background_photo_url) {
+                const background = document.createElement('div');
+                background.className = 'card-background';
+                background.style.backgroundImage = `url('${gallery.background_photo_url}')`;
+                card.appendChild(background);
+            }
 
-                const overlay = document.createElement('div');
-                overlay.className = 'card-content-overlay';
+            const overlay = document.createElement('div');
+            overlay.className = 'card-content-overlay';
 
-                const icon = document.createElement('div');
-                icon.className = 'card-icon';
-                if (gallery.profile_picture_url) {
-                    icon.style.backgroundImage = `url('${gallery.profile_picture_url}')`;
-                }
+            const icon = document.createElement('div');
+            icon.className = 'card-icon';
+            if (gallery.profile_picture_url) {
+                icon.style.backgroundImage = `url('${gallery.profile_picture_url}')`;
+            }
 
-                const textContainer = document.createElement('div');
-                textContainer.className = 'card-text';
+            const textContainer = document.createElement('div');
+            textContainer.className = 'card-text';
 
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = gallery.name;
-                textContainer.appendChild(nameSpan);
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = gallery.name;
+            textContainer.appendChild(nameSpan);
 
-                if (sortBy === 'newest' || sortBy === 'oldest') {
-                    const editedSpan = document.createElement('span');
-                    editedSpan.textContent = `Editado: ${new Date(gallery.last_edited).toLocaleDateString()}`;
-                    editedSpan.style.fontSize = '0.8rem';
-                    editedSpan.style.display = 'block';
-                    textContainer.appendChild(editedSpan);
-                }
+            if (sortBy === 'newest' || sortBy === 'oldest') {
+                const editedSpan = document.createElement('span');
+                editedSpan.textContent = `Editado: ${new Date(gallery.last_edited).toLocaleDateString()}`;
+                editedSpan.style.fontSize = '0.8rem';
+                editedSpan.style.display = 'block';
+                textContainer.appendChild(editedSpan);
+            }
 
-                overlay.appendChild(icon);
-                overlay.appendChild(textContainer);
-                card.appendChild(overlay);
-                container.appendChild(card);
-            });
-        } else if (!append) {
-            container.innerHTML = '<p>No se encontraron galerías.</p>';
-        }
+            overlay.appendChild(icon);
+            overlay.appendChild(textContainer);
+            card.appendChild(overlay);
+            container.appendChild(card);
+        });
     }
 
     function displayGalleriesAsTable(galleries, container, append = false) {
@@ -319,41 +329,33 @@ export function initMainController() {
         if (!append) {
             tbody.innerHTML = '';
         }
-        if (galleries.length > 0) {
-            galleries.forEach(gallery => {
-                const row = document.createElement('tr');
-                row.dataset.uuid = gallery.uuid;
-                row.dataset.name = gallery.name;
-                row.dataset.privacy = gallery.privacy;
-
-                const nameCell = document.createElement('td');
-                nameCell.innerHTML = `<div class="user-info"><div class="user-avatar" style="background-image: url('${gallery.profile_picture_url || ''}')"></div><span>${gallery.name}</span></div>`;
-                const privacyCell = document.createElement('td');
-                privacyCell.textContent = gallery.privacy == 1 ? 'Privado' : 'Público';
-                const typeCell = document.createElement('td');
-                typeCell.textContent = 'Galería';
-                const editedCell = document.createElement('td');
-                editedCell.textContent = new Date(gallery.last_edited).toLocaleDateString();
-
-                row.appendChild(nameCell);
-                row.appendChild(privacyCell);
-                row.appendChild(typeCell);
-                row.appendChild(editedCell);
-                tbody.appendChild(row);
-            });
-        } else if (!append) {
+        galleries.forEach(gallery => {
             const row = document.createElement('tr');
-            const cell = document.createElement('td');
-            cell.colSpan = 4;
-            cell.textContent = 'No se encontraron galerías.';
-            cell.style.textAlign = 'center';
-            row.appendChild(cell);
+            row.dataset.uuid = gallery.uuid;
+            row.dataset.name = gallery.name;
+            row.dataset.privacy = gallery.privacy;
+
+            const nameCell = document.createElement('td');
+            nameCell.innerHTML = `<div class="user-info"><div class="user-avatar" style="background-image: url('${gallery.profile_picture_url || ''}')"></div><span>${gallery.name}</span></div>`;
+            const privacyCell = document.createElement('td');
+            privacyCell.textContent = gallery.privacy == 1 ? 'Privado' : 'Público';
+            const typeCell = document.createElement('td');
+            typeCell.textContent = 'Galería';
+            const editedCell = document.createElement('td');
+            editedCell.textContent = new Date(gallery.last_edited).toLocaleDateString();
+
+            row.appendChild(nameCell);
+            row.appendChild(privacyCell);
+            row.appendChild(typeCell);
+            row.appendChild(editedCell);
             tbody.appendChild(row);
-        }
+        });
     }
 
     function promptForAccessCode(uuid, name) {
-        handleNavigation('main', 'accessCodePrompt', true, { uuid: uuid });
+        handleNavigation('main', 'accessCodePrompt', true, {
+            uuid: uuid
+        });
 
         const title = document.getElementById('access-code-title');
         const promptContainer = document.querySelector('[data-section="accessCodePrompt"]');
@@ -370,13 +372,19 @@ export function initMainController() {
         if (isLoadingGalleries) return;
         isLoadingGalleries = true;
 
-        const gridContainer = document.getElementById('grid-view');
-        const tableContainer = document.getElementById('table-view');
+        const section = document.querySelector('[data-section="home"]');
+        const gridContainer = section.querySelector('#grid-view');
+        const tableContainer = section.querySelector('#table-view');
+        const statusContainer = section.querySelector('.status-message-container');
 
         if (!append) {
             galleriesCurrentPage = 1;
-            if(gridContainer) gridContainer.innerHTML = loaderHTML;
-            if(tableContainer) tableContainer.querySelector('tbody').innerHTML = `<tr><td colspan="4">${loaderHTML}</td></tr>`;
+            gridContainer.innerHTML = '';
+            tableContainer.querySelector('tbody').innerHTML = '';
+            gridContainer.classList.add('disabled');
+            tableContainer.classList.add('disabled');
+            statusContainer.classList.remove('disabled');
+            statusContainer.innerHTML = loaderHTML;
         }
 
         const encodedSearchTerm = encodeURIComponent(searchTerm);
@@ -385,11 +393,26 @@ export function initMainController() {
         fetch(url)
             .then(response => response.json())
             .then(data => {
+                statusContainer.classList.add('disabled');
+                statusContainer.innerHTML = '';
+
+                if (currentView === 'grid') {
+                    gridContainer.classList.remove('disabled');
+                } else {
+                    tableContainer.classList.remove('disabled');
+                }
+
+                if (data.length > 0) {
+                    displayGalleriesAsGrid(data, gridContainer, sortBy, append);
+                    displayGalleriesAsTable(data, tableContainer, append);
+                } else if (!append) {
+                    statusContainer.classList.remove('disabled');
+                    statusContainer.innerHTML = '<div><h2>No se encontraron resultados</h2><p>Prueba con una búsqueda diferente para encontrar lo que buscas.</p></div>';
+                    gridContainer.classList.add('disabled');
+                    tableContainer.classList.add('disabled');
+                }
+
                 const loadMoreContainer = document.getElementById('users-load-more-container');
-
-                if (gridContainer) displayGalleriesAsGrid(data, gridContainer, sortBy, append);
-                if (tableContainer) displayGalleriesAsTable(data, tableContainer, append);
-
                 if (data.length < BATCH_SIZE) {
                     loadMoreContainer.classList.add('disabled');
                 } else {
@@ -399,7 +422,10 @@ export function initMainController() {
             })
             .catch(error => {
                 console.error('Error al obtener las galerías:', error);
-                if (gridContainer && !append) gridContainer.innerHTML = '<p>Error al cargar galerías.</p>';
+                if (!append) {
+                    statusContainer.classList.remove('disabled');
+                    statusContainer.innerHTML = '<div><h2>Error al cargar</h2><p>Hubo un problema al intentar cargar el contenido. Por favor, inténtalo de nuevo más tarde.</p></div>';
+                }
             })
             .finally(() => {
                 isLoadingGalleries = false;
@@ -407,15 +433,21 @@ export function initMainController() {
     }
 
     function fetchAndDisplayGalleryPhotos(uuid, galleryName, append = false) {
-         const grid = document.getElementById('user-photos-grid');
+        const section = document.querySelector('[data-section="galleryPhotos"]');
+        const grid = section.querySelector('#user-photos-grid');
+        const statusContainer = section.querySelector('.status-message-container');
 
         if (!append) {
             photosCurrentPage = 1;
             currentGalleryPhotoList = [];
-            
-            if (grid) grid.innerHTML = loaderHTML;
+            grid.innerHTML = '';
+            grid.classList.add('disabled');
+            statusContainer.classList.remove('disabled');
+            statusContainer.innerHTML = loaderHTML;
 
-            handleNavigation('main', 'galleryPhotos', true, { uuid: uuid });
+            handleNavigation('main', 'galleryPhotos', true, {
+                uuid: uuid
+            });
         }
 
         if (isLoadingPhotos) return;
@@ -434,6 +466,10 @@ export function initMainController() {
         fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=photos&uuid=${uuid}&page=${photosCurrentPage}&limit=${BATCH_SIZE}`)
             .then(response => response.json())
             .then(photos => {
+                statusContainer.classList.add('disabled');
+                statusContainer.innerHTML = '';
+                grid.classList.remove('disabled');
+
                 if (!append) grid.innerHTML = '';
 
                 currentGalleryPhotoList.push(...photos);
@@ -475,7 +511,9 @@ export function initMainController() {
                         updateFavoriteCardState(photo.id);
                     });
                 } else if (!append) {
-                    grid.innerHTML = '<p>Esta galería no tiene fotos.</p>';
+                    grid.classList.add('disabled');
+                    statusContainer.classList.remove('disabled');
+                    statusContainer.innerHTML = '<div><h2>Galería vacía</h2><p>Este usuario aún no ha subido ninguna foto a esta galería.</p></div>';
                 }
 
                 if (photos.length < BATCH_SIZE) {
@@ -487,82 +525,98 @@ export function initMainController() {
             })
             .catch(error => {
                 console.error('Error al obtener las fotos:', error);
-                if (!append) grid.innerHTML = '<p>Error al cargar las fotos.</p>';
+                if (!append) {
+                    grid.classList.add('disabled');
+                    statusContainer.classList.remove('disabled');
+                    statusContainer.innerHTML = '<div><h2>Error al cargar</h2><p>Hubo un problema al intentar cargar las fotos. Por favor, inténtalo de nuevo más tarde.</p></div>';
+                }
             })
             .finally(() => {
                 isLoadingPhotos = false;
             });
     }
 
-function displayPhoto(uuid, photoId, photoList = null) {
-    handleNavigation('main', 'photoView', true, { uuid: uuid, photoId: photoId });
-    const photoViewerImage = document.getElementById('photo-viewer-image');
-    const photoCounter = document.getElementById('photo-counter');
-    const photoViewUserTitle = document.getElementById('photo-view-user-title');
-    const prevButton = document.querySelector('[data-action="previous-photo"]');
-    const nextButton = document.querySelector('[data-action="next-photo"]');
+    function displayPhoto(uuid, photoId, photoList = null) {
+        handleNavigation('main', 'photoView', true, {
+            uuid: uuid,
+            photoId: photoId
+        });
+        const photoViewerImage = document.getElementById('photo-viewer-image');
+        const photoCounter = document.getElementById('photo-counter');
+        const photoViewUserTitle = document.getElementById('photo-view-user-title');
+        const prevButton = document.querySelector('[data-action="previous-photo"]');
+        const nextButton = document.querySelector('[data-action="next-photo"]');
 
-    const displayFetchedPhoto = (list) => {
-        const photoIndex = list.findIndex(p => p.id == photoId);
-        if (photoIndex !== -1) {
-            const photo = list[photoIndex];
-            
-            if (photo.gallery_name) {
-                currentGalleryNameForPhotoView = photo.gallery_name;
-                photoViewUserTitle.textContent = photo.gallery_name;
-            } else if (currentGalleryForPhotoView !== uuid) {
-                fetchAndSetGalleryName(uuid);
-            } else if (currentGalleryNameForPhotoView) {
-                photoViewUserTitle.textContent = currentGalleryNameForPhotoView;
-            }
+        const displayFetchedPhoto = (list) => {
+            const photoIndex = list.findIndex(p => p.id == photoId);
+            if (photoIndex !== -1) {
+                const photo = list[photoIndex];
 
-            currentPhotoData = { id: photo.id, gallery_uuid: uuid, photo_url: photo.photo_url, gallery_name: photo.gallery_name || currentGalleryNameForPhotoView, profile_picture_url: photo.profile_picture_url };
-            
-            photoViewerImage.src = photo.photo_url;
-            photoCounter.textContent = `${photoIndex + 1} / ${list.length}`;
-            currentGalleryForPhotoView = uuid;
-            
-            updateFavoriteButtonState(photo.id);
-
-            prevButton.classList.toggle('disabled-nav', photoIndex === 0);
-            nextButton.classList.toggle('disabled-nav', photoIndex === list.length - 1);
-        } else {
-            handleNavigation('main', '404');
-        }
-    };
-    
-    const fetchAndSetGalleryName = (galleryUuid) => {
-         fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${galleryUuid}`)
-            .then(res => res.json())
-            .then(gallery => {
-                if (gallery && gallery.name) {
-                    currentGalleryNameForPhotoView = gallery.name;
-                    photoViewUserTitle.textContent = gallery.name;
+                if (photo.gallery_name) {
+                    currentGalleryNameForPhotoView = photo.gallery_name;
+                    photoViewUserTitle.textContent = photo.gallery_name;
+                } else if (currentGalleryForPhotoView !== uuid) {
+                    fetchAndSetGalleryName(uuid);
+                } else if (currentGalleryNameForPhotoView) {
+                    photoViewUserTitle.textContent = currentGalleryNameForPhotoView;
                 }
-            });
-    };
 
-    if (photoList) {
-        currentGalleryPhotoList = photoList;
-        displayFetchedPhoto(photoList);
-    } else if (currentGalleryPhotoList.length === 0 || currentGalleryForPhotoView !== uuid) {
-        fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=photos&uuid=${uuid}&limit=1000`)
-            .then(res => res.json())
-            .then(photos => {
-                currentGalleryPhotoList = photos;
-                displayFetchedPhoto(photos);
-            });
-    } else {
-        displayFetchedPhoto(currentGalleryPhotoList);
+                currentPhotoData = {
+                    id: photo.id,
+                    gallery_uuid: uuid,
+                    photo_url: photo.photo_url,
+                    gallery_name: photo.gallery_name || currentGalleryNameForPhotoView,
+                    profile_picture_url: photo.profile_picture_url
+                };
+
+                photoViewerImage.src = photo.photo_url;
+                photoCounter.textContent = `${photoIndex + 1} / ${list.length}`;
+                currentGalleryForPhotoView = uuid;
+
+                updateFavoriteButtonState(photo.id);
+
+                prevButton.classList.toggle('disabled-nav', photoIndex === 0);
+                nextButton.classList.toggle('disabled-nav', photoIndex === list.length - 1);
+            } else {
+                handleNavigation('main', '404');
+            }
+        };
+
+        const fetchAndSetGalleryName = (galleryUuid) => {
+            fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${galleryUuid}`)
+                .then(res => res.json())
+                .then(gallery => {
+                    if (gallery && gallery.name) {
+                        currentGalleryNameForPhotoView = gallery.name;
+                        photoViewUserTitle.textContent = gallery.name;
+                    }
+                });
+        };
+
+        if (photoList) {
+            currentGalleryPhotoList = photoList;
+            displayFetchedPhoto(photoList);
+        } else if (currentGalleryPhotoList.length === 0 || currentGalleryForPhotoView !== uuid) {
+            fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=photos&uuid=${uuid}&limit=1000`)
+                .then(res => res.json())
+                .then(photos => {
+                    currentGalleryPhotoList = photos;
+                    displayFetchedPhoto(photos);
+                });
+        } else {
+            displayFetchedPhoto(currentGalleryPhotoList);
+        }
     }
-}
 
     function incrementInteraction(uuid) {
         const formData = new FormData();
         formData.append('action_type', 'increment_interaction');
         formData.append('uuid', uuid);
 
-        fetch(`${window.BASE_PATH}/api/main_handler.php`, { method: 'POST', body: formData });
+        fetch(`${window.BASE_PATH}/api/main_handler.php`, {
+            method: 'POST',
+            body: formData
+        });
     }
 
     function updateSelectActiveState(selectId, value) {
@@ -578,7 +632,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
             }
         }
     }
-    
+
     // --- INICIO DE LA MODIFICACIÓN ---
     function applyViewPreference() {
         const savedView = localStorage.getItem('galleryView') || 'grid';
@@ -589,13 +643,17 @@ function displayPhoto(uuid, photoId, photoList = null) {
 
         if (gridView && tableView && icon) {
             if (savedView === 'table') {
-                gridView.classList.remove('active'); gridView.classList.add('disabled');
-                tableView.classList.remove('disabled'); tableView.classList.add('active');
+                gridView.classList.remove('active');
+                gridView.classList.add('disabled');
+                tableView.classList.remove('disabled');
+                tableView.classList.add('active');
                 icon.textContent = 'grid_view';
                 currentView = 'table';
             } else {
-                tableView.classList.remove('active'); tableView.classList.add('disabled');
-                gridView.classList.remove('disabled'); gridView.classList.add('active');
+                tableView.classList.remove('active');
+                tableView.classList.add('disabled');
+                gridView.classList.remove('disabled');
+                gridView.classList.add('active');
                 icon.textContent = 'view_list';
                 currentView = 'grid';
             }
@@ -619,14 +677,18 @@ function displayPhoto(uuid, photoId, photoList = null) {
                 const tableView = document.getElementById('table-view');
                 const icon = toggleViewBtn.querySelector('.material-symbols-rounded');
                 if (currentView === 'grid') {
-                    gridView.classList.remove('active'); gridView.classList.add('disabled');
-                    tableView.classList.remove('disabled'); tableView.classList.add('active');
-                    icon.textContent = 'grid_view'; 
+                    gridView.classList.remove('active');
+                    gridView.classList.add('disabled');
+                    tableView.classList.remove('disabled');
+                    tableView.classList.add('active');
+                    icon.textContent = 'grid_view';
                     currentView = 'table';
                 } else {
-                    tableView.classList.remove('active'); tableView.classList.add('disabled');
-                    gridView.classList.remove('disabled'); gridView.classList.add('active');
-                    icon.textContent = 'view_list'; 
+                    tableView.classList.remove('active');
+                    tableView.classList.add('disabled');
+                    gridView.classList.remove('disabled');
+                    gridView.classList.add('active');
+                    icon.textContent = 'view_list';
                     currentView = 'grid';
                 }
                 // --- INICIO DE LA MODIFICACIÓN ---
@@ -668,10 +730,15 @@ function displayPhoto(uuid, photoId, photoList = null) {
         }
 
         allMenuLinks.forEach(link => {
-            link.addEventListener('click', function (e) {
+            link.addEventListener('click', function(e) {
                 const action = this.dataset.action;
-                if (action && action !== 'toggle-select' && !this.closest('.photo-context-menu')) { e.preventDefault(); }
-                if (action === 'toggleMainView') { handleNavigation('main', 'home'); return; }
+                if (action && action !== 'toggle-select' && !this.closest('.photo-context-menu')) {
+                    e.preventDefault();
+                }
+                if (action === 'toggleMainView') {
+                    handleNavigation('main', 'home');
+                    return;
+                }
                 if (action && action.startsWith('toggleSection')) {
                     const sectionName = action.substring("toggleSection".length);
                     const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
@@ -682,7 +749,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
             });
         });
 
-        document.addEventListener('click', function (event) {
+        document.addEventListener('click', function(event) {
             if (moduleSurface && moduleSurface.classList.contains('active')) {
                 const isClickInsideModule = moduleSurface.contains(event.target);
                 const isClickOnMenuButton = menuButton && menuButton.contains(event.target);
@@ -691,7 +758,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
                     moduleSurface.classList.remove('active');
                 }
             }
-            
+
             if (!event.target.closest('.card-actions-container')) {
                 document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
                     menu.classList.remove('active');
@@ -720,8 +787,12 @@ function displayPhoto(uuid, photoId, photoList = null) {
             const userCardFavorite = event.target.closest('#favorites-grid-view-by-user .user-card');
             if (userCardFavorite) {
                 const uuid = userCardFavorite.dataset.uuid;
-                navigateToUrl('main', 'userSpecificFavorites', { uuid: uuid });
-                handleStateChange('main', 'userSpecificFavorites', { uuid: uuid });
+                navigateToUrl('main', 'userSpecificFavorites', {
+                    uuid: uuid
+                });
+                handleStateChange('main', 'userSpecificFavorites', {
+                    uuid: uuid
+                });
                 return;
             }
 
@@ -740,7 +811,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
                 }
                 return;
             }
-            
+
             const photoCard = event.target.closest('.card.photo-card');
             if (photoCard && !event.target.closest('.card-actions-container')) {
                 const galleryUuid = photoCard.dataset.galleryUuid || currentGalleryForPhotoView;
@@ -748,7 +819,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
                 incrementInteraction(galleryUuid);
 
                 const activeSection = document.querySelector('.section-content.active')?.dataset.section;
-                
+
                 let photoList;
                 if (activeSection === 'favorites') {
                     photoList = currentFavoritesList;
@@ -766,7 +837,8 @@ function displayPhoto(uuid, photoId, photoList = null) {
 
             if (!actionTarget || !actionTarget.dataset.action.includes('toggle')) {
                 document.querySelectorAll('.module-select:not(.photo-context-menu).active').forEach(menu => {
-                    menu.classList.remove('active'); menu.classList.add('disabled');
+                    menu.classList.remove('active');
+                    menu.classList.add('disabled');
                 });
                 document.querySelectorAll('.active-trigger').forEach(trigger => trigger.classList.remove('active-trigger'));
             }
@@ -793,25 +865,27 @@ function displayPhoto(uuid, photoId, photoList = null) {
                         handleStateChange('main', 'home');
                     }
                     break;
-                case 'returnToHome': 
+                case 'returnToHome':
                     navigateToUrl('main', 'home');
-                    handleStateChange('main', 'home'); 
+                    handleStateChange('main', 'home');
                     break;
                 case 'returnToFavorites':
                     navigateToUrl('main', 'favorites');
                     handleStateChange('main', 'favorites');
                     break;
-                case 'toggle-favorite': if (currentPhotoData) toggleFavorite(currentPhotoData); break;
+                case 'toggle-favorite':
+                    if (currentPhotoData) toggleFavorite(currentPhotoData);
+                    break;
                 case 'toggle-favorite-card':
                     const photoId = actionTarget.dataset.photoId;
                     const favorites = getFavorites();
                     const photoData = favorites.find(p => p.id == photoId) || currentGalleryPhotoList.find(p => p.id == photoId);
 
                     if (photoData) {
-                        const fullPhotoData = { 
-                            id: photoData.id, 
-                            gallery_uuid: photoData.gallery_uuid || currentGalleryForPhotoView, 
-                            photo_url: photoData.photo_url, 
+                        const fullPhotoData = {
+                            id: photoData.id,
+                            gallery_uuid: photoData.gallery_uuid || currentGalleryForPhotoView,
+                            photo_url: photoData.photo_url,
                             gallery_name: photoData.gallery_name || currentGalleryNameForPhotoView,
                             profile_picture_url: photoData.profile_picture_url
                         };
@@ -820,7 +894,9 @@ function displayPhoto(uuid, photoId, photoList = null) {
                         const activeSection = document.querySelector('.section-content.active')?.dataset.section;
                         if (activeSection === 'userSpecificFavorites') {
                             const uuid = document.querySelector('[data-section="userSpecificFavorites"]').dataset.uuid;
-                            handleStateChange('main', 'userSpecificFavorites', { uuid: uuid });
+                            handleStateChange('main', 'userSpecificFavorites', {
+                                uuid: uuid
+                            });
                         } else if (activeSection === 'favorites') {
                             displayFavoritePhotos();
                         }
@@ -850,7 +926,8 @@ function displayPhoto(uuid, photoId, photoList = null) {
                     const isOpening = currentMenu.classList.contains('disabled');
                     document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
                         if (menu !== currentMenu) {
-                            menu.classList.remove('active'); menu.classList.add('disabled');
+                            menu.classList.remove('active');
+                            menu.classList.add('disabled');
                             menu.closest('.card-actions-container').classList.remove('force-visible');
                         }
                     });
@@ -876,14 +953,23 @@ function displayPhoto(uuid, photoId, photoList = null) {
 
                 document.querySelectorAll('[data-action="toggle-select"]').forEach(t => t.classList.remove('active-trigger'));
                 document.querySelectorAll('.module-select').forEach(s => {
-                    if (s.id !== targetId) { s.classList.add('disabled'); s.classList.remove('active'); }
+                    if (s.id !== targetId) {
+                        s.classList.add('disabled');
+                        s.classList.remove('active');
+                    }
                 });
 
                 if (!wasActive) {
                     trigger.classList.add('active-trigger');
-                    if (targetSelect) { targetSelect.classList.remove('disabled'); targetSelect.classList.add('active'); }
+                    if (targetSelect) {
+                        targetSelect.classList.remove('disabled');
+                        targetSelect.classList.add('active');
+                    }
                 } else {
-                    if (targetSelect) { targetSelect.classList.add('disabled'); targetSelect.classList.remove('active'); }
+                    if (targetSelect) {
+                        targetSelect.classList.add('disabled');
+                        targetSelect.classList.remove('active');
+                    }
                 }
             }
         });
@@ -896,14 +982,20 @@ function displayPhoto(uuid, photoId, photoList = null) {
                 const error = document.getElementById('access-code-error');
                 const code = codeInput.value;
 
-                if (!uuid || !code) { error.textContent = 'Por favor, introduce un código.'; return; }
+                if (!uuid || !code) {
+                    error.textContent = 'Por favor, introduce un código.';
+                    return;
+                }
 
                 const formData = new FormData();
                 formData.append('action_type', 'verify_code');
                 formData.append('uuid', uuid);
                 formData.append('code', code);
 
-                fetch(`${window.BASE_PATH}/api/main_handler.php`, { method: 'POST', body: formData })
+                fetch(`${window.BASE_PATH}/api/main_handler.php`, {
+                        method: 'POST',
+                        body: formData
+                    })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
@@ -917,11 +1009,13 @@ function displayPhoto(uuid, photoId, photoList = null) {
         }
 
         document.querySelectorAll('.toggle-switch').forEach(toggle => {
-            toggle.addEventListener('click', function () { this.classList.toggle('active'); });
+            toggle.addEventListener('click', function() {
+                this.classList.toggle('active');
+            });
         });
 
         document.querySelectorAll('#relevance-select .menu-link').forEach(option => {
-            option.addEventListener('click', function () {
+            option.addEventListener('click', function() {
                 currentSortBy = this.dataset.value;
                 fetchAndDisplayGalleries(currentSortBy, searchInput.value.trim());
                 updateSelectActiveState('relevance-select', currentSortBy);
@@ -929,7 +1023,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
         });
 
         document.querySelectorAll('#favorites-sort-select .menu-link').forEach(option => {
-            option.addEventListener('click', function () {
+            option.addEventListener('click', function() {
                 currentFavoritesSortBy = this.dataset.value;
                 displayFavoritePhotos();
                 updateSelectActiveState('favorites-sort-select', currentFavoritesSortBy);
@@ -937,15 +1031,15 @@ function displayPhoto(uuid, photoId, photoList = null) {
         });
 
         document.querySelectorAll('#view-select .menu-link, #view-select-fav .menu-link').forEach(option => {
-            option.addEventListener('click', function () {
+            option.addEventListener('click', function() {
                 navigateToUrl('main', this.dataset.value);
                 handleStateChange('main', this.dataset.value);
             });
         });
-        
+
         document.querySelectorAll('#theme-select .menu-link').forEach(option => {
-            option.addEventListener('click', function (e) {
-                 e.stopPropagation();
+            option.addEventListener('click', function(e) {
+                e.stopPropagation();
                 const theme = this.dataset.value;
                 setTheme(theme);
                 const selectContainer = this.closest('.module-select');
@@ -957,9 +1051,9 @@ function displayPhoto(uuid, photoId, photoList = null) {
                 }
             });
         });
-        
+
         document.querySelectorAll('#language-select .menu-link').forEach(option => {
-            option.addEventListener('click', function (e) {
+            option.addEventListener('click', function(e) {
                 e.stopPropagation();
                 const lang = this.dataset.value;
                 setLanguage(lang);
@@ -974,7 +1068,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
         });
 
 
-        document.addEventListener('keydown', function (event) {
+        document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape' && moduleSurface && moduleSurface.classList.contains('active')) {
                 moduleSurface.classList.add('disabled');
                 moduleSurface.classList.remove('active');
@@ -985,7 +1079,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
     function setupScrollShadows() {
         const mainScrolleable = document.querySelector('.general-content-scrolleable');
         const mainHeader = document.querySelector('.general-content-top');
-    
+
         if (mainScrolleable && mainHeader) {
             mainScrolleable.addEventListener('scroll', () => {
                 mainHeader.classList.toggle('shadow', mainScrolleable.scrollTop > 0);
@@ -999,7 +1093,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
         if (section === 'favorites') {
             document.querySelector('[data-target="view-select-fav"] .select-trigger-text').textContent = 'Mostrar favoritos';
             if (document.getElementById('favorites-search-input')) document.getElementById('favorites-search-input').value = '';
-            
+
             updateSelectActiveState('view-select-fav', 'favorites');
             updateSelectActiveState('favorites-sort-select', currentFavoritesSortBy);
             displayFavoritePhotos();
@@ -1011,7 +1105,9 @@ function displayPhoto(uuid, photoId, photoList = null) {
         } else if (section === 'galleryPhotos' && data && data.uuid) {
             fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${data.uuid}`)
                 .then(res => res.json())
-                .then(gallery => { if (gallery) fetchAndDisplayGalleryPhotos(gallery.uuid, gallery.name); });
+                .then(gallery => {
+                    if (gallery) fetchAndDisplayGalleryPhotos(gallery.uuid, gallery.name);
+                });
         } else if (section === 'photoView' && data && data.uuid && data.photoId) {
             let photoList = null;
             if (lastVisitedView === 'favorites' || lastVisitedView === 'userSpecificFavorites') {
@@ -1023,14 +1119,18 @@ function displayPhoto(uuid, photoId, photoList = null) {
             displayPhoto(data.uuid, data.photoId, photoList);
         } else if (section === 'userSpecificFavorites' && data && data.uuid) {
             const userFavorites = getFavorites().filter(p => p.gallery_uuid === data.uuid);
-            const grid = document.getElementById('user-specific-favorites-grid');
-            const title = document.getElementById('user-specific-favorites-title');
-            
-            grid.innerHTML = '';
-            document.querySelector('[data-section="userSpecificFavorites"]').dataset.uuid = data.uuid;
+            const sectionEl = document.querySelector('[data-section="userSpecificFavorites"]');
+            const grid = sectionEl.querySelector('#user-specific-favorites-grid');
+            const statusContainer = sectionEl.querySelector('.status-message-container');
+            const title = sectionEl.querySelector('#user-specific-favorites-title');
 
+            grid.innerHTML = '';
+            statusContainer.innerHTML = '';
+            sectionEl.dataset.uuid = data.uuid;
 
             if (userFavorites.length > 0) {
+                grid.classList.remove('disabled');
+                statusContainer.classList.add('disabled');
                 title.textContent = `Favoritos de ${userFavorites[0].gallery_name}`;
                 userFavorites.forEach(photo => {
                     const card = document.createElement('div');
@@ -1047,8 +1147,10 @@ function displayPhoto(uuid, photoId, photoList = null) {
                     grid.appendChild(card);
                 });
             } else {
+                grid.classList.add('disabled');
+                statusContainer.classList.remove('disabled');
                 title.textContent = 'Sin favoritos';
-                grid.innerHTML = '<p>Este usuario no tiene fotos en tus favoritos.</p>';
+                statusContainer.innerHTML = '<div><h2>No tienes favoritos de este usuario</h2><p>Las fotos que marques como favoritas de este usuario aparecerán aquí.</p></div>';
             }
         }
     }
@@ -1076,12 +1178,17 @@ function displayPhoto(uuid, photoId, photoList = null) {
 
     if (photoMatch) {
         const [, galleryUuid, photoId] = photoMatch;
-        initialStateData = { uuid: galleryUuid, photoId: photoId };
+        initialStateData = {
+            uuid: galleryUuid,
+            photoId: photoId
+        };
         setInitialHistoryState(initialView, 'photoView', initialStateData);
         handleStateChange(initialView, 'photoView', initialStateData);
     } else if (galleryMatch) {
         const galleryUuid = galleryMatch[1];
-        initialStateData = { uuid: galleryUuid };
+        initialStateData = {
+            uuid: galleryUuid
+        };
         setInitialHistoryState(initialView, 'galleryPhotos', initialStateData);
         fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${galleryUuid}`)
             .then(res => res.json())
@@ -1098,12 +1205,16 @@ function displayPhoto(uuid, photoId, photoList = null) {
             });
     } else if (favoritesMatch) {
         const galleryUuid = favoritesMatch[1];
-        initialStateData = { uuid: galleryUuid };
+        initialStateData = {
+            uuid: galleryUuid
+        };
         setInitialHistoryState(initialView, 'userSpecificFavorites', initialStateData);
         handleStateChange(initialView, 'userSpecificFavorites', initialStateData);
     } else if (reedemMatch) {
         const galleryUuid = reedemMatch[1];
-        initialStateData = { uuid: galleryUuid };
+        initialStateData = {
+            uuid: galleryUuid
+        };
         setInitialHistoryState(initialView, 'accessCodePrompt', initialStateData);
         fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${galleryUuid}`)
             .then(res => res.json())
@@ -1124,7 +1235,7 @@ function displayPhoto(uuid, photoId, photoList = null) {
     } else {
         console.error("Could not determine initial state from DOM.");
     }
-    
+
     if (initialSection !== 'photoView') {
         lastVisitedView = initialSection;
         lastVisitedData = initialStateData;

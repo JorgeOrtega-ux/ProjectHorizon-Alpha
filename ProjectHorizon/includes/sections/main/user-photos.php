@@ -12,9 +12,10 @@
         </div>
     </div>
     <div class="section-content-block overflow-y">
+        <div class="status-message-container disabled"></div>
         <div class="card-grid active" id="user-photos-grid">
         </div>
-        
+
         <div class="load-more-container disabled" id="photos-load-more-container">
             <button class="load-more-btn" data-action="load-more-photos">Mostrar más</button>
         </div>

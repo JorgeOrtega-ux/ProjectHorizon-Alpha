@@ -1,5 +1,4 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
-
 * {
     margin: 0;
     padding: 0;
@@ -333,12 +332,11 @@ body {
     display: flex;
     align-items: center;
     position: relative;
-    padding: 10px 0 10px 0;
     border: 1px solid #ced4da;
     border-radius: 8px;
     background-color: #fff;
     font-size: 0.875rem;
-    color: #212529;
+    color: #000000;
     cursor: pointer;
     width: 100%;
     text-align: left;
@@ -395,6 +393,7 @@ body {
     align-items: center;
     justify-content: center;
     width: 45px;
+    height: 100%;
     flex-shrink: 0;
 }
 
@@ -527,6 +526,9 @@ body {
 .section-content-block {
     padding: 8px;
     width: 100%;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .card-grid {
@@ -584,11 +586,15 @@ body {
     height: 100%;
     background: linear-gradient(180deg, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.6) 100%);
     pointer-events: none;
-    opacity: 0; /* --- MODIFICACIÓN: El gradiente es transparente por defecto --- */
-    transition: opacity 0.2s ease-in-out; /* --- MODIFICACIÓN: Se añade transición para la opacidad --- */
+    opacity: 0;
+    /* --- MODIFICACIÓN: El gradiente es transparente por defecto --- */
+    transition: opacity 0.2s ease-in-out;
+    /* --- MODIFICACIÓN: Se añade transición para la opacidad --- */
 }
 
+
 /* --- MODIFICACIÓN: Se añade una nueva regla para mostrar el gradiente en hover --- */
+
 .card:hover .card-background::after {
     opacity: 1;
 }
@@ -698,15 +704,12 @@ body {
         flex-direction: column;
         gap: 8px;
     }
-
     .content-header-left {
         width: 100%;
     }
-
     .search-input-wrapper {
         max-width: 100%;
     }
-
     .content-header-right {
         width: 100%;
         justify-content: flex-end;
@@ -765,14 +768,12 @@ body {
     left: auto;
 }
 
-
 @media (max-width:468px) {
     .module-content.module-surface {
         width: 100%;
         height: 100%;
         padding: 0;
     }
-
     .module-surface .menu-content {
         width: 100%;
         height: 100%;
@@ -967,7 +968,6 @@ body {
         align-items: flex-start;
         gap: 16px;
     }
-
     .item-actions {
         width: 100%;
         justify-content: flex-end;
@@ -975,19 +975,20 @@ body {
     .main-content {
         padding: 0;
     }
-
     .general-content {
         border-radius: 0;
     }
 }
 
+
 /* --- ESTILOS DEL LOADER --- */
+
 .loader-container {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
-    height: 280px;
+    height: 100%;
 }
 
 .spinner {
@@ -1008,9 +1009,47 @@ body {
     }
 }
 
+
 /* --- CLASE PARA LA SOMBRA DINÁMICA --- */
+
 .general-content-top.shadow,
 .section-content-header.shadow {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border-color: transparent;
+}
+
+
+/* --- AÑADIDO: Estilos para el contenedor de mensajes --- */
+
+.status-message-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    flex-grow: 1;
+    min-height: 280px;
+    /* Altura mínima igual a la de las tarjetas */
+}
+
+.status-message-container.active {
+    display: flex;
+}
+
+.status-message-container.disabled {
+    display: none;
+}
+
+.status-message-container p {
+    color: #6c757d;
+}
+
+.status-message-container div {
+    text-align: center;
+}
+
+.status-message-container h2 {
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #1f1f1f;
 }
