@@ -14,6 +14,7 @@
         </div>
     </div>
     <div class="section-content-block overflow-y">
+        <div class="status-message-container disabled"></div>
         <div class="category-section">
             <div class="category-section-title">
                 <span class="material-symbols-rounded">trending_up</span>

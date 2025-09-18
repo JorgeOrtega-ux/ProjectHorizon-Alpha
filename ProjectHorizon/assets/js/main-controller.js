@@ -215,7 +215,7 @@ export function initMainController() {
                     <div class="module-content module-select photo-context-menu disabled body-title">
                         <div class="menu-content"><div class="menu-list">
                             <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
-                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
+                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></a>
                             <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
                         </div></div>
                     </div>
@@ -499,7 +499,7 @@ export function initMainController() {
                                 <div class="module-content module-select photo-context-menu disabled body-title">
                                     <div class="menu-content"><div class="menu-list">
                                         <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
-                                        <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
+                                        <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></a>
                                         <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
                                     </div></div>
                                 </div>
@@ -535,83 +535,106 @@ export function initMainController() {
             });
     }
 
-    function fetchAndDisplayTrends() {
-        const usersGrid = document.getElementById('trending-users-grid');
-        const photosGrid = document.getElementById('trending-photos-grid');
+    function fetchAndDisplayTrends(searchTerm = '') {
+        const section = document.querySelector('[data-section="trends"]');
+        const usersGrid = section.querySelector('#trending-users-grid');
+        const photosGrid = section.querySelector('#trending-photos-grid');
+        const statusContainer = section.querySelector('.status-message-container');
+        const usersSection = usersGrid.closest('.category-section');
+        const photosSection = photosGrid.closest('.category-section');
+        const encodedSearchTerm = encodeURIComponent(searchTerm);
 
-        usersGrid.innerHTML = loaderHTML;
-        photosGrid.innerHTML = loaderHTML;
+        statusContainer.classList.remove('disabled');
+        statusContainer.innerHTML = loaderHTML;
+        usersGrid.innerHTML = '';
+        photosGrid.innerHTML = '';
 
-        // Fetch Trending Users
-        fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=trending_users&limit=8`)
-            .then(res => res.json())
-            .then(users => {
-                usersGrid.innerHTML = '';
+        // Ocultar secciones de contenido mientras se carga
+        usersSection.style.display = 'none';
+        photosSection.style.display = 'none';
+
+        const fetchUsers = fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=trending_users&search=${encodedSearchTerm}&limit=8`).then(res => res.json());
+        const fetchPhotos = searchTerm === '' ? fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=trending_photos&limit=12`).then(res => res.json()) : Promise.resolve([]);
+        
+        Promise.all([fetchUsers, fetchPhotos])
+            .then(([users, photos]) => {
+                statusContainer.classList.add('disabled');
+                statusContainer.innerHTML = '';
+                
+                // Display Users
                 if (users.length > 0) {
+                    usersSection.style.display = 'block';
                     displayGalleriesAsGrid(users, usersGrid, 'relevant', false);
                 } else {
-                    usersGrid.innerHTML = '<p>No hay usuarios en tendencia en este momento.</p>';
+                    statusContainer.classList.remove('disabled');
+                    statusContainer.innerHTML = '<div><h2>No se encontraron resultados</h2><p>No hay usuarios en tendencia que coincidan con tu búsqueda.</p></div>';
                 }
-            })
-            .catch(error => {
-                console.error('Error fetching trending users:', error);
-                usersGrid.innerHTML = '<p>Error al cargar usuarios en tendencia.</p>';
-            });
 
-        // Fetch Trending Photos
-        fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=trending_photos&limit=12`)
-            .then(res => res.json())
-            .then(photos => {
-                photosGrid.innerHTML = '';
-                currentTrendingPhotosList = photos;
-                if (photos.length > 0) {
-                    photos.forEach(photo => {
-                        const card = document.createElement('div');
-                        card.className = 'card photo-card';
-                        card.dataset.photoUrl = photo.photo_url;
-                        card.dataset.photoId = photo.id;
-                        card.dataset.galleryUuid = photo.gallery_uuid;
+                // Display Photos (solo si no hay búsqueda)
+                if (searchTerm === '') {
+                    photosSection.style.display = 'block';
+                    currentTrendingPhotosList = photos;
+                    if (photos.length > 0) {
+                        photos.forEach(photo => {
+                            const card = document.createElement('div');
+                            card.className = 'card photo-card';
+                            card.dataset.photoUrl = photo.photo_url;
+                            card.dataset.photoId = photo.id;
+                            card.dataset.galleryUuid = photo.gallery_uuid;
 
-                        const background = document.createElement('div');
-                        background.className = 'card-background';
-                        background.style.backgroundImage = `url('${photo.photo_url}')`;
-                        card.appendChild(background);
+                            const background = document.createElement('div');
+                            background.className = 'card-background';
+                            background.style.backgroundImage = `url('${photo.photo_url}')`;
+                            card.appendChild(background);
 
-                        const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
+                            const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
 
-                        card.innerHTML += `
-                            <div class="card-content-overlay">
-                                <div class="card-icon" style="background-image: url('${photo.profile_picture_url || ''}')"></div>
-                                <div class="card-text">
-                                    <span>${photo.gallery_name}</span>
-                                </div>
-                            </div>
-                            <div class="card-actions-container">
-                                <div class="card-hover-overlay">
-                                    <div class="card-hover-icons">
-                                        <div class="icon-wrapper" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div>
-                                        <div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div>
+                            card.innerHTML += `
+                                <div class="card-content-overlay">
+                                    <div class="card-icon" style="background-image: url('${photo.profile_picture_url || ''}')"></div>
+                                    <div class="card-text">
+                                        <span>${photo.gallery_name}</span>
+                                        <span style="font-size: 0.8rem; display: block;">${photo.likes} Me gusta - ${photo.interactions} Vistas</span>
                                     </div>
                                 </div>
-                                <div class="module-content module-select photo-context-menu disabled body-title">
-                                    <div class="menu-content"><div class="menu-list">
-                                        <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
-                                        <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
-                                        <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
-                                    </div></div>
-                                </div>
-                            </div>`;
-                        photosGrid.appendChild(card);
-                        updateFavoriteCardState(photo.id);
-                    });
-                } else {
-                    photosGrid.innerHTML = '<p>No hay fotos en tendencia en este momento.</p>';
+                                <div class="card-actions-container">
+                                    <div class="card-hover-overlay">
+                                        <div class="card-hover-icons">
+                                            <div class="icon-wrapper" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div>
+                                            <div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div>
+                                        </div>
+                                    </div>
+                                    <div class="module-content module-select photo-context-menu disabled body-title">
+                                        <div class="menu-content"><div class="menu-list">
+                                            <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
+                                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></a>
+                                            <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
+                                        </div></div>
+                                    </div>
+                                </div>`;
+                            photosGrid.appendChild(card);
+                            updateFavoriteCardState(photo.id);
+                        });
+                    } else {
+                        photosGrid.innerHTML = '<p>No hay fotos en tendencia en este momento.</p>';
+                    }
                 }
             })
             .catch(error => {
-                console.error('Error fetching trending photos:', error);
-                photosGrid.innerHTML = '<p>Error al cargar fotos en tendencia.</p>';
+                console.error('Error fetching trends:', error);
+                statusContainer.innerHTML = '<div><h2>Error al cargar</h2><p>Hubo un problema al intentar cargar las tendencias. Por favor, inténtalo de nuevo más tarde.</p></div>';
             });
+    }
+
+    function incrementPhotoInteraction(photoId) {
+        const formData = new FormData();
+        formData.append('action_type', 'increment_photo_interaction');
+        formData.append('photo_id', photoId);
+
+        fetch(`${window.BASE_PATH}/api/main_handler.php`, {
+            method: 'POST',
+            body: formData
+        });
     }
 
     function displayPhoto(uuid, photoId, photoList = null) {
@@ -624,6 +647,8 @@ export function initMainController() {
         const photoViewUserTitle = document.getElementById('photo-view-user-title');
         const prevButton = document.querySelector('[data-action="previous-photo"]');
         const nextButton = document.querySelector('[data-action="next-photo"]');
+        
+        incrementPhotoInteraction(photoId);
 
         const displayFetchedPhoto = (list) => {
             const photoIndex = list.findIndex(p => p.id == photoId);
@@ -777,6 +802,7 @@ export function initMainController() {
         const toggleViewBtn = document.querySelector('[data-action="toggle-view"]');
         const searchInput = document.querySelector('.search-input-text input');
         const favoritesSearchInput = document.getElementById('favorites-search-input');
+        const trendsSearchInput = document.querySelector('[data-section="trends"] .search-input-text input');
         const menuButton = document.querySelector('[data-action="toggleModuleSurface"]');
         const settingsButton = document.querySelector('[data-action="toggleSettings"]');
         const helpButton = document.querySelector('[data-action="toggleHelp"]');
@@ -817,6 +843,16 @@ export function initMainController() {
                 }, 300);
             });
         }
+        
+        if (trendsSearchInput) {
+            trendsSearchInput.addEventListener('input', () => {
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = setTimeout(() => {
+                    const searchTerm = trendsSearchInput.value.trim();
+                    fetchAndDisplayTrends(searchTerm);
+                }, 300);
+            });
+        }
 
         if (favoritesSearchInput) {
             favoritesSearchInput.addEventListener('input', () => {
@@ -837,12 +873,14 @@ export function initMainController() {
         if (settingsButton) {
             settingsButton.addEventListener('click', () => {
                 handleNavigation('settings', 'accessibility');
+                handleStateChange('settings', 'accessibility');
             });
         }
         
         if (helpButton) {
             helpButton.addEventListener('click', () => {
                 handleNavigation('help', 'privacyPolicy');
+                handleStateChange('help', 'privacyPolicy');
             });
         }
 
@@ -857,6 +895,7 @@ export function initMainController() {
                  }
                 if (action === 'toggleMainView') {
                     handleNavigation('main', 'home');
+                    handleStateChange('main', 'home');
                     return;
                 }
                 if (action && action.startsWith('toggleSection')) {
@@ -865,6 +904,7 @@ export function initMainController() {
                     const parentMenu = this.closest('[data-menu]');
                     const targetView = parentMenu ? parentMenu.dataset.menu : 'main';
                     handleNavigation(targetView, targetSection);
+                    handleStateChange(targetView, targetSection);
                 }
             });
         });
@@ -1295,7 +1335,7 @@ export function initMainController() {
                     background.style.backgroundImage = `url('${photo.photo_url}')`;
                     card.appendChild(background);
                     const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
-                    card.innerHTML += `<div class="card-actions-container"><div class="card-hover-overlay"><div class="card-hover-icons"><div class="icon-wrapper active" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div><div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div></div></div><div class="module-content module-select photo-context-menu disabled body-title"><div class="menu-content"><div class="menu-list"><a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a><div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div><a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a></div></div></div></div>`;
+                    card.innerHTML += `<div class="card-actions-container"><div class="card-hover-overlay"><div class="card-hover-icons"><div class="icon-wrapper active" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div><div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div></div></div><div class="module-content module-select photo-context-menu disabled body-title"><div class="menu-content"><div class="menu-list"><a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a><div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></a><a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a></div></div></div></div>`;
                     grid.appendChild(card);
                 });
             } else {

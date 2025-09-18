@@ -37,6 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $stmt->close();
     } elseif ($action_type === 'increment_interaction') {
+        // --- ESTA ACCIÓN ES PARA INTERACCIONES DE GALERÍA (AL ENTRAR) ---
         $uuid = isset($_POST['uuid']) ? $_POST['uuid'] : '';
         if (!empty($uuid)) {
             $sql = "UPDATE galleries_metadata SET total_interactions = total_interactions + 1 WHERE gallery_uuid = ?";
@@ -49,25 +50,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Falta el UUID de la galería.']);
         }
+    } elseif ($action_type === 'increment_photo_interaction') {
+        // --- NUEVA ACCIÓN PARA INTERACCIONES DE FOTO (VISTAS) ---
+        $photo_id = isset($_POST['photo_id']) ? (int)$_POST['photo_id'] : 0;
+        if ($photo_id > 0) {
+            // Solo incrementamos la interacción en la foto
+            $sql = "UPDATE gallery_photos_metadata SET interactions = interactions + 1 WHERE photo_id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("i", $photo_id);
+            $stmt->execute();
+            $stmt->close();
+            echo json_encode(['success' => true]);
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Falta el ID de la foto.']);
+        }
     } elseif ($action_type === 'toggle_like') {
+        // --- LÓGICA DE LIKE/UNLIKE CORREGIDA ---
         $photo_id = isset($_POST['photo_id']) ? (int)$_POST['photo_id'] : 0;
         $gallery_uuid = isset($_POST['gallery_uuid']) ? $_POST['gallery_uuid'] : '';
         $is_liked = isset($_POST['is_liked']) ? filter_var($_POST['is_liked'], FILTER_VALIDATE_BOOLEAN) : false;
 
         if ($photo_id > 0 && !empty($gallery_uuid)) {
+            $like_change = $is_liked ? 1 : -1; // +1 si es like, -1 si es unlike
+
             $conn->begin_transaction();
             try {
-                // Actualizar likes de la foto
-                $sql_photo = "UPDATE gallery_photos_metadata SET likes = likes + 1, interactions = interactions + 1 WHERE photo_id = ?";
+                // Actualizar likes de la foto (suma o resta)
+                $sql_photo = "UPDATE gallery_photos_metadata SET likes = likes + ? WHERE photo_id = ?";
                 $stmt_photo = $conn->prepare($sql_photo);
-                $stmt_photo->bind_param("i", $photo_id);
+                $stmt_photo->bind_param("ii", $like_change, $photo_id);
                 $stmt_photo->execute();
                 $stmt_photo->close();
 
-                // Actualizar total_likes e total_interactions de la galería
-                $sql_gallery = "UPDATE galleries_metadata SET total_likes = total_likes + 1, total_interactions = total_interactions + 1 WHERE gallery_uuid = ?";
+                // Actualizar total_likes de la galería (suma o resta)
+                $sql_gallery = "UPDATE galleries_metadata SET total_likes = total_likes + ? WHERE gallery_uuid = ?";
                 $stmt_gallery = $conn->prepare($sql_gallery);
-                $stmt_gallery->bind_param("s", $gallery_uuid);
+                $stmt_gallery->bind_param("is", $like_change, $gallery_uuid);
                 $stmt_gallery->execute();
                 $stmt_gallery->close();
 
@@ -191,7 +210,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // --- INICIO DE LA CORRECCIÓN ---
         $sql = "SELECT p.id, p.photo_url, p.gallery_uuid, g.name AS gallery_name, gpp.profile_picture_url
                 FROM gallery_photos p
                 JOIN galleries g ON p.gallery_uuid = g.uuid
@@ -199,7 +217,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 WHERE p.gallery_uuid = ?
                 ORDER BY p.id DESC
                 LIMIT ? OFFSET ?";
-        // --- FIN DE LA CORRECCIÓN ---
                 
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("sii", $gallery_uuid, $limit, $offset);
@@ -216,15 +233,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     } elseif ($request_type === 'trending_users') {
         $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $search_term = isset($_GET['search']) ? $_GET['search'] : '';
+        $where_clause = "";
+        $params = [];
+        $types = "";
+
+        if (!empty($search_term)) {
+            $where_clause = "WHERE g.name LIKE ?";
+            $types .= "s";
+            $params[] = "%" . $search_term . "%";
+        }
+        
         $sql = "SELECT g.uuid, g.name, g.privacy, gpp.profile_picture_url,
                        (SELECT gp.photo_url FROM gallery_photos gp WHERE gp.gallery_uuid = g.uuid ORDER BY RAND() LIMIT 1) AS background_photo_url
                 FROM galleries g
                 JOIN galleries_metadata gm ON g.uuid = gm.gallery_uuid
                 LEFT JOIN gallery_profile_pictures gpp ON g.uuid = gpp.gallery_uuid
+                $where_clause
                 ORDER BY (gm.total_likes * 0.7 + gm.total_interactions * 0.3) DESC
                 LIMIT ?";
+        
+        $types .= "i";
+        $params[] = $limit;
+
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("i", $limit);
+        $stmt->bind_param($types, ...$params);
         $stmt->execute();
         $result = $stmt->get_result();
         $users = array();
@@ -236,7 +269,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     } elseif ($request_type === 'trending_photos') {
         $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
-        $sql = "SELECT p.id, p.photo_url, p.gallery_uuid, g.name AS gallery_name, gpp.profile_picture_url
+        $sql = "SELECT p.id, p.photo_url, p.gallery_uuid, g.name AS gallery_name, gpp.profile_picture_url, pm.likes, pm.interactions
                 FROM gallery_photos p
                 JOIN gallery_photos_metadata pm ON p.id = pm.photo_id
                 JOIN galleries g ON p.gallery_uuid = g.uuid
