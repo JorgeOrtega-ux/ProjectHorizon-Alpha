@@ -4,10 +4,13 @@ const urlMap = {
     'main-explore': 'explore',
     'settings-accessibility': 'settings/accessibility',
     'settings-historyPrivacy': 'settings/history-privacy',
+    'help-privacyPolicy': 'help/privacy-policy',
+    'help-termsConditions': 'help/terms-conditions',
+    'help-cookiePolicy': 'help/cookie-policy',
+    'help-sendFeedback': 'help/send-feedback',
     'main-galleryPhotos': 'gallery/{uuid}',
     'main-photoView': 'gallery/{uuid}/photo/{photoId}',
     'main-accessCodePrompt': 'reedem/{uuid}',
-    // --- AÑADIDO: Nueva plantilla para la vista de favoritos por usuario. ---
     'main-userSpecificFavorites': 'favorites/{uuid}',
     'main-404': '404'
 };
@@ -26,11 +29,8 @@ export function generateUrl(view, section, data = null) {
 
     const newPath = pathSegment ? `${BASE_PATH}/${pathSegment}` : BASE_PATH;
     
-    // Construimos la URL base
     const finalUrl = `${window.location.protocol}//${window.location.host}${newPath || '/'}`;
 
-    // Si la URL es la de inicio (es decir, no hay un 'pathSegment') y
-    // no termina con una barra, se la añadimos.
     if (!pathSegment && !finalUrl.endsWith('/')) {
         return finalUrl + '/';
     }

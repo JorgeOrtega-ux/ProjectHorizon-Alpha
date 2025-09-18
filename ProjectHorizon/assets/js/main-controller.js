@@ -123,7 +123,6 @@ export function initMainController() {
             byUserContainer.classList.add('active');
             byUserContainer.classList.remove('disabled');
 
-            // --- INICIO DE LA MODIFICACIÓN ---
             const galleries = favorites.reduce((acc, photo) => {
                 if (!acc[photo.gallery_uuid]) {
                     acc[photo.gallery_uuid] = {
@@ -174,7 +173,6 @@ export function initMainController() {
                 statusContainer.classList.remove('disabled');
                 statusContainer.innerHTML = '<div><h2>No se encontraron favoritos</h2><p>Prueba a buscar en otra sección o añade nuevas fotos a tu colección.</p></div>';
             }
-            // --- FIN DE LA MODIFICACIÓN ---
 
         } else {
             allPhotosContainer.classList.add('active');
@@ -213,11 +211,11 @@ export function initMainController() {
                             <div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div>
                         </div>
                     </div>
-                    <div class="module-content module-select photo-context-menu disabled">
+                    <div class="module-content module-select photo-context-menu disabled body-title">
                         <div class="menu-content"><div class="menu-list">
                             <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
                             <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
-                            <a class="menu-link disabled-link" href="javascript:void(0);"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
+                            <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
                         </div></div>
                     </div>
                 </div>`;
@@ -497,11 +495,11 @@ export function initMainController() {
                                         <div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div>
                                     </div>
                                 </div>
-                                <div class="module-content module-select photo-context-menu disabled">
+                                <div class="module-content module-select photo-context-menu disabled body-title">
                                     <div class="menu-content"><div class="menu-list">
                                         <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
                                         <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
-                                        <a class="menu-link disabled-link" href="javascript:void(0);"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
+                                        <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
                                     </div></div>
                                 </div>
                             </div>
@@ -633,7 +631,6 @@ export function initMainController() {
         }
     }
 
-    // --- INICIO DE LA MODIFICACIÓN ---
     function applyViewPreference() {
         const savedView = localStorage.getItem('galleryView') || 'grid';
         const gridView = document.getElementById('grid-view');
@@ -659,7 +656,31 @@ export function initMainController() {
             }
         }
     }
-    // --- FIN DE LA MODIFICACIÓN ---
+
+    async function downloadPhoto(url) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const blob = await response.blob();
+            const objectUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = objectUrl;
+            
+            const fileName = url.substring(url.lastIndexOf('/') + 1).split('?')[0] || 'download.jpg';
+            a.download = fileName;
+            
+            document.body.appendChild(a);
+            a.click();
+            
+            window.URL.revokeObjectURL(objectUrl);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error('Error downloading the image:', error);
+        }
+    }
 
     function setupEventListeners() {
         const toggleViewBtn = document.querySelector('[data-action="toggle-view"]');
@@ -667,6 +688,7 @@ export function initMainController() {
         const favoritesSearchInput = document.getElementById('favorites-search-input');
         const menuButton = document.querySelector('[data-action="toggleModuleSurface"]');
         const settingsButton = document.querySelector('[data-action="toggleSettings"]');
+        const helpButton = document.querySelector('[data-action="toggleHelp"]');
         const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
         const allMenuLinks = document.querySelectorAll('.menu-link');
         const accessCodeSubmitBtn = document.getElementById('access-code-submit');
@@ -691,9 +713,7 @@ export function initMainController() {
                     icon.textContent = 'view_list';
                     currentView = 'grid';
                 }
-                // --- INICIO DE LA MODIFICACIÓN ---
                 localStorage.setItem('galleryView', currentView);
-                // --- FIN DE LA MODIFICACIÓN ---
             });
         }
 
@@ -728,6 +748,12 @@ export function initMainController() {
                 handleNavigation('settings', 'accessibility');
             });
         }
+        
+        if (helpButton) {
+            helpButton.addEventListener('click', () => {
+                handleNavigation('help', 'privacyPolicy');
+            });
+        }
 
         allMenuLinks.forEach(link => {
             link.addEventListener('click', function(e) {
@@ -735,6 +761,9 @@ export function initMainController() {
                 if (action && action !== 'toggle-select' && !this.closest('.photo-context-menu')) {
                     e.preventDefault();
                 }
+                 if (action === 'download-photo') {
+                    e.preventDefault();
+                 }
                 if (action === 'toggleMainView') {
                     handleNavigation('main', 'home');
                     return;
@@ -943,6 +972,15 @@ export function initMainController() {
                         actionTarget.closest('.card-actions-container').classList.remove('force-visible');
                     });
                     break;
+                case 'download-photo':
+                    const photoCardForDownload = actionTarget.closest('.card.photo-card');
+                    if (photoCardForDownload) {
+                        const photoUrl = photoCardForDownload.dataset.photoUrl;
+                        if (photoUrl) {
+                            downloadPhoto(photoUrl);
+                        }
+                    }
+                    break;
             }
 
             const trigger = event.target.closest('[data-action="toggle-select"]');
@@ -1014,7 +1052,6 @@ export function initMainController() {
             });
         });
 
-        // --- INICIO DE LA CORRECCIÓN ---
         document.querySelectorAll('#relevance-select .menu-link').forEach(option => {
             option.addEventListener('click', function() {
                 const newSortBy = this.dataset.value;
@@ -1047,7 +1084,6 @@ export function initMainController() {
                 }
             });
         });
-        // --- FIN DE LA CORRECCIÓN ---
 
         document.querySelectorAll('#theme-select .menu-link').forEach(option => {
             option.addEventListener('click', function(e) {
@@ -1155,7 +1191,7 @@ export function initMainController() {
                     background.style.backgroundImage = `url('${photo.photo_url}')`;
                     card.appendChild(background);
                     const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
-                    card.innerHTML += `<div class="card-actions-container"><div class="card-hover-overlay"><div class="card-hover-icons"><div class="icon-wrapper active" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div><div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div></div></div><div class="module-content module-select photo-context-menu disabled"><div class="menu-content"><div class="menu-list"><a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a><div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div><a class="menu-link disabled-link" href="javascript:void(0);"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a></div></div></div></div>`;
+                    card.innerHTML += `<div class="card-actions-container"><div class="card-hover-overlay"><div class="card-hover-icons"><div class="icon-wrapper active" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div><div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div></div></div><div class="module-content module-select photo-context-menu disabled body-title"><div class="menu-content"><div class="menu-list"><a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a><div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div><a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a></div></div></div></div>`;
                     grid.appendChild(card);
                 });
             } else {
@@ -1167,9 +1203,7 @@ export function initMainController() {
         }
     }
 
-    // --- INICIO DE LA MODIFICACIÓN ---
     applyViewPreference();
-    // --- FIN DE LA MODIFICACIÓN ---
     setupEventListeners();
     setupScrollShadows();
 

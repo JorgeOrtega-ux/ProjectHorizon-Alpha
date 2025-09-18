@@ -5,7 +5,11 @@ class Router {
         'explore' => ['view' => 'main', 'section' => 'explore'],
         'favorites' => ['view' => 'main', 'section' => 'favorites'],
         'settings/accessibility' => ['view' => 'settings', 'section' => 'accessibility'],
-        'settings/history-privacy' => ['view' => 'settings', 'section' => 'historyPrivacy']
+        'settings/history-privacy' => ['view' => 'settings', 'section' => 'historyPrivacy'],
+        'help/privacy-policy' => ['view' => 'help', 'section' => 'privacyPolicy'],
+        'help/terms-conditions' => ['view' => 'help', 'section' => 'termsConditions'],
+        'help/cookie-policy' => ['view' => 'help', 'section' => 'cookiePolicy'],
+        'help/send-feedback' => ['view' => 'help', 'section' => 'sendFeedback']
     ];
 
     public static function getRouteConfig($path) {
@@ -21,7 +25,6 @@ class Router {
             return ['view' => 'main', 'section' => 'galleryPhotos'];
         }
 
-        // --- AÑADIDO: Nueva regla para las URLs de favoritos por usuario. ---
         if (preg_match('/^favorites\/[a-f0-9-]{36}$/', $path)) {
             return ['view' => 'main', 'section' => 'userSpecificFavorites'];
         }

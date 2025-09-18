@@ -6,10 +6,17 @@
     <?php include 'includes/sections/main/user-photos.php'; ?>
     <?php include 'includes/sections/main/photo-view.php'; ?>
     <?php include 'includes/sections/main/access-code-prompt.php'; ?>
-    <?php include 'includes/sections/main/user-specific-favorites.php'; // --- AÑADIDO --- ?>
+    <?php include 'includes/sections/main/user-specific-favorites.php'; ?>
 </div>
 
 <div class="section-container <?php echo ($CURRENT_VIEW === 'settings') ? 'active' : 'disabled'; ?>" data-view="settings">
     <?php include 'includes/sections/settings/accessibility.php'; ?>
     <?php include 'includes/sections/settings/historyPrivacy.php'; ?>
+</div>
+
+<div class="section-container <?php echo ($CURRENT_VIEW === 'help') ? 'active' : 'disabled'; ?>" data-view="help">
+    <?php include 'includes/sections/help/privacy-policy.php'; ?>
+    <?php include 'includes/sections/help/terms-conditions.php'; ?>
+    <?php include 'includes/sections/help/cookie-policy.php'; ?>
+    <?php include 'includes/sections/help/send-feedback.php'; ?>
 </div>

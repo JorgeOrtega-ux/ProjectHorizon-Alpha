@@ -757,7 +757,7 @@ body {
 }
 
 .card-hover-icons .icon-wrapper:hover {
-    background-color: #f0f0f0;
+    background-color: #f5f5fa;
 }
 
 .module-content.photo-context-menu {
@@ -843,6 +843,7 @@ body {
     border: 1px solid #00000020;
     border-radius: 8px;
     padding: 0 16px;
+    display: flex;
     font-size: 1rem;
     font-weight: 500;
 }

@@ -28,4 +28,29 @@
             </div>
         </div>
     </div>
+
+    <div class="menu-content <?php echo ($CURRENT_VIEW === 'help') ? 'active' : 'disabled'; ?>" data-menu="help">
+        <div class="menu-list">
+            <div class="menu-link" data-action="toggleMainView">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">arrow_back</span></div>
+                <div class="menu-link-text"><span>Volver a inicio</span></div>
+            </div>
+            <div class="menu-link <?php echo ($CURRENT_SECTION === 'privacyPolicy') ? 'active' : ''; ?>" data-action="toggleSectionPrivacyPolicy">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">privacy_tip</span></div>
+                <div class="menu-link-text"><span>Política de Privacidad</span></div>
+            </div>
+            <div class="menu-link <?php echo ($CURRENT_SECTION === 'termsConditions') ? 'active' : ''; ?>" data-action="toggleSectionTermsConditions">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">gavel</span></div>
+                <div class="menu-link-text"><span>Términos y Condiciones</span></div>
+            </div>
+             <div class="menu-link <?php echo ($CURRENT_SECTION === 'cookiePolicy') ? 'active' : ''; ?>" data-action="toggleSectionCookiePolicy">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">cookie</span></div>
+                <div class="menu-link-text"><span>Política de Cookies</span></div>
+            </div>
+            <div class="menu-link <?php echo ($CURRENT_SECTION === 'sendFeedback') ? 'active' : ''; ?>" data-action="toggleSectionSendFeedback">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">feedback</span></div>
+                <div class="menu-link-text"><span>Enviar Comentarios</span></div>
+            </div>
+        </div>
+    </div>
 </div>
