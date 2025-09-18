@@ -1054,3 +1054,68 @@ body {
     margin-bottom: 8px;
     color: #1f1f1f;
 }
+
+/* --- ESTILOS PARA LA SECCIÓN DE EXPLORAR CATEGORÍAS --- */
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 8px;
+    width: 100%;
+}
+
+.category-card {
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.category-card .card-background {
+    transition: transform 0.3s ease-in-out;
+}
+
+.category-card:hover .card-background {
+    transform: scale(1.1);
+}
+
+.category-card-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.category-card h3 {
+    color: #ffffff;
+    font-size: 1.25rem;
+    font-weight: 500;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.category-section {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.category-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 12px;
+    padding: 12px;
+    color: #1f1f1f;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+}
