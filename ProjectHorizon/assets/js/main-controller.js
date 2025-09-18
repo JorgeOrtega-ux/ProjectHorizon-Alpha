@@ -1014,28 +1014,40 @@ export function initMainController() {
             });
         });
 
+        // --- INICIO DE LA CORRECCIÓN ---
         document.querySelectorAll('#relevance-select .menu-link').forEach(option => {
             option.addEventListener('click', function() {
-                currentSortBy = this.dataset.value;
-                fetchAndDisplayGalleries(currentSortBy, searchInput.value.trim());
-                updateSelectActiveState('relevance-select', currentSortBy);
+                const newSortBy = this.dataset.value;
+                if (newSortBy !== currentSortBy) {
+                    currentSortBy = newSortBy;
+                    fetchAndDisplayGalleries(currentSortBy, searchInput.value.trim());
+                    updateSelectActiveState('relevance-select', currentSortBy);
+                }
             });
         });
 
         document.querySelectorAll('#favorites-sort-select .menu-link').forEach(option => {
             option.addEventListener('click', function() {
-                currentFavoritesSortBy = this.dataset.value;
-                displayFavoritePhotos();
-                updateSelectActiveState('favorites-sort-select', currentFavoritesSortBy);
+                const newSortBy = this.dataset.value;
+                if (newSortBy !== currentFavoritesSortBy) {
+                    currentFavoritesSortBy = newSortBy;
+                    displayFavoritePhotos();
+                    updateSelectActiveState('favorites-sort-select', currentFavoritesSortBy);
+                }
             });
         });
 
         document.querySelectorAll('#view-select .menu-link, #view-select-fav .menu-link').forEach(option => {
             option.addEventListener('click', function() {
-                navigateToUrl('main', this.dataset.value);
-                handleStateChange('main', this.dataset.value);
+                const newSection = this.dataset.value;
+                const activeSection = document.querySelector('.section-container.active .section-content.active')?.dataset.section;
+                if (newSection !== activeSection) {
+                    navigateToUrl('main', newSection);
+                    handleStateChange('main', newSection);
+                }
             });
         });
+        // --- FIN DE LA CORRECCIÓN ---
 
         document.querySelectorAll('#theme-select .menu-link').forEach(option => {
             option.addEventListener('click', function(e) {
