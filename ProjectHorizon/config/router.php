@@ -2,7 +2,7 @@
 class Router {
     private static $routes = [
         '' => ['view' => 'main', 'section' => 'home'],
-        'explore' => ['view' => 'main', 'section' => 'explore'],
+        'trends' => ['view' => 'main', 'section' => 'trends'],
         'favorites' => ['view' => 'main', 'section' => 'favorites'],
         'settings/accessibility' => ['view' => 'settings', 'section' => 'accessibility'],
         'settings/history-privacy' => ['view' => 'settings', 'section' => 'historyPrivacy'],

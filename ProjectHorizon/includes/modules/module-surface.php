@@ -5,9 +5,9 @@
                 <div class="menu-link-icon"><span class="material-symbols-rounded">home</span></div>
                 <div class="menu-link-text"><span>Pagina principal</span></div>
             </div>
-            <div class="menu-link <?php echo ($CURRENT_SECTION === 'explore') ? 'active' : ''; ?>" data-action="toggleSectionExplore">
-                <div class="menu-link-icon"><span class="material-symbols-rounded">explore</span></div>
-                <div class="menu-link-text"><span>Explorar categorias</span></div>
+            <div class="menu-link <?php echo ($CURRENT_SECTION === 'trends') ? 'active' : ''; ?>" data-action="toggleSectionTrends">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">trending_up</span></div>
+                <div class="menu-link-text"><span>Explorar tendencias</span></div>
             </div>
         </div>
     </div>

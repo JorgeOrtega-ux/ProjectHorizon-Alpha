@@ -1,7 +1,7 @@
 <div class="section-container <?php echo ($CURRENT_VIEW === 'main') ? 'active' : 'disabled'; ?>" data-view="main">
     <?php include 'includes/sections/main/home.php'; ?>
     <?php include 'includes/sections/main/favorites.php'; ?>
-    <?php include 'includes/sections/main/explore.php'; ?>
+    <?php include 'includes/sections/main/trends.php'; ?>
     <?php include 'includes/sections/main/404.php'; ?>
     <?php include 'includes/sections/main/user-photos.php'; ?>
     <?php include 'includes/sections/main/photo-view.php'; ?>

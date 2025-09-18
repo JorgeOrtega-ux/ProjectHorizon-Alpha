@@ -214,6 +214,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
         echo json_encode($photos);
 
+    } elseif ($request_type === 'trending_users') {
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $sql = "SELECT g.uuid, g.name, g.privacy, gpp.profile_picture_url,
+                       (SELECT gp.photo_url FROM gallery_photos gp WHERE gp.gallery_uuid = g.uuid ORDER BY RAND() LIMIT 1) AS background_photo_url
+                FROM galleries g
+                JOIN galleries_metadata gm ON g.uuid = gm.gallery_uuid
+                LEFT JOIN gallery_profile_pictures gpp ON g.uuid = gpp.gallery_uuid
+                ORDER BY (gm.total_likes * 0.7 + gm.total_interactions * 0.3) DESC
+                LIMIT ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $users = array();
+        while($row = $result->fetch_assoc()) {
+            $users[] = $row;
+        }
+        $stmt->close();
+        echo json_encode($users);
+
+    } elseif ($request_type === 'trending_photos') {
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $sql = "SELECT p.id, p.photo_url, p.gallery_uuid, g.name AS gallery_name, gpp.profile_picture_url
+                FROM gallery_photos p
+                JOIN gallery_photos_metadata pm ON p.id = pm.photo_id
+                JOIN galleries g ON p.gallery_uuid = g.uuid
+                LEFT JOIN gallery_profile_pictures gpp ON p.gallery_uuid = gpp.gallery_uuid
+                ORDER BY (pm.likes * 0.6 + pm.interactions * 0.4) DESC
+                LIMIT ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $limit);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $photos = array();
+        while($row = $result->fetch_assoc()) {
+            $photos[] = $row;
+        }
+        $stmt->close();
+        echo json_encode($photos);
     } else {
         http_response_code(400);
         echo json_encode(['error' => 'Invalid GET request type']);

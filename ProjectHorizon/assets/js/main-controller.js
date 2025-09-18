@@ -19,6 +19,7 @@ export function initMainController() {
     let currentGalleryForPhotoView = null;
     let currentGalleryNameForPhotoView = null;
     let currentGalleryPhotoList = [];
+    let currentTrendingPhotosList = [];
     let currentPhotoData = null;
     let lastVisitedView = null;
     let lastVisitedData = null;
@@ -534,6 +535,85 @@ export function initMainController() {
             });
     }
 
+    function fetchAndDisplayTrends() {
+        const usersGrid = document.getElementById('trending-users-grid');
+        const photosGrid = document.getElementById('trending-photos-grid');
+
+        usersGrid.innerHTML = loaderHTML;
+        photosGrid.innerHTML = loaderHTML;
+
+        // Fetch Trending Users
+        fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=trending_users&limit=8`)
+            .then(res => res.json())
+            .then(users => {
+                usersGrid.innerHTML = '';
+                if (users.length > 0) {
+                    displayGalleriesAsGrid(users, usersGrid, 'relevant', false);
+                } else {
+                    usersGrid.innerHTML = '<p>No hay usuarios en tendencia en este momento.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching trending users:', error);
+                usersGrid.innerHTML = '<p>Error al cargar usuarios en tendencia.</p>';
+            });
+
+        // Fetch Trending Photos
+        fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=trending_photos&limit=12`)
+            .then(res => res.json())
+            .then(photos => {
+                photosGrid.innerHTML = '';
+                currentTrendingPhotosList = photos;
+                if (photos.length > 0) {
+                    photos.forEach(photo => {
+                        const card = document.createElement('div');
+                        card.className = 'card photo-card';
+                        card.dataset.photoUrl = photo.photo_url;
+                        card.dataset.photoId = photo.id;
+                        card.dataset.galleryUuid = photo.gallery_uuid;
+
+                        const background = document.createElement('div');
+                        background.className = 'card-background';
+                        background.style.backgroundImage = `url('${photo.photo_url}')`;
+                        card.appendChild(background);
+
+                        const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
+
+                        card.innerHTML += `
+                            <div class="card-content-overlay">
+                                <div class="card-icon" style="background-image: url('${photo.profile_picture_url || ''}')"></div>
+                                <div class="card-text">
+                                    <span>${photo.gallery_name}</span>
+                                </div>
+                            </div>
+                            <div class="card-actions-container">
+                                <div class="card-hover-overlay">
+                                    <div class="card-hover-icons">
+                                        <div class="icon-wrapper" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div>
+                                        <div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div>
+                                    </div>
+                                </div>
+                                <div class="module-content module-select photo-context-menu disabled body-title">
+                                    <div class="menu-content"><div class="menu-list">
+                                        <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
+                                        <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
+                                        <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
+                                    </div></div>
+                                </div>
+                            </div>`;
+                        photosGrid.appendChild(card);
+                        updateFavoriteCardState(photo.id);
+                    });
+                } else {
+                    photosGrid.innerHTML = '<p>No hay fotos en tendencia en este momento.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching trending photos:', error);
+                photosGrid.innerHTML = '<p>Error al cargar fotos en tendencia.</p>';
+            });
+    }
+
     function displayPhoto(uuid, photoId, photoList = null) {
         handleNavigation('main', 'photoView', true, {
             uuid: uuid,
@@ -591,10 +671,21 @@ export function initMainController() {
                 });
         };
 
+        let currentList = currentGalleryPhotoList;
+        if (lastVisitedView === 'trends') {
+            currentList = currentTrendingPhotosList;
+        }
+
         if (photoList) {
-            currentGalleryPhotoList = photoList;
+            const isTempList = lastVisitedView === 'trends' && currentList.length <= 1;
             displayFetchedPhoto(photoList);
-        } else if (currentGalleryPhotoList.length === 0 || currentGalleryForPhotoView !== uuid) {
+
+            if (isTempList) {
+                currentGalleryPhotoList = photoList;
+            } else {
+                currentGalleryPhotoList = photoList;
+            }
+        } else if (currentList.length === 0 || currentGalleryForPhotoView !== uuid) {
             fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=photos&uuid=${uuid}&limit=1000`)
                 .then(res => res.json())
                 .then(photos => {
@@ -602,7 +693,7 @@ export function initMainController() {
                     displayFetchedPhoto(photos);
                 });
         } else {
-            displayFetchedPhoto(currentGalleryPhotoList);
+            displayFetchedPhoto(currentList);
         }
     }
 
@@ -854,6 +945,8 @@ export function initMainController() {
                     photoList = currentFavoritesList;
                 } else if (activeSection === 'userSpecificFavorites') {
                     photoList = currentFavoritesList.filter(p => p.gallery_uuid === galleryUuid);
+                } else if (activeSection === 'trends') {
+                    photoList = currentTrendingPhotosList;
                 } else {
                     photoList = currentGalleryPhotoList;
                 }
@@ -908,7 +1001,7 @@ export function initMainController() {
                 case 'toggle-favorite-card':
                     const photoId = actionTarget.dataset.photoId;
                     const favorites = getFavorites();
-                    const photoData = favorites.find(p => p.id == photoId) || currentGalleryPhotoList.find(p => p.id == photoId);
+                    const photoData = favorites.find(p => p.id == photoId) || currentGalleryPhotoList.find(p => p.id == photoId) || currentTrendingPhotosList.find(p => p.id == photoId);
 
                     if (photoData) {
                         const fullPhotoData = {
@@ -936,15 +1029,22 @@ export function initMainController() {
                     if (!actionTarget.classList.contains('disabled-nav')) {
                         const path = window.location.pathname;
                         const photoMatch = path.match(/^.*\/photo\/(\d+)$/);
-                        if (!photoMatch || currentGalleryPhotoList.length === 0) return;
+                        
+                        let listToUse = currentGalleryPhotoList;
+                        if (lastVisitedView === 'trends') {
+                            listToUse = currentTrendingPhotosList;
+                        }
+
+                        if (!photoMatch || listToUse.length === 0) return;
+                        
                         const currentId = parseInt(photoMatch[1], 10);
-                        const currentIndex = currentGalleryPhotoList.findIndex(p => p.id === currentId);
+                        const currentIndex = listToUse.findIndex(p => p.id === currentId);
 
                         if (currentIndex !== -1) {
                             let nextIndex = (action === 'next-photo') ? currentIndex + 1 : currentIndex - 1;
-                            if (nextIndex >= 0 && nextIndex < currentGalleryPhotoList.length) {
-                                const nextPhoto = currentGalleryPhotoList[nextIndex];
-                                displayPhoto(nextPhoto.gallery_uuid, nextPhoto.id, currentGalleryPhotoList);
+                            if (nextIndex >= 0 && nextIndex < listToUse.length) {
+                                const nextPhoto = listToUse[nextIndex];
+                                displayPhoto(nextPhoto.gallery_uuid, nextPhoto.id, listToUse);
                             }
                         }
                     }
@@ -1150,6 +1250,8 @@ export function initMainController() {
             updateSelectActiveState('view-select', 'home');
             updateSelectActiveState('relevance-select', currentSortBy);
             fetchAndDisplayGalleries(currentSortBy);
+        } else if (section === 'trends') {
+            fetchAndDisplayTrends();
         } else if (section === 'galleryPhotos' && data && data.uuid) {
             fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${data.uuid}`)
                 .then(res => res.json())
@@ -1163,6 +1265,8 @@ export function initMainController() {
                 if (lastVisitedView === 'userSpecificFavorites' && lastVisitedData && lastVisitedData.uuid) {
                     photoList = photoList.filter(p => p.gallery_uuid === lastVisitedData.uuid);
                 }
+            } else if (lastVisitedView === 'trends') {
+                photoList = currentTrendingPhotosList;
             }
             displayPhoto(data.uuid, data.photoId, photoList);
         } else if (section === 'userSpecificFavorites' && data && data.uuid) {
