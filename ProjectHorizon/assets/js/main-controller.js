@@ -38,7 +38,8 @@ export function initMainController() {
 
     const loaderHTML = '<div class="loader-container"><div class="spinner"></div></div>';
     
-    let activeScrollHandler = { element: null, listener: null };
+    // BUG FIX: Se convierte en array para manejar múltiples listeners de scroll
+    let activeScrollHandlers = [];
 
     function isFavorite(photoId) {
         const favorites = getFavorites();
@@ -923,7 +924,6 @@ export function initMainController() {
                     case 'previous-photo':
                     case 'next-photo':
                         if (!actionTarget.classList.contains('disabled-nav')) {
-                            // *** INICIO DE LA CORRECCIÓN ***
                             let listToUse = [];
                             if (lastVisitedView === 'favorites' || lastVisitedView === 'userSpecificFavorites') {
                                 listToUse = currentFavoritesList;
@@ -932,7 +932,6 @@ export function initMainController() {
                             } else {
                                 listToUse = currentGalleryPhotoList;
                             }
-                            // *** FIN DE LA CORRECCIÓN ***
 
                             const currentId = currentPhotoData ? currentPhotoData.id : null;
                             if (!currentId || listToUse.length === 0) return;
@@ -1042,7 +1041,7 @@ export function initMainController() {
                 }
             }
 
-            // --- MANEJAR SELECCIÓN DE OPCIONES EN MENÚS DESPLEGables ---
+            // --- MANEJAR SELECCIÓN DE OPCIONES EN MENÚS DESPLEGABLES ---
             const selectedOption = event.target.closest('.module-select .menu-link');
             if (selectedOption) {
                 const selectContainer = selectedOption.closest('.module-select');
@@ -1151,28 +1150,48 @@ export function initMainController() {
         });
     }
 
+    /**
+     * BUG FIX: La función ahora maneja dos listeners de scroll independientes.
+     * 1. Uno para el contenedor principal (.general-content-scrolleable), que controla la sombra del encabezado superior.
+     * 2. Otro para el bloque de contenido de la sección (.section-content-block), que controla la sombra de su propio encabezado.
+     * Esto asegura que la sombra correcta aparezca según qué parte de la página se esté desplazando.
+     */
     function setupScrollShadows() {
-        if (activeScrollHandler.element && activeScrollHandler.listener) {
-            activeScrollHandler.element.removeEventListener('scroll', activeScrollHandler.listener);
+        // 1. Limpia los listeners de scroll anteriores para evitar duplicados
+        activeScrollHandlers.forEach(({ element, listener }) => {
+            element.removeEventListener('scroll', listener);
+        });
+        activeScrollHandlers = [];
+
+        // 2. Maneja la sombra del encabezado principal (general-content-top)
+        const mainScrolleable = document.querySelector('.general-content-scrolleable');
+        const mainHeader = document.querySelector('.general-content-top');
+        
+        if (mainScrolleable && mainHeader) {
+            const mainListener = () => {
+                // Esta sombra depende del scroll del contenedor principal
+                mainHeader.classList.toggle('shadow', mainScrolleable.scrollTop > 0);
+            };
+            mainScrolleable.addEventListener('scroll', mainListener);
+            activeScrollHandlers.push({ element: mainScrolleable, listener: mainListener });
+            mainListener(); // Ejecuta una vez al cargar
         }
 
-        const scrolleableElement = document.querySelector('.general-content-scrolleable');
-        const headerToShadow = document.querySelector('.general-content-top');
-        
-        if (scrolleableElement && headerToShadow) {
-            const newListener = () => {
-                const sectionHeader = scrolleableElement.querySelector('.section-content-header');
-                headerToShadow.classList.toggle('shadow', scrolleableElement.scrollTop > 0);
-                if(sectionHeader) {
-                    sectionHeader.classList.toggle('shadow', scrolleableElement.scrollTop > 0);
-                }
-            };
+        // 3. Maneja la sombra del encabezado de la sección (section-content-header)
+        const sectionScrolleable = document.querySelector('.section-content-block.overflow-y');
+        const sectionHeader = document.querySelector('.section-content-header');
 
-            scrolleableElement.addEventListener('scroll', newListener);
-            activeScrollHandler = { element: scrolleableElement, listener: newListener };
-            newListener();
+        if (sectionScrolleable && sectionHeader) {
+            const sectionListener = () => {
+                // Esta sombra depende del scroll del bloque de contenido interno
+                sectionHeader.classList.toggle('shadow', sectionScrolleable.scrollTop > 0);
+            };
+            sectionScrolleable.addEventListener('scroll', sectionListener);
+            activeScrollHandlers.push({ element: sectionScrolleable, listener: sectionListener });
+            sectionListener(); // Ejecuta una vez al cargar
         }
     }
+
 
     function updateHeaderAndMenuStates(view, section) {
         // Actualizar menú lateral principal
