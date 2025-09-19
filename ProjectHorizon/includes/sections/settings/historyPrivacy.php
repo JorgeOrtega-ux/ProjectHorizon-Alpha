@@ -1,0 +1,1 @@
+<div class="section-content <?php echo ($CURRENT_SECTION === 'historyPrivacy') ? 'active' : 'disabled'; ?>" data-section="historyPrivacy">Contenido de Historial y Privacidad</div>
