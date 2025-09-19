@@ -215,7 +215,7 @@ export function initMainController() {
                     <div class="module-content module-select photo-context-menu disabled body-title">
                         <div class="menu-content"><div class="menu-list">
                             <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
-                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></a>
+                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
                             <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
                         </div></div>
                     </div>
@@ -499,7 +499,7 @@ export function initMainController() {
                                 <div class="module-content module-select photo-context-menu disabled body-title">
                                     <div class="menu-content"><div class="menu-list">
                                         <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
-                                        <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></a>
+                                        <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
                                         <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
                                     </div></div>
                                 </div>
@@ -607,7 +607,7 @@ export function initMainController() {
                                     <div class="module-content module-select photo-context-menu disabled body-title">
                                         <div class="menu-content"><div class="menu-list">
                                             <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
-                                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></a>
+                                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
                                             <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
                                         </div></div>
                                     </div>
@@ -795,6 +795,35 @@ export function initMainController() {
             document.body.removeChild(a);
         } catch (error) {
             console.error('Error downloading the image:', error);
+        }
+    }
+
+    function copyTextToClipboard(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text);
+        } else {
+            // Fallback for insecure contexts
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed'; // Prevent scrolling to bottom
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            return new Promise((res, rej) => {
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        res();
+                    } else {
+                        rej(new Error('Copy command was unsuccessful'));
+                    }
+                } catch (err) {
+                    rej(err);
+                } finally {
+                    document.body.removeChild(textArea);
+                }
+            });
         }
     }
 
@@ -1019,21 +1048,9 @@ export function initMainController() {
                     }
                     break;
                 case 'returnToUserPhotos':
-                    if (lastVisitedView && lastVisitedView !== 'photoView') {
-                        navigateToUrl('main', lastVisitedView, lastVisitedData);
-                        handleStateChange('main', lastVisitedView, lastVisitedData);
-                    } else {
-                        navigateToUrl('main', 'home');
-                        handleStateChange('main', 'home');
-                    }
-                    break;
                 case 'returnToHome':
-                    navigateToUrl('main', 'home');
-                    handleStateChange('main', 'home');
-                    break;
                 case 'returnToFavorites':
-                    navigateToUrl('main', 'favorites');
-                    handleStateChange('main', 'favorites');
+                    window.history.back();
                     break;
                 case 'toggle-favorite':
                     if (currentPhotoData) toggleFavorite(currentPhotoData);
@@ -1107,9 +1124,11 @@ export function initMainController() {
                 case 'copy-link':
                     const card = actionTarget.closest('.card');
                     const url = `${window.location.origin}${window.BASE_PATH}/gallery/${card.dataset.galleryUuid}/photo/${card.dataset.photoId}`;
-                    navigator.clipboard.writeText(url).then(() => {
+                    copyTextToClipboard(url).then(() => {
                         actionTarget.closest('.photo-context-menu').classList.add('disabled');
                         actionTarget.closest('.card-actions-container').classList.remove('force-visible');
+                    }).catch(err => {
+                        console.error('Failed to copy: ', err);
                     });
                     break;
                 case 'download-photo':
@@ -1335,7 +1354,7 @@ export function initMainController() {
                     background.style.backgroundImage = `url('${photo.photo_url}')`;
                     card.appendChild(background);
                     const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
-                    card.innerHTML += `<div class="card-actions-container"><div class="card-hover-overlay"><div class="card-hover-icons"><div class="icon-wrapper active" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div><div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div></div></div><div class="module-content module-select photo-context-menu disabled body-title"><div class="menu-content"><div class="menu-list"><a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a><div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></a><a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a></div></div></div></div>`;
+                    card.innerHTML += `<div class="card-actions-container"><div class="card-hover-overlay"><div class="card-hover-icons"><div class="icon-wrapper active" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div><div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div></div></div><div class="module-content module-select photo-context-menu disabled body-title"><div class="menu-content"><div class="menu-list"><a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a><div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div><a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a></div></div></div></div>`;
                     grid.appendChild(card);
                 });
             } else {
@@ -1362,7 +1381,7 @@ export function initMainController() {
     const photoMatch = path.match(/^gallery\/([a-f0-9-]{36})\/photo\/(\d+)$/);
     const galleryMatch = path.match(/^gallery\/([a-f0-9-]{36})$/);
     const favoritesMatch = path.match(/^favorites\/([a-f0-9-]{36})$/);
-    const reedemMatch = path.match(/^reedem\/([a-f0-9-]{36})$/);
+    const accessCodeMatch = path.match(/^gallery\/([a-f0-9-]{36})\/access-code$/);
 
     let initialStateData = null;
 
@@ -1400,8 +1419,8 @@ export function initMainController() {
         };
         setInitialHistoryState(initialView, 'userSpecificFavorites', initialStateData);
         handleStateChange(initialView, 'userSpecificFavorites', initialStateData);
-    } else if (reedemMatch) {
-        const galleryUuid = reedemMatch[1];
+    } else if (accessCodeMatch) {
+        const galleryUuid = accessCodeMatch[1];
         initialStateData = {
             uuid: galleryUuid
         };

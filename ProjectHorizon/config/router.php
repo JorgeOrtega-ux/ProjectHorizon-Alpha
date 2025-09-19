@@ -29,7 +29,7 @@ class Router {
             return ['view' => 'main', 'section' => 'userSpecificFavorites'];
         }
         
-        if (preg_match('/^reedem\/[a-f0-9-]{36}$/', $path)) {
+        if (preg_match('/^gallery\/[a-f0-9-]{36}\/access-code$/', $path)) {
             return ['view' => 'main', 'section' => 'accessCodePrompt'];
         }
 
