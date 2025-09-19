@@ -55,6 +55,7 @@ body {
     border-bottom: 1px solid #00000020;
     z-index: 999;
     transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    position: relative; /* Añadido para consistencia */
 }
 
 .general-content-bottom {
@@ -521,6 +522,8 @@ body {
     border-bottom: 1px solid #00000020;
     flex-shrink: 0;
     transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    position: relative; /* Cambio Clave */
+    z-index: 10;       /* Cambio Clave */
 }
 
 .section-content-block {
@@ -587,13 +590,8 @@ body {
     background: linear-gradient(180deg, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.6) 100%);
     pointer-events: none;
     opacity: 0;
-    /* --- MODIFICACIÓN: El gradiente es transparente por defecto --- */
     transition: opacity 0.2s ease-in-out;
-    /* --- MODIFICACIÓN: Se añade transición para la opacidad --- */
 }
-
-
-/* --- MODIFICACIÓN: Se añade una nueva regla para mostrar el gradiente en hover --- */
 
 .card:hover .card-background::after {
     opacity: 1;
@@ -981,9 +979,6 @@ body {
     }
 }
 
-
-/* --- ESTILOS DEL LOADER --- */
-
 .loader-container {
     display: flex;
     justify-content: center;
@@ -1010,17 +1005,11 @@ body {
     }
 }
 
-
-/* --- CLASE PARA LA SOMBRA DINÁMICA --- */
-
 .general-content-top.shadow,
 .section-content-header.shadow {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border-color: transparent;
 }
-
-
-/* --- AÑADIDO: Estilos para el contenedor de mensajes --- */
 
 .status-message-container {
     display: flex;
@@ -1029,7 +1018,6 @@ body {
     width: 100%;
     flex-grow: 1;
     min-height: 280px;
-    /* Altura mínima igual a la de las tarjetas */
 }
 
 .status-message-container.active {
@@ -1054,8 +1042,6 @@ body {
     margin-bottom: 8px;
     color: #1f1f1f;
 }
-
-/* --- ESTILOS PARA LA SECCIÓN DE EXPLORAR CATEGORÍAS --- */
 
 .category-grid {
     display: grid;

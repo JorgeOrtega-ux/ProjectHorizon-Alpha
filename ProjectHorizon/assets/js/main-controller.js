@@ -34,6 +34,9 @@ export function initMainController() {
     let currentFavoritesList = [];
 
     const loaderHTML = '<div class="loader-container"><div class="spinner"></div></div>';
+    
+    // Variable para gestionar el listener de scroll activo
+    let activeScrollHandler = { element: null, listener: null };
 
 
     function isFavorite(photoId) {
@@ -1048,9 +1051,34 @@ export function initMainController() {
                     }
                     break;
                 case 'returnToUserPhotos':
+                    if (history.length > 1 && document.referrer.startsWith(window.location.origin + (window.BASE_PATH || ''))) {
+                        window.history.back();
+                    } else {
+                        const galleryUuid = currentPhotoData ? currentPhotoData.gallery_uuid : null;
+                        if (galleryUuid) {
+                            navigateToUrl('main', 'galleryPhotos', { uuid: galleryUuid });
+                            handleStateChange('main', 'galleryPhotos', { uuid: galleryUuid });
+                        } else {
+                            navigateToUrl('main', 'home');
+                            handleStateChange('main', 'home');
+                        }
+                    }
+                    break;
                 case 'returnToHome':
+                    if (history.length > 1 && document.referrer.startsWith(window.location.origin + (window.BASE_PATH || ''))) {
+                        window.history.back();
+                    } else {
+                        navigateToUrl('main', 'home');
+                        handleStateChange('main', 'home');
+                    }
+                    break;
                 case 'returnToFavorites':
-                    window.history.back();
+                    if (history.length > 1 && document.referrer.startsWith(window.location.origin + (window.BASE_PATH || ''))) {
+                        window.history.back();
+                    } else {
+                        navigateToUrl('main', 'favorites');
+                        handleStateChange('main', 'favorites');
+                    }
                     break;
                 case 'toggle-favorite':
                     if (currentPhotoData) toggleFavorite(currentPhotoData);
@@ -1284,18 +1312,58 @@ export function initMainController() {
     }
 
     function setupScrollShadows() {
-        const mainScrolleable = document.querySelector('.general-content-scrolleable');
-        const mainHeader = document.querySelector('.general-content-top');
+        // Elimina el listener anterior para evitar duplicados y fugas de memoria
+        if (activeScrollHandler.element && activeScrollHandler.listener) {
+            activeScrollHandler.element.removeEventListener('scroll', activeScrollHandler.listener);
+        }
 
-        if (mainScrolleable && mainHeader) {
-            mainScrolleable.addEventListener('scroll', () => {
-                mainHeader.classList.toggle('shadow', mainScrolleable.scrollTop > 0);
-            });
+        const activeSection = document.querySelector('.section-content.active');
+        if (!activeSection) return;
+
+        let scrolleableElement = null;
+        let headerToShadow = null;
+
+        // Escenario 1: Busca un área de scroll y encabezado dentro de la sección activa
+        const sectionScrolleable = activeSection.querySelector('.section-content-block.overflow-y');
+        const sectionHeader = activeSection.querySelector('.section-content-header');
+
+        if (sectionScrolleable && sectionHeader) {
+            scrolleableElement = sectionScrolleable;
+            headerToShadow = sectionHeader;
+        } else {
+            // Escenario 2 (Fallback): Usa el scroller y encabezado principal
+            scrolleableElement = document.querySelector('.general-content-scrolleable');
+            headerToShadow = document.querySelector('.general-content-top');
+        }
+
+        // Fallback "inteligente": si encontramos un scroller pero no un header específico,
+        // asumimos que debe ser el header principal.
+        if (scrolleableElement && !headerToShadow) {
+             headerToShadow = document.querySelector('.general-content-top');
+        }
+        
+        // Si encontramos ambos elementos, configuramos el nuevo listener
+        if (scrolleableElement && headerToShadow) {
+            const newListener = () => {
+                headerToShadow.classList.toggle('shadow', scrolleableElement.scrollTop > 0);
+            };
+
+            scrolleableElement.addEventListener('scroll', newListener);
+
+            // Guarda la referencia del nuevo listener para poder eliminarlo después
+            activeScrollHandler = { element: scrolleableElement, listener: newListener };
+            
+            // Comprueba el estado inicial del scroll por si la página carga ya con scroll
+            newListener();
         }
     }
 
+
     function handleStateChange(view, section, data) {
         handleNavigation(view, section, false, data);
+        
+        // Llama a la función de la sombra CADA VEZ que cambia el estado
+        setupScrollShadows();
 
         if (section === 'favorites') {
             document.querySelector('[data-target="view-select-fav"] .select-trigger-text').textContent = 'Mostrar favoritos';
@@ -1368,7 +1436,8 @@ export function initMainController() {
 
     applyViewPreference();
     setupEventListeners();
-    setupScrollShadows();
+    
+    // Se elimina la llamada inicial a setupScrollShadows() de aquí, ya que se manejará en handleStateChange()
 
     setupPopStateHandler((view, section, pushState, data) => {
         handleStateChange(view, section, data);
