@@ -19,7 +19,8 @@ export function setTheme(theme) {
     updateThemeSelectorUI(theme);
 }
 
-function updateThemeSelectorUI(theme) {
+// La función ahora es exportada
+export function updateThemeSelectorUI(theme) {
     const themeSelector = document.querySelector('[data-target="theme-select"]');
     if (themeSelector) {
         const themeText = themeSelector.querySelector('.select-trigger-text');
@@ -45,13 +46,11 @@ function updateThemeSelectorUI(theme) {
     }
 }
 
-
 export function initThemeManager() {
     applyTheme();
 
-    const savedTheme = localStorage.getItem('theme') || 'system';
-    updateThemeSelectorUI(savedTheme);
-
+    // Ya no llamamos a updateThemeSelectorUI aquí porque el HTML puede no existir.
+    // Se llamará desde el main-controller cuando sea necesario.
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
         if (localStorage.getItem('theme') === 'system') {

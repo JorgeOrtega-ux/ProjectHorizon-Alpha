@@ -88,7 +88,7 @@
                         <p>Al activar esta opción, todos los enlaces se abrirán en una nueva pestaña para no interrumpir tu navegación actual.</p>
                     </div>
                     <div class="item-actions">
-                        <div class="toggle-switch">
+                        <div class="toggle-switch" data-setting="open-links-in-new-tab">
                             <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
                         </div>
                     </div>
@@ -101,7 +101,7 @@
                         <p>Para crear atajos, es necesario usar la tecla modificadora Alt.</p>
                     </div>
                     <div class="item-actions">
-                        <div class="toggle-switch">
+                        <div class="toggle-switch" data-setting="require-modifier-for-shortcuts">
                             <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
                         </div>
                     </div>

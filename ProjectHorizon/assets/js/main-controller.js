@@ -1,8 +1,8 @@
 // assets/js/main-controller.js
 
 import { navigateToUrl, setupPopStateHandler, setInitialHistoryState } from './url-manager.js';
-import { setTheme } from './theme-manager.js';
-import { setLanguage } from './language-manager.js';
+import { setTheme, updateThemeSelectorUI } from './theme-manager.js';
+import { setLanguage, updateLanguageSelectorUI } from './language-manager.js';
 
 function getFavorites() {
     const favorites = localStorage.getItem('favoritePhotos');
@@ -38,8 +38,60 @@ export function initMainController() {
 
     const loaderHTML = '<div class="loader-container"><div class="spinner"></div></div>';
     
-    // BUG FIX: Se convierte en array para manejar múltiples listeners de scroll
     let activeScrollHandlers = [];
+
+    // --- INICIO DE LA NUEVA SECCIÓN: Lógica de Configuración ---
+    function initSettingsController() {
+        // Objeto para manejar los toggles de configuración
+        const settingsToggles = {
+            'open-links-in-new-tab': {
+                element: document.querySelector('[data-setting="open-links-in-new-tab"]'),
+                key: 'openLinksInNewTab',
+                defaultValue: false
+            },
+            'require-modifier-for-shortcuts': {
+                element: document.querySelector('[data-setting="require-modifier-for-shortcuts"]'),
+                key: 'requireModifierForShortcuts',
+                defaultValue: false
+            }
+        };
+
+        // Función para actualizar el estado visual de un toggle
+        function updateToggleUI(setting) {
+            const value = localStorage.getItem(setting.key) === 'true';
+            if (setting.element) {
+                setting.element.classList.toggle('active', value);
+            }
+        }
+
+        // Inicializar y añadir listeners a cada toggle
+        for (const id in settingsToggles) {
+            const setting = settingsToggles[id];
+            if (setting.element) {
+                // Establecer estado inicial desde localStorage o por defecto
+                if (localStorage.getItem(setting.key) === null) {
+                    localStorage.setItem(setting.key, setting.defaultValue);
+                }
+                updateToggleUI(setting);
+
+                // Añadir listener para clics
+                setting.element.addEventListener('click', () => {
+                    const currentValue = localStorage.getItem(setting.key) === 'true';
+                    localStorage.setItem(setting.key, !currentValue);
+                    updateToggleUI(setting);
+                });
+            }
+        }
+
+        // Log de estado inicial en la consola
+        console.log("Accessibility Settings Initialized:");
+        console.log(`- Theme: ${localStorage.getItem('theme') || 'system'}`);
+        console.log(`- Language: ${localStorage.getItem('language') || 'es-LA'}`);
+        console.log(`- Open links in new tab: ${localStorage.getItem(settingsToggles['open-links-in-new-tab'].key)}`);
+        console.log(`- Require modifier for shortcuts: ${localStorage.getItem(settingsToggles['require-modifier-for-shortcuts'].key)}`);
+    }
+    // --- FIN DE LA NUEVA SECCIÓN ---
+
 
     function isFavorite(photoId) {
         const favorites = getFavorites();
@@ -96,7 +148,7 @@ export function initMainController() {
 
     function displayFavoritePhotos() {
         const section = document.querySelector('[data-section="favorites"]');
-        if (!section) return; // La sección puede no estar en el DOM todavía
+        if (!section) return;
 
         const allPhotosContainer = section.querySelector('#favorites-grid-view');
         const byUserContainer = section.querySelector('#favorites-grid-view-by-user');
@@ -315,11 +367,9 @@ export function initMainController() {
     }
 
     async function promptForAccessCode(uuid, name) {
-        // La navegación y carga de la sección ahora se manejan en handleStateChange
         navigateToUrl('main', 'accessCodePrompt', { uuid: uuid });
         await handleStateChange('main', 'accessCodePrompt', { uuid: uuid });
     
-        // La lógica para poblar los campos permanece aquí, ejecutándose después de la carga
         const title = document.getElementById('access-code-title');
         const promptContainer = document.querySelector('[data-section="accessCodePrompt"]');
         const input = document.getElementById('access-code-input');
@@ -631,7 +681,6 @@ export function initMainController() {
         if (photoIndex !== -1) {
             const photo = photoList[photoIndex];
     
-            // Función para actualizar el nombre de la galería si es necesario
             const updateGalleryName = () => {
                 if (photo.gallery_name) {
                     currentGalleryNameForPhotoView = photo.gallery_name;
@@ -639,7 +688,6 @@ export function initMainController() {
                 if (photoViewUserTitle && currentGalleryNameForPhotoView) {
                     photoViewUserTitle.textContent = currentGalleryNameForPhotoView;
                 } else {
-                    // Si no tenemos nombre, lo buscamos
                     fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${uuid}`)
                         .then(res => res.json())
                         .then(gallery => {
@@ -696,6 +744,16 @@ export function initMainController() {
             const activeLink = selectContainer.querySelector(`.menu-link[data-value="${value}"]`);
             if (activeLink) {
                 activeLink.classList.add('active');
+
+                const wrapper = selectContainer.closest('.select-wrapper');
+                if (wrapper) {
+                    const trigger = wrapper.querySelector('[data-action="toggle-select"]');
+                    const triggerText = trigger.querySelector('.select-trigger-text');
+                    const optionText = activeLink.querySelector('.menu-link-text span');
+                    if (triggerText && optionText) {
+                        triggerText.textContent = optionText.textContent;
+                    }
+                }
             }
         }
     }
@@ -784,7 +842,6 @@ export function initMainController() {
             const actionTarget = event.target.closest('[data-action]');
             const selectTrigger = event.target.closest('[data-action="toggle-select"]');
             
-            // --- CERRAR MENÚS DESPLEGABLES ---
             const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
             if (moduleSurface && !moduleSurface.classList.contains('disabled')) {
                 if (!actionTarget?.matches('[data-action="toggleModuleSurface"]') && !event.target.closest('[data-module="moduleSurface"]')) {
@@ -807,21 +864,17 @@ export function initMainController() {
                 });
             }
 
-            // --- MANEJAR CLICS EN ELEMENTOS CON data-action ---
             if (actionTarget) {
                 const action = actionTarget.dataset.action;
                 
-                // Prevenir comportamiento por defecto para acciones de JS puro
                 if (action !== 'download-photo' && !actionTarget.closest('a[target="_blank"]')) {
                     const link = actionTarget.closest('.menu-link');
                     if(link && link.tagName.toLowerCase() === 'a' && !link.getAttribute('href').startsWith('#')) {
-                         // No prevenir si es un enlace externo
                     } else {
                         event.preventDefault();
                     }
                 }
                 
-                // Lógica de acciones
                 switch (action) {
                     case 'toggleModuleSurface':
                         const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
@@ -1013,7 +1066,6 @@ export function initMainController() {
 
                 }
             }
-             // --- MANEJAR APERTURA/CIERRE DE SELECTS ---
             if (selectTrigger) {
                 const targetId = selectTrigger.dataset.target;
                 const targetSelect = document.getElementById(targetId);
@@ -1041,19 +1093,24 @@ export function initMainController() {
                 }
             }
 
-            // --- MANEJAR SELECCIÓN DE OPCIONES EN MENÚS DESPLEGABLES ---
             const selectedOption = event.target.closest('.module-select .menu-link');
             if (selectedOption) {
                 const selectContainer = selectedOption.closest('.module-select');
                 const wrapper = selectContainer.closest('.select-wrapper');
                 
-                if (wrapper) { // Es un select de UI, no un menú de navegación
+                if (wrapper) { 
                     const currentTrigger = wrapper.querySelector('[data-action="toggle-select"]');
                     const triggerText = currentTrigger.querySelector('.select-trigger-text');
                     const optionText = selectedOption.querySelector('.menu-link-text span');
-                    if (triggerText && optionText) triggerText.textContent = optionText.textContent;
                     
-                    // Lógica específica para cada select
+                    if (triggerText && optionText) {
+                        triggerText.textContent = optionText.textContent;
+                    }
+                    
+                    const allLinks = selectContainer.querySelectorAll('.menu-link');
+                    allLinks.forEach(link => link.classList.remove('active'));
+                    selectedOption.classList.add('active');
+                    
                     const selectId = selectContainer.id;
                     const value = selectedOption.dataset.value;
                     
@@ -1074,7 +1131,6 @@ export function initMainController() {
                         setLanguage(value);
                     }
 
-                    // Cerrar el select
                     selectContainer.classList.add('disabled');
                     selectContainer.classList.remove('active');
                     currentTrigger.classList.remove('active-trigger');
@@ -1082,7 +1138,6 @@ export function initMainController() {
             }
 
 
-            // --- NAVEGACIÓN DESDE TARJETAS (Galerías y Fotos) ---
             if (!actionTarget) {
                 const userCardFavorite = event.target.closest('#favorites-grid-view-by-user .user-card');
                 if (userCardFavorite) {
@@ -1123,7 +1178,6 @@ export function initMainController() {
 
         });
 
-        // --- MANEJO DE BÚSQUEDA CON DEBOUNCE ---
         document.addEventListener('input', (event) => {
             const input = event.target;
             if (input.tagName.toLowerCase() === 'input' && input.closest('.search-input-wrapper')) {
@@ -1149,58 +1203,45 @@ export function initMainController() {
             }
         });
     }
-
-    /**
-     * BUG FIX: La función ahora maneja dos listeners de scroll independientes.
-     * 1. Uno para el contenedor principal (.general-content-scrolleable), que controla la sombra del encabezado superior.
-     * 2. Otro para el bloque de contenido de la sección (.section-content-block), que controla la sombra de su propio encabezado.
-     * Esto asegura que la sombra correcta aparezca según qué parte de la página se esté desplazando.
-     */
+    
     function setupScrollShadows() {
-        // 1. Limpia los listeners de scroll anteriores para evitar duplicados
         activeScrollHandlers.forEach(({ element, listener }) => {
             element.removeEventListener('scroll', listener);
         });
         activeScrollHandlers = [];
 
-        // 2. Maneja la sombra del encabezado principal (general-content-top)
         const mainScrolleable = document.querySelector('.general-content-scrolleable');
         const mainHeader = document.querySelector('.general-content-top');
         
         if (mainScrolleable && mainHeader) {
             const mainListener = () => {
-                // Esta sombra depende del scroll del contenedor principal
                 mainHeader.classList.toggle('shadow', mainScrolleable.scrollTop > 0);
             };
             mainScrolleable.addEventListener('scroll', mainListener);
             activeScrollHandlers.push({ element: mainScrolleable, listener: mainListener });
-            mainListener(); // Ejecuta una vez al cargar
+            mainListener();
         }
 
-        // 3. Maneja la sombra del encabezado de la sección (section-content-header)
         const sectionScrolleable = document.querySelector('.section-content-block.overflow-y');
         const sectionHeader = document.querySelector('.section-content-header');
 
         if (sectionScrolleable && sectionHeader) {
             const sectionListener = () => {
-                // Esta sombra depende del scroll del bloque de contenido interno
                 sectionHeader.classList.toggle('shadow', sectionScrolleable.scrollTop > 0);
             };
             sectionScrolleable.addEventListener('scroll', sectionListener);
             activeScrollHandlers.push({ element: sectionScrolleable, listener: sectionListener });
-            sectionListener(); // Ejecuta una vez al cargar
+            sectionListener();
         }
     }
 
 
     function updateHeaderAndMenuStates(view, section) {
-        // Actualizar menú lateral principal
         document.querySelectorAll('[data-menu]').forEach(menu => {
             menu.classList.toggle('active', menu.dataset.menu === view);
             menu.classList.toggle('disabled', menu.dataset.menu !== view);
         });
     
-        // Actualizar el link activo dentro del menú lateral
         document.querySelectorAll('[data-module="moduleSurface"] .menu-link').forEach(link => {
             const linkAction = link.dataset.action || '';
             let linkSection = '';
@@ -1211,7 +1252,6 @@ export function initMainController() {
             link.classList.toggle('active', linkSection === section);
         });
 
-        // Actualizar el select de vista (Home/Favoritos)
         const viewSelects = ['view-select', 'view-select-fav'];
         viewSelects.forEach(selectId => {
             const selectContainer = document.getElementById(selectId);
@@ -1221,13 +1261,11 @@ export function initMainController() {
                     link.classList.remove('active');
                 });
                 
-                // Activar la opción correcta ('home' o 'favorites')
                 let activeValue = section === 'favorites' ? 'favorites' : 'home';
                 const activeLink = selectContainer.querySelector(`.menu-link[data-value="${activeValue}"]`);
                 if (activeLink) {
                     activeLink.classList.add('active');
                     
-                    // Actualizar el texto del trigger
                     const wrapper = selectContainer.closest('.select-wrapper');
                     if(wrapper) {
                         const triggerText = wrapper.querySelector('.select-trigger-text');
@@ -1242,18 +1280,15 @@ export function initMainController() {
     }
 
     async function handleStateChange(view, section, data) {
-        // 1. Mostrar el loader y limpiar el contenido anterior
         const contentContainer = document.querySelector('.general-content-scrolleable');
         if (contentContainer) {
             contentContainer.innerHTML = loaderHTML;
         }
 
-        // 2. Actualizar estado visual de los menús
         updateHeaderAndMenuStates(view, section);
         currentAppView = view;
         currentAppSection = section;
 
-        // 3. Obtener y renderizar el nuevo contenido HTML
         try {
             const response = await fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=section&view=${view}&section=${section}`);
             if (!response.ok) throw new Error('Network response was not ok');
@@ -1267,10 +1302,9 @@ export function initMainController() {
                 const errorHtml = await fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=section&view=main&section=404`).then(res => res.text());
                 contentContainer.innerHTML = errorHtml;
             }
-            return; // Detener ejecución si la sección no se pudo cargar
+            return;
         }
         
-        // 4. Ejecutar la lógica específica de la sección DESPUÉS de que el DOM esté listo
         if (section !== 'photoView') {
             lastVisitedView = section;
             lastVisitedData = data;
@@ -1289,6 +1323,14 @@ export function initMainController() {
             case 'trends':
                 fetchAndDisplayTrends();
                 break;
+            // --- INICIO DE LA MODIFICACIÓN ---
+            case 'accessibility':
+                // Ahora actualizamos la UI de los selectores y los toggles DESPUÉS de cargar el HTML
+                updateThemeSelectorUI(localStorage.getItem('theme') || 'system');
+                updateLanguageSelectorUI(localStorage.getItem('language') || 'es-LA');
+                initSettingsController(); // Inicializa los toggles y logs
+                break;
+            // --- FIN DE LA MODIFICACIÓN ---
             case 'galleryPhotos':
                 if (data && data.uuid) {
                     if (data.galleryName) {
@@ -1314,7 +1356,7 @@ export function initMainController() {
                         photoList = getFavorites().filter(p => p.gallery_uuid === data.uuid);
                         renderPhotoView(data.uuid, data.photoId, photoList);
                     } else if (lastVisitedView === 'favorites') {
-                        photoList = currentFavoritesList; // Usamos la lista ya ordenada/filtrada
+                        photoList = currentFavoritesList;
                         renderPhotoView(data.uuid, data.photoId, photoList);
                     } else if (lastVisitedView === 'trends') {
                         photoList = currentTrendingPhotosList;
@@ -1373,9 +1415,7 @@ export function initMainController() {
                 break;
         }
 
-        // 5. Configurar sombras y otros efectos dependientes del DOM
         setupScrollShadows();
-        // Se llama de nuevo para asegurar que los selectores que acabamos de cargar se actualicen
         updateHeaderAndMenuStates(view, section);
     }
     
@@ -1388,7 +1428,6 @@ export function initMainController() {
 
     const path = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1);
     
-    // Simular una llamada al router de PHP para obtener la vista y sección inicial
     const routes = {
         '': { view: 'main', section: 'home' },
         'trends': { view: 'main', section: 'trends' },
