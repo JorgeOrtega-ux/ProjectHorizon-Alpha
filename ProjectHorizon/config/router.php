@@ -6,6 +6,7 @@ class Router {
         'favorites' => ['view' => 'main', 'section' => 'favorites'],
         'settings/accessibility' => ['view' => 'settings', 'section' => 'accessibility'],
         'settings/history-privacy' => ['view' => 'settings', 'section' => 'historyPrivacy'],
+        'settings/history' => ['view' => 'settings', 'section' => 'history'],
         'help/privacy-policy' => ['view' => 'help', 'section' => 'privacyPolicy'],
         'help/terms-conditions' => ['view' => 'help', 'section' => 'termsConditions'],
         'help/cookie-policy' => ['view' => 'help', 'section' => 'cookiePolicy'],

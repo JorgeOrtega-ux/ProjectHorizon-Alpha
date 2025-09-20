@@ -4,6 +4,7 @@ const urlMap = {
     'main-trends': 'trends',
     'settings-accessibility': 'settings/accessibility',
     'settings-historyPrivacy': 'settings/history-privacy',
+    'settings-history': 'settings/history',
     'help-privacyPolicy': 'help/privacy-policy',
     'help-termsConditions': 'help/terms-conditions',
     'help-cookiePolicy': 'help/cookie-policy',
