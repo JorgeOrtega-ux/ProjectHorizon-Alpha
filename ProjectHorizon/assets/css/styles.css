@@ -217,7 +217,7 @@ body {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    gap: 16px;
+    gap: 8px;
 }
 
 .content-header-left {
@@ -1104,4 +1104,28 @@ body {
     color: #1f1f1f;
     border: 1px solid #00000020;
     border-radius: 8px;
+}.show-on-mobile {
+    display: none;
+}
+.show-on-mobile {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .content-header-wrapper {
+        flex-direction: row; /* Mantenemos la dirección de fila */
+        align-items: center;
+    }
+
+    .content-header-right {
+        width: auto; /* Ajustamos el ancho */
+    }
+
+    .hide-on-mobile {
+        display: none;
+    }
+
+    .show-on-mobile {
+        display: flex;
+    }
 }

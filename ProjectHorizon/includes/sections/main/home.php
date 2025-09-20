@@ -12,7 +12,7 @@
                 </div>
             </div>
             <div class="content-header-right">
-                <div class="header-item">
+                <div class="header-item hide-on-mobile">
                     <div class="select-wrapper body-title">
                         <div class="custom-select-trigger" data-action="toggle-select" data-target="view-select">
                             <div class="select-trigger-icon">
@@ -39,7 +39,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="header-item" id="relevance-sorter">
+                <div class="header-item hide-on-mobile" id="relevance-sorter">
                     <div class="select-wrapper body-title">
                         <div class="custom-select-trigger" data-action="toggle-select" data-target="relevance-select">
                             <div class="select-trigger-icon">
@@ -83,13 +83,33 @@
                         <span class="material-symbols-rounded">view_list</span>
                     </div>
                 </div>
+                <div class="header-item show-on-mobile">
+                    <div class="header-button" data-action="toggle-select" data-target="more-options-menu">
+                        <span class="material-symbols-rounded">more_vert</span>
+                    </div>
+                    <div class="module-content module-select disabled" id="more-options-menu">
+                        <div class="menu-content">
+                            <div class="menu-list">
+                                <div class="menu-link" data-action="toggle-select" data-target="relevance-select-mobile">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">filter_list</span></div>
+                                    <div class="menu-link-text"><span>Filtros</span></div>
+                                </div>
+                                <div class="menu-link" data-value="favorites">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">favorite</span></div>
+                                    <div class="menu-link-text"><span>Mostrar favoritos</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="module-content module-select disabled" id="relevance-select-mobile">
+                        </div>
+                </div>
             </div>
         </div>
     </div>
     <div class="section-content-block overflow-y">
         <div class="status-message-container disabled"></div>
         <div class="card-grid active" id="grid-view"></div>
-
         <div class="table-view-container body-title disabled" id="table-view">
             <table class="user-table">
                 <thead>

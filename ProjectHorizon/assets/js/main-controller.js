@@ -40,9 +40,8 @@ export function initMainController() {
 
     let activeScrollHandlers = [];
 
-    // --- INICIO DE LA NUEVA SECCIÓN: Lógica de Configuración ---
+    // --- Lógica de Configuración ---
     function initSettingsController() {
-        // Objeto para manejar los toggles de configuración
         const settingsToggles = {
             'open-links-in-new-tab': {
                 element: document.querySelector('[data-setting="open-links-in-new-tab"]'),
@@ -56,7 +55,6 @@ export function initMainController() {
             }
         };
 
-        // Función para actualizar el estado visual de un toggle
         function updateToggleUI(setting) {
             const value = localStorage.getItem(setting.key) === 'true';
             if (setting.element) {
@@ -64,17 +62,14 @@ export function initMainController() {
             }
         }
 
-        // Inicializar y añadir listeners a cada toggle
         for (const id in settingsToggles) {
             const setting = settingsToggles[id];
             if (setting.element) {
-                // Establecer estado inicial desde localStorage o por defecto
                 if (localStorage.getItem(setting.key) === null) {
                     localStorage.setItem(setting.key, setting.defaultValue);
                 }
                 updateToggleUI(setting);
 
-                // Añadir listener para clics
                 setting.element.addEventListener('click', () => {
                     const currentValue = localStorage.getItem(setting.key) === 'true';
                     localStorage.setItem(setting.key, !currentValue);
@@ -83,14 +78,12 @@ export function initMainController() {
             }
         }
 
-        // Log de estado inicial en la consola
         console.log("Accessibility Settings Initialized:");
         console.log(`- Theme: ${localStorage.getItem('theme') || 'system'}`);
         console.log(`- Language: ${localStorage.getItem('language') || 'es-LA'}`);
         console.log(`- Open links in new tab: ${localStorage.getItem(settingsToggles['open-links-in-new-tab'].key)}`);
         console.log(`- Require modifier for shortcuts: ${localStorage.getItem(settingsToggles['require-modifier-for-shortcuts'].key)}`);
     }
-    // --- FIN DE LA NUEVA SECCIÓN ---
 
 
     function isFavorite(photoId) {
@@ -735,29 +728,53 @@ export function initMainController() {
         });
     }
 
-    function updateSelectActiveState(selectId, value) {
-        const selectContainer = document.getElementById(selectId);
-        if (selectContainer) {
-            const allLinks = selectContainer.querySelectorAll('.menu-link');
-            allLinks.forEach(link => {
-                link.classList.remove('active');
-            });
-            const activeLink = selectContainer.querySelector(`.menu-link[data-value="${value}"]`);
-            if (activeLink) {
-                activeLink.classList.add('active');
-
-                const wrapper = selectContainer.closest('.select-wrapper');
-                if (wrapper) {
-                    const trigger = wrapper.querySelector('[data-action="toggle-select"]');
-                    const triggerText = trigger.querySelector('.select-trigger-text');
-                    const optionText = activeLink.querySelector('.menu-link-text span');
-                    if (triggerText && optionText) {
-                        triggerText.textContent = optionText.textContent;
-                    }
-                }
+    // *** INICIO DE LA NUEVA FUNCIÓN ***
+    function updateMoreOptionsFilterText(filterText, menuId) {
+        const moreOptionsMenu = document.querySelector(menuId);
+        if (moreOptionsMenu) {
+            const filterLink = moreOptionsMenu.querySelector('[data-action="toggle-select"] .menu-link-text span');
+            if (filterLink) {
+                filterLink.textContent = `Filtros (${filterText})`;
             }
         }
     }
+    // *** FIN DE LA NUEVA FUNCIÓN ***
+
+    function updateSelectActiveState(selectId, value) {
+        let activeText = '';
+        const selectContainers = document.querySelectorAll(`#${selectId}, #${selectId}-mobile`);
+
+        selectContainers.forEach(selectContainer => {
+            if (selectContainer) {
+                const allLinks = selectContainer.querySelectorAll('.menu-link');
+                allLinks.forEach(link => {
+                    link.classList.remove('active');
+                });
+                const activeLink = selectContainer.querySelector(`.menu-link[data-value="${value}"]`);
+                if (activeLink) {
+                    activeLink.classList.add('active');
+                    activeText = activeLink.querySelector('.menu-link-text span').textContent;
+
+                    const wrapper = selectContainer.closest('.select-wrapper');
+                    if (wrapper) {
+                        const trigger = wrapper.querySelector('[data-action="toggle-select"]');
+                        const triggerText = trigger.querySelector('.select-trigger-text');
+                        if (triggerText) {
+                            triggerText.textContent = activeText;
+                        }
+                    }
+                }
+            }
+        });
+
+        // Llamar a la nueva función para actualizar el texto del menú móvil
+        if (selectId.includes('relevance')) {
+            updateMoreOptionsFilterText(activeText, '#more-options-menu');
+        } else if (selectId.includes('favorites-sort')) {
+            updateMoreOptionsFilterText(activeText, '#more-options-menu-fav');
+        }
+    }
+
 
     function applyViewPreference() {
         const savedView = localStorage.getItem('galleryView') || 'grid';
@@ -850,13 +867,14 @@ export function initMainController() {
                 }
             }
 
-            if (!actionTarget || !actionTarget.dataset.action.includes('toggle')) {
+            if (!selectTrigger) {
                 document.querySelectorAll('.module-select:not(.photo-context-menu).active').forEach(menu => {
                     menu.classList.remove('active');
                     menu.classList.add('disabled');
                 });
                 document.querySelectorAll('.active-trigger').forEach(trigger => trigger.classList.remove('active-trigger'));
             }
+
             if (!event.target.closest('.card-actions-container')) {
                 document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
                     menu.classList.remove('active');
@@ -1067,12 +1085,15 @@ export function initMainController() {
 
                 }
             }
+
             if (selectTrigger) {
                 const targetId = selectTrigger.dataset.target;
                 const targetSelect = document.getElementById(targetId);
                 const wasActive = selectTrigger.classList.contains('active-trigger');
 
-                document.querySelectorAll('[data-action="toggle-select"]').forEach(t => t.classList.remove('active-trigger'));
+                document.querySelectorAll('.active-trigger').forEach(t => {
+                    if (t !== selectTrigger) t.classList.remove('active-trigger');
+                });
                 document.querySelectorAll('.module-select').forEach(s => {
                     if (s.id !== targetId) {
                         s.classList.add('disabled');
@@ -1080,62 +1101,54 @@ export function initMainController() {
                     }
                 });
 
-                if (!wasActive) {
-                    selectTrigger.classList.add('active-trigger');
-                    if (targetSelect) {
-                        targetSelect.classList.remove('disabled');
-                        targetSelect.classList.add('active');
-                    }
-                } else {
-                    if (targetSelect) {
-                        targetSelect.classList.add('disabled');
-                        targetSelect.classList.remove('active');
-                    }
+                selectTrigger.classList.toggle('active-trigger');
+                if (targetSelect) {
+                    targetSelect.classList.toggle('disabled');
+                    targetSelect.classList.toggle('active');
                 }
             }
-
+            
             const selectedOption = event.target.closest('.module-select .menu-link');
             if (selectedOption) {
+                const value = selectedOption.dataset.value;
+                if (!value) return;
+
                 const selectContainer = selectedOption.closest('.module-select');
-                const wrapper = selectContainer.closest('.select-wrapper');
+                const selectId = selectContainer.id;
 
-                if (wrapper) {
-                    const currentTrigger = wrapper.querySelector('[data-action="toggle-select"]');
-                    const triggerText = currentTrigger.querySelector('.select-trigger-text');
-                    const optionText = selectedOption.querySelector('.menu-link-text span');
-
-                    if (triggerText && optionText) {
-                        triggerText.textContent = optionText.textContent;
+                if (value === 'home' || value === 'favorites') {
+                    if (currentAppView !== 'main' || currentAppSection !== value) {
+                        navigateToUrl('main', value);
+                        handleStateChange('main', value);
                     }
-
-                    const allLinks = selectContainer.querySelectorAll('.menu-link');
-                    allLinks.forEach(link => link.classList.remove('active'));
-                    selectedOption.classList.add('active');
-
-                    const selectId = selectContainer.id;
-                    const value = selectedOption.dataset.value;
-
-                    if (selectId === 'relevance-select' && value !== currentSortBy) {
+                }
+                else if (selectId.includes('relevance-select')) {
+                    if (value !== currentSortBy) {
                         currentSortBy = value;
                         const homeSearch = document.querySelector('.search-input-text input');
                         fetchAndDisplayGalleries(currentSortBy, homeSearch ? homeSearch.value.trim() : '');
-                    } else if (selectId === 'favorites-sort-select' && value !== currentFavoritesSortBy) {
+                        updateSelectActiveState('relevance-select', currentSortBy);
+                    }
+                }
+                else if (selectId.includes('favorites-sort-select')) {
+                    if (value !== currentFavoritesSortBy) {
                         currentFavoritesSortBy = value;
                         displayFavoritePhotos();
-                    } else if (selectId === 'view-select' || selectId === 'view-select-fav') {
-                        if (currentAppView === 'main' && currentAppSection === value) return;
-                        navigateToUrl('main', value);
-                        handleStateChange('main', value);
-                    } else if (selectId === 'theme-select') {
-                        setTheme(value);
-                    } else if (selectId === 'language-select') {
-                        setLanguage(value);
+                        updateSelectActiveState('favorites-sort-select', currentFavoritesSortBy);
                     }
-
-                    selectContainer.classList.add('disabled');
-                    selectContainer.classList.remove('active');
-                    currentTrigger.classList.remove('active-trigger');
                 }
+                else if (selectId === 'theme-select') {
+                    setTheme(value);
+                }
+                else if (selectId === 'language-select') {
+                    setLanguage(value);
+                }
+
+                document.querySelectorAll('.module-select').forEach(menu => {
+                    menu.classList.add('disabled');
+                    menu.classList.remove('active');
+                });
+                document.querySelectorAll('.active-trigger').forEach(trigger => trigger.classList.remove('active-trigger'));
             }
 
 
@@ -1280,6 +1293,20 @@ export function initMainController() {
         });
     }
 
+    function setupMoreOptionsMenu() {
+        const relevanceSelectMobile = document.getElementById('relevance-select-mobile');
+        const relevanceSelect = document.getElementById('relevance-select');
+        const favoritesSortSelectMobile = document.getElementById('favorites-sort-select-mobile');
+        const favoritesSortSelect = document.getElementById('favorites-sort-select');
+
+        if (relevanceSelectMobile && relevanceSelect) {
+            relevanceSelectMobile.innerHTML = relevanceSelect.innerHTML;
+        }
+        if (favoritesSortSelectMobile && favoritesSortSelect) {
+            favoritesSortSelectMobile.innerHTML = favoritesSortSelect.innerHTML;
+        }
+    }
+
     async function handleStateChange(view, section, data) {
         const contentContainer = document.querySelector('.general-content-scrolleable');
         if (contentContainer) {
@@ -1314,24 +1341,23 @@ export function initMainController() {
         switch (section) {
             case 'home':
                 applyViewPreference();
+                setupMoreOptionsMenu();
                 updateSelectActiveState('relevance-select', currentSortBy);
                 fetchAndDisplayGalleries(currentSortBy);
                 break;
             case 'favorites':
+                setupMoreOptionsMenu();
                 updateSelectActiveState('favorites-sort-select', currentFavoritesSortBy);
                 displayFavoritePhotos();
                 break;
             case 'trends':
                 fetchAndDisplayTrends();
                 break;
-            // --- INICIO DE LA MODIFICACIÓN ---
             case 'accessibility':
-                // Ahora actualizamos la UI de los selectores y los toggles DESPUÉS de cargar el HTML
                 updateThemeSelectorUI(localStorage.getItem('theme') || 'system');
                 updateLanguageSelectorUI(localStorage.getItem('language') || 'es-LA');
-                initSettingsController(); // Inicializa los toggles y logs
+                initSettingsController();
                 break;
-            // --- FIN DE LA MODIFICACIÓN ---
             case 'galleryPhotos':
                 if (data && data.uuid) {
                     if (data.galleryName) {
@@ -1385,7 +1411,6 @@ export function initMainController() {
                     }
 
                     const titleElement = document.getElementById('access-code-title');
-                    // Fetch gallery details to get the name
                     fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${data.uuid}`)
                         .then(res => res.json())
                         .then(gallery => {
@@ -1394,7 +1419,6 @@ export function initMainController() {
                             }
                         });
 
-                    // --- INICIO DE LA NUEVA LÓGICA DE FORMATEO ---
                     const codeInput = document.getElementById('access-code-input');
                     if (codeInput) {
                         codeInput.addEventListener('input', (e) => {
@@ -1407,7 +1431,6 @@ export function initMainController() {
                             e.target.value = value;
                         });
                     }
-                    // --- FIN DE LA NUEVA LÓGICA DE FORMATEO ---
                 }
                 break;
             case 'userSpecificFavorites':

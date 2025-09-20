@@ -12,7 +12,7 @@
                 </div>
             </div>
             <div class="content-header-right" id="favorites-controls-wrapper">
-                <div class="header-item">
+                <div class="header-item hide-on-mobile">
                     <div class="select-wrapper body-title">
                         <div class="custom-select-trigger" data-action="toggle-select" data-target="view-select-fav">
                             <div class="select-trigger-icon">
@@ -39,7 +39,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="header-item" id="favorites-sorter">
+                <div class="header-item hide-on-mobile" id="favorites-sorter">
                     <div class="select-wrapper body-title">
                         <div class="custom-select-trigger" data-action="toggle-select" data-target="favorites-sort-select">
                             <div class="select-trigger-icon">
@@ -69,6 +69,27 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="header-item show-on-mobile">
+                    <div class="header-button" data-action="toggle-select" data-target="more-options-menu-fav">
+                        <span class="material-symbols-rounded">more_vert</span>
+                    </div>
+                    <div class="module-content module-select disabled" id="more-options-menu-fav">
+                        <div class="menu-content">
+                            <div class="menu-list">
+                                <div class="menu-link" data-action="toggle-select" data-target="favorites-sort-select-mobile">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">filter_list</span></div>
+                                    <div class="menu-link-text"><span>Filtros</span></div>
+                                </div>
+                                <div class="menu-link" data-value="home">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">home</span></div>
+                                    <div class="menu-link-text"><span>Página principal</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="module-content module-select disabled" id="favorites-sort-select-mobile">
+                        </div>
                 </div>
             </div>
         </div>
