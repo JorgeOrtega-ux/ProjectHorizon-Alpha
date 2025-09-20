@@ -1,6 +1,4 @@
-<?php
-require_once 'config/router.php';
-?>
+<?php require_once 'config/router.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -9,7 +7,6 @@ require_once 'config/router.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Horizon</title>
     <script>
-        // Define una variable global para la ruta base, accesible desde los módulos JS.
         window.BASE_PATH = "<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'); ?>";
     </script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
@@ -25,14 +22,7 @@ require_once 'config/router.php';
                 </div>
                 <div class="general-content-bottom">
                     <?php include 'includes/modules/module-surface.php'; ?>
-                    
-                    <div class="general-content-scrolleable overflow-y">
-                        <?php
-                            // Ya no se incluye todo aquí.
-                            // JavaScript se encargará de cargar la sección inicial.
-                        ?>
-                    </div>
-
+                    <div class="general-content-scrolleable overflow-y"></div>
                 </div>
             </div>
         </div>

@@ -4,7 +4,7 @@
         <p>Para ver las fotos de este usuario, por favor, introduce el código de acceso.</p>
         <div class="access-code-form">
             <input type="text" id="access-code-input" placeholder="XXXX-XXXX" maxlength="9">
-            <button id="access-code-submit" class="load-more-btn">Acceder</button>
+            <button id="access-code-submit" class="load-more-btn" data-action="access-code-submit">Acceder</button>
         </div>
         <p id="access-code-error" class="error-message"></p>
         <div class="header-button" data-action="returnToHome" style="margin-top: 20px;">
