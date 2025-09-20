@@ -916,6 +916,7 @@ export function initMainController() {
                         break;
                     case 'toggleSectionHome':
                     case 'toggleSectionTrends':
+                    case 'toggleSectionFavorites':
                     case 'toggleSectionAccessibility':
                     case 'toggleSectionHistoryPrivacy':
                     case 'toggleSectionPrivacyPolicy':
@@ -1116,13 +1117,7 @@ export function initMainController() {
                 const selectContainer = selectedOption.closest('.module-select');
                 const selectId = selectContainer.id;
 
-                if (value === 'home' || value === 'favorites') {
-                    if (currentAppView !== 'main' || currentAppSection !== value) {
-                        navigateToUrl('main', value);
-                        handleStateChange('main', value);
-                    }
-                }
-                else if (selectId.includes('relevance-select')) {
+                if (selectId.includes('relevance-select')) {
                     if (value !== currentSortBy) {
                         currentSortBy = value;
                         const homeSearch = document.querySelector('.search-input-text input');
@@ -1264,32 +1259,6 @@ export function initMainController() {
                 linkSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
             }
             link.classList.toggle('active', linkSection === section);
-        });
-
-        const viewSelects = ['view-select', 'view-select-fav'];
-        viewSelects.forEach(selectId => {
-            const selectContainer = document.getElementById(selectId);
-            if (selectContainer) {
-                const allLinks = selectContainer.querySelectorAll('.menu-link');
-                allLinks.forEach(link => {
-                    link.classList.remove('active');
-                });
-
-                let activeValue = section === 'favorites' ? 'favorites' : 'home';
-                const activeLink = selectContainer.querySelector(`.menu-link[data-value="${activeValue}"]`);
-                if (activeLink) {
-                    activeLink.classList.add('active');
-
-                    const wrapper = selectContainer.closest('.select-wrapper');
-                    if (wrapper) {
-                        const triggerText = wrapper.querySelector('.select-trigger-text');
-                        const optionText = activeLink.querySelector('.menu-link-text span');
-                        if (triggerText && optionText) {
-                            triggerText.textContent = optionText.textContent;
-                        }
-                    }
-                }
-            }
         });
     }
 

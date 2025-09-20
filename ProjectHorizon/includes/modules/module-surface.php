@@ -9,6 +9,10 @@
                 <div class="menu-link-icon"><span class="material-symbols-rounded">trending_up</span></div>
                 <div class="menu-link-text"><span>Explorar tendencias</span></div>
             </div>
+            <div class="menu-link <?php echo ($CURRENT_SECTION === 'favorites') ? 'active' : ''; ?>" data-action="toggleSectionFavorites">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">favorite</span></div>
+                <div class="menu-link-text"><span>Mis favoritos</span></div>
+            </div>
         </div>
     </div>
 

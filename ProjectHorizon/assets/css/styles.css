@@ -501,8 +501,14 @@ body {
     position: absolute;
     top: calc(100% + 5px);
     left: 0;
-    width: 100%;
+    width: 240px; /* Ancho fijo para los selectores */
     z-index: 10;
+}
+
+/* Ajuste para los menús de filtros en móvil */
+#relevance-select-mobile, #favorites-sort-select-mobile {
+    left: auto;
+    right: 0;
 }
 
 .module-select .menu-content {
