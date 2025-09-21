@@ -1173,4 +1173,19 @@ body {
 .content-section-stacked .item-actions {
     width: 100%;
     justify-content: flex-end;
+}.history-paused-alert {
+    width: 100%;
+    padding: 12px 16px;
+    background-color: #f5f5fa;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6c757d;
+}
+
+.history-paused-alert.disabled {
+    display: none;
 }

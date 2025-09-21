@@ -14,7 +14,6 @@ function getHistory() {
     const defaultHistory = { profiles: [], photos: [], searches: [] };
     if (historyString) {
         const savedHistory = JSON.parse(historyString);
-        // Merge saved history with default to ensure all keys exist
         return { ...defaultHistory, ...savedHistory };
     }
     return defaultHistory;
@@ -27,7 +26,6 @@ function addToHistory(type, data) {
     let history = getHistory();
     const now = Date.now();
 
-    // Evitar duplicados recientes
     const existingIndex = history[type].findIndex(item => item.id === data.id);
     if (existingIndex > -1) {
         history[type].splice(existingIndex, 1);
@@ -35,7 +33,6 @@ function addToHistory(type, data) {
 
     history[type].unshift({ ...data, visited_at: now });
 
-    // Limitar el historial a un número razonable de entradas
     const MAX_HISTORY_ITEMS = 50;
     if (history[type].length > MAX_HISTORY_ITEMS) {
         history[type] = history[type].slice(0, MAX_HISTORY_ITEMS);
@@ -51,7 +48,6 @@ function addSearchToHistory(term, section) {
     let history = getHistory();
     const now = Date.now();
 
-    // Evitar duplicados exactos y recientes
     const existingIndex = history.searches.findIndex(item => item.term.toLowerCase() === term.toLowerCase() && item.section === section);
     if (existingIndex > -1) {
         history.searches.splice(existingIndex, 1);
@@ -102,7 +98,6 @@ export function initMainController() {
 
     let activeScrollHandlers = [];
 
-    // --- Lógica de Configuración ---
     function initSettingsController() {
         const settingsToggles = {
             'open-links-in-new-tab': {
@@ -190,6 +185,9 @@ export function initMainController() {
                 if (confirm('¿Estás seguro de que quieres borrar todo tu historial? Esta acción no se puede deshacer.')) {
                     localStorage.removeItem('viewHistory');
                     alert('Historial borrado con éxito.');
+                    if(currentAppSection === 'history') {
+                        displayHistory();
+                    }
                 }
             });
         }
@@ -858,7 +856,6 @@ export function initMainController() {
         });
     }
 
-    // *** INICIO DE LA NUEVA FUNCIÓN ***
     function updateMoreOptionsFilterText(filterText, menuId) {
         const moreOptionsMenu = document.querySelector(menuId);
         if (moreOptionsMenu) {
@@ -868,7 +865,6 @@ export function initMainController() {
             }
         }
     }
-    // *** FIN DE LA NUEVA FUNCIÓN ***
 
     function updateSelectActiveState(selectId, value) {
         let activeText = '';
@@ -897,7 +893,6 @@ export function initMainController() {
             }
         });
 
-        // Llamar a la nueva función para actualizar el texto del menú móvil
         if (selectId.includes('relevance')) {
             updateMoreOptionsFilterText(activeText, '#more-options-menu');
         } else if (selectId.includes('favorites-sort')) {
@@ -1268,13 +1263,13 @@ export function initMainController() {
                 }
                 else if (selectId === 'language-select') {
                     setLanguage(value);
-                } else if (selectId === 'history-select') {
+                } else if (selectId.includes('history-select')) {
                     document.querySelectorAll('[data-history-view]').forEach(view => {
                         view.style.display = view.dataset.historyView === value ? '' : 'none';
                     });
                     updateSelectActiveState('history-select', value);
+                    displayHistory();
                 }
-
 
                 document.querySelectorAll('.module-select').forEach(menu => {
                     menu.classList.add('disabled');
@@ -1282,7 +1277,6 @@ export function initMainController() {
                 });
                 document.querySelectorAll('.active-trigger').forEach(trigger => trigger.classList.remove('active-trigger'));
             }
-
 
             if (!actionTarget) {
                 const userCardFavorite = event.target.closest('#favorites-grid-view-by-user .user-card');
@@ -1327,9 +1321,8 @@ export function initMainController() {
         document.addEventListener('keydown', function (event) {
             const input = event.target;
 
-            // --- Lógica de búsqueda con "Enter" ---
             if (event.key === 'Enter' && input.tagName.toLowerCase() === 'input' && input.closest('.search-input-wrapper')) {
-                event.preventDefault(); // Evita que se envíe un formulario, si lo hubiera
+                event.preventDefault();
                 
                 const searchTerm = input.value.trim();
                 const section = input.closest('.section-content')?.dataset.section;
@@ -1343,7 +1336,6 @@ export function initMainController() {
                 }
             }
 
-            // --- Lógica para cerrar el menú con "Escape" ---
             const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
             if (event.key === 'Escape' && moduleSurface && !moduleSurface.classList.contains('disabled')) {
                 moduleSurface.classList.add('disabled');
@@ -1414,122 +1406,138 @@ export function initMainController() {
         }
     }
 
+    // *** FUNCIÓN displayHistory FINAL Y CORREGIDA ***
     function displayHistory() {
         const history = getHistory();
-        const historyContainer = document.getElementById('history-container');
-        const profilesGrid = document.getElementById('history-profiles-grid');
-        const photosGrid = document.getElementById('history-photos-grid');
-        const searchesList = document.getElementById('history-searches-list');
-        const statusContainer = document.querySelector('[data-section="history"] .status-message-container');
-    
-        if (!historyContainer || !profilesGrid || !photosGrid || !searchesList || !statusContainer) return;
-    
+        const mainContainer = document.querySelector('[data-section="history"]');
+        if (!mainContainer) return;
+
+        const historyContainer = mainContainer.querySelector('#history-container');
+        const profilesGrid = mainContainer.querySelector('#history-profiles-grid');
+        const photosGrid = mainContainer.querySelector('#history-photos-grid');
+        const searchesList = mainContainer.querySelector('#history-searches-list');
+        const statusContainer = mainContainer.querySelector('.status-message-container');
+        const pausedAlert = mainContainer.querySelector('.history-paused-alert');
+        const historySelect = mainContainer.querySelector('#history-select');
+        
+        const currentView = historySelect ? (historySelect.querySelector('.menu-link.active')?.dataset.value || 'views') : 'views';
+        const isViewHistoryPaused = localStorage.getItem('enable-view-history') === 'false';
+        const isSearchHistoryPaused = localStorage.getItem('enable-search-history') === 'false';
+
+        // Resetear estado visual
+        historyContainer.style.display = 'none';
+        statusContainer.classList.add('disabled');
+        pausedAlert.classList.add('disabled');
         profilesGrid.innerHTML = '';
         photosGrid.innerHTML = '';
         searchesList.innerHTML = '';
-    
-        if (history.profiles.length === 0 && history.photos.length === 0 && history.searches.length === 0) {
-            statusContainer.classList.remove('disabled');
-            historyContainer.classList.add('disabled');
-            statusContainer.innerHTML = '<div><h2>Tu historial está vacío</h2><p>Los perfiles, fotos y búsquedas que realices aparecerán aquí.</p></div>';
-            return;
-        }
-    
-        statusContainer.classList.add('disabled');
-        historyContainer.classList.remove('disabled');
-    
-        // Display Profiles
-        if (history.profiles.length > 0) {
-            history.profiles.forEach(profile => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.dataset.uuid = profile.id; 
-                card.dataset.name = profile.name;
-                card.dataset.privacy = profile.privacy;
-    
-                if (profile.background_photo_url) {
-                    const background = document.createElement('div');
-                    background.className = 'card-background';
-                    background.style.backgroundImage = `url('${profile.background_photo_url}')`;
-                    card.appendChild(background);
-                }
-    
-                const overlay = document.createElement('div');
-                overlay.className = 'card-content-overlay';
-    
-                const icon = document.createElement('div');
-                icon.className = 'card-icon';
-                if (profile.profile_picture_url) {
-                    icon.style.backgroundImage = `url('${profile.profile_picture_url}')`;
-                }
-                overlay.appendChild(icon);
-    
-                const textContainer = document.createElement('div');
-                textContainer.className = 'card-text';
-                textContainer.innerHTML = `<span>${profile.name}</span><span style="font-size: 0.8rem; display: block;">Visto: ${new Date(profile.visited_at).toLocaleString()}</span>`;
-                overlay.appendChild(textContainer);
-    
-                card.appendChild(overlay);
-                profilesGrid.appendChild(card);
-            });
-        } else {
-            profilesGrid.innerHTML = '<p>No has visto ningún perfil recientemente.</p>';
-        }
-    
-        // Display Photos
-        if (history.photos.length > 0) {
-            history.photos.forEach(photo => {
-                const card = document.createElement('div');
-                card.className = 'card photo-card';
-                card.dataset.photoUrl = photo.photo_url;
-                card.dataset.photoId = photo.id;
-                card.dataset.galleryUuid = photo.gallery_uuid;
-    
-                const background = document.createElement('div');
-                background.className = 'card-background';
-                background.style.backgroundImage = `url('${photo.photo_url}')`;
-                card.appendChild(background);
-    
-                const overlay = document.createElement('div');
-                overlay.className = 'card-content-overlay';
-    
-                const icon = document.createElement('div');
-                icon.className = 'card-icon';
-                if (photo.profile_picture_url) {
-                    icon.style.backgroundImage = `url('${photo.profile_picture_url}')`;
-                }
-                overlay.appendChild(icon);
-    
-                const textContainer = document.createElement('div');
-                textContainer.className = 'card-text';
-                textContainer.innerHTML = `<span>${photo.gallery_name}</span><span style="font-size: 0.8rem; display: block;">Visto: ${new Date(photo.visited_at).toLocaleString()}</span>`;
-                overlay.appendChild(textContainer);
-    
-                card.appendChild(overlay);
-                photosGrid.appendChild(card);
-            });
-        } else {
-            photosGrid.innerHTML = '<p>No has visto ninguna foto recientemente.</p>';
-        }
 
-        // Display Searches
-        if (history.searches.length > 0) {
-            history.searches.forEach(search => {
-                const item = document.createElement('div');
-                item.className = 'search-history-item';
-                // You can add data attributes if needed for future interactions
-                item.innerHTML = `
-                    <div class="search-history-text">
-                        <span class="search-term">"${search.term}"</span>
-                        <span class="search-details">en ${search.section} - ${new Date(search.searched_at).toLocaleString()}</span>
-                    </div>
-                `;
-                searchesList.appendChild(item);
-            });
-        } else {
-            searchesList.innerHTML = '<p>No has realizado ninguna búsqueda recientemente.</p>';
+        if (currentView === 'views') {
+            const hasContent = history.profiles.length > 0 || history.photos.length > 0;
+
+            if (hasContent) {
+                historyContainer.style.display = 'block';
+                if (isViewHistoryPaused) {
+                    pausedAlert.classList.remove('disabled');
+                }
+                
+                if (history.profiles.length > 0) {
+                     history.profiles.forEach(profile => {
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        card.dataset.uuid = profile.id;
+                        card.dataset.name = profile.name;
+                        card.dataset.privacy = profile.privacy;
+                        if (profile.background_photo_url) {
+                            const background = document.createElement('div');
+                            background.className = 'card-background';
+                            background.style.backgroundImage = `url('${profile.background_photo_url}')`;
+                            card.appendChild(background);
+                        }
+                        const overlay = document.createElement('div');
+                        overlay.className = 'card-content-overlay';
+                        const icon = document.createElement('div');
+                        icon.className = 'card-icon';
+                        if (profile.profile_picture_url) {
+                            icon.style.backgroundImage = `url('${profile.profile_picture_url}')`;
+                        }
+                        overlay.appendChild(icon);
+                        const textContainer = document.createElement('div');
+                        textContainer.className = 'card-text';
+                        textContainer.innerHTML = `<span>${profile.name}</span><span style="font-size: 0.8rem; display: block;">Visto: ${new Date(profile.visited_at).toLocaleString()}</span>`;
+                        overlay.appendChild(textContainer);
+                        card.appendChild(overlay);
+                        profilesGrid.appendChild(card);
+                    });
+                }
+                
+                if (history.photos.length > 0) {
+                     history.photos.forEach(photo => {
+                        const card = document.createElement('div');
+                        card.className = 'card photo-card';
+                        card.dataset.photoUrl = photo.photo_url;
+                        card.dataset.photoId = photo.id;
+                        card.dataset.galleryUuid = photo.gallery_uuid;
+                        const background = document.createElement('div');
+                        background.className = 'card-background';
+                        background.style.backgroundImage = `url('${photo.photo_url}')`;
+                        card.appendChild(background);
+                        const overlay = document.createElement('div');
+                        overlay.className = 'card-content-overlay';
+                        const icon = document.createElement('div');
+                        icon.className = 'card-icon';
+                        if (photo.profile_picture_url) {
+                            icon.style.backgroundImage = `url('${photo.profile_picture_url}')`;
+                        }
+                        overlay.appendChild(icon);
+                        const textContainer = document.createElement('div');
+                        textContainer.className = 'card-text';
+                        textContainer.innerHTML = `<span>${photo.gallery_name}</span><span style="font-size: 0.8rem; display: block;">Visto: ${new Date(photo.visited_at).toLocaleString()}</span>`;
+                        overlay.appendChild(textContainer);
+                        card.appendChild(overlay);
+                        photosGrid.appendChild(card);
+                    });
+                }
+            } else { // No hay contenido
+                if (isViewHistoryPaused) {
+                    statusContainer.innerHTML = '<div><h2>El historial de perfiles y fotos está pausado</h2><p>Tu actividad de visualización no se guardará mientras esta opción esté desactivada.</p></div>';
+                    statusContainer.classList.remove('disabled');
+                } else {
+                    statusContainer.innerHTML = '<div><h2>No hay actividad para mostrar</h2><p>Los perfiles y fotos que hayas visto recientemente aparecerán aquí.</p></div>';
+                    statusContainer.classList.remove('disabled');
+                }
+            }
+        } else if (currentView === 'searches') {
+            const hasContent = history.searches.length > 0;
+
+            if (hasContent) {
+                historyContainer.style.display = 'block';
+                if (isSearchHistoryPaused) {
+                    pausedAlert.classList.remove('disabled');
+                }
+                history.searches.forEach(search => {
+                    const item = document.createElement('div');
+                    item.className = 'search-history-item';
+                    item.innerHTML = `
+                        <div class="search-history-text">
+                            <span class="search-term">"${search.term}"</span>
+                            <span class="search-details">en ${search.section} - ${new Date(search.searched_at).toLocaleString()}</span>
+                        </div>
+                    `;
+                    searchesList.appendChild(item);
+                });
+            } else { // No hay contenido
+                if (isSearchHistoryPaused) {
+                    statusContainer.innerHTML = '<div><h2>El historial de búsqueda está pausado</h2><p>Tus búsquedas no se guardarán mientras esta opción esté desactivada.</p></div>';
+                    statusContainer.classList.remove('disabled');
+                } else {
+                    statusContainer.innerHTML = '<div><h2>No tienes búsquedas recientes</h2><p>Los términos que busques en la aplicación aparecerán aquí.</p></div>';
+                    statusContainer.classList.remove('disabled');
+                }
+            }
         }
     }
+
 
     async function handleStateChange(view, section, data) {
         const contentContainer = document.querySelector('.general-content-scrolleable');
