@@ -10,14 +10,23 @@ function getFavorites() {
 }
 
 function getHistory() {
-    const history = localStorage.getItem('viewHistory');
-    return history ? JSON.parse(history) : { profiles: [], photos: [] };
+    const historyString = localStorage.getItem('viewHistory');
+    const defaultHistory = { profiles: [], photos: [], searches: [] };
+    if (historyString) {
+        const savedHistory = JSON.parse(historyString);
+        // Merge saved history with default to ensure all keys exist
+        return { ...defaultHistory, ...savedHistory };
+    }
+    return defaultHistory;
 }
 
 function addToHistory(type, data) {
+    const isHistoryEnabled = localStorage.getItem('enable-view-history') !== 'false';
+    if (!isHistoryEnabled) return;
+
     let history = getHistory();
     const now = Date.now();
-    
+
     // Evitar duplicados recientes
     const existingIndex = history[type].findIndex(item => item.id === data.id);
     if (existingIndex > -1) {
@@ -30,6 +39,29 @@ function addToHistory(type, data) {
     const MAX_HISTORY_ITEMS = 50;
     if (history[type].length > MAX_HISTORY_ITEMS) {
         history[type] = history[type].slice(0, MAX_HISTORY_ITEMS);
+    }
+
+    localStorage.setItem('viewHistory', JSON.stringify(history));
+}
+
+function addSearchToHistory(term, section) {
+    const isSearchHistoryEnabled = localStorage.getItem('enable-search-history') !== 'false';
+    if (!term || !isSearchHistoryEnabled) return;
+
+    let history = getHistory();
+    const now = Date.now();
+
+    // Evitar duplicados exactos y recientes
+    const existingIndex = history.searches.findIndex(item => item.term.toLowerCase() === term.toLowerCase() && item.section === section);
+    if (existingIndex > -1) {
+        history.searches.splice(existingIndex, 1);
+    }
+
+    history.searches.unshift({ term, section, searched_at: now });
+
+    const MAX_SEARCH_HISTORY = 100;
+    if (history.searches.length > MAX_SEARCH_HISTORY) {
+        history.searches = history.searches.slice(0, MAX_SEARCH_HISTORY);
     }
 
     localStorage.setItem('viewHistory', JSON.stringify(history));
@@ -115,6 +147,54 @@ export function initMainController() {
         console.log(`- Require modifier for shortcuts: ${localStorage.getItem(settingsToggles['require-modifier-for-shortcuts'].key)}`);
     }
 
+    function initHistoryPrivacySettings() {
+        const settingsToggles = {
+            'enable-view-history': {
+                element: document.querySelector('[data-setting="enable-view-history"]'),
+                key: 'enable-view-history',
+                defaultValue: true
+            },
+            'enable-search-history': {
+                element: document.querySelector('[data-setting="enable-search-history"]'),
+                key: 'enable-search-history',
+                defaultValue: true
+            }
+        };
+
+        function updateToggleUI(setting) {
+            const value = localStorage.getItem(setting.key) !== 'false';
+            if (setting.element) {
+                setting.element.classList.toggle('active', value);
+            }
+        }
+
+        for (const id in settingsToggles) {
+            const setting = settingsToggles[id];
+            if (setting.element) {
+                if (localStorage.getItem(setting.key) === null) {
+                    localStorage.setItem(setting.key, setting.defaultValue);
+                }
+                updateToggleUI(setting);
+
+                setting.element.addEventListener('click', () => {
+                    const currentValue = localStorage.getItem(setting.key) !== 'false';
+                    localStorage.setItem(setting.key, !currentValue);
+                    updateToggleUI(setting);
+                });
+            }
+        }
+
+        const clearHistoryBtn = document.querySelector('[data-action="clear-history"]');
+        if (clearHistoryBtn) {
+            clearHistoryBtn.addEventListener('click', () => {
+                if (confirm('¿Estás seguro de que quieres borrar todo tu historial? Esta acción no se puede deshacer.')) {
+                    localStorage.removeItem('viewHistory');
+                    alert('Historial borrado con éxito.');
+                }
+            });
+        }
+    }
+
 
     function isFavorite(photoId) {
         const favorites = getFavorites();
@@ -179,6 +259,10 @@ export function initMainController() {
         const statusContainer = section.querySelector('.status-message-container');
         const searchInput = document.getElementById('favorites-search-input');
         const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        
+        if (searchTerm) {
+            addSearchToHistory(searchTerm, 'favorites');
+        }
 
         allPhotosContainer.innerHTML = '';
         byUserContainer.innerHTML = '';
@@ -408,6 +492,10 @@ export function initMainController() {
     function fetchAndDisplayGalleries(sortBy = 'relevant', searchTerm = '', append = false) {
         if (isLoadingGalleries) return;
         isLoadingGalleries = true;
+        
+        if (searchTerm) {
+            addSearchToHistory(searchTerm, 'home');
+        }
 
         const section = document.querySelector('[data-section="home"]');
         if (!section) {
@@ -582,6 +670,10 @@ export function initMainController() {
     function fetchAndDisplayTrends(searchTerm = '') {
         const section = document.querySelector('[data-section="trends"]');
         if (!section) return;
+
+        if (searchTerm) {
+            addSearchToHistory(searchTerm, 'trends');
+        }
 
         const usersGrid = section.querySelector('#trending-users-grid');
         const photosGrid = section.querySelector('#trending-photos-grid');
@@ -1176,7 +1268,13 @@ export function initMainController() {
                 }
                 else if (selectId === 'language-select') {
                     setLanguage(value);
+                } else if (selectId === 'history-select') {
+                    document.querySelectorAll('[data-history-view]').forEach(view => {
+                        view.style.display = view.dataset.historyView === value ? '' : 'none';
+                    });
+                    updateSelectActiveState('history-select', value);
                 }
+
 
                 document.querySelectorAll('.module-select').forEach(menu => {
                     menu.classList.add('disabled');
@@ -1318,22 +1416,27 @@ export function initMainController() {
 
     function displayHistory() {
         const history = getHistory();
+        const historyContainer = document.getElementById('history-container');
         const profilesGrid = document.getElementById('history-profiles-grid');
         const photosGrid = document.getElementById('history-photos-grid');
+        const searchesList = document.getElementById('history-searches-list');
         const statusContainer = document.querySelector('[data-section="history"] .status-message-container');
     
-        if (!profilesGrid || !photosGrid || !statusContainer) return;
+        if (!historyContainer || !profilesGrid || !photosGrid || !searchesList || !statusContainer) return;
     
         profilesGrid.innerHTML = '';
         photosGrid.innerHTML = '';
+        searchesList.innerHTML = '';
     
-        if (history.profiles.length === 0 && history.photos.length === 0) {
+        if (history.profiles.length === 0 && history.photos.length === 0 && history.searches.length === 0) {
             statusContainer.classList.remove('disabled');
-            statusContainer.innerHTML = '<div><h2>Tu historial está vacío</h2><p>Los perfiles y las fotos que veas aparecerán aquí.</p></div>';
+            historyContainer.classList.add('disabled');
+            statusContainer.innerHTML = '<div><h2>Tu historial está vacío</h2><p>Los perfiles, fotos y búsquedas que realices aparecerán aquí.</p></div>';
             return;
         }
     
         statusContainer.classList.add('disabled');
+        historyContainer.classList.remove('disabled');
     
         // Display Profiles
         if (history.profiles.length > 0) {
@@ -1408,6 +1511,24 @@ export function initMainController() {
         } else {
             photosGrid.innerHTML = '<p>No has visto ninguna foto recientemente.</p>';
         }
+
+        // Display Searches
+        if (history.searches.length > 0) {
+            history.searches.forEach(search => {
+                const item = document.createElement('div');
+                item.className = 'search-history-item';
+                // You can add data attributes if needed for future interactions
+                item.innerHTML = `
+                    <div class="search-history-text">
+                        <span class="search-term">"${search.term}"</span>
+                        <span class="search-details">en ${search.section} - ${new Date(search.searched_at).toLocaleString()}</span>
+                    </div>
+                `;
+                searchesList.appendChild(item);
+            });
+        } else {
+            searchesList.innerHTML = '<p>No has realizado ninguna búsqueda recientemente.</p>';
+        }
     }
 
     async function handleStateChange(view, section, data) {
@@ -1463,6 +1584,9 @@ export function initMainController() {
                 break;
             case 'history':
                 displayHistory();
+                break;
+            case 'historyPrivacy':
+                initHistoryPrivacySettings();
                 break;
             case 'galleryPhotos':
                 if (data && data.uuid) {

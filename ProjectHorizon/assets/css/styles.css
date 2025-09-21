@@ -1135,3 +1135,32 @@ body {
         display: flex;
     }
 }
+
+.search-history-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 45px;
+    padding: 0 16px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.search-history-item:hover {
+    background-color: #f5f5fa;
+}
+
+.search-history-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.search-history-text .search-term {
+    font-weight: 500;
+}
+
+.search-history-text .search-details {
+    font-size: 0.8rem;
+    color: #6c757d;
+}

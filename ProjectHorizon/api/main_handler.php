@@ -26,6 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'settings-accessibility' => '../includes/sections/settings/accessibility.php',
             'settings-historyPrivacy' => '../includes/sections/settings/historyPrivacy.php',
             'settings-history' => '../includes/sections/settings/history.php',
+            'settings-historySearches' => '../includes/sections/settings/historySearches.php',
             'help-privacyPolicy' => '../includes/sections/help/privacy-policy.php',
             'help-termsConditions' => '../includes/sections/help/terms-conditions.php',
             'help-cookiePolicy' => '../includes/sections/help/cookie-policy.php',
