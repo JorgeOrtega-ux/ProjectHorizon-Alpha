@@ -1143,7 +1143,6 @@ export function initMainController() {
                                     // Pero sí renderizamos la nueva foto inmediatamente para una mejor UX.
                                     if (Math.random() < 0.25) {
                                         photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id } };
-                                        navigateToUrl('main', 'adView');
                                         handleStateChange('main', 'adView');
                                     } else {
                                         renderPhotoView(nextPhoto.gallery_uuid, nextPhoto.id, listToUse);
@@ -1185,7 +1184,6 @@ export function initMainController() {
                         }
                         break;
                     case 'watch-ad-to-unlock':
-                        navigateToUrl('main', 'adView');
                         handleStateChange('main', 'adView');
                         break;
 
@@ -1291,7 +1289,6 @@ export function initMainController() {
     
                     if (Math.random() < 0.25) { // 25% de probabilidad
                         photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: galleryUuid, photoId: photoId } };
-                        navigateToUrl('main', 'adView');
                         handleStateChange('main', 'adView');
                     } else {
                         navigateToUrl('main', 'photoView', { uuid: galleryUuid, photoId: photoId });
@@ -1760,7 +1757,6 @@ export function initMainController() {
         '': { view: 'main', section: 'home' },
         'trends': { view: 'main', section: 'trends' },
         'favorites': { view: 'main', section: 'favorites' },
-        'ad': { view: 'main', section: 'adView' },
         'settings/accessibility': { view: 'settings', section: 'accessibility' },
         'settings/history-privacy': { view: 'settings', section: 'historyPrivacy' },
         'settings/history': { view: 'settings', section: 'history' },
