@@ -60,7 +60,7 @@
                     <div class="header-button" data-action="toggle-select" data-target="relevance-select-mobile">
                         <span class="material-symbols-rounded">filter_list</span>
                     </div>
-                    <div class="module-content module-select disabled" id="relevance-select-mobile">
+                    <div class="module-content module-select body-title disabled" id="relevance-select-mobile">
                     </div>
                 </div>
             </div>

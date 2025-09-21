@@ -16,7 +16,7 @@
                             <div class="select-trigger-icon">
                                 <span class="material-symbols-rounded">filter_list</span>
                             </div>
-                            <span class="select-trigger-text">Perfiles y Fotos</span>
+                            <span class="select-trigger-text">Vistos recientes</span>
                             <div class="select-trigger-icon select-trigger-arrow">
                                 <span class="material-symbols-rounded">expand_more</span>
                             </div>
@@ -26,11 +26,11 @@
                                 <div class="menu-list">
                                     <div class="menu-link active" data-value="views">
                                         <div class="menu-link-icon"><span class="material-symbols-rounded">visibility</span></div>
-                                        <div class="menu-link-text"><span>Perfiles y Fotos</span></div>
+                                        <div class="menu-link-text"><span>Vistos recientes</span></div>
                                     </div>
                                     <div class="menu-link" data-value="searches">
                                         <div class="menu-link-icon"><span class="material-symbols-rounded">search</span></div>
-                                        <div class="menu-link-text"><span>Búsquedas</span></div>
+                                        <div class="menu-link-text"><span>Historial de búsqueda</span></div>
                                     </div>
                                 </div>
                             </div>
