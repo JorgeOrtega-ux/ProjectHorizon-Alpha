@@ -85,6 +85,7 @@ export function initMainController() {
     let currentPhotoData = null;
     let lastVisitedView = null;
     let lastVisitedData = null;
+    let currentPhotoViewList = [];
 
     let galleriesCurrentPage = 1;
     let photosCurrentPage = 1;
@@ -1127,17 +1128,8 @@ export function initMainController() {
                     case 'previous-photo':
                     case 'next-photo':
                         if (!actionTarget.classList.contains('disabled-nav')) {
-                            let listToUse = [];
-                            if (lastVisitedView === 'favorites' || lastVisitedView === 'userSpecificFavorites') {
-                                listToUse = currentFavoritesList;
-                            } else if (lastVisitedView === 'trends') {
-                                listToUse = currentTrendingPhotosList;
-                            } else if (lastVisitedView === 'history') {
-                                listToUse = currentHistoryPhotosList;
-                            } else {
-                                listToUse = currentGalleryPhotoList;
-                            }
-
+                            const listToUse = currentPhotoViewList;
+                            
                             const currentId = currentPhotoData ? currentPhotoData.id : null;
                             if (!currentId || listToUse.length === 0) return;
 
@@ -1147,7 +1139,7 @@ export function initMainController() {
                                 if (nextIndex >= 0 && nextIndex < listToUse.length) {
                                     const nextPhoto = listToUse[nextIndex];
                                     navigateToUrl('main', 'photoView', { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id });
-                                    handleStateChange('main', 'photoView', { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id });
+                                    renderPhotoView(nextPhoto.gallery_uuid, nextPhoto.id, listToUse);
                                 }
                             }
                         }
@@ -1412,42 +1404,52 @@ export function initMainController() {
         }
     }
 
-    // *** FUNCIÓN displayHistory FINAL Y CORREGIDA ***
+    // *** FUNCIÓN displayHistory CORREGIDA ***
     function displayHistory() {
         const history = getHistory();
         const mainContainer = document.querySelector('[data-section="history"]');
         if (!mainContainer) return;
 
-        const historyContainer = mainContainer.querySelector('#history-container');
         const profilesGrid = mainContainer.querySelector('#history-profiles-grid');
         const photosGrid = mainContainer.querySelector('#history-photos-grid');
         const searchesList = mainContainer.querySelector('#history-searches-list');
         const statusContainer = mainContainer.querySelector('.status-message-container');
         const pausedAlert = mainContainer.querySelector('.history-paused-alert');
         const historySelect = mainContainer.querySelector('#history-select');
+
+        // Referencias a las secciones de categoría completas (título + grid)
+        const profilesSection = profilesGrid.closest('.category-section');
+        const photosSection = photosGrid.closest('.category-section');
+        const searchesSection = searchesList.closest('.category-section');
         
         const currentView = historySelect ? (historySelect.querySelector('.menu-link.active')?.dataset.value || 'views') : 'views';
         const isViewHistoryPaused = localStorage.getItem('enable-view-history') === 'false';
         const isSearchHistoryPaused = localStorage.getItem('enable-search-history') === 'false';
 
         // Resetear estado visual
-        historyContainer.style.display = 'none';
         statusContainer.classList.add('disabled');
         pausedAlert.classList.add('disabled');
         profilesGrid.innerHTML = '';
         photosGrid.innerHTML = '';
         searchesList.innerHTML = '';
 
-        if (currentView === 'views') {
-            const hasContent = history.profiles.length > 0 || history.photos.length > 0;
+        // Ocultar todas las secciones de categoría al principio
+        if(profilesSection) profilesSection.style.display = 'none';
+        if(photosSection) photosSection.style.display = 'none';
+        if(searchesSection) searchesSection.style.display = 'none';
 
-            if (hasContent) {
-                historyContainer.style.display = 'block';
+
+        if (currentView === 'views') {
+            const hasProfiles = history.profiles.length > 0;
+            const hasPhotos = history.photos.length > 0;
+
+            if (hasProfiles || hasPhotos) {
                 if (isViewHistoryPaused) {
                     pausedAlert.classList.remove('disabled');
                 }
                 
-                if (history.profiles.length > 0) {
+                if (hasProfiles) {
+                    if(profilesSection) profilesSection.style.display = 'block'; // Mostrar sección
                      history.profiles.forEach(profile => {
                         const card = document.createElement('div');
                         card.className = 'card';
@@ -1477,7 +1479,8 @@ export function initMainController() {
                     });
                 }
                 
-                if (history.photos.length > 0) {
+                if (hasPhotos) {
+                    if(photosSection) photosSection.style.display = 'block'; // Mostrar sección
                      history.photos.forEach(photo => {
                         const card = document.createElement('div');
                         card.className = 'card photo-card';
@@ -1504,7 +1507,7 @@ export function initMainController() {
                         photosGrid.appendChild(card);
                     });
                 }
-            } else { // No hay contenido
+            } else { // No hay contenido en ninguna de las dos
                 if (isViewHistoryPaused) {
                     statusContainer.innerHTML = '<div><h2>El historial de perfiles y fotos está pausado</h2><p>Tu actividad de visualización no se guardará mientras esta opción esté desactivada.</p></div>';
                     statusContainer.classList.remove('disabled');
@@ -1514,10 +1517,10 @@ export function initMainController() {
                 }
             }
         } else if (currentView === 'searches') {
-            const hasContent = history.searches.length > 0;
+            const hasSearches = history.searches.length > 0;
 
-            if (hasContent) {
-                historyContainer.style.display = 'block';
+            if (hasSearches) {
+                if(searchesSection) searchesSection.style.display = 'block'; // Mostrar sección
                 if (isSearchHistoryPaused) {
                     pausedAlert.classList.remove('disabled');
                 }
@@ -1532,7 +1535,7 @@ export function initMainController() {
                     `;
                     searchesList.appendChild(item);
                 });
-            } else { // No hay contenido
+            } else { // No hay búsquedas
                 if (isSearchHistoryPaused) {
                     statusContainer.innerHTML = '<div><h2>El historial de búsqueda está pausado</h2><p>Tus búsquedas no se guardarán mientras esta opción esté desactivada.</p></div>';
                     statusContainer.classList.remove('disabled');
@@ -1628,33 +1631,35 @@ export function initMainController() {
                 break;
             case 'photoView':
                 if (data && data.uuid && data.photoId) {
-                    let photoList;
+                    let photoListPromise;
 
                     if (lastVisitedView === 'userSpecificFavorites' && lastVisitedData && lastVisitedData.uuid) {
-                        photoList = getFavorites().filter(p => p.gallery_uuid === data.uuid);
-                        renderPhotoView(data.uuid, data.photoId, photoList);
+                        photoListPromise = Promise.resolve(getFavorites().filter(p => p.gallery_uuid === data.uuid));
                     } else if (lastVisitedView === 'favorites') {
-                        photoList = currentFavoritesList;
-                        renderPhotoView(data.uuid, data.photoId, photoList);
+                        photoListPromise = Promise.resolve(currentFavoritesList);
                     } else if (lastVisitedView === 'trends') {
-                        photoList = currentTrendingPhotosList;
-                        renderPhotoView(data.uuid, data.photoId, photoList);
+                        photoListPromise = Promise.resolve(currentTrendingPhotosList);
                     } else if (lastVisitedView === 'history') {
                         currentHistoryPhotosList = getHistory().photos;
-                        renderPhotoView(data.uuid, data.photoId, currentHistoryPhotosList);
+                        photoListPromise = Promise.resolve(currentHistoryPhotosList);
                     } else {
                         if (currentGalleryForPhotoView === data.uuid && currentGalleryPhotoList.length > 0) {
-                            renderPhotoView(data.uuid, data.photoId, currentGalleryPhotoList);
+                            photoListPromise = Promise.resolve(currentGalleryPhotoList);
                         } else {
-                            fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=photos&uuid=${data.uuid}&limit=1000`)
+                            photoListPromise = fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=photos&uuid=${data.uuid}&limit=1000`)
                                 .then(res => res.json())
                                 .then(photos => {
                                     currentGalleryPhotoList = photos;
                                     currentGalleryForPhotoView = data.uuid;
-                                    renderPhotoView(data.uuid, data.photoId, photos);
+                                    return photos;
                                 });
                         }
                     }
+                    
+                    photoListPromise.then(photoList => {
+                        currentPhotoViewList = photoList;
+                        renderPhotoView(data.uuid, data.photoId, currentPhotoViewList);
+                    });
                 }
                 break;
             case 'accessCodePrompt':
