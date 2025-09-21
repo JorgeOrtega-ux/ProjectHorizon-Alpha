@@ -2,7 +2,7 @@
     <div class="section-content-header">
         <div class="content-header-wrapper">
             <div class="content-header-left">
-                 <div class="header-button" data-action="returnToFavorites">
+                <div class="header-button" data-action="returnToFavorites" data-tooltip="Volver a favoritos">
                     <span class="material-symbols-rounded">arrow_back</span>
                 </div>
                 <div class="header-title-container">

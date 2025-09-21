@@ -949,6 +949,14 @@ export function initMainController() {
             if (actionTarget) {
                 const action = actionTarget.dataset.action;
 
+                // En móviles, al hacer clic en un enlace del menú principal, se oculta el menú.
+                if (window.matchMedia('(max-width: 468px)').matches && actionTarget.closest('[data-module="moduleSurface"] .menu-link')) {
+                    const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
+                    if (moduleSurface) {
+                        moduleSurface.classList.add('disabled');
+                    }
+                }
+
                 if (action !== 'download-photo' && !actionTarget.closest('a[target="_blank"]')) {
                     const link = actionTarget.closest('.menu-link');
                     if (link && link.tagName.toLowerCase() === 'a' && !link.getAttribute('href').startsWith('#')) {

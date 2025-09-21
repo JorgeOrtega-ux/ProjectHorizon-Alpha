@@ -2,7 +2,7 @@
     <div class="section-content-header">
         <div class="content-header-wrapper">
             <div class="content-header-left">
-                <div class="header-button" data-action="returnToUserPhotos">
+                <div class="header-button" data-action="returnToUserPhotos" data-tooltip="Volver">
                     <span class="material-symbols-rounded">arrow_back</span>
                 </div>
                 <div class="header-title-container">
@@ -10,13 +10,13 @@
                 </div>
             </div>
             <div class="content-header-center">
-               
+
             </div>
             <div class="content-header-right">
-                 <div class="header-button" data-action="toggle-favorite">
+                <div class="header-button" data-action="toggle-favorite">
                     <span class="material-symbols-rounded">favorite</span>
                 </div>
-                 <div class="photo-nav-control">
+                <div class="photo-nav-control">
                     <div class="photo-nav-button" data-action="previous-photo">
                         <span class="material-symbols-rounded">chevron_left</span>
                     </div>

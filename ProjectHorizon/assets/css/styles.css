@@ -501,7 +501,7 @@ body {
     position: absolute;
     top: calc(100% + 5px);
     left: 0;
-    width: 240px; /* Ancho fijo para los selectores */
+    width: 100%; /* Ancho adaptado al contenedor padre */
     z-index: 10;
 }
 
@@ -509,6 +509,7 @@ body {
 #relevance-select-mobile, #favorites-sort-select-mobile {
     left: auto;
     right: 5px;
+    width: 265px; /* Ancho específico para los filtros móviles */
 }
 
 .module-select .menu-content {

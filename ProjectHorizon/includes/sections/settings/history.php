@@ -2,7 +2,7 @@
     <div class="section-content-header">
         <div class="content-header-wrapper">
             <div class="content-header-left">
-                <div class="header-button" data-action="toggleSectionHistoryPrivacy">
+                <div class="header-button" data-action="toggleSectionHistoryPrivacy" data-tooltip="Volver">
                     <span class="material-symbols-rounded">arrow_back</span>
                 </div>
                 <div class="header-title-container">
@@ -43,8 +43,8 @@
     <div class="section-content-block overflow-y">
         <div class="status-message-container disabled"></div>
         <div class="history-paused-alert disabled">
-             <span class="material-symbols-rounded">pause_circle</span>
-             <span>El historial está pausado. No se guardará tu actividad.</span>
+            <span class="material-symbols-rounded">pause_circle</span>
+            <span>El historial está pausado. No se guardará tu actividad.</span>
         </div>
         <div id="history-container">
             <div class="category-section" data-history-view="views">
@@ -62,7 +62,7 @@
                 <div class="card-grid" id="history-photos-grid"></div>
             </div>
             <div class="category-section" data-history-view="searches" style="display: none;">
-                 <div class="category-section-title">
+                <div class="category-section-title">
                     <span class="material-symbols-rounded">search</span>
                     <span>Búsquedas Recientes</span>
                 </div>
