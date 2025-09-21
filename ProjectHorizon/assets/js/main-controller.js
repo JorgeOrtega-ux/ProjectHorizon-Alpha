@@ -81,6 +81,7 @@ export function initMainController() {
     let currentGalleryNameForPhotoView = null;
     let currentGalleryPhotoList = [];
     let currentTrendingPhotosList = [];
+    let currentHistoryPhotosList = [];
     let currentPhotoData = null;
     let lastVisitedView = null;
     let lastVisitedData = null;
@@ -1072,7 +1073,10 @@ export function initMainController() {
                         }
                         break;
                     case 'returnToUserPhotos':
-                        if (lastVisitedView === 'favorites') {
+                        if (lastVisitedView === 'history') {
+                            navigateToUrl('settings', 'history');
+                            handleStateChange('settings', 'history');
+                        } else if (lastVisitedView === 'favorites') {
                             navigateToUrl('main', 'favorites');
                             handleStateChange('main', 'favorites');
                         } else if (lastVisitedView === 'userSpecificFavorites' && lastVisitedData && lastVisitedData.uuid) {
@@ -1099,7 +1103,7 @@ export function initMainController() {
                         break;
                     case 'toggle-favorite-card':
                         const photoIdFav = actionTarget.dataset.photoId;
-                        const allPhotos = [...getFavorites(), ...currentGalleryPhotoList, ...currentTrendingPhotosList];
+                        const allPhotos = [...getFavorites(), ...currentGalleryPhotoList, ...currentTrendingPhotosList, ...currentHistoryPhotosList];
                         const photoDataFav = allPhotos.find(p => p.id == photoIdFav);
 
                         if (photoDataFav) {
@@ -1128,6 +1132,8 @@ export function initMainController() {
                                 listToUse = currentFavoritesList;
                             } else if (lastVisitedView === 'trends') {
                                 listToUse = currentTrendingPhotosList;
+                            } else if (lastVisitedView === 'history') {
+                                listToUse = currentHistoryPhotosList;
                             } else {
                                 listToUse = currentGalleryPhotoList;
                             }
@@ -1633,6 +1639,9 @@ export function initMainController() {
                     } else if (lastVisitedView === 'trends') {
                         photoList = currentTrendingPhotosList;
                         renderPhotoView(data.uuid, data.photoId, photoList);
+                    } else if (lastVisitedView === 'history') {
+                        currentHistoryPhotosList = getHistory().photos;
+                        renderPhotoView(data.uuid, data.photoId, currentHistoryPhotosList);
                     } else {
                         if (currentGalleryForPhotoView === data.uuid && currentGalleryPhotoList.length > 0) {
                             renderPhotoView(data.uuid, data.photoId, currentGalleryPhotoList);

@@ -8,32 +8,33 @@
         </div>
 
         <div class="content-section data-group-section">
-            <div class="data-item">
-                <div class="view-container active">
-                    <div class="item-details">
-                        <h4>Activar historial de perfiles y fotos</h4>
-                        <p>Guarda los perfiles y las fotos que has visto recientemente.</p>
-                    </div>
-                    <div class="item-actions">
-                        <div class="toggle-switch" data-setting="enable-view-history">
-                            <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
-                        </div>
-                    </div>
+           <div class="data-item">
+        <div class="view-container active">
+            <div class="item-details">
+                <h4>Guardar vistos recientemente</h4>
+                <p>Guarda los perfiles y las fotos que has visto.</p>
+            </div>
+            <div class="item-actions">
+                <div class="toggle-switch active" data-setting="enable-view-history">
+                    <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
                 </div>
             </div>
-            <div class="data-item">
-                <div class="view-container active">
-                    <div class="item-details">
-                        <h4>Activar historial de búsqueda</h4>
-                        <p>Guarda los términos que buscas en la aplicación.</p>
-                    </div>
-                    <div class="item-actions">
-                        <div class="toggle-switch" data-setting="enable-search-history">
-                            <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
-                        </div>
-                    </div>
+        </div>
+    </div>
+
+    <div class="data-item">
+        <div class="view-container active">
+            <div class="item-details">
+                <h4>Guardar historial de búsqueda</h4>
+                <p>Guarda los términos que buscas en la aplicación.</p>
+            </div>
+            <div class="item-actions">
+                <div class="toggle-switch active" data-setting="enable-search-history">
+                    <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
                 </div>
             </div>
+        </div>
+    </div>
         </div>
 
         <div class="content-section content-section-stacked">
