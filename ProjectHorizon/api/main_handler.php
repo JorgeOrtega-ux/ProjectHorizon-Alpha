@@ -248,37 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     header('Content-Type: application/json');
     $action_type = isset($_POST['action_type']) ? $_POST['action_type'] : '';
 
-    if ($action_type === 'verify_code') {
-        // ... (código sin cambios)
-        $uuid = isset($_POST['uuid']) ? $_POST['uuid'] : '';
-        $code = isset($_POST['code']) ? $_POST['code'] : '';
-
-        if (empty($uuid) || empty($code)) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Faltan el UUID de la galería o el código de acceso.']);
-            exit;
-        }
-
-        $sql = "SELECT access_code FROM galleries WHERE uuid = ? AND privacy = 1";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("s", $uuid);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result && $result->num_rows > 0) {
-            $gallery = $result->fetch_assoc();
-            // --- NOTA: En un proyecto real, las contraseñas y códigos deben estar hasheados. ---
-            if ($gallery['access_code'] === $code) {
-                echo json_encode(['success' => true, 'message' => 'Código correcto.']);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'El código de acceso es incorrecto.']);
-            }
-        } else {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'message' => 'No se encontró una galería privada con ese UUID.']);
-        }
-        $stmt->close();
-    } elseif ($action_type === 'increment_interaction') {
+   if ($action_type === 'increment_interaction') {
         // ... (código sin cambios)
         $uuid = isset($_POST['uuid']) ? $_POST['uuid'] : '';
         if (!empty($uuid)) {

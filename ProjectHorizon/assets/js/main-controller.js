@@ -87,6 +87,8 @@ export function initMainController() {
     let lastVisitedData = null;
     let adCountdownInterval = null;
     let photoAfterAd = null;
+    let galleryAfterAd = null;
+    let unlockCountdownInterval = null;
     
     // *** VARIABLE CORREGIDA ***
     // Almacenará la lista de fotos actual para el visor
@@ -401,6 +403,40 @@ export function initMainController() {
             }
         }
     }
+    
+    function updateCardPrivacyStatus(uuid, unlockedTimestamp) {
+        const card = document.querySelector(`.card[data-uuid="${uuid}"]`);
+        if (!card) return;
+
+        const badge = card.querySelector('.privacy-badge');
+        if (!badge) return;
+
+        const now = new Date().getTime();
+        const sixtyMinutes = 60 * 60 * 1000;
+        const remainingTime = unlockedTimestamp + sixtyMinutes - now;
+
+        if (remainingTime > 0) {
+            const minutes = Math.floor(remainingTime / 60000);
+            const seconds = Math.floor((remainingTime % 60000) / 1000);
+            badge.innerHTML = `<span class="material-symbols-rounded">lock_open</span> Desbloqueado (${minutes}:${seconds.toString().padStart(2, '0')})`;
+            badge.className = 'privacy-badge';
+        } else {
+            badge.innerHTML = `<span class="material-symbols-rounded">lock</span> Privado`;
+            badge.className = 'privacy-badge';
+        }
+    }
+    
+    function startUnlockCountdownTimer() {
+        if (unlockCountdownInterval) {
+            clearInterval(unlockCountdownInterval);
+        }
+        unlockCountdownInterval = setInterval(() => {
+            const unlockedGalleries = JSON.parse(localStorage.getItem('unlockedGalleries') || '{}');
+            for (const uuid in unlockedGalleries) {
+                updateCardPrivacyStatus(uuid, unlockedGalleries[uuid]);
+            }
+        }, 1000);
+    }
 
     function displayGalleriesAsGrid(galleries, container, sortBy, append = false) {
         if (!append) {
@@ -419,6 +455,16 @@ export function initMainController() {
                 background.style.backgroundImage = `url('${gallery.background_photo_url}')`;
                 card.appendChild(background);
             }
+
+            const badge = document.createElement('div');
+            badge.className = 'privacy-badge';
+
+            if (gallery.privacy === 1) {
+                badge.innerHTML = `<span class="material-symbols-rounded">lock</span> Privado`;
+            } else {
+                badge.innerHTML = `<span class="material-symbols-rounded">public</span> Público`;
+            }
+            card.appendChild(badge);
 
             const overlay = document.createElement('div');
             overlay.className = 'card-content-overlay';
@@ -448,22 +494,33 @@ export function initMainController() {
             overlay.appendChild(textContainer);
             card.appendChild(overlay);
             container.appendChild(card);
+            
+            if (gallery.privacy === 1) {
+                const unlockedGalleries = JSON.parse(localStorage.getItem('unlockedGalleries') || '{}');
+                if (unlockedGalleries[gallery.uuid]) {
+                    updateCardPrivacyStatus(gallery.uuid, unlockedGalleries[gallery.uuid]);
+                }
+            }
         });
     }
-
-    async function promptForAccessCode(uuid, name) {
-        navigateToUrl('main', 'accessCodePrompt', { uuid: uuid });
-        await handleStateChange('main', 'accessCodePrompt', { uuid: uuid });
+    
+    async function promptToWatchAd(uuid, name) {
+        galleryAfterAd = { view: 'main', section: 'galleryPhotos', data: { uuid, galleryName: name } };
+        navigateToUrl('main', 'accessCodePrompt', { uuid });
+        await handleStateChange('main', 'accessCodePrompt', { uuid });
 
         const title = document.getElementById('access-code-title');
-        const promptContainer = document.querySelector('[data-section="accessCodePrompt"]');
-        const input = document.getElementById('access-code-input');
-        const error = document.getElementById('access-code-error');
-
         if (title) title.textContent = `Galería de ${name}`;
-        if (promptContainer) promptContainer.dataset.galleryUuid = uuid;
-        if (input) input.value = '';
-        if (error) error.textContent = '';
+    }
+
+    function isPrivateGalleryUnlocked(uuid) {
+        const unlockedGalleries = JSON.parse(localStorage.getItem('unlockedGalleries') || '{}');
+        if (!unlockedGalleries[uuid]) {
+            return false;
+        }
+        const now = new Date().getTime();
+        const sixtyMinutes = 60 * 60 * 1000;
+        return (now - unlockedGalleries[uuid]) < sixtyMinutes;
     }
 
     function fetchAndDisplayGalleries(sortBy = 'relevant', searchTerm = '', append = false) {
@@ -1127,37 +1184,9 @@ export function initMainController() {
                             downloadPhoto(cardForDownload.dataset.photoUrl);
                         }
                         break;
-                    case 'access-code-submit':
-                        const promptContainer = document.querySelector('[data-section="accessCodePrompt"]');
-                        const uuid = promptContainer.dataset.galleryUuid;
-                        const codeInput = document.getElementById('access-code-input');
-                        const error = document.getElementById('access-code-error');
-                        const code = codeInput.value;
-
-                        if (!uuid || !code) {
-                            error.textContent = 'Por favor, introduce un código.';
-                            return;
-                        }
-
-                        const formData = new FormData();
-                        formData.append('action_type', 'verify_code');
-                        formData.append('uuid', uuid);
-                        formData.append('code', code);
-
-                        fetch(`${window.BASE_PATH}/api/main_handler.php`, {
-                            method: 'POST',
-                            body: formData
-                        })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.success) {
-                                    const galleryTitle = document.getElementById('access-code-title').textContent.replace('Galería de ', '');
-                                    navigateToUrl('main', 'galleryPhotos', { uuid: uuid });
-                                    handleStateChange('main', 'galleryPhotos', { uuid: uuid, galleryName: galleryTitle });
-                                } else {
-                                    error.textContent = data.message || 'Error al verificar el código.';
-                                }
-                            });
+                    case 'watch-ad-to-unlock':
+                        navigateToUrl('main', 'adView');
+                        handleStateChange('main', 'adView');
                         break;
 
                 }
@@ -1245,8 +1274,8 @@ export function initMainController() {
 
                     incrementInteraction(uuid);
 
-                    if (isPrivate) {
-                        promptForAccessCode(uuid, name);
+                    if (isPrivate && !isPrivateGalleryUnlocked(uuid)) {
+                        promptToWatchAd(uuid, name);
                     } else {
                         navigateToUrl('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
                         handleStateChange('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
@@ -1615,11 +1644,6 @@ export function initMainController() {
             
             case 'accessCodePrompt':
                 if (data && data.uuid) {
-                    const promptContainer = document.querySelector('[data-section="accessCodePrompt"]');
-                    if (promptContainer) {
-                        promptContainer.dataset.galleryUuid = data.uuid;
-                    }
-
                     const titleElement = document.getElementById('access-code-title');
                     fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${data.uuid}`)
                         .then(res => res.json())
@@ -1628,19 +1652,6 @@ export function initMainController() {
                                 titleElement.textContent = `Galería de ${gallery.name}`;
                             }
                         });
-
-                    const codeInput = document.getElementById('access-code-input');
-                    if (codeInput) {
-                        codeInput.addEventListener('input', (e) => {
-                            let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-
-                            if (value.length > 4) {
-                                value = value.slice(0, 4) + '-' + value.slice(4);
-                            }
-
-                            e.target.value = value;
-                        });
-                    }
                 }
                 break;
             case 'adView':
@@ -1670,10 +1681,23 @@ export function initMainController() {
 
                 if (skipButton) {
                     skipButton.onclick = () => {
-                        if (photoAfterAd) {
-                            navigateToUrl(photoAfterAd.view, photoAfterAd.section, photoAfterAd.data);
-                            handleStateChange(photoAfterAd.view, photoAfterAd.section, photoAfterAd.data);
+                        const destination = galleryAfterAd || photoAfterAd;
+                        if (galleryAfterAd) {
+                            const unlockedGalleries = JSON.parse(localStorage.getItem('unlockedGalleries') || '{}');
+                            const galleryUuidToUnlock = galleryAfterAd.data.uuid;
+                            unlockedGalleries[galleryUuidToUnlock] = new Date().getTime();
+                            localStorage.setItem('unlockedGalleries', JSON.stringify(unlockedGalleries));
+                        }
+
+                        if (destination) {
+                            navigateToUrl(destination.view, destination.section, destination.data);
+                            handleStateChange(destination.view, destination.section, destination.data);
                             photoAfterAd = null;
+                            galleryAfterAd = null;
+                        } else {
+                            // Si no hay un destino específico, vuelve a la página de inicio
+                            navigateToUrl('main', 'home');
+                            handleStateChange('main', 'home');
                         }
                     };
                 }
@@ -1724,6 +1748,7 @@ export function initMainController() {
 
     // --- INICIALIZACIÓN ---
     setupEventListeners();
+    startUnlockCountdownTimer();
 
     setupPopStateHandler((view, section, pushState, data) => {
         handleStateChange(view, section, data);

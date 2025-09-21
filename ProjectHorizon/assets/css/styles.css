@@ -907,6 +907,11 @@ body {
     padding: 0 16px;
 }
 
+#watch-ad-button {
+    width: 100%;
+    height: 42px;
+}
+
 @media (max-width: 768px) {
     .view-container.active {
         flex-direction: column;
@@ -1248,4 +1253,24 @@ body {
     background-color: #e9ecef;
     color: #6c757d;
     border-color: #ced4da;
+}
+
+.privacy-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.privacy-badge .material-symbols-rounded {
+    font-size: 14px;
 }
