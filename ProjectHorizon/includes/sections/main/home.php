@@ -51,13 +51,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="header-item">
-                    <div class="header-button" data-action="toggle-view">
-                        <span class="material-symbols-rounded">view_list</span>
-                    </div>
-                </div>
                 <div class="header-item show-on-mobile">
-                    <div class="header-button" data-action="toggle-select" data-target="relevance-select-mobile">
+                    <div class="header-button" data-action="toggle-select" data-target="relevance-select-mobile" data-tooltip="Filtros">
                         <span class="material-symbols-rounded">filter_list</span>
                     </div>
                     <div class="module-content module-select body-title disabled" id="relevance-select-mobile">
@@ -69,20 +64,6 @@
     <div class="section-content-block overflow-y">
         <div class="status-message-container disabled"></div>
         <div class="card-grid active" id="grid-view"></div>
-        <div class="table-view-container body-title disabled" id="table-view">
-            <table class="user-table">
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Privacidad</th>
-                        <th>Tipo</th>
-                        <th>Editado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
-        </div>
         <div class="load-more-container disabled" id="users-load-more-container">
             <button class="load-more-btn" data-action="load-more-users">Mostrar más</button>
         </div>

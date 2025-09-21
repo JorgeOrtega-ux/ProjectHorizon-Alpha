@@ -3,6 +3,7 @@
 import { navigateToUrl, setupPopStateHandler, setInitialHistoryState } from './url-manager.js';
 import { setTheme, updateThemeSelectorUI } from './theme-manager.js';
 import { setLanguage, updateLanguageSelectorUI } from './language-manager.js';
+import { initTooltips } from './tooltip-manager.js';
 
 function getFavorites() {
     const favorites = localStorage.getItem('favoritePhotos');
@@ -74,7 +75,6 @@ export function initMainController() {
     let currentAppView = null;
     let currentAppSection = null;
 
-    let currentView = 'grid';
     let currentSortBy = 'relevant';
     let searchDebounceTimer;
     let currentGalleryForPhotoView = null;
@@ -449,34 +449,6 @@ export function initMainController() {
         });
     }
 
-    function displayGalleriesAsTable(galleries, container, append = false) {
-        const tbody = container.querySelector('tbody');
-        if (!append) {
-            tbody.innerHTML = '';
-        }
-        galleries.forEach(gallery => {
-            const row = document.createElement('tr');
-            row.dataset.uuid = gallery.uuid;
-            row.dataset.name = gallery.name;
-            row.dataset.privacy = gallery.privacy;
-
-            const nameCell = document.createElement('td');
-            nameCell.innerHTML = `<div class="user-info"><div class="user-avatar" style="background-image: url('${gallery.profile_picture_url || ''}')"></div><span>${gallery.name}</span></div>`;
-            const privacyCell = document.createElement('td');
-            privacyCell.textContent = gallery.privacy == 1 ? 'Privado' : 'Público';
-            const typeCell = document.createElement('td');
-            typeCell.textContent = 'Galería';
-            const editedCell = document.createElement('td');
-            editedCell.textContent = new Date(gallery.last_edited).toLocaleDateString();
-
-            row.appendChild(nameCell);
-            row.appendChild(privacyCell);
-            row.appendChild(typeCell);
-            row.appendChild(editedCell);
-            tbody.appendChild(row);
-        });
-    }
-
     async function promptForAccessCode(uuid, name) {
         navigateToUrl('main', 'accessCodePrompt', { uuid: uuid });
         await handleStateChange('main', 'accessCodePrompt', { uuid: uuid });
@@ -507,15 +479,12 @@ export function initMainController() {
         }
 
         const gridContainer = section.querySelector('#grid-view');
-        const tableContainer = section.querySelector('#table-view');
         const statusContainer = section.querySelector('.status-message-container');
 
         if (!append) {
             galleriesCurrentPage = 1;
             if (gridContainer) gridContainer.innerHTML = '';
-            if (tableContainer) tableContainer.querySelector('tbody').innerHTML = '';
             if (gridContainer) gridContainer.classList.add('disabled');
-            if (tableContainer) tableContainer.classList.add('disabled');
             if (statusContainer) {
                 statusContainer.classList.remove('disabled');
                 statusContainer.innerHTML = loaderHTML;
@@ -533,20 +502,14 @@ export function initMainController() {
                     statusContainer.innerHTML = '';
                 }
 
-                if (currentView === 'grid') {
-                    if (gridContainer) gridContainer.classList.remove('disabled');
-                } else {
-                    if (tableContainer) tableContainer.classList.remove('disabled');
-                }
-
+                if (gridContainer) gridContainer.classList.remove('disabled');
+                
                 if (data.length > 0) {
                     displayGalleriesAsGrid(data, gridContainer, sortBy, append);
-                    displayGalleriesAsTable(data, tableContainer, append);
                 } else if (!append) {
                     if (statusContainer) statusContainer.classList.remove('disabled');
                     if (statusContainer) statusContainer.innerHTML = '<div><h2>No se encontraron resultados</h2><p>Prueba con una búsqueda diferente para encontrar lo que buscas.</p></div>';
                     if (gridContainer) gridContainer.classList.add('disabled');
-                    if (tableContainer) tableContainer.classList.add('disabled');
                 }
 
                 const loadMoreContainer = document.getElementById('users-load-more-container');
@@ -905,36 +868,6 @@ export function initMainController() {
         }
     }
 
-
-    function applyViewPreference() {
-        const savedView = localStorage.getItem('galleryView') || 'grid';
-        currentView = savedView;
-
-        const section = document.querySelector('.general-content-scrolleable > div');
-        if (!section) return;
-
-        const gridView = section.querySelector('#grid-view');
-        const tableView = section.querySelector('#table-view');
-        const toggleViewBtn = document.querySelector('[data-action="toggle-view"]');
-        const icon = toggleViewBtn ? toggleViewBtn.querySelector('.material-symbols-rounded') : null;
-
-        if (gridView && tableView && icon) {
-            if (savedView === 'table') {
-                gridView.classList.remove('active');
-                gridView.classList.add('disabled');
-                tableView.classList.remove('disabled');
-                tableView.classList.add('active');
-                icon.textContent = 'grid_view';
-            } else {
-                tableView.classList.remove('active');
-                tableView.classList.add('disabled');
-                gridView.classList.remove('disabled');
-                gridView.classList.add('active');
-                icon.textContent = 'view_list';
-            }
-        }
-    }
-
     async function downloadPhoto(url) {
         try {
             const response = await fetch(url);
@@ -1061,11 +994,6 @@ export function initMainController() {
                         if (currentAppView === targetView && currentAppSection === targetSection) return;
                         navigateToUrl(targetView, targetSection);
                         handleStateChange(targetView, targetSection);
-                        break;
-                    case 'toggle-view':
-                        currentView = (currentView === 'grid') ? 'table' : 'grid';
-                        localStorage.setItem('galleryView', currentView);
-                        applyViewPreference();
                         break;
                     case 'load-more-users':
                         const homeSearch = document.querySelector('.search-input-text input');
@@ -1293,7 +1221,7 @@ export function initMainController() {
                     return;
                 }
 
-                const galleryElement = event.target.closest('.card:not(.photo-card):not(.user-card), tr[data-uuid]');
+                const galleryElement = event.target.closest('.card:not(.photo-card):not(.user-card)');
                 if (galleryElement && galleryElement.dataset.uuid) {
                     const uuid = galleryElement.dataset.uuid;
                     const name = galleryElement.dataset.name;
@@ -1576,7 +1504,6 @@ export function initMainController() {
 
         switch (section) {
             case 'home':
-                applyViewPreference();
                 setupMoreOptionsMenu();
                 updateSelectActiveState('relevance-select', currentSortBy);
                 fetchAndDisplayGalleries(currentSortBy);
@@ -1735,6 +1662,7 @@ export function initMainController() {
 
         setupScrollShadows();
         updateHeaderAndMenuStates(view, section);
+        initTooltips();
     }
 
     // --- INICIALIZACIÓN ---

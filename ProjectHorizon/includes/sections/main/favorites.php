@@ -44,7 +44,7 @@
                     </div>
                 </div>
                 <div class="header-item show-on-mobile">
-                    <div class="header-button" data-action="toggle-select" data-target="favorites-sort-select-mobile">
+                    <div class="header-button" data-action="toggle-select" data-target="favorites-sort-select-mobile" data-tooltip="Filtros">
                         <span class="material-symbols-rounded">filter_list</span>
                     </div>
                     <div class="module-content module-select disabled" id="favorites-sort-select-mobile">
