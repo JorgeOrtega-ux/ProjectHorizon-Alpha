@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'main-photoView' => '../includes/sections/main/photo-view.php',
             'main-accessCodePrompt' => '../includes/sections/main/access-code-prompt.php',
             'main-userSpecificFavorites' => '../includes/sections/main/user-specific-favorites.php',
+            'main-adView' => '../includes/sections/main/ad-view.php',
             'settings-accessibility' => '../includes/sections/settings/accessibility.php',
             'settings-historyPrivacy' => '../includes/sections/settings/historyPrivacy.php',
             'settings-history' => '../includes/sections/settings/history.php',

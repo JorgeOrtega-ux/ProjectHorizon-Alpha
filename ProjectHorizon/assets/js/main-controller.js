@@ -85,6 +85,8 @@ export function initMainController() {
     let currentPhotoData = null;
     let lastVisitedView = null;
     let lastVisitedData = null;
+    let adCountdownInterval = null;
+    let photoAfterAd = null;
     
     // *** VARIABLE CORREGIDA ***
     // Almacenará la lista de fotos actual para el visor
@@ -1082,7 +1084,13 @@ export function initMainController() {
                                     navigateToUrl('main', 'photoView', { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id });
                                     // NO llamamos a handleStateChange aquí, ya que popstate lo hará.
                                     // Pero sí renderizamos la nueva foto inmediatamente para una mejor UX.
-                                    renderPhotoView(nextPhoto.gallery_uuid, nextPhoto.id, listToUse);
+                                    if (Math.random() < 0.25) {
+                                        photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id } };
+                                        navigateToUrl('main', 'adView');
+                                        handleStateChange('main', 'adView');
+                                    } else {
+                                        renderPhotoView(nextPhoto.gallery_uuid, nextPhoto.id, listToUse);
+                                    }
                                 }
                             }
                         }
@@ -1251,9 +1259,15 @@ export function initMainController() {
                     const galleryUuid = photoCard.dataset.galleryUuid || currentGalleryForPhotoView;
                     const photoId = photoCard.dataset.photoId;
                     incrementInteraction(galleryUuid);
-
-                    navigateToUrl('main', 'photoView', { uuid: galleryUuid, photoId: photoId });
-                    handleStateChange('main', 'photoView', { uuid: galleryUuid, photoId: photoId });
+    
+                    if (Math.random() < 0.25) { // 25% de probabilidad
+                        photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: galleryUuid, photoId: photoId } };
+                        navigateToUrl('main', 'adView');
+                        handleStateChange('main', 'adView');
+                    } else {
+                        navigateToUrl('main', 'photoView', { uuid: galleryUuid, photoId: photoId });
+                        handleStateChange('main', 'photoView', { uuid: galleryUuid, photoId: photoId });
+                    }
                     return;
                 }
             }
@@ -1629,6 +1643,41 @@ export function initMainController() {
                     }
                 }
                 break;
+            case 'adView':
+                let countdown = 5;
+                const timerElement = document.getElementById('ad-timer');
+                const skipButton = document.getElementById('skip-ad-button');
+
+                if (adCountdownInterval) {
+                    clearInterval(adCountdownInterval);
+                }
+
+                adCountdownInterval = setInterval(() => {
+                    countdown--;
+                    if (timerElement) {
+                        timerElement.textContent = countdown;
+                    }
+                    if (countdown <= 0) {
+                        clearInterval(adCountdownInterval);
+                        if (timerElement) {
+                            timerElement.textContent = '0';
+                        }
+                        if (skipButton) {
+                            skipButton.disabled = false;
+                        }
+                    }
+                }, 1000);
+
+                if (skipButton) {
+                    skipButton.onclick = () => {
+                        if (photoAfterAd) {
+                            navigateToUrl(photoAfterAd.view, photoAfterAd.section, photoAfterAd.data);
+                            handleStateChange(photoAfterAd.view, photoAfterAd.section, photoAfterAd.data);
+                            photoAfterAd = null;
+                        }
+                    };
+                }
+                break;
             case 'userSpecificFavorites':
                 if (data && data.uuid) {
                     const userFavorites = getFavorites().filter(p => p.gallery_uuid === data.uuid);
@@ -1686,6 +1735,7 @@ export function initMainController() {
         '': { view: 'main', section: 'home' },
         'trends': { view: 'main', section: 'trends' },
         'favorites': { view: 'main', section: 'favorites' },
+        'ad': { view: 'main', section: 'adView' },
         'settings/accessibility': { view: 'settings', section: 'accessibility' },
         'settings/history-privacy': { view: 'settings', section: 'historyPrivacy' },
         'settings/history': { view: 'settings', section: 'history' },

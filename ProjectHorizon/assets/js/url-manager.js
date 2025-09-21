@@ -13,6 +13,7 @@ const urlMap = {
     'main-photoView': 'gallery/{uuid}/photo/{photoId}',
     'main-accessCodePrompt': 'gallery/{uuid}/access-code',
     'main-userSpecificFavorites': 'favorites/{uuid}',
+    'main-adView': 'ad',
     'main-404': '404'
 };
 
