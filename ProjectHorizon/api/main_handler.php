@@ -18,6 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'main-home' => '../includes/sections/main/home.php',
             'main-favorites' => '../includes/sections/main/favorites.php',
             'main-trends' => '../includes/sections/main/trends.php',
+            'main-login' => '../includes/sections/main/login.php',
+            'main-register' => '../includes/sections/main/register.php',
             'main-404' => '../includes/sections/main/404.php',
             'main-galleryPhotos' => '../includes/sections/main/user-photos.php',
             'main-photoView' => '../includes/sections/main/photo-view.php',

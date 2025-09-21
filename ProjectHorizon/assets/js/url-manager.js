@@ -2,6 +2,8 @@ const urlMap = {
     'main-home': '',
     'main-favorites': 'favorites',
     'main-trends': 'trends',
+    'main-login': 'login',
+    'main-register': 'register',
     'settings-accessibility': 'settings/accessibility',
     'settings-historyPrivacy': 'settings/history-privacy',
     'settings-history': 'settings/history',

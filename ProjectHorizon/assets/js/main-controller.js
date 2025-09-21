@@ -1047,6 +1047,8 @@ export function initMainController() {
                     case 'toggleSectionHome':
                     case 'toggleSectionTrends':
                     case 'toggleSectionFavorites':
+                    case 'toggleSectionLogin':
+                    case 'toggleSectionRegister':
                     case 'toggleSectionAccessibility':
                     case 'toggleSectionHistoryPrivacy':
                     case 'toggleSectionHistory':
@@ -1057,7 +1059,7 @@ export function initMainController() {
                         const sectionName = action.substring("toggleSection".length);
                         const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
                         const parentMenu = actionTarget.closest('[data-menu]');
-                        const targetView = parentMenu ? parentMenu.dataset.menu : currentAppView;
+                        const targetView = parentMenu ? parentMenu.dataset.menu : 'main';
                         if (currentAppView === targetView && currentAppSection === targetSection) return;
                         navigateToUrl(targetView, targetSection);
                         handleStateChange(targetView, targetSection);
@@ -1185,6 +1187,16 @@ export function initMainController() {
                         break;
                     case 'watch-ad-to-unlock':
                         handleStateChange('main', 'adView');
+                        break;
+                    case 'toggle-password-visibility':
+                        const passwordInput = actionTarget.previousElementSibling.previousElementSibling;
+                        if (passwordInput.type === 'password') {
+                            passwordInput.type = 'text';
+                            actionTarget.textContent = 'visibility_off';
+                        } else {
+                            passwordInput.type = 'password';
+                            actionTarget.textContent = 'visibility';
+                        }
                         break;
 
                 }
@@ -1564,6 +1576,33 @@ export function initMainController() {
             case 'trends':
                 fetchAndDisplayTrends();
                 break;
+            case 'login':
+                // Logic for login section can be added here if needed in the future
+                break;
+            case 'register': { // Using block scope for variable declaration
+                const adminCodeInput = document.getElementById('admin-code-input');
+                if (adminCodeInput) {
+                    adminCodeInput.addEventListener('input', (e) => {
+                        const input = e.target;
+                        let value = input.value;
+
+                        // Remove non-alphanumeric chars and convert to uppercase
+                        let cleanValue = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                        
+                        let finalValue = cleanValue;
+                        if (cleanValue.length > 4) {
+                            // Insert hyphen and limit to XXXX-XXXX format
+                            finalValue = cleanValue.slice(0, 4) + '-' + cleanValue.slice(4, 8);
+                        }
+
+                        // Only update the value if it has changed to prevent cursor jumps
+                        if (input.value !== finalValue) {
+                            input.value = finalValue;
+                        }
+                    });
+                }
+                break;
+            }
             case 'accessibility':
                 updateThemeSelectorUI(localStorage.getItem('theme') || 'system');
                 updateLanguageSelectorUI(localStorage.getItem('language') || 'es-LA');
@@ -1757,6 +1796,8 @@ export function initMainController() {
         '': { view: 'main', section: 'home' },
         'trends': { view: 'main', section: 'trends' },
         'favorites': { view: 'main', section: 'favorites' },
+        'login': { view: 'main', section: 'login' },
+        'register': { view: 'main', section: 'register' },
         'settings/accessibility': { view: 'settings', section: 'accessibility' },
         'settings/history-privacy': { view: 'settings', section: 'historyPrivacy' },
         'settings/history': { view: 'settings', section: 'history' },

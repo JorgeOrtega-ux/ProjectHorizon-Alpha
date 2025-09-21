@@ -14,6 +14,9 @@
             <div class="header-button" data-action="toggleSettings" data-tooltip="Configuración">
                 <span class="material-symbols-rounded">settings</span>
             </div>
+            <div class="header-button" data-action="toggleSectionLogin" data-tooltip="Acceder">
+                <span class="material-symbols-rounded">login</span>
+            </div>
         </div>
     </div>
 </div>

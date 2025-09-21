@@ -4,6 +4,8 @@ class Router {
         '' => ['view' => 'main', 'section' => 'home'],
         'trends' => ['view' => 'main', 'section' => 'trends'],
         'favorites' => ['view' => 'main', 'section' => 'favorites'],
+        'login' => ['view' => 'main', 'section' => 'login'],
+        'register' => ['view' => 'main', 'section' => 'register'],
         'settings/accessibility' => ['view' => 'settings', 'section' => 'accessibility'],
         'settings/history-privacy' => ['view' => 'settings', 'section' => 'historyPrivacy'],
         'settings/history' => ['view' => 'settings', 'section' => 'history'],
