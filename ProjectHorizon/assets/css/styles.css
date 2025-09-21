@@ -1163,4 +1163,14 @@ body {
 .search-history-text .search-details {
     font-size: 0.8rem;
     color: #6c757d;
+}/* Add these new rules at the end of the file */
+.content-section-stacked {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.content-section-stacked .item-actions {
+    width: 100%;
+    justify-content: flex-end;
 }

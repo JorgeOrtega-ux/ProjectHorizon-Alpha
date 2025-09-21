@@ -36,7 +36,7 @@
             </div>
         </div>
 
-        <div class="content-section">
+        <div class="content-section content-section-stacked">
             <div class="item-details">
                 <h4>Mi historial</h4>
                 <p>Consulta los perfiles, fotos y búsquedas que has realizado.</p>
@@ -46,7 +46,7 @@
             </div>
         </div>
 
-        <div class="content-section">
+        <div class="content-section content-section-stacked">
             <div class="item-details">
                 <h4>Borrar datos de navegación</h4>
                 <p>Elimina permanentemente todo tu historial de la aplicación.</p>
