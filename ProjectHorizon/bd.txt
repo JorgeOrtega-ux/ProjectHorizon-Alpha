@@ -1,0 +1,318 @@
+-- Borra la base de datos si ya existe para empezar desde cero
+DROP DATABASE IF EXISTS project_horizon;
+-- Crea la base de datos
+CREATE DATABASE project_horizon;
+
+-- Selecciona la base de datos para usarla
+USE project_horizon;
+-- --------------------------------------------------------
+--
+-- Estructura de la tabla `galleries` (CORREGIDA)
+--
+-- --------------------------------------------------------
+CREATE TABLE galleries (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    privacy BOOLEAN DEFAULT FALSE,
+    access_code VARCHAR(10) NULL DEFAULT NULL
+);
+-- --------------------------------------------------------
+--
+-- Estructura de la tabla `galleries_metadata`
+--
+-- --------------------------------------------------------
+CREATE TABLE galleries_metadata (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    gallery_uuid VARCHAR(36) NOT NULL,
+    total_likes INT DEFAULT 0,
+    total_saves INT DEFAULT 0,
+    total_interactions INT DEFAULT 0,
+    last_edited TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (gallery_uuid) REFERENCES galleries(uuid)
+);
+-- --------------------------------------------------------
+--
+-- Volcado de datos para la tabla `galleries` (CORREGIDO)
+--
+-- --------------------------------------------------------
+INSERT INTO `galleries` (`uuid`, `name`, `privacy`, `access_code`) VALUES
+('a1b2c3d4-e5f6-7890-1234-567890abcdef', 'Alejandro García', 0, NULL),
+('b2c3d4e5-f6a7-8901-2345-67890abcdef0', 'Sofía Rodríguez', 1, '2024-1998'),
+('c3d4e5f6-a7b8-9012-3456-7890abcdef01', 'Mateo Martínez', 0, NULL),
+('d4e5f6a7-b8c9-0123-4567-890abcdef012', 'Valentina Hernández', 0, NULL),
+('e5f6a7b8-c9d0-1234-5678-90abcdef0123', 'Santiago López', 1, '2019-2024'),
+('f6a7b8c9-d0e1-2345-6789-0abcdef01234', 'Isabella González', 0, NULL),
+('a7b8c9d0-e1f2-3456-7890-bcdef0123456', 'Leonardo Pérez', 0, NULL),
+('b8c9d0e1-f2a3-4567-8901-cdef01234567', 'Camila Sánchez', 1, '2000-2024'),
+('c9d0e1f2-a3b4-5678-9012-def012345678', 'Matías Ramírez', 0, NULL),
+('d0e1f2a3-b4c5-6789-0123-ef0123456789', 'Luciana Torres', 0, NULL),
+('e1f2a3b4-c5d6-7890-1234-f01234567890', 'Benjamín Flores', 1, '1990-2023'),
+('f2a3b4c5-d6e7-8901-2345-01234567890a', 'Emilia Díaz', 0, NULL),
+('a3b4c5d6-e7f8-9012-3456-1234567890ab', 'Daniel Vargas', 0, NULL),
+('b4c5d6e7-f8a9-0123-4567-234567890abc', 'Victoria Romero', 1, '1995-2024'),
+('c5d6e7f8-a9b0-1234-5678-34567890abcd', 'Joaquín Morales', 0, NULL),
+('d6e7f8a9-b0c1-2345-6789-4567890abcde', 'Renata Castillo', 0, NULL),
+('e7f8a9b0-c1d2-3456-7890-567890abcdef', 'Gabriel Jiménez', 1, '1998-2018'),
+('f8a9b0c1-d2e3-4567-8901-67890abcdef0', 'Julieta Álvarez', 0, NULL),
+('a9b0c1d2-e3f4-5678-9012-7890abcdef01', 'Lucas Moreno', 0, NULL),
+('b0c1d2e3-f4a5-6789-0123-890abcdef012', 'Martina Muñoz', 1, '2022-2024'),
+('c1d2e3f4-a5b6-7890-1234-90abcdef0123', 'Emiliano Silva', 
+0, NULL),
+('d2e3f4a5-b6c7-8901-2345-abcdef012345', 'Elena Rojas', 0, NULL),
+('e3f4a5b6-c7d8-9012-3456-bcdef0123456', 'Thiago Sosa', 1, '1980-2000'),
+('f4a5b6c7-d8e9-0123-4567-cdef01234567', 'Abril Acosta', 0, NULL),
+('a5b6c7d8-e9f0-1234-5678-def0123456789', 'Felipe Ortiz', 0, NULL);
+-- --------------------------------------------------------
+--
+-- Volcado de datos para la tabla `galleries_metadata`
+--
+-- --------------------------------------------------------
+INSERT INTO `galleries_metadata` (`gallery_uuid`, `total_likes`, `total_saves`, `total_interactions`) VALUES
+('a1b2c3d4-e5f6-7890-1234-567890abcdef', 150, 30, 180),
+('b2c3d4e5-f6a7-8901-2345-67890abcdef0', 200, 50, 250),
+('c3d4e5f6-a7b8-9012-3456-7890abcdef01', 95, 15, 110),
+('d4e5f6a7-b8c9-0123-4567-890abcdef012', 300, 100, 400),
+('e5f6a7b8-c9d0-1234-5678-90abcdef0123', 50, 10, 60),
+('f6a7b8c9-d0e1-2345-6789-0abcdef01234', 120, 25, 145),
+('a7b8c9d0-e1f2-3456-7890-bcdef0123456', 210, 70, 280),
+('b8c9d0e1-f2a3-4567-8901-cdef01234567', 80, 20, 100),
+('c9d0e1f2-a3b4-5678-9012-def012345678', 180, 40, 220),
+('d0e1f2a3-b4c5-6789-0123-ef0123456789', 250, 80, 330),
+('e1f2a3b4-c5d6-7890-1234-f01234567890', 60, 5, 65),
+('f2a3b4c5-d6e7-8901-2345-01234567890a', 140, 35, 175),
+('a3b4c5d6-e7f8-9012-3456-1234567890ab', 220, 60, 280),
+('b4c5d6e7-f8a9-0123-4567-234567890abc', 70, 12, 82),
+('c5d6e7f8-a9b0-1234-5678-34567890abcd', 190, 45, 235),
+('d6e7f8a9-b0c1-2345-6789-4567890abcde', 280, 90, 370),
+('e7f8a9b0-c1d2-3456-7890-567890abcdef', 40, 8, 48),
+('f8a9b0c1-d2e3-4567-8901-67890abcdef0', 160, 38, 198),
+('a9b0c1d2-e3f4-5678-9012-7890abcdef01', 230, 65, 295),
+('b0c1d2e3-f4a5-6789-0123-890abcdef012', 110, 22, 132),
+('c1d2e3f4-a5b6-7890-1234-90abcdef0123', 200, 55, 255),
+('d2e3f4a5-b6c7-8901-2345-abcdef012345', 260, 85, 345),
+('e3f4a5b6-c7d8-9012-3456-bcdef0123456', 30, 3, 33),
+('f4a5b6c7-d8e9-0123-4567-cdef01234567', 170, 42, 212),
+('a5b6c7d8-e9f0-1234-5678-def0123456789', 240, 75, 315);
+-- --------------------------------------------------------
+--
+-- Actualiza las fechas de `last_edited` con valores aleatorios
+-- para simular un historial de ediciones.
+--
+-- --------------------------------------------------------
+UPDATE galleries_metadata SET last_edited = NOW() - INTERVAL FLOOR(RAND() * 365) DAY - INTERVAL FLOOR(RAND() * 24) HOUR - INTERVAL FLOOR(RAND() * 60) MINUTE;
+-- --------------------------------------------------------
+--
+-- Estructura de la tabla `gallery_photos`
+--
+-- --------------------------------------------------------
+CREATE TABLE `gallery_photos` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `gallery_uuid` varchar(36) NOT NULL,
+  `photo_url` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+--
+-- Volcado de datos para la tabla `gallery_photos`
+--
+
+INSERT INTO `gallery_photos` (`id`, `gallery_uuid`, `photo_url`) VALUES
+(1, 'a1b2c3d4-e5f6-7890-1234-567890abcdef', 'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=800&q=60'),
+(2, 'a1b2c3d4-e5f6-7890-1234-567890abcdef', 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=800&q=60'),
+(3, 'a1b2c3d4-e5f6-7890-1234-567890abcdef', 'https://images.unsplash.com/photo-1426604966848-d7adac402bff?auto=format&fit=crop&w=800&q=60'),
+(4, 'a1b2c3d4-e5f6-7890-1234-567890abcdef', 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=800&q=60'),
+(5, 'a1b2c3d4-e5f6-7890-1234-567890abcdef', 'https://images.unsplash.com/photo-1433086966358-54859d0ed716?auto=format&fit=crop&w=800&q=60'),
+(6, 'b2c3d4e5-f6a7-8901-2345-67890abcdef0', 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=800&q=60'),
+(7, 'b2c3d4e5-f6a7-8901-2345-67890abcdef0', 'https://images.unsplash.com/photo-1513407030348-c983a97b98d8?auto=format&fit=crop&w=800&q=60'),
+(8, 'b2c3d4e5-f6a7-8901-2345-67890abcdef0', 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=800&q=60'),
+(9, 'b2c3d4e5-f6a7-8901-2345-67890abcdef0', 'https://images.unsplash.com/photo-1444723121867-7a241cacace9?auto=format&fit=crop&w=800&q=60'),
+(10, 'b2c3d4e5-f6a7-8901-2345-67890abcdef0', 'https://images.unsplash.com/photo-1506755594592-3ab4d12f0a51?auto=format&fit=crop&w=800&q=60'),
+(11, 'c3d4e5f6-a7b8-9012-3456-7890abcdef01', 'https://images.unsplash.com/photo-1504208434309-cb69f4c62b20?auto=format&fit=crop&w=800&q=60'),
+(12, 'c3d4e5f6-a7b8-9012-3456-7890abcdef01', 'https://images.unsplash.com/photo-1456926631375-92c8ce872def?auto=format&fit=crop&w=800&q=60'),
+(13, 'c3d4e5f6-a7b8-9012-3456-7890abcdef01', 'https://images.unsplash.com/photo-1555169062-013468b47731?auto=format&fit=crop&w=800&q=60'),
+(14, 'c3d4e5f6-a7b8-9012-3456-7890abcdef01', 'https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=800&q=60'),
+(15, 'c3d4e5f6-a7b8-9012-3456-7890abcdef01', 'https://images.unsplash.com/photo-1560114928-40f1f1eb26a0?auto=format&fit=crop&w=800&q=60'),
+(16, 'd4e5f6a7-b8c9-0123-4567-890abcdef012', 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=60'),
+(17, 'd4e5f6a7-b8c9-0123-4567-890abcdef012', 'https://images.unsplash.com/photo-1484723050470-7e68d95ea39b?auto=format&fit=crop&w=800&q=60'),
+(18, 'd4e5f6a7-b8c9-0123-4567-890abcdef012', 'https://images.unsplash.com/photo-1493770348161-369560ae357d?auto=format&fit=crop&w=800&q=60'),
+(19, 'd4e5f6a7-b8c9-0123-4567-890abcdef012', 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=60'),
+(20, 'd4e5f6a7-b8c9-0123-4567-890abcdef012', 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=800&q=60'),
+(21, 'e5f6a7b8-c9d0-1234-5678-90abcdef0123', 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=60'),
+(22, 'e5f6a7b8-c9d0-1234-5678-90abcdef0123', 'https://images.unsplash.com/photo-1550745165-9bc0b252726a?auto=format&fit=crop&w=800&q=60'),
+(23, 'e5f6a7b8-c9d0-1234-5678-90abcdef0123', 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=60'),
+(24, 'e5f6a7b8-c9d0-1234-5678-90abcdef0123', 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=60'),
+(25, 'e5f6a7b8-c9d0-1234-5678-90abcdef0123', 'https://images.unsplash.com/photo-1605810230464-28c1161933e1?auto=format&fit=crop&w=800&q=60'),
+(26, 'f6a7b8c9-d0e1-2345-6789-0abcdef01234', 'https://images.unsplash.com/photo-1507525428034-b723a9ce6890?auto=format&fit=crop&w=800&q=60'),
+(27, 'f6a7b8c9-d0e1-2345-6789-0abcdef01234', 'https://images.unsplash.com/photo-1527631746610-bca00a040d60?auto=format&fit=crop&w=800&q=60'),
+(28, 'f6a7b8c9-d0e1-2345-6789-0abcdef01234', 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=800&q=60'),
+(29, 'f6a7b8c9-d0e1-2345-6789-0abcdef01234', 'https://images.unsplash.com/photo-1503220317375-aaad61436b1b?auto=format&fit=crop&w=800&q=60'),
+(30, 'f6a7b8c9-d0e1-2345-6789-0abcdef01234', 'https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=800&q=60'),
+(31, 'a7b8c9d0-e1f2-3456-7890-bcdef0123456', 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=800&q=60'),
+(32, 'a7b8c9d0-e1f2-3456-7890-bcdef0123456', 'https://images.unsplash.com/photo-1487466365202-1af0b8cc7c3b?auto=format&fit=crop&w=800&q=60'),
+(33, 'a7b8c9d0-e1f2-3456-7890-bcdef0123456', 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=800&q=60'),
+(34, 'a7b8c9d0-e1f2-3456-7890-bcdef0123456', 'https://images.unsplash.com/photo-1552674605-db6ffd5e259b?auto=format&fit=crop&w=800&q=60'),
+(35, 'a7b8c9d0-e1f2-3456-7890-bcdef0123456', 'https://images.unsplash.com/photo-1517649763942-7e3c76277c66?auto=format&fit=crop&w=800&q=60'),
+(36, 'b8c9d0e1-f2a3-4567-8901-cdef01234567', 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=800&q=60'),
+(37, 'b8c9d0e1-f2a3-4567-8901-cdef01234567', 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=60'),
+(38, 'b8c9d0e1-f2a3-4567-8901-cdef01234567', 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=800&q=60'),
+(39, 'b8c9d0e1-f2a3-4567-8901-cdef01234567', 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=800&q=60'),
+(40, 'b8c9d0e1-f2a3-4567-8901-cdef01234567', 'https://images.unsplash.com/photo-1461784537883-5bab2a2524cf?auto=format&fit=crop&w=800&q=60'),
+(41, 'c9d0e1f2-a3b4-5678-9012-def012345678', 'https://images.unsplash.com/photo-1536924430914-94f41bd9c394?auto=format&fit=crop&w=800&q=60'),
+(42, 'c9d0e1f2-a3b4-5678-9012-def012345678', 'https://images.unsplash.com/photo-1501426026826-31c667bdf23d?auto=format&fit=crop&w=800&q=60'),
+(43, 'c9d0e1f2-a3b4-5678-9012-def012345678', 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=800&q=60'),
+(44, 
+
+'c9d0e1f2-a3b4-5678-9012-def012345678', 'https://images.unsplash.com/photo-1482160549825-59ac1b23a9c8?auto=format&fit=crop&w=800&q=60'),
+(45, 'c9d0e1f2-a3b4-5678-9012-def012345678', 'https://images.unsplash.com/photo-1547891654-e66ed7ebb968?auto=format&fit=crop&w=800&q=60'),
+(46, 'd0e1f2a3-b4c5-6789-0123-ef0123456789', 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=60'),
+(47, 'd0e1f2a3-b4c5-6789-0123-ef0123456789', 'https://images.unsplash.com/photo-1551489186-cf8726f514f8?auto=format&fit=crop&w=800&q=60'),
+(48, 'd0e1f2a3-b4c5-6789-0123-ef0123456789', 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=60'),
+(49, 'd0e1f2a3-b4c5-6789-0123-ef0123456789', 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=60'),
+(50, 'd0e1f2a3-b4c5-6789-0123-ef0123456789', 'https://images.unsplash.com/photo-1581338834647-b0fb40704e21?auto=format&fit=crop&w=800&q=60'),
+(51, 'e1f2a3b4-c5d6-7890-1234-f01234567890', 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=800&q=60'),
+(52, 'e1f2a3b4-c5d6-7890-1234-f01234567890', 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=60'),
+(53, 'e1f2a3b4-c5d6-7890-1234-f01234567890', 'https://images.unsplash.com/photo-1552581234-26160f608093?auto=format&fit=crop&w=800&q=60'),
+(54, 'e1f2a3b4-c5d6-7890-1234-f01234567890', 'https://images.unsplash.com/photo-1556156156-84f34731a541?auto=format&fit=crop&w=800&q=60'),
+(55, 'e1f2a3b4-c5d6-7890-1234-f01234567890', 'https://images.unsplash.com/photo-1560250056-07ba64664864?auto=format&fit=crop&w=800&q=60'),
+(56, 'f2a3b4c5-d6e7-8901-2345-01234567890a', 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=60'),
+(57, 'f2a3b4c5-d6e7-8901-2345-01234567890a', 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=800&q=60'),
+(58, 'f2a3b4c5-d6e7-8901-2345-01234567890a', 'https://images.unsplash.com/photo-1553440569-99424e1bf875?auto=format&fit=crop&w=800&q=60'),
+(59, 'f2a3b4c5-d6e7-8901-2345-01234567890a', 'https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?auto=format&fit=crop&w=800&q=60'),
+(60, 'f2a3b4c5-d6e7-8901-2345-01234567890a', 'https://images.unsplash.com/photo-1514316454348-772a0a202078?auto=format&fit=crop&w=800&q=60'),
+(61, 'a3b4c5d6-e7f8-9012-3456-1234567890ab', 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=800&q=60'),
+(62, 'a3b4c5d6-e7f8-9012-3456-1234567890ab', 'https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=800&q=60'),
+(63, 'a3b4c5d6-e7f8-9012-3456-1234567890ab', 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=800&q=60'),
+(64, 'a3b4c5d6-e7f8-9012-3456-1234567890ab', 'https://images.unsplash.com/photo-1477332552946-cfb384aeaf1c?auto=format&fit=crop&w=800&q=60'),
+(65, 'a3b4c5d6-e7f8-9012-3456-1234567890ab', 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=800&q=60'),
+(66, 'b4c5d6e7-f8a9-0123-4567-234567890abc', 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=60'),
+(67, 'b4c5d6e7-f8a9-0123-4567-234567890abc', 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=60'),
+(68, 'b4c5d6e7-f8a9-0123-4567-234567890abc', 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=60'),
+(69, 'b4c5d6e7-f8a9-0123-4567-234567890abc', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=800&q=60'),
+(70, 'b4c5d6e7-f8a9-0123-4567-234567890abc', 'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&w=800&q=60'),
+(71, 'c5d6e7f8-a9b0-1234-5678-34567890abcd', 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=60'),
+(72, 'c5d6e7f8-a9b0-1234-5678-34567890abcd', 'https://images.unsplash.com/photo-1489599849927-2ee91e356462?auto=format&fit=crop&w=800&q=60'),
+(73, 'c5d6e7f8-a9b0-1234-5678-34567890abcd', 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?auto=format&fit=crop&w=800&q=60'),
+(74, 'c5d6e7f8-a9b0-1234-5678-34567890abcd', 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&w=800&q=60'),
+(75, 'c5d6e7f8-a9b0-1234-5678-34567890abcd', 'https://images.unsplash.com/photo-1604975701397-1cf25b5168b8?auto=format&fit=crop&w=800&q=60'),
+(76, 'd6e7f8a9-b0c1-2345-6789-4567890abcde', 'https://images.unsplash.com/photo-1524995767962-b1f4b889aa3b?auto=format&fit=crop&w=800&q=60'),
+(77, 'd6e7f8a9-b0c1-2345-6789-4567890abcde', 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=800&q=60'),
+(78, 'd6e7f8a9-b0c1-2345-6789-4567890abcde', 'https://images.unsplash.com/photo-1550399105-c4db5fb85c18?auto=format&fit=crop&w=800&q=60'),
+(79, 'd6e7f8a9-b0c1-2345-6789-4567890abcde', 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=800&q=60'),
+(80, 'd6e7f8a9-b0c1-2345-6789-4567890abcde', 'https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=800&q=60'),
+(81, 'e7f8a9b0-c1d2-3456-7890-567890abcdef', 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?auto=format&fit=crop&w=800&q=60'),
+(82, 'e7f8a9b0-c1d2-3456-7890-567890abcdef', 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=60'),
+(83, 'e7f8a9b0-c1d2-3456-7890-567890abcdef', 'https://images.unsplash.com/photo-1506443432602-ac2fcd6f5439?auto=format&fit=crop&w=800&q=60'),
+(84, 'e7f8a9b0-c1d2-3456-7890-567890abcdef', 'https://images.unsplash.com/photo-1528722828814-77b9b83aafb2?auto=format&fit=crop&w=800&q=60'),
+(85, 'e7f8a9b0-c1d2-3456-7890-567890abcdef', 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=800&q=60'),
+(86, 'f8a9b0c1-d2e3-4567-8901-67890abcdef0', 'https://images.unsplash.com/photo-1524492412937-b28074a5371b?auto=format&fit=crop&w=800&q=60'),
+(87, 'f8a9b0c1-d2e3-4567-8901-67890abcdef0', 'https://images.unsplash.com/photo-1483794344563-d27a8d18014e?auto=format&fit=crop&w=800&q=60'),
+(88, 'f8a9b0c1-d2e3-4567-8901-67890abcdef0', 'https://images.unsplash.com/photo-1555448248-2571daf6344b?auto=format&fit=crop&w=800&q=60'),
+(89, 'f8a9b0c1-d2e3-4567-8901-67890abcdef0', 'https://images.unsplash.com/photo-1569954432138-3b3207233261?auto=format&fit=crop&w=800&q=60'),
+(90, 'f8a9b0c1-d2e3-4567-8901-67890abcdef0', 'https://images.unsplash.com/photo-1505671715339-6de38c2a3e29?auto=format&fit=crop&w=800&q=60'),
+(91, 'a9b0c1d2-e3f4-5678-9012-7890abcdef01', 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=800&q=60'),
+(92, 'a9b0c1d2-e3f4-5678-9012-7890abcdef01', 'https://images.unsplash.com/photo-1574974635109-c636611c5217?auto=format&fit=crop&w=800&q=60'),
+(93, 'a9b0c1d2-e3f4-5678-9012-7890abcdef01', 'https://images.unsplash.com/photo-1554475901-4538ddfbccc2?auto=format&fit=crop&w=800&q=60'),
+(94, 
+
+'a9b0c1d2-e3f4-5678-9012-7890abcdef01', 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&w=800&q=60'),
+(95, 'a9b0c1d2-e3f4-5678-9012-7890abcdef01', 'https://images.unsplash.com/photo-1614935151651-0bea6508db6b?auto=format&fit=crop&w=800&q=60'),
+(96, 'b0c1d2e3-f4a5-6789-0123-890abcdef012', 'https://images.unsplash.com/photo-1566275529824-cca6d008f3da?auto=format&fit=crop&w=800&q=60'),
+(97, 'b0c1d2e3-f4a5-6789-0123-890abcdef012', 'https://images.unsplash.com/photo-1599423300042-c4a475d0a5f3?auto=format&fit=crop&w=800&q=60'),
+(98, 'b0c1d2e3-f4a5-6789-0123-890abcdef012', 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=800&q=60'),
+(99, 'b0c1d2e3-f4a5-6789-0123-890abcdef012', 'https://images.unsplash.com/photo-1518701046843-6d732a3f21b3?auto=format&fit=crop&w=800&q=60'),
+(100, 'b0c1d2e3-f4a5-6789-0123-890abcdef012', 'https://images.unsplash.com/photo-1460518451285-97b6aa326961?auto=format&fit=crop&w=800&q=60'),
+(101, 'c1d2e3f4-a5b6-7890-1234-90abcdef0123', 'https://images.unsplash.com/photo-1509358271058-acd22cc93898?auto=format&fit=crop&w=800&q=60'),
+(102, 'c1d2e3f4-a5b6-7890-1234-90abcdef0123', 'https://images.unsplash.com/photo-1542262868-cec49c353553?auto=format&fit=crop&w=800&q=60'),
+(103, 'c1d2e3f4-a5b6-7890-1234-90abcdef0123', 'https://images.unsplash.com/photo-1439405326854-014607f694d7?auto=format&fit=crop&w=800&q=60'),
+(104, 'c1d2e3f4-a5b6-7890-1234-90abcdef0123', 'https://images.unsplash.com/photo-1559128010-4c123e4e91d4?auto=format&fit=crop&w=800&q=60'),
+(105, 'c1d2e3f4-a5b6-7890-1234-90abcdef0123', 'https://images.unsplash.com/photo-1520454974442-62a145861115?auto=format&fit=crop&w=800&q=60'),
+(106, 'd2e3f4a5-b6c7-8901-2345-abcdef012345', 'https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=800&q=60'),
+(107, 'd2e3f4a5-b6c7-8901-2345-abcdef012345', 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=60'),
+(108, 'd2e3f4a5-b6c7-8901-2345-abcdef012345', 'https://images.unsplash.com/photo-1616046229478-9901c5536a45?auto=format&fit=crop&w=800&q=60'),
+(109, 'd2e3f4a5-b6c7-8901-2345-abcdef012345', 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=60'),
+(110, 'd2e3f4a5-b6c7-8901-2345-abcdef012345', 'https://images.unsplash.com/photo-1538688525198-9b88f6f53126?auto=format&fit=crop&w=800&q=60'),
+(111, 'e3f4a5b6-c7d8-9012-3456-bcdef0123456', 'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?auto=format&fit=crop&w=800&q=60'),
+(112, 'e3f4a5b6-c7d8-9012-3456-bcdef0123456', 'https://images.unsplash.com/photo-1516912481808-3406841bd33c?auto=format&fit=crop&w=800&q=60'),
+(113, 'e3f4a5b6-c7d8-9012-3456-bcdef0123456', 'https://images.unsplash.com/photo-1598194478156-918d35a5092a?auto=format&fit=crop&w=800&q=60'),
+(114, 'e3f4a5b6-c7d8-9012-3456-bcdef0123456', 'https://images.unsplash.com/photo-1485322551133-3a4c27a9d925?auto=format&fit=crop&w=800&q=60'),
+(115, 'e3f4a5b6-c7d8-9012-3456-bcdef0123456', 'https://images.unsplash.com/photo-1561485132-59e214bab646?auto=format&fit=crop&w=800&q=60'),
+(116, 'f4a5b6c7-d8e9-0123-4567-cdef01234567', 'https://images.unsplash.com/photo-1508823348126-3392f757e721?auto=format&fit=crop&w=800&q=60'),
+(117, 'f4a5b6c7-d8e9-0123-4567-cdef01234567', 'https://images.unsplash.com/photo-1561069934-eee225952461?auto=format&fit=crop&w=800&q=60'),
+(118, 'f4a5b6c7-d8e9-0123-4567-cdef01234567', 'https://images.unsplash.com/photo-1550684376-efcbd6e3f031?auto=format&fit=crop&w=800&q=60'),
+(119, 'f4a5b6c7-d8e9-0123-4567-cdef01234567', 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?auto=format&fit=crop&w=800&q=60'),
+(120, 'f4a5b6c7-d8e9-0123-4567-cdef01234567', 'https://images.unsplash.com/photo-1533038590840-1cde6e668a91?auto=format&fit=crop&w=800&q=60'),
+(121, 'a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=800&q=60'),
+(122, 'a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=60'),
+(123, 'a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1504196658025-a1f5f3a25e1a?auto=format&fit=crop&w=800&q=60'),
+(124, 'a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1464349153735-7db50ed83c84?auto=format&fit=crop&w=800&q=60'),
+(125, 'a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1527487265873-35079a2a94a6?auto=format&fit=crop&w=800&q=60');
+-- --------------------------------------------------------
+--
+-- Estructura de la tabla `gallery_photos_metadata`
+--
+-- --------------------------------------------------------
+CREATE TABLE `gallery_photos_metadata` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `photo_id` int(11) NOT NULL,
+  `likes` int(11) DEFAULT 0,
+  `saves` int(11) DEFAULT 0,
+  `interactions` int(11) DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `photo_id` (`photo_id`),
+  CONSTRAINT `gallery_photos_metadata_ibfk_1` FOREIGN KEY (`photo_id`) REFERENCES `gallery_photos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- --------------------------------------------------------
+--
+-- Volcado de datos para la tabla `gallery_photos_metadata`
+--
+-- --------------------------------------------------------
+-- Se generan datos aleatorios para cada una de las 125 fotos
+INSERT INTO `gallery_photos_metadata` (`photo_id`, `likes`, `saves`, `interactions`)
+SELECT
+    id,
+    FLOOR(RAND() * 500) AS likes,
+    FLOOR(RAND() * 100) AS saves,
+    FLOOR(RAND() * 1000) AS interactions
+FROM
+    `gallery_photos`;
+-- --------------------------------------------------------
+--
+-- Estructura de la tabla `gallery_profile_pictures`
+--
+-- --------------------------------------------------------
+CREATE TABLE `gallery_profile_pictures` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `gallery_uuid` varchar(36) NOT NULL,
+  `profile_picture_url` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `gallery_uuid` (`gallery_uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+--
+-- Volcado de datos para la tabla `gallery_profile_pictures`
+--
+INSERT INTO `gallery_profile_pictures` (`gallery_uuid`, `profile_picture_url`) VALUES
+('a1b2c3d4-e5f6-7890-1234-567890abcdef', 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=60'),
+('b2c3d4e5-f6a7-8901-2345-67890abcdef0', 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=200&q=60'),
+('c3d4e5f6-a7b8-9012-3456-7890abcdef01', 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=200&q=60'),
+('d4e5f6a7-b8c9-0123-4567-890abcdef012', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=60'),
+('e5f6a7b8-c9d0-1234-5678-90abcdef0123', 'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?auto=format&fit=crop&w=200&q=60'),
+('f6a7b8c9-d0e1-2345-6789-0abcdef01234', 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=200&q=60'),
+('a7b8c9d0-e1f2-3456-7890-bcdef0123456', 'https://images.unsplash.com/photo-1489599849927-2ee91e356462?auto=format&fit=crop&w=200&q=60'),
+('b8c9d0e1-f2a3-4567-8901-cdef01234567', 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?auto=format&fit=crop&w=200&q=60'),
+('c9d0e1f2-a3b4-5678-9012-def012345678', 'https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&w=200&q=60'),
+('d0e1f2a3-b4c5-6789-0123-ef0123456789', 'https://images.unsplash.com/photo-1604975701397-1cf25b5168b8?auto=format&fit=crop&w=200&q=60'),
+('e1f2a3b4-c5d6-7890-1234-f01234567890', 'https://images.unsplash.com/photo-1524995767962-b1f4b889aa3b?auto=format&fit=crop&w=200&q=60'),
+('f2a3b4c5-d6e7-8901-2345-01234567890a', 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=200&q=60'),
+('a3b4c5d6-e7f8-9012-3456-1234567890ab', 'https://images.unsplash.com/photo-1550399105-c4db5fb85c18?auto=format&fit=crop&w=200&q=60'),
+('b4c5d6e7-f8a9-0123-4567-234567890abc', 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=200&q=60'),
+('c5d6e7f8-a9b0-1234-5678-34567890abcd', 'https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=200&q=60'),
+('d6e7f8a9-b0c1-2345-6789-4567890abcde', 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?auto=format&fit=crop&w=200&q=60'),
+('e7f8a9b0-c1d2-3456-7890-567890abcdef', 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=200&q=60'),
+('f8a9b0c1-d2e3-4567-8901-67890abcdef0', 'https://images.unsplash.com/photo-1506443432602-ac2fcd6f5439?auto=format&fit=crop&w=200&q=60'),
+('a9b0c1d2-e3f4-5678-9012-7890abcdef01', 'https://images.unsplash.com/photo-1528722828814-77b9b83aafb2?auto=format&fit=crop&w=200&q=60'),
+('b0c1d2e3-f4a5-6789-0123-890abcdef012', 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=200&q=60'),
+('c1d2e3f4-a5b6-7890-1234-90abcdef0123', 'https://images.unsplash.com/photo-1524492412937-b28074a5371b?auto=format&fit=crop&w=200&q=60'),
+('d2e3f4a5-b6c7-8901-2345-abcdef012345', 'https://images.unsplash.com/photo-1483794344563-d27a8d18014e?auto=format&fit=crop&w=200&q=60'),
+('e3f4a5b6-c7d8-9012-3456-bcdef0123456', 'https://images.unsplash.com/photo-1555448248-2571daf6344b?auto=format&fit=crop&w=200&q=60'),
+('f4a5b6c7-d8e9-0123-4567-cdef01234567', 'https://images.unsplash.com/photo-1569954432138-3b3207233261?auto=format&fit=crop&w=200&q=60'),
+('a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1505671715339-6de38c2a3e29?auto=format&fit=crop&w=200&q=60');
