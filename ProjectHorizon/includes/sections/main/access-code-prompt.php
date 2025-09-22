@@ -6,7 +6,7 @@
             <button id="watch-ad-button" class="load-more-btn" data-action="watch-ad-to-unlock">Ver anuncio para desbloquear</button>
         </div>
         <div class="header-button" data-action="returnToHome" style="margin-top: 20px;">
-            <span class="material-symbols-rounded">arrow_back</span>
+            <span class="material-symbols-rounded">arrow_left</span>
             <span>Volver a la página principal</span>
         </div>
     </div>

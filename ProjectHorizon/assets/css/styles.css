@@ -248,7 +248,7 @@ body {
 }
 
 .search-input-wrapper:hover {
-    border-color: #a0a0a0;
+    border-color: #000000;
 }
 
 .search-input-wrapper:focus-within {
@@ -260,16 +260,21 @@ body {
     align-items: center;
     justify-content: center;
     width: 45px;
+    height: 100%;
     color: #6c757d;
 }
 
 .search-input-text {
     flex: 1;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .search-input-wrapper input {
     width: 100%;
-    height: 100%;
+    height: 90%;
     border: none;
     padding: 0;
     padding-right: 12px;

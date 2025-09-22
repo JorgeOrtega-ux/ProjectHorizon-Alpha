@@ -108,6 +108,9 @@ export function initMainController() {
 
     let currentFavoritesSortBy = 'user';
     let currentFavoritesList = [];
+    
+    // Nueva variable para el cooldown de anuncios
+    let adCooldownActive = false;
 
     const loaderHTML = '<div class="loader-container"><div class="spinner"></div></div>';
 
@@ -417,6 +420,15 @@ export function initMainController() {
     function updateCardPrivacyStatus(uuid, unlockedTimestamp) {
         const card = document.querySelector(`.card[data-uuid="${uuid}"]`);
         if (!card) return;
+
+        // FIX: Only update status for actual private galleries.
+        if (card.dataset.privacy !== '1') {
+            const badge = card.querySelector('.privacy-badge');
+            if (badge && !badge.innerHTML.includes('Público')) {
+                badge.innerHTML = `<span class="material-symbols-rounded">public</span> Público`;
+            }
+            return;
+        }
 
         const badge = card.querySelector('.privacy-badge');
         if (!badge) return;
@@ -1171,11 +1183,15 @@ export function initMainController() {
                                 if (nextIndex >= 0 && nextIndex < listToUse.length) {
                                     const nextPhoto = listToUse[nextIndex];
                                     navigateToUrl('main', 'photoView', { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id });
-                                    if (Math.random() < 0.25) {
+                                    
+                                    // Lógica de anuncios para navegación
+                                    if (!adCooldownActive && Math.random() < 0.15) { // 15% de probabilidad
                                         photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id } };
                                         handleStateChange('main', 'adView');
+                                        adCooldownActive = true; // Activa el cooldown
                                     } else {
                                         renderPhotoView(nextPhoto.gallery_uuid, nextPhoto.id, listToUse);
+                                        adCooldownActive = false; // Resetea el cooldown
                                     }
                                 }
                             }
@@ -1314,8 +1330,26 @@ export function initMainController() {
                     if (isPrivate && !isPrivateGalleryUnlocked(uuid)) {
                         promptToWatchAd(uuid, name);
                     } else {
-                        navigateToUrl('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
-                        handleStateChange('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
+                        // This is either a public gallery OR an unlocked private gallery.
+                        
+                        // User wants no ad if it's private but unlocked.
+                        if (isPrivate && isPrivateGalleryUnlocked(uuid)) {
+                            // It's unlocked, so navigate directly.
+                            navigateToUrl('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
+                            handleStateChange('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
+                            adCooldownActive = false; // Reset cooldown just in case.
+                        } else {
+                            // This must be a public gallery. Apply the ad logic.
+                            if (!adCooldownActive && Math.random() < 0.10) { // 10% de probabilidad
+                                galleryAfterAd = { view: 'main', section: 'galleryPhotos', data: { uuid: uuid, galleryName: name } };
+                                handleStateChange('main', 'adView');
+                                adCooldownActive = true; // Activa el cooldown
+                            } else {
+                                navigateToUrl('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
+                                handleStateChange('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
+                                adCooldownActive = false; // Resetea el cooldown
+                            }
+                        }
                     }
                     return;
                 }
@@ -1326,12 +1360,15 @@ export function initMainController() {
                     const photoId = photoCard.dataset.photoId;
                     incrementInteraction(galleryUuid);
     
-                    if (Math.random() < 0.25) { // 25% de probabilidad
+                    // Lógica de anuncios al hacer clic en una foto
+                    if (!adCooldownActive && Math.random() < 0.10) { // 10% de probabilidad
                         photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: galleryUuid, photoId: photoId } };
                         handleStateChange('main', 'adView');
+                        adCooldownActive = true; // Activa el cooldown
                     } else {
                         navigateToUrl('main', 'photoView', { uuid: galleryUuid, photoId: photoId });
                         handleStateChange('main', 'photoView', { uuid: galleryUuid, photoId: photoId });
+                        adCooldownActive = false; // Resetea el cooldown
                     }
                     return;
                 }

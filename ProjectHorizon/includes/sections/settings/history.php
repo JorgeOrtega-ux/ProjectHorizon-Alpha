@@ -3,7 +3,7 @@
         <div class="content-header-wrapper">
             <div class="content-header-left">
                 <div class="header-button" data-action="toggleSectionHistoryPrivacy" data-tooltip="Volver">
-                    <span class="material-symbols-rounded">arrow_back</span>
+                    <span class="material-symbols-rounded">arrow_left</span>
                 </div>
                 <div class="header-title-container">
                     <span>Mi historial</span>

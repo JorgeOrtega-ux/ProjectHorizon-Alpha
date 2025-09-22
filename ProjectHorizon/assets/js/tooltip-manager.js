@@ -100,7 +100,7 @@ export function initTooltips() {
         attachedElements.add(element);
 
         const showEvents = ['mouseenter', 'focus'];
-        const hideEvents = ['mouseleave', 'blur'];
+        const hideEvents = ['mouseleave', 'blur', 'click']; // Se añade 'click' a los eventos que ocultan
 
         showEvents.forEach(event => {
             element.addEventListener(event, () => showTooltip(element));
