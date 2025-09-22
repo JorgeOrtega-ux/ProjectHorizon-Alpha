@@ -1579,30 +1579,8 @@ export function initMainController() {
             case 'login':
                 // Logic for login section can be added here if needed in the future
                 break;
-            case 'register': { // Using block scope for variable declaration
-                const adminCodeInput = document.getElementById('admin-code-input');
-                if (adminCodeInput) {
-                    adminCodeInput.addEventListener('input', (e) => {
-                        const input = e.target;
-                        let value = input.value;
-
-                        // Remove non-alphanumeric chars and convert to uppercase
-                        let cleanValue = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-                        
-                        let finalValue = cleanValue;
-                        if (cleanValue.length > 4) {
-                            // Insert hyphen and limit to XXXX-XXXX format
-                            finalValue = cleanValue.slice(0, 4) + '-' + cleanValue.slice(4, 8);
-                        }
-
-                        // Only update the value if it has changed to prevent cursor jumps
-                        if (input.value !== finalValue) {
-                            input.value = finalValue;
-                        }
-                    });
-                }
+            case 'register':
                 break;
-            }
             case 'accessibility':
                 updateThemeSelectorUI(localStorage.getItem('theme') || 'system');
                 updateLanguageSelectorUI(localStorage.getItem('language') || 'es-LA');
