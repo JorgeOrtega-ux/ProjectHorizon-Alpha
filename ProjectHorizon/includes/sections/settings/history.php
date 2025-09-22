@@ -53,6 +53,7 @@
                     <span>Perfiles vistos recientemente</span>
                 </div>
                 <div class="card-grid" id="history-profiles-grid"></div>
+                <div class="load-more-container disabled" id="history-profiles-load-more"></div>
             </div>
             <div class="category-section" data-history-view="views">
                 <div class="category-section-title">
@@ -60,6 +61,7 @@
                     <span>Fotos vistas recientemente</span>
                 </div>
                 <div class="card-grid" id="history-photos-grid"></div>
+                <div class="load-more-container disabled" id="history-photos-load-more"></div>
             </div>
             <div class="category-section" data-history-view="searches" style="display: none;">
                 <div class="category-section-title">
@@ -67,6 +69,7 @@
                     <span>Búsquedas Recientes</span>
                 </div>
                 <div id="history-searches-list"></div>
+                <div class="load-more-container disabled" id="history-searches-load-more"></div>
             </div>
         </div>
     </div>

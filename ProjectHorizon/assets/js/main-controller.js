@@ -90,8 +90,6 @@ export function initMainController() {
     let galleryAfterAd = null;
     let unlockCountdownInterval = null;
     
-    // *** VARIABLE CORREGIDA ***
-    // Almacenará la lista de fotos actual para el visor
     let currentPhotoViewList = [];
 
     let galleriesCurrentPage = 1;
@@ -99,6 +97,14 @@ export function initMainController() {
     let isLoadingGalleries = false;
     let isLoadingPhotos = false;
     const BATCH_SIZE = 20;
+
+    // *** NUEVAS VARIABLES PARA EL HISTORIAL ***
+    const HISTORY_PROFILES_BATCH = 20;
+    const HISTORY_PHOTOS_BATCH = 20;
+    const HISTORY_SEARCHES_BATCH = 25;
+    let historyProfilesShown = HISTORY_PROFILES_BATCH;
+    let historyPhotosShown = HISTORY_PHOTOS_BATCH;
+    let historySearchesShown = HISTORY_SEARCHES_BATCH;
 
     let currentFavoritesSortBy = 'user';
     let currentFavoritesList = [];
@@ -195,6 +201,10 @@ export function initMainController() {
                     localStorage.removeItem('viewHistory');
                     alert('Historial borrado con éxito.');
                     if(currentAppSection === 'history') {
+                        // Reseteamos los contadores y volvemos a mostrar
+                        historyProfilesShown = HISTORY_PROFILES_BATCH;
+                        historyPhotosShown = HISTORY_PHOTOS_BATCH;
+                        historySearchesShown = HISTORY_SEARCHES_BATCH;
                         displayHistory();
                     }
                 }
@@ -977,6 +987,17 @@ export function initMainController() {
         }
     }
 
+    function removeSearchFromHistory(timestamp) {
+        let history = getHistory();
+        const indexToRemove = history.searches.findIndex(item => item.searched_at == timestamp);
+        
+        if (indexToRemove > -1) {
+            history.searches.splice(indexToRemove, 1);
+            localStorage.setItem('viewHistory', JSON.stringify(history));
+            displayHistory();
+        }
+    }
+
     function setupEventListeners() {
         document.addEventListener('click', function (event) {
             const actionTarget = event.target.closest('[data-action]');
@@ -1008,7 +1029,6 @@ export function initMainController() {
             if (actionTarget) {
                 const action = actionTarget.dataset.action;
 
-                // En móviles, al hacer clic en un enlace del menú principal, se oculta el menú.
                 if (window.matchMedia('(max-width: 468px)').matches && actionTarget.closest('[data-module="moduleSurface"] .menu-link')) {
                     const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
                     if (moduleSurface) {
@@ -1057,7 +1077,7 @@ export function initMainController() {
                         const sectionName = action.substring("toggleSection".length);
                         const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
                         const parentMenu = actionTarget.closest('[data-menu]');
-                        const targetView = parentMenu ? parentMenu.dataset.menu : 'main';
+                        const targetView = parentMenu ? parentMenu.dataset.menu : currentAppView;
                         if (currentAppView === targetView && currentAppSection === targetSection) return;
                         navigateToUrl(targetView, targetSection);
                         handleStateChange(targetView, targetSection);
@@ -1070,6 +1090,19 @@ export function initMainController() {
                         if (currentGalleryForPhotoView && currentGalleryNameForPhotoView) {
                             fetchAndDisplayGalleryPhotos(currentGalleryForPhotoView, currentGalleryNameForPhotoView, true);
                         }
+                        break;
+                    // *** NUEVOS CASOS PARA EL HISTORIAL ***
+                    case 'load-more-history-profiles':
+                        historyProfilesShown += HISTORY_PROFILES_BATCH;
+                        displayHistory();
+                        break;
+                    case 'load-more-history-photos':
+                        historyPhotosShown += HISTORY_PHOTOS_BATCH;
+                        displayHistory();
+                        break;
+                    case 'load-more-history-searches':
+                        historySearchesShown += HISTORY_SEARCHES_BATCH;
+                        displayHistory();
                         break;
                     case 'returnToUserPhotos':
                         if (lastVisitedView === 'history') {
@@ -1124,11 +1157,10 @@ export function initMainController() {
                         }
                         break;
                     
-                    // *** CASO CORREGIDO ***
                     case 'previous-photo':
                     case 'next-photo':
                         if (!actionTarget.classList.contains('disabled-nav')) {
-                            const listToUse = currentPhotoViewList; // Usar siempre la lista del visor
+                            const listToUse = currentPhotoViewList; 
                             
                             const currentId = currentPhotoData ? currentPhotoData.id : null;
                             if (!currentId || listToUse.length === 0) return;
@@ -1139,8 +1171,6 @@ export function initMainController() {
                                 if (nextIndex >= 0 && nextIndex < listToUse.length) {
                                     const nextPhoto = listToUse[nextIndex];
                                     navigateToUrl('main', 'photoView', { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id });
-                                    // NO llamamos a handleStateChange aquí, ya que popstate lo hará.
-                                    // Pero sí renderizamos la nueva foto inmediatamente para una mejor UX.
                                     if (Math.random() < 0.25) {
                                         photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id } };
                                         handleStateChange('main', 'adView');
@@ -1186,7 +1216,12 @@ export function initMainController() {
                     case 'watch-ad-to-unlock':
                         handleStateChange('main', 'adView');
                         break;
-
+                    case 'delete-search-item':
+                        const timestamp = actionTarget.dataset.timestamp;
+                        if (timestamp) {
+                            removeSearchFromHistory(timestamp);
+                        }
+                        break;
                 }
             }
 
@@ -1241,6 +1276,10 @@ export function initMainController() {
                 else if (selectId === 'language-select') {
                     setLanguage(value);
                 } else if (selectId.includes('history-select')) {
+                    // Reseteamos contadores al cambiar de vista en el historial
+                    historyProfilesShown = HISTORY_PROFILES_BATCH;
+                    historyPhotosShown = HISTORY_PHOTOS_BATCH;
+                    historySearchesShown = HISTORY_SEARCHES_BATCH;
                     document.querySelectorAll('[data-history-view]').forEach(view => {
                         view.style.display = view.dataset.historyView === value ? '' : 'none';
                     });
@@ -1388,11 +1427,12 @@ export function initMainController() {
         }
     }
 
+    // *** FUNCIÓN DE HISTORIAL COMPLETAMENTE ACTUALIZADA ***
     function displayHistory() {
         const history = getHistory();
         const mainContainer = document.querySelector('[data-section="history"]');
         if (!mainContainer) return;
-
+    
         const historyContainer = mainContainer.querySelector('#history-container');
         const profilesGrid = mainContainer.querySelector('#history-profiles-grid');
         const photosGrid = mainContainer.querySelector('#history-photos-grid');
@@ -1401,28 +1441,40 @@ export function initMainController() {
         const pausedAlert = mainContainer.querySelector('.history-paused-alert');
         const historySelect = mainContainer.querySelector('#history-select');
         
+        const profilesLoadMore = mainContainer.querySelector('#history-profiles-load-more');
+        const photosLoadMore = mainContainer.querySelector('#history-photos-load-more');
+        const searchesLoadMore = mainContainer.querySelector('#history-searches-load-more');
+
         const currentView = historySelect ? (historySelect.querySelector('.menu-link.active')?.dataset.value || 'views') : 'views';
         const isViewHistoryPaused = localStorage.getItem('enable-view-history') === 'false';
         const isSearchHistoryPaused = localStorage.getItem('enable-search-history') === 'false';
-
+    
         historyContainer.style.display = 'none';
         statusContainer.classList.add('disabled');
         pausedAlert.classList.add('disabled');
         profilesGrid.innerHTML = '';
         photosGrid.innerHTML = '';
         searchesList.innerHTML = '';
-
+        profilesLoadMore.innerHTML = '';
+        photosLoadMore.innerHTML = '';
+        searchesLoadMore.innerHTML = '';
+        profilesLoadMore.classList.add('disabled');
+        photosLoadMore.classList.add('disabled');
+        searchesLoadMore.classList.add('disabled');
+    
         if (currentView === 'views') {
             const hasContent = history.profiles.length > 0 || history.photos.length > 0;
-
+    
             if (hasContent) {
                 historyContainer.style.display = 'block';
                 if (isViewHistoryPaused) {
                     pausedAlert.classList.remove('disabled');
                 }
                 
+                // Mostrar perfiles vistos
                 if (history.profiles.length > 0) {
-                     history.profiles.forEach(profile => {
+                    const profilesToShow = history.profiles.slice(0, historyProfilesShown);
+                    profilesToShow.forEach(profile => {
                         const card = document.createElement('div');
                         card.className = 'card';
                         card.dataset.uuid = profile.id;
@@ -1449,10 +1501,17 @@ export function initMainController() {
                         card.appendChild(overlay);
                         profilesGrid.appendChild(card);
                     });
+
+                    if (history.profiles.length > historyProfilesShown) {
+                        profilesLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-profiles">Mostrar más</button>`;
+                        profilesLoadMore.classList.remove('disabled');
+                    }
                 }
                 
+                // Mostrar fotos vistas
                 if (history.photos.length > 0) {
-                     history.photos.forEach(photo => {
+                    const photosToShow = history.photos.slice(0, historyPhotosShown);
+                    photosToShow.forEach(photo => {
                         const card = document.createElement('div');
                         card.className = 'card photo-card';
                         card.dataset.photoUrl = photo.photo_url;
@@ -1477,6 +1536,11 @@ export function initMainController() {
                         card.appendChild(overlay);
                         photosGrid.appendChild(card);
                     });
+
+                    if (history.photos.length > historyPhotosShown) {
+                        photosLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-photos">Mostrar más</button>`;
+                        photosLoadMore.classList.remove('disabled');
+                    }
                 }
             } else {
                 if (isViewHistoryPaused) {
@@ -1489,13 +1553,15 @@ export function initMainController() {
             }
         } else if (currentView === 'searches') {
             const hasContent = history.searches.length > 0;
-
+    
             if (hasContent) {
                 historyContainer.style.display = 'block';
                 if (isSearchHistoryPaused) {
                     pausedAlert.classList.remove('disabled');
                 }
-                history.searches.forEach(search => {
+
+                const searchesToShow = history.searches.slice(0, historySearchesShown);
+                searchesToShow.forEach(search => {
                     const item = document.createElement('div');
                     item.className = 'search-history-item';
                     item.innerHTML = `
@@ -1503,9 +1569,19 @@ export function initMainController() {
                             <span class="search-term">"${search.term}"</span>
                             <span class="search-details">en ${search.section} - ${new Date(search.searched_at).toLocaleString()}</span>
                         </div>
+                        <div class="search-history-actions">
+                            <button class="search-history-delete-btn" data-action="delete-search-item" data-timestamp="${search.searched_at}" data-tooltip="Eliminar">
+                                <span class="material-symbols-rounded">close</span>
+                            </button>
+                        </div>
                     `;
                     searchesList.appendChild(item);
                 });
+
+                if (history.searches.length > historySearchesShown) {
+                    searchesLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-searches">Mostrar más</button>`;
+                    searchesLoadMore.classList.remove('disabled');
+                }
             } else {
                 if (isSearchHistoryPaused) {
                     statusContainer.innerHTML = '<div><h2>El historial de búsqueda está pausado</h2><p>Tus búsquedas no se guardarán mientras esta opción esté desactivada.</p></div>';
@@ -1570,6 +1646,10 @@ export function initMainController() {
                 initSettingsController();
                 break;
             case 'history':
+                // Reseteamos contadores al entrar a la sección de historial
+                historyProfilesShown = HISTORY_PROFILES_BATCH;
+                historyPhotosShown = HISTORY_PHOTOS_BATCH;
+                historySearchesShown = HISTORY_SEARCHES_BATCH;
                 displayHistory();
                 break;
             case 'historyPrivacy':
@@ -1600,12 +1680,10 @@ export function initMainController() {
                 }
                 break;
             
-            // *** CASO CORREGIDO ***
             case 'photoView':
                 if (data && data.uuid && data.photoId) {
                     let photoListPromise;
 
-                    // Determinar qué lista usar basado en la última vista visitada
                     if (lastVisitedView === 'userSpecificFavorites' && lastVisitedData && lastVisitedData.uuid) {
                         photoListPromise = Promise.resolve(getFavorites().filter(p => p.gallery_uuid === data.uuid));
                     } else if (lastVisitedView === 'favorites') {
@@ -1616,11 +1694,9 @@ export function initMainController() {
                         currentHistoryPhotosList = getHistory().photos;
                         photoListPromise = Promise.resolve(currentHistoryPhotosList);
                     } else {
-                        // Si la lista de la galería actual ya está cargada y coincide, úsala.
                         if (currentGalleryForPhotoView === data.uuid && currentGalleryPhotoList.length > 0) {
                             photoListPromise = Promise.resolve(currentGalleryPhotoList);
                         } else {
-                            // Si no, obtén la lista completa de fotos de la galería.
                             photoListPromise = fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=photos&uuid=${data.uuid}&limit=1000`)
                                 .then(res => res.json())
                                 .then(photos => {
@@ -1631,9 +1707,8 @@ export function initMainController() {
                         }
                     }
                     
-                    // Una vez que la promesa se resuelve, actualiza la lista del visor y renderiza la foto.
                     photoListPromise.then(photoList => {
-                        currentPhotoViewList = photoList; // Actualiza la lista del contexto del visor
+                        currentPhotoViewList = photoList;
                         renderPhotoView(data.uuid, data.photoId, currentPhotoViewList);
                     });
                 }
@@ -1692,7 +1767,6 @@ export function initMainController() {
                             photoAfterAd = null;
                             galleryAfterAd = null;
                         } else {
-                            // Si no hay un destino específico, vuelve a la página de inicio
                             navigateToUrl('main', 'home');
                             handleStateChange('main', 'home');
                         }
