@@ -1,6 +1,6 @@
 // assets/js/main-controller.js
 
-import { navigateToUrl, setupPopStateHandler, setInitialHistoryState } from './url-manager.js';
+import { generateUrl, navigateToUrl, setupPopStateHandler, setInitialHistoryState } from './url-manager.js';
 import { setTheme, updateThemeSelectorUI } from './theme-manager.js';
 import { setLanguage, updateLanguageSelectorUI } from './language-manager.js';
 import { initTooltips } from './tooltip-manager.js';
@@ -403,7 +403,7 @@ export function initMainController() {
                     <div class="module-content module-select photo-context-menu disabled body-title">
                         <div class="menu-content"><div class="menu-list">
                             <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
-                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
+                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></a>
                             <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
                         </div></div>
                     </div>
@@ -676,7 +676,7 @@ export function initMainController() {
                                 <div class="module-content module-select photo-context-menu disabled body-title">
                                     <div class="menu-content"><div class="menu-list">
                                         <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
-                                        <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
+                                        <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></a>
                                         <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
                                     </div></div>
                                 </div>
@@ -793,7 +793,7 @@ export function initMainController() {
                                     <div class="module-content module-select photo-context-menu disabled body-title">
                                         <div class="menu-content"><div class="menu-list">
                                             <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
-                                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
+                                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></a>
                                             <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
                                         </div></div>
                                     </div>
@@ -1326,25 +1326,19 @@ export function initMainController() {
 
                     incrementInteraction(uuid);
 
-                    if (isPrivate && !isPrivateGalleryUnlocked(uuid)) {
-                        navigateToUrl('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
-                        promptToWatchAd(uuid, name);
+                    if (isPrivate) {
+                        navigateToUrl('main', 'privateGalleryProxy', { uuid: uuid });
+                        handleStateChange('main', 'privateGalleryProxy', { uuid: uuid, galleryName: name });
                     } else {
-                        if (isPrivate && isPrivateGalleryUnlocked(uuid)) {
+                        if (!adCooldownActive && Math.random() < 0.10) {
+                            adContext = 'navigation';
+                            galleryAfterAd = { view: 'main', section: 'galleryPhotos', data: { uuid: uuid, galleryName: name } };
+                            handleStateChange('main', 'adView');
+                            adCooldownActive = true;
+                        } else {
                             navigateToUrl('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
                             handleStateChange('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
                             adCooldownActive = false;
-                        } else {
-                            if (!adCooldownActive && Math.random() < 0.10) {
-                                adContext = 'navigation';
-                                galleryAfterAd = { view: 'main', section: 'galleryPhotos', data: { uuid: uuid, galleryName: name } };
-                                handleStateChange('main', 'adView');
-                                adCooldownActive = true;
-                            } else {
-                                navigateToUrl('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
-                                handleStateChange('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
-                                adCooldownActive = false;
-                            }
                         }
                     }
                     return;
@@ -1688,15 +1682,27 @@ export function initMainController() {
             case 'historyPrivacy':
                 initHistoryPrivacySettings();
                 break;
+            case 'privateGalleryProxy':
+                if (data && data.uuid) {
+                    if (isPrivateGalleryUnlocked(data.uuid)) {
+                        navigateToUrl('main', 'galleryPhotos', { uuid: data.uuid });
+                        handleStateChange('main', 'galleryPhotos', { uuid: data.uuid, galleryName: data.galleryName });
+                    } else {
+                        promptToWatchAd(data.uuid, data.galleryName);
+                    }
+                }
+                break;
             case 'galleryPhotos':
                 if (data && data.uuid) {
-                    if (data.galleryName) {
-                        fetchAndDisplayGalleryPhotos(data.uuid, data.galleryName);
-                    } else {
-                        fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${data.uuid}`)
-                            .then(res => res.json())
-                            .then(gallery => {
-                                if (gallery && gallery.name) {
+                    fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${data.uuid}`)
+                        .then(res => res.json())
+                        .then(gallery => {
+                            if (gallery && gallery.name) {
+                                if (gallery.privacy === 1) {
+                                    const privateUrl = generateUrl('main', 'privateGalleryProxy', { uuid: gallery.uuid });
+                                    history.replaceState({ view: 'main', section: 'privateGalleryProxy', data: { uuid: gallery.uuid, galleryName: gallery.name } }, '', privateUrl);
+                                    handleStateChange('main', 'privateGalleryProxy', { uuid: gallery.uuid, galleryName: gallery.name });
+                                } else {
                                     addToHistory('profiles', { 
                                         id: gallery.uuid, 
                                         name: gallery.name, 
@@ -1705,11 +1711,15 @@ export function initMainController() {
                                         background_photo_url: gallery.background_photo_url 
                                     });
                                     fetchAndDisplayGalleryPhotos(gallery.uuid, gallery.name);
-                                } else {
-                                    handleStateChange('main', '404');
                                 }
-                            });
-                    }
+                            } else {
+                                handleStateChange('main', '404');
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Failed to fetch gallery info:", error);
+                            handleStateChange('main', '404');
+                        });
                 }
                 break;
             
@@ -1904,11 +1914,15 @@ export function initMainController() {
     let initialRoute = routes[path] || null;
     let initialStateData = null;
 
+    const privateGalleryMatch = path.match(/^gallery\/private\/([a-f0-9-]{36})$/);
     const galleryMatch = path.match(/^gallery\/([a-f0-9-]{36})$/);
     const photoMatch = path.match(/^gallery\/([a-f0-9-]{36})\/photo\/(\d+)$/);
     const userFavoritesMatch = path.match(/^favorites\/([a-f0-9-]{36})$/);
 
-    if (galleryMatch) {
+    if (privateGalleryMatch) {
+        initialRoute = { view: 'main', section: 'privateGalleryProxy' };
+        initialStateData = { uuid: privateGalleryMatch[1] };
+    } else if (galleryMatch) {
         initialRoute = { view: 'main', section: 'galleryPhotos' };
         initialStateData = { uuid: galleryMatch[1] };
     } else if (photoMatch) {

@@ -24,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'main-accessCodePrompt' => '../includes/sections/main/access-code-prompt.php',
             'main-userSpecificFavorites' => '../includes/sections/main/user-specific-favorites.php',
             'main-adView' => '../includes/sections/main/ad-view.php',
+            'main-privateGalleryProxy' => '../includes/sections/main/private-gallery-proxy.php',
             'settings-accessibility' => '../includes/sections/settings/accessibility.php',
             'settings-historyPrivacy' => '../includes/sections/settings/historyPrivacy.php',
             'settings-history' => '../includes/sections/settings/history.php',
@@ -231,7 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("i", $limit);
         $stmt->execute();
-        $result = $stmt->get_result();
+        $result = $result->get_result();
         $photos = array();
         while($row = $result->fetch_assoc()) {
             $photos[] = $row;

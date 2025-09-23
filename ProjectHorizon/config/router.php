@@ -18,6 +18,10 @@ class Router {
             return self::$routes[$path];
         }
 
+        if (preg_match('/^gallery\/private\/[a-f0-9-]{36}$/', $path)) {
+            return ['view' => 'main', 'section' => 'privateGalleryProxy'];
+        }
+
         if (preg_match('/^gallery\/[a-f0-9-]{36}\/photo\/\d+$/', $path)) {
             return ['view' => 'main', 'section' => 'photoView'];
         }

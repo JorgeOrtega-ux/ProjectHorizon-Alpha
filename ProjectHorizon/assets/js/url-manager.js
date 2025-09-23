@@ -12,6 +12,7 @@ const urlMap = {
     'help-cookiePolicy': 'help/cookie-policy',
     'help-sendFeedback': 'help/send-feedback',
     'main-galleryPhotos': 'gallery/{uuid}',
+    'main-privateGalleryProxy': 'gallery/private/{uuid}',
     'main-photoView': 'gallery/{uuid}/photo/{photoId}',
     'main-userSpecificFavorites': 'favorites/{uuid}',
     'main-404': '404'
