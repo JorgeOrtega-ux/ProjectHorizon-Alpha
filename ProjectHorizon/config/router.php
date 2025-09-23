@@ -29,10 +29,6 @@ class Router {
         if (preg_match('/^favorites\/[a-f0-9-]{36}$/', $path)) {
             return ['view' => 'main', 'section' => 'userSpecificFavorites'];
         }
-        
-        if (preg_match('/^gallery\/[a-f0-9-]{36}\/access-code$/', $path)) {
-            return ['view' => 'main', 'section' => 'accessCodePrompt'];
-        }
 
         return null;
     }

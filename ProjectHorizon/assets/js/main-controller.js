@@ -109,8 +109,9 @@ export function initMainController() {
     let currentFavoritesSortBy = 'user';
     let currentFavoritesList = [];
     
-    // Nueva variable para el cooldown de anuncios
+    // Nueva variable para el cooldown y contexto de anuncios
     let adCooldownActive = false;
+    let adContext = 'navigation'; // 'navigation' o 'unlock'
 
     const loaderHTML = '<div class="loader-container"><div class="spinner"></div></div>';
 
@@ -527,12 +528,9 @@ export function initMainController() {
     }
     
     async function promptToWatchAd(uuid, name) {
+        adContext = 'unlock';
         galleryAfterAd = { view: 'main', section: 'galleryPhotos', data: { uuid, galleryName: name } };
-        navigateToUrl('main', 'accessCodePrompt', { uuid });
         await handleStateChange('main', 'accessCodePrompt', { uuid });
-
-        const title = document.getElementById('access-code-title');
-        if (title) title.textContent = `Galería de ${name}`;
     }
 
     function isPrivateGalleryUnlocked(uuid) {
@@ -1186,6 +1184,7 @@ export function initMainController() {
                                     
                                     // Lógica de anuncios para navegación
                                     if (!adCooldownActive && Math.random() < 0.15) { // 15% de probabilidad
+                                        adContext = 'navigation';
                                         photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id } };
                                         handleStateChange('main', 'adView');
                                         adCooldownActive = true; // Activa el cooldown
@@ -1328,26 +1327,23 @@ export function initMainController() {
                     incrementInteraction(uuid);
 
                     if (isPrivate && !isPrivateGalleryUnlocked(uuid)) {
+                        navigateToUrl('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
                         promptToWatchAd(uuid, name);
                     } else {
-                        // This is either a public gallery OR an unlocked private gallery.
-                        
-                        // User wants no ad if it's private but unlocked.
                         if (isPrivate && isPrivateGalleryUnlocked(uuid)) {
-                            // It's unlocked, so navigate directly.
                             navigateToUrl('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
                             handleStateChange('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
-                            adCooldownActive = false; // Reset cooldown just in case.
+                            adCooldownActive = false;
                         } else {
-                            // This must be a public gallery. Apply the ad logic.
-                            if (!adCooldownActive && Math.random() < 0.10) { // 10% de probabilidad
+                            if (!adCooldownActive && Math.random() < 0.10) {
+                                adContext = 'navigation';
                                 galleryAfterAd = { view: 'main', section: 'galleryPhotos', data: { uuid: uuid, galleryName: name } };
                                 handleStateChange('main', 'adView');
-                                adCooldownActive = true; // Activa el cooldown
+                                adCooldownActive = true;
                             } else {
                                 navigateToUrl('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
                                 handleStateChange('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
-                                adCooldownActive = false; // Resetea el cooldown
+                                adCooldownActive = false;
                             }
                         }
                     }
@@ -1360,15 +1356,15 @@ export function initMainController() {
                     const photoId = photoCard.dataset.photoId;
                     incrementInteraction(galleryUuid);
     
-                    // Lógica de anuncios al hacer clic en una foto
-                    if (!adCooldownActive && Math.random() < 0.10) { // 10% de probabilidad
+                    if (!adCooldownActive && Math.random() < 0.10) {
+                        adContext = 'navigation';
                         photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: galleryUuid, photoId: photoId } };
                         handleStateChange('main', 'adView');
-                        adCooldownActive = true; // Activa el cooldown
+                        adCooldownActive = true;
                     } else {
                         navigateToUrl('main', 'photoView', { uuid: galleryUuid, photoId: photoId });
                         handleStateChange('main', 'photoView', { uuid: galleryUuid, photoId: photoId });
-                        adCooldownActive = false; // Resetea el cooldown
+                        adCooldownActive = false;
                     }
                     return;
                 }
@@ -1764,40 +1760,68 @@ export function initMainController() {
                 }
                 break;
             case 'adView':
-                let countdown = 5;
+                const adTitle = document.getElementById('ad-title');
+                const adContentTitle = document.getElementById('ad-content-title');
                 const timerElement = document.getElementById('ad-timer');
                 const skipButton = document.getElementById('skip-ad-button');
-
+            
                 if (adCountdownInterval) {
                     clearInterval(adCountdownInterval);
                 }
-
-                adCountdownInterval = setInterval(() => {
-                    countdown--;
-                    if (timerElement) {
+            
+                function startAdCountdown() {
+                    let countdown = 5;
+                    timerElement.textContent = countdown;
+                    skipButton.disabled = true;
+            
+                    adCountdownInterval = setInterval(() => {
+                        countdown--;
                         timerElement.textContent = countdown;
-                    }
-                    if (countdown <= 0) {
-                        clearInterval(adCountdownInterval);
-                        if (timerElement) {
+                        if (countdown <= 0) {
+                            clearInterval(adCountdownInterval);
                             timerElement.textContent = '0';
-                        }
-                        if (skipButton) {
                             skipButton.disabled = false;
                         }
-                    }
-                }, 1000);
-
-                if (skipButton) {
+                    }, 1000);
+                }
+            
+                if (adContext === 'unlock') {
+                    let adStep = 1;
+                    adTitle.textContent = 'Anuncio 1 de 2';
+                    adContentTitle.textContent = 'Aquí va el primer anuncio';
+                    skipButton.textContent = 'Siguiente Anuncio';
+                    startAdCountdown();
+            
+                    skipButton.onclick = () => {
+                        if (adStep === 1) {
+                            adStep = 2;
+                            adTitle.textContent = 'Anuncio 2 de 2';
+                            adContentTitle.textContent = 'Aquí va el segundo anuncio';
+                            skipButton.textContent = 'Omitir Anuncio';
+                            startAdCountdown();
+                        } else {
+                            const destination = galleryAfterAd; // Solo para desbloqueo
+                            if (destination) {
+                                const unlockedGalleries = JSON.parse(localStorage.getItem('unlockedGalleries') || '{}');
+                                const galleryUuidToUnlock = destination.data.uuid;
+                                unlockedGalleries[galleryUuidToUnlock] = new Date().getTime();
+                                localStorage.setItem('unlockedGalleries', JSON.stringify(unlockedGalleries));
+            
+                                navigateToUrl(destination.view, destination.section, destination.data);
+                                handleStateChange(destination.view, destination.section, destination.data);
+                                galleryAfterAd = null;
+                            }
+                            adContext = 'navigation'; // Reset context
+                        }
+                    };
+                } else { // adContext is 'navigation'
+                    adTitle.textContent = 'Anuncio';
+                    adContentTitle.textContent = 'Aquí va el anuncio';
+                    skipButton.textContent = 'Omitir Anuncio';
+                    startAdCountdown();
+            
                     skipButton.onclick = () => {
                         const destination = galleryAfterAd || photoAfterAd;
-                        if (galleryAfterAd) {
-                            const unlockedGalleries = JSON.parse(localStorage.getItem('unlockedGalleries') || '{}');
-                            const galleryUuidToUnlock = galleryAfterAd.data.uuid;
-                            unlockedGalleries[galleryUuidToUnlock] = new Date().getTime();
-                            localStorage.setItem('unlockedGalleries', JSON.stringify(unlockedGalleries));
-                        }
-
                         if (destination) {
                             navigateToUrl(destination.view, destination.section, destination.data);
                             handleStateChange(destination.view, destination.section, destination.data);
@@ -1882,7 +1906,6 @@ export function initMainController() {
 
     const galleryMatch = path.match(/^gallery\/([a-f0-9-]{36})$/);
     const photoMatch = path.match(/^gallery\/([a-f0-9-]{36})\/photo\/(\d+)$/);
-    const accessCodeMatch = path.match(/^gallery\/([a-f0-9-]{36})\/access-code$/);
     const userFavoritesMatch = path.match(/^favorites\/([a-f0-9-]{36})$/);
 
     if (galleryMatch) {
@@ -1891,9 +1914,6 @@ export function initMainController() {
     } else if (photoMatch) {
         initialRoute = { view: 'main', section: 'photoView' };
         initialStateData = { uuid: photoMatch[1], photoId: photoMatch[2] };
-    } else if (accessCodeMatch) {
-        initialRoute = { view: 'main', section: 'accessCodePrompt' };
-        initialStateData = { uuid: accessCodeMatch[1] };
     } else if (userFavoritesMatch) {
         initialRoute = { view: 'main', section: 'userSpecificFavorites' };
         initialStateData = { uuid: userFavoritesMatch[1] };

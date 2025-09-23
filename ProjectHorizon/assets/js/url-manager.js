@@ -13,7 +13,6 @@ const urlMap = {
     'help-sendFeedback': 'help/send-feedback',
     'main-galleryPhotos': 'gallery/{uuid}',
     'main-photoView': 'gallery/{uuid}/photo/{photoId}',
-    'main-accessCodePrompt': 'gallery/{uuid}/access-code',
     'main-userSpecificFavorites': 'favorites/{uuid}',
     'main-404': '404'
 };

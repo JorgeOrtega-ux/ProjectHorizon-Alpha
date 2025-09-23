@@ -2,7 +2,7 @@
     <div class="section-content-header">
         <div class="content-header-wrapper">
             <div class="content-header-left">
-                <span>Anuncio</span>
+                <span id="ad-title">Anuncio</span>
             </div>
             <div class="content-header-right">
                 <div id="ad-timer">5</div>
@@ -12,7 +12,7 @@
     </div>
     <div class="section-content-block overflow-y">
         <div class="ad-container">
-            <h1>Aquí va el anuncio</h1>
+            <h1 id="ad-content-title">Aquí va el anuncio</h1>
         </div>
     </div>
 </div>
