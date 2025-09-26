@@ -117,6 +117,33 @@ export function initMainController() {
 
     let activeScrollHandlers = [];
 
+function showCustomConfirm(title, message) {
+    return new Promise((resolve) => {
+        const overlay = document.getElementById('custom-confirm-overlay');
+        const titleEl = document.getElementById('custom-confirm-title');
+        const messageEl = document.getElementById('custom-confirm-message');
+        const cancelBtn = document.getElementById('custom-confirm-cancel');
+        const okBtn = document.getElementById('custom-confirm-ok');
+
+        titleEl.textContent = title;
+        messageEl.innerHTML = message; // Usar innerHTML para renderizar el <strong>
+
+        overlay.classList.remove('disabled');
+
+        const close = (value) => {
+            overlay.classList.add('disabled');
+            // Quitar los listeners para evitar ejecuciones múltiples
+            cancelBtn.onclick = null;
+            okBtn.onclick = null;
+            resolve(value);
+        };
+
+        cancelBtn.onclick = () => close(false);
+        okBtn.onclick = () => close(true);
+    });
+}
+
+
 function initSettingsController() {
     const settingsToggles = {
         'open-links-in-new-tab': {
@@ -200,16 +227,35 @@ function initSettingsController() {
 
         const clearHistoryBtn = document.querySelector('[data-action="clear-history"]');
         if (clearHistoryBtn) {
-            clearHistoryBtn.addEventListener('click', () => {
-                if (confirm('¿Estás seguro de que quieres borrar todo tu historial? Esta acción no se puede deshacer.')) {
+            clearHistoryBtn.addEventListener('click', async () => {
+                const history = getHistory();
+                const profileCount = history.profiles.length;
+                const photoCount = history.photos.length;
+                const searchCount = history.searches.length;
+                const totalItems = profileCount + photoCount + searchCount;
+
+                if (totalItems === 0) {
+                    alert("Tu historial ya está vacío.");
+                    return;
+                }
+
+                const listItems = [];
+                if (profileCount > 0) listItems.push(`<li><strong>Perfiles:</strong> ${profileCount}</li>`);
+                if (photoCount > 0) listItems.push(`<li><strong>Fotos:</strong> ${photoCount}</li>`);
+                if (searchCount > 0) listItems.push(`<li><strong>Búsquedas:</strong> ${searchCount}</li>`);
+
+                const message = `
+                    <p>Vas a eliminar permanentemente los siguientes datos de tu historial. No podrás deshacer esta acción.</p>
+                    <ul class="confirm-delete-list">
+                        ${listItems.join('')}
+                    </ul>`;
+
+                const confirmed = await showCustomConfirm('¿Eliminar historial?', message);
+
+                if (confirmed) {
                     localStorage.removeItem('viewHistory');
-                    alert('Historial borrado con éxito.');
-                    if(currentAppSection === 'history') {
-                        // Reseteamos los contadores y volvemos a mostrar
-                        historyProfilesShown = HISTORY_PROFILES_BATCH;
-                        historyPhotosShown = HISTORY_PHOTOS_BATCH;
-                        historySearchesShown = HISTORY_SEARCHES_BATCH;
-                        displayHistory();
+                    if (currentAppSection === 'history' || currentAppSection === 'historyPrivacy') {
+                        handleStateChange(currentAppView, currentAppSection, null);
                     }
                 }
             });

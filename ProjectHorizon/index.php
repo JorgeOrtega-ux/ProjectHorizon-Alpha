@@ -28,6 +28,17 @@
         </div>
     </div>
     
+    <div id="custom-confirm-overlay" class="custom-confirm-overlay disabled">
+        <div class="custom-confirm-box">
+            <h2 id="custom-confirm-title">Confirmar Acción</h2>
+            <p id="custom-confirm-message">¿Estás seguro?</p>
+            <div class="custom-confirm-buttons">
+                <button id="custom-confirm-cancel" class="load-more-btn">Cancelar</button>
+                <button id="custom-confirm-ok" class="load-more-btn btn-danger">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/@popperjs/core@2"></script>
     <script type="module" src="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'); ?>/assets/js/app-init.js"></script>
 </body>
