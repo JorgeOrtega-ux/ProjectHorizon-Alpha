@@ -1234,17 +1234,26 @@ body {
     border-radius: 12px;
 }
 
-#ad-timer {
-    font-size: 1.2rem;
+.ad-timer-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    min-width: 50px;
+    padding: 0 16px;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    font-size: 1rem;
     font-weight: 500;
-    margin-right: 16px;
+}
+
+#ad-timer {
+    margin-right: 0;
 }
 
 #skip-ad-button:disabled {
-    cursor: not-allowed;
-    background-color: #e9ecef;
-    color: #6c757d;
-    border-color: #ced4da;
+    opacity: 0.5;
+    pointer-events: none;
 }
 
 .privacy-badge {
@@ -1359,7 +1368,7 @@ body {
     background-color: #ffffff;
     padding: 24px;
     border-radius: 12px;
-    max-width: 450px;
+    max-width: 525px;
     width: 90%;
     box-shadow: 0 4px 12px #00000020;
 }
@@ -1371,28 +1380,27 @@ body {
     margin: 0;
 }
 
-.custom-confirm-box #custom-confirm-message p {
+.custom-confirm-box #custom-confirm-message {
     text-align: left;
     margin: 8px 0 0 0;
     color: #6c757d;
     line-height: 1.5;
 }
 
-.custom-confirm-box .confirm-delete-list {
-    list-style-type: none;
-    padding: 0;
-    margin: 16px 0;
-    text-align: left;
-    color: #6c757d;
+.custom-confirm-box #custom-confirm-message p {
+    margin-bottom: 16px;
 }
 
-.custom-confirm-box .confirm-delete-list li {
-    margin-bottom: 8px;
+.custom-confirm-box #custom-confirm-message a {
+    color: #0056b3;
+    text-decoration: none;
+    font-weight: 500;
 }
 
-.custom-confirm-box .confirm-delete-list li:last-child {
-    margin-bottom: 0;
+.custom-confirm-box #custom-confirm-message a:hover {
+    text-decoration: underline;
 }
+
 
 .custom-confirm-buttons {
     margin-top: 24px;

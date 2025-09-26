@@ -2,10 +2,14 @@
     <div class="section-content-header">
         <div class="content-header-wrapper">
             <div class="content-header-left">
-                <span id="ad-title">Anuncio</span>
+                <div class="header-title-container">
+                    <span id="ad-title">Anuncio</span>
+                </div>
             </div>
             <div class="content-header-right">
-                <div id="ad-timer">5</div>
+                <div class="ad-timer-container">
+                    <div id="ad-timer">5</div>
+                </div>
                 <button id="skip-ad-button" class="load-more-btn" disabled>Omitir Anuncio</button>
             </div>
         </div>

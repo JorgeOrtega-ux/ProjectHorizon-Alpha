@@ -31,7 +31,7 @@
     <div id="custom-confirm-overlay" class="custom-confirm-overlay disabled">
         <div class="custom-confirm-box">
             <h2 id="custom-confirm-title">Confirmar Acción</h2>
-            <p id="custom-confirm-message">¿Estás seguro?</p>
+            <div id="custom-confirm-message"></div>
             <div class="custom-confirm-buttons">
                 <button id="custom-confirm-cancel" class="load-more-btn">Cancelar</button>
                 <button id="custom-confirm-ok" class="load-more-btn btn-danger">Confirmar</button>

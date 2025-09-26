@@ -226,28 +226,18 @@ export function initMainController() {
         if (clearHistoryBtn) {
             clearHistoryBtn.addEventListener('click', async () => {
                 const history = getHistory();
-                const profileCount = history.profiles.length;
-                const photoCount = history.photos.length;
-                const searchCount = history.searches.length;
-                const totalItems = profileCount + photoCount + searchCount;
+                const totalItems = history.profiles.length + history.photos.length + history.searches.length;
 
                 if (totalItems === 0) {
                     showNotification("Tu historial ya está vacío.");
                     return;
                 }
 
-                const listItems = [];
-                if (profileCount > 0) listItems.push(`<li><strong>Perfiles:</strong> ${profileCount}</li>`);
-                if (photoCount > 0) listItems.push(`<li><strong>Fotos:</strong> ${photoCount}</li>`);
-                if (searchCount > 0) listItems.push(`<li><strong>Búsquedas:</strong> ${searchCount}</li>`);
-
                 const message = `
-                    <p>Vas a eliminar permanentemente los siguientes datos de tu historial. No podrás deshacer esta acción.</p>
-                    <ul class="confirm-delete-list">
-                        ${listItems.join('')}
-                    </ul>`;
+                    <p>Esta acción eliminará permanentemente todo tu historial de la aplicación. No podrás deshacer esta acción.</p>
+                    <a href="#" data-action="view-history-help">Más información</a>`;
 
-                const confirmed = await showCustomConfirm('¿Eliminar historial?', message);
+                const confirmed = await showCustomConfirm('¿Eliminar todo el historial?', message);
 
                 if (confirmed) {
                     localStorage.removeItem('viewHistory');
@@ -1514,7 +1504,7 @@ export function initMainController() {
                     if (value !== currentSortBy) {
                         currentSortBy = value;
                         const homeSearch = document.querySelector('.search-input-text input');
-                        fetchAndDisplayGalleries(currentSortBy, homeSearch ? homeSearch.value.trim() : '');
+                        fetchAndDisplayGalleries(currentSortBy, homeSearch ? homeSearch.value.trim() : '', '');
                         updateSelectActiveState('relevance-select', currentSortBy);
                     }
                 }
@@ -1775,7 +1765,7 @@ export function initMainController() {
                         .then(res => res.json())
                         .then(gallery => {
                             if (gallery && gallery.name) {
-                                if (gallery.privacy === 1) {
+                                if (gallery.privacy === 1 && !isPrivateGalleryUnlocked(gallery.uuid)) {
                                     const privateUrl = generateUrl('main', 'privateGalleryProxy', { uuid: gallery.uuid });
                                     history.replaceState({ view: 'main', section: 'privateGalleryProxy', data: { uuid: gallery.uuid, galleryName: gallery.name } }, '', privateUrl);
                                     handleStateChange('main', 'privateGalleryProxy', { uuid: gallery.uuid, galleryName: gallery.name });
