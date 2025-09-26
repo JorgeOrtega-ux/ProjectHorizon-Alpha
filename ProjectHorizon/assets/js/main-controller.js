@@ -4,6 +4,7 @@ import { generateUrl, navigateToUrl, setupPopStateHandler, setInitialHistoryStat
 import { setTheme, updateThemeSelectorUI } from './theme-manager.js';
 import { setLanguage, updateLanguageSelectorUI } from './language-manager.js';
 import { initTooltips } from './tooltip-manager.js';
+import { showNotification } from './notification-manager.js';
 
 function getFavorites() {
     const favorites = localStorage.getItem('favoritePhotos');
@@ -98,7 +99,6 @@ export function initMainController() {
     let isLoadingPhotos = false;
     const BATCH_SIZE = 20;
 
-    // *** NUEVAS VARIABLES PARA EL HISTORIAL ***
     const HISTORY_PROFILES_BATCH = 20;
     const HISTORY_PHOTOS_BATCH = 20;
     const HISTORY_SEARCHES_BATCH = 25;
@@ -109,84 +109,81 @@ export function initMainController() {
     let currentFavoritesSortBy = 'user';
     let currentFavoritesList = [];
     
-    // Nueva variable para el cooldown y contexto de anuncios
     let adCooldownActive = false;
-    let adContext = 'navigation'; // 'navigation' o 'unlock'
+    let adContext = 'navigation';
 
     const loaderHTML = '<div class="loader-container"><div class="spinner"></div></div>';
 
     let activeScrollHandlers = [];
 
-function showCustomConfirm(title, message) {
-    return new Promise((resolve) => {
-        const overlay = document.getElementById('custom-confirm-overlay');
-        const titleEl = document.getElementById('custom-confirm-title');
-        const messageEl = document.getElementById('custom-confirm-message');
-        const cancelBtn = document.getElementById('custom-confirm-cancel');
-        const okBtn = document.getElementById('custom-confirm-ok');
+    function showCustomConfirm(title, message) {
+        return new Promise((resolve) => {
+            const overlay = document.getElementById('custom-confirm-overlay');
+            const titleEl = document.getElementById('custom-confirm-title');
+            const messageEl = document.getElementById('custom-confirm-message');
+            const cancelBtn = document.getElementById('custom-confirm-cancel');
+            const okBtn = document.getElementById('custom-confirm-ok');
 
-        titleEl.textContent = title;
-        messageEl.innerHTML = message; // Usar innerHTML para renderizar el <strong>
+            titleEl.textContent = title;
+            messageEl.innerHTML = message;
 
-        overlay.classList.remove('disabled');
+            overlay.classList.remove('disabled');
 
-        const close = (value) => {
-            overlay.classList.add('disabled');
-            // Quitar los listeners para evitar ejecuciones múltiples
-            cancelBtn.onclick = null;
-            okBtn.onclick = null;
-            resolve(value);
+            const close = (value) => {
+                overlay.classList.add('disabled');
+                cancelBtn.onclick = null;
+                okBtn.onclick = null;
+                resolve(value);
+            };
+
+            cancelBtn.onclick = () => close(false);
+            okBtn.onclick = () => close(true);
+        });
+    }
+
+    function initSettingsController() {
+        const settingsToggles = {
+            'open-links-in-new-tab': {
+                element: document.querySelector('[data-setting="open-links-in-new-tab"]'),
+                key: 'openLinksInNewTab',
+                defaultValue: false
+            },
+            'longer-message-duration': {
+                element: document.querySelector('[data-setting="longer-message-duration"]'),
+                key: 'longerMessageDuration',
+                defaultValue: false
+            }
         };
 
-        cancelBtn.onclick = () => close(false);
-        okBtn.onclick = () => close(true);
-    });
-}
-
-
-function initSettingsController() {
-    const settingsToggles = {
-        'open-links-in-new-tab': {
-            element: document.querySelector('[data-setting="open-links-in-new-tab"]'),
-            key: 'openLinksInNewTab',
-            defaultValue: false
-        },
-        'longer-message-duration': {
-            element: document.querySelector('[data-setting="longer-message-duration"]'),
-            key: 'longerMessageDuration',
-            defaultValue: false
-        }
-    };
-
-    function updateToggleUI(setting) {
-        const value = localStorage.getItem(setting.key) === 'true';
-        if (setting.element) {
-            setting.element.classList.toggle('active', value);
-        }
-    }
-
-    for (const id in settingsToggles) {
-        const setting = settingsToggles[id];
-        if (setting.element) {
-            if (localStorage.getItem(setting.key) === null) {
-                localStorage.setItem(setting.key, setting.defaultValue);
+        function updateToggleUI(setting) {
+            const value = localStorage.getItem(setting.key) === 'true';
+            if (setting.element) {
+                setting.element.classList.toggle('active', value);
             }
-            updateToggleUI(setting);
-
-            setting.element.addEventListener('click', () => {
-                const currentValue = localStorage.getItem(setting.key) === 'true';
-                localStorage.setItem(setting.key, !currentValue);
-                updateToggleUI(setting);
-            });
         }
-    }
 
-    console.log("Accessibility Settings Initialized:");
-    console.log(`- Theme: ${localStorage.getItem('theme') || 'system'}`);
-    console.log(`- Language: ${localStorage.getItem('language') || 'es-LA'}`);
-    console.log(`- Open links in new tab: ${localStorage.getItem(settingsToggles['open-links-in-new-tab'].key)}`);
-    console.log(`- Longer notification duration: ${localStorage.getItem(settingsToggles['longer-message-duration'].key)}`); // <--- Texto del log actualizado
-}
+        for (const id in settingsToggles) {
+            const setting = settingsToggles[id];
+            if (setting.element) {
+                if (localStorage.getItem(setting.key) === null) {
+                    localStorage.setItem(setting.key, setting.defaultValue);
+                }
+                updateToggleUI(setting);
+
+                setting.element.addEventListener('click', () => {
+                    const currentValue = localStorage.getItem(setting.key) === 'true';
+                    localStorage.setItem(setting.key, !currentValue);
+                    updateToggleUI(setting);
+                });
+            }
+        }
+
+        console.log("Accessibility Settings Initialized:");
+        console.log(`- Theme: ${localStorage.getItem('theme') || 'system'}`);
+        console.log(`- Language: ${localStorage.getItem('language') || 'es-LA'}`);
+        console.log(`- Open links in new tab: ${localStorage.getItem(settingsToggles['open-links-in-new-tab'].key)}`);
+        console.log(`- Longer notification duration: ${localStorage.getItem(settingsToggles['longer-message-duration'].key)}`);
+    }
 
     function initHistoryPrivacySettings() {
         const settingsToggles = {
@@ -235,7 +232,7 @@ function initSettingsController() {
                 const totalItems = profileCount + photoCount + searchCount;
 
                 if (totalItems === 0) {
-                    alert("Tu historial ya está vacío.");
+                    showNotification("Tu historial ya está vacío.");
                     return;
                 }
 
@@ -254,6 +251,7 @@ function initSettingsController() {
 
                 if (confirmed) {
                     localStorage.removeItem('viewHistory');
+                    showNotification("Historial eliminado correctamente.");
                     if (currentAppSection === 'history' || currentAppSection === 'historyPrivacy') {
                         handleStateChange(currentAppView, currentAppSection, null);
                     }
@@ -261,7 +259,6 @@ function initSettingsController() {
             });
         }
     }
-
 
     function isFavorite(photoId) {
         const favorites = getFavorites();
@@ -468,7 +465,6 @@ function initSettingsController() {
         const card = document.querySelector(`.card[data-uuid="${uuid}"]`);
         if (!card) return;
 
-        // FIX: Only update status for actual private galleries.
         if (card.dataset.privacy !== '1') {
             const badge = card.querySelector('.privacy-badge');
             if (badge && !badge.innerHTML.includes('Público')) {
@@ -589,6 +585,23 @@ function initSettingsController() {
         return (now - unlockedGalleries[uuid]) < sixtyMinutes;
     }
 
+    function displayFetchError(containerSelector, title, message) {
+        const section = document.querySelector(containerSelector);
+        if (!section) return;
+
+        const statusContainer = section.querySelector('.status-message-container');
+        const grid = section.querySelector('.card-grid');
+
+        if (statusContainer) {
+            statusContainer.classList.remove('disabled');
+            statusContainer.innerHTML = `<div><h2>${title}</h2><p>${message}</p></div>`;
+        }
+        if (grid) {
+            grid.classList.add('disabled');
+            grid.innerHTML = '';
+        }
+    }
+
     function fetchAndDisplayGalleries(sortBy = 'relevant', searchTerm = '', append = false) {
         if (isLoadingGalleries) return;
         isLoadingGalleries = true;
@@ -620,7 +633,12 @@ function initSettingsController() {
         const url = `${window.BASE_PATH}/api/main_handler.php?request_type=galleries&sort=${sortBy}&search=${encodedSearchTerm}&page=${galleriesCurrentPage}&limit=${BATCH_SIZE}`;
 
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Server error');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (statusContainer) {
                     statusContainer.classList.add('disabled');
@@ -649,9 +667,10 @@ function initSettingsController() {
             })
             .catch(error => {
                 console.error('Error al obtener las galerías:', error);
-                if (!append && statusContainer) {
-                    statusContainer.classList.remove('disabled');
-                    statusContainer.innerHTML = '<div><h2>Error al cargar</h2><p>Hubo un problema al intentar cargar el contenido. Por favor, inténtalo de nuevo más tarde.</p></div>';
+                if (!append) {
+                    displayFetchError('[data-section="home"]', 'Error de Conexión', 'Hubo un problema al intentar cargar el contenido. Por favor, inténtalo de nuevo más tarde.');
+                } else {
+                    showNotification("No se pudo cargar más contenido.", 'error');
                 }
             })
             .finally(() => {
@@ -686,7 +705,12 @@ function initSettingsController() {
         currentGalleryNameForPhotoView = galleryName;
 
         fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=photos&uuid=${uuid}&page=${photosCurrentPage}&limit=${BATCH_SIZE}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Server error');
+                }
+                return response.json();
+            })
             .then(photos => {
                 if (statusContainer) {
                     statusContainer.classList.add('disabled');
@@ -748,9 +772,10 @@ function initSettingsController() {
             })
             .catch(error => {
                 console.error('Error al obtener las fotos:', error);
-                if (!append && statusContainer) {
-                    statusContainer.classList.remove('disabled');
-                    statusContainer.innerHTML = '<div><h2>Error al cargar</h2><p>Hubo un problema al intentar cargar las fotos. Por favor, inténtalo de nuevo más tarde.</p></div>';
+                if (!append) {
+                     displayFetchError('[data-section="galleryPhotos"]', 'Error de Conexión', 'Hubo un problema al intentar cargar el contenido. Por favor, inténtalo de nuevo más tarde.');
+                } else {
+                    showNotification("No se pudo cargar más contenido.", 'error');
                 }
             })
             .finally(() => {
@@ -783,8 +808,8 @@ function initSettingsController() {
         if (usersSection) usersSection.style.display = 'none';
         if (photosSection) photosSection.style.display = 'none';
 
-        const fetchUsers = fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=trending_users&search=${encodedSearchTerm}&limit=8`).then(res => res.json());
-        const fetchPhotos = searchTerm === '' ? fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=trending_photos&limit=12`).then(res => res.json()) : Promise.resolve([]);
+        const fetchUsers = fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=trending_users&search=${encodedSearchTerm}&limit=8`).then(res => { if(!res.ok) throw new Error('Server error'); return res.json(); });
+        const fetchPhotos = searchTerm === '' ? fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=trending_photos&limit=12`).then(res => { if(!res.ok) throw new Error('Server error'); return res.json(); }) : Promise.resolve([]);
 
         Promise.all([fetchUsers, fetchPhotos])
             .then(([users, photos]) => {
@@ -854,7 +879,7 @@ function initSettingsController() {
             })
             .catch(error => {
                 console.error('Error fetching trends:', error);
-                if (statusContainer) statusContainer.innerHTML = '<div><h2>Error al cargar</h2><p>Hubo un problema al intentar cargar las tendencias. Por favor, inténtalo de nuevo más tarde.</p></div>';
+                displayFetchError('[data-section="trends"]', 'Error de Conexión', 'Hubo un problema al intentar cargar el contenido. Por favor, inténtalo de nuevo más tarde.');
             });
     }
 
@@ -1015,6 +1040,7 @@ function initSettingsController() {
             document.body.removeChild(a);
         } catch (error) {
             console.error('Error downloading the image:', error);
+            showNotification('Error al descargar la imagen.', 'error');
         }
     }
 
@@ -1043,6 +1069,7 @@ function initSettingsController() {
         }
     }
 
+    // ✅ **FUNCIÓN RESTAURADA**
     function removeSearchFromHistory(timestamp) {
         let history = getHistory();
         const indexToRemove = history.searches.findIndex(item => item.searched_at == timestamp);
@@ -1051,6 +1078,171 @@ function initSettingsController() {
             history.searches.splice(indexToRemove, 1);
             localStorage.setItem('viewHistory', JSON.stringify(history));
             displayHistory();
+        }
+    }
+    
+    // ✅ **FUNCIÓN RESTAURADA**
+    function displayHistory() {
+        const history = getHistory();
+        const mainContainer = document.querySelector('[data-section="history"]');
+        if (!mainContainer) return;
+    
+        const historyContainer = mainContainer.querySelector('#history-container');
+        const profilesGrid = mainContainer.querySelector('#history-profiles-grid');
+        const photosGrid = mainContainer.querySelector('#history-photos-grid');
+        const searchesList = mainContainer.querySelector('#history-searches-list');
+        const statusContainer = mainContainer.querySelector('.status-message-container');
+        const pausedAlert = mainContainer.querySelector('.history-paused-alert');
+        const historySelect = mainContainer.querySelector('#history-select');
+        
+        const profilesLoadMore = mainContainer.querySelector('#history-profiles-load-more');
+        const photosLoadMore = mainContainer.querySelector('#history-photos-load-more');
+        const searchesLoadMore = mainContainer.querySelector('#history-searches-load-more');
+
+        const currentView = historySelect ? (historySelect.querySelector('.menu-link.active')?.dataset.value || 'views') : 'views';
+        const isViewHistoryPaused = localStorage.getItem('enable-view-history') === 'false';
+        const isSearchHistoryPaused = localStorage.getItem('enable-search-history') === 'false';
+    
+        historyContainer.style.display = 'none';
+        statusContainer.classList.add('disabled');
+        pausedAlert.classList.add('disabled');
+        profilesGrid.innerHTML = '';
+        photosGrid.innerHTML = '';
+        searchesList.innerHTML = '';
+        profilesLoadMore.innerHTML = '';
+        photosLoadMore.innerHTML = '';
+        searchesLoadMore.innerHTML = '';
+        profilesLoadMore.classList.add('disabled');
+        photosLoadMore.classList.add('disabled');
+        searchesLoadMore.classList.add('disabled');
+    
+        if (currentView === 'views') {
+            const hasContent = history.profiles.length > 0 || history.photos.length > 0;
+    
+            if (hasContent) {
+                historyContainer.style.display = 'block';
+                if (isViewHistoryPaused) {
+                    pausedAlert.classList.remove('disabled');
+                }
+                
+                if (history.profiles.length > 0) {
+                    const profilesToShow = history.profiles.slice(0, historyProfilesShown);
+                    profilesToShow.forEach(profile => {
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        card.dataset.uuid = profile.id;
+                        card.dataset.name = profile.name;
+                        card.dataset.privacy = profile.privacy;
+                        if (profile.background_photo_url) {
+                            const background = document.createElement('div');
+                            background.className = 'card-background';
+                            background.style.backgroundImage = `url('${profile.background_photo_url}')`;
+                            card.appendChild(background);
+                        }
+                        const overlay = document.createElement('div');
+                        overlay.className = 'card-content-overlay';
+                        const icon = document.createElement('div');
+                        icon.className = 'card-icon';
+                        if (profile.profile_picture_url) {
+                            icon.style.backgroundImage = `url('${profile.profile_picture_url}')`;
+                        }
+                        overlay.appendChild(icon);
+                        const textContainer = document.createElement('div');
+                        textContainer.className = 'card-text';
+                        textContainer.innerHTML = `<span>${profile.name}</span><span style="font-size: 0.8rem; display: block;">Visto: ${new Date(profile.visited_at).toLocaleString()}</span>`;
+                        overlay.appendChild(textContainer);
+                        card.appendChild(overlay);
+                        profilesGrid.appendChild(card);
+                    });
+
+                    if (history.profiles.length > historyProfilesShown) {
+                        profilesLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-profiles">Mostrar más</button>`;
+                        profilesLoadMore.classList.remove('disabled');
+                    }
+                }
+                
+                if (history.photos.length > 0) {
+                    const photosToShow = history.photos.slice(0, historyPhotosShown);
+                    photosToShow.forEach(photo => {
+                        const card = document.createElement('div');
+                        card.className = 'card photo-card';
+                        card.dataset.photoUrl = photo.photo_url;
+                        card.dataset.photoId = photo.id;
+                        card.dataset.galleryUuid = photo.gallery_uuid;
+                        const background = document.createElement('div');
+                        background.className = 'card-background';
+                        background.style.backgroundImage = `url('${photo.photo_url}')`;
+                        card.appendChild(background);
+                        const overlay = document.createElement('div');
+                        overlay.className = 'card-content-overlay';
+                        const icon = document.createElement('div');
+                        icon.className = 'card-icon';
+                        if (photo.profile_picture_url) {
+                            icon.style.backgroundImage = `url('${photo.profile_picture_url}')`;
+                        }
+                        overlay.appendChild(icon);
+                        const textContainer = document.createElement('div');
+                        textContainer.className = 'card-text';
+                        textContainer.innerHTML = `<span>${photo.gallery_name}</span><span style="font-size: 0.8rem; display: block;">Visto: ${new Date(photo.visited_at).toLocaleString()}</span>`;
+                        overlay.appendChild(textContainer);
+                        card.appendChild(overlay);
+                        photosGrid.appendChild(card);
+                    });
+
+                    if (history.photos.length > historyPhotosShown) {
+                        photosLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-photos">Mostrar más</button>`;
+                        photosLoadMore.classList.remove('disabled');
+                    }
+                }
+            } else {
+                if (isViewHistoryPaused) {
+                    statusContainer.innerHTML = '<div><h2>El historial de perfiles y fotos está pausado</h2><p>Tu actividad de visualización no se guardará mientras esta opción esté desactivada.</p></div>';
+                    statusContainer.classList.remove('disabled');
+                } else {
+                    statusContainer.innerHTML = '<div><h2>No hay actividad para mostrar</h2><p>Los perfiles y fotos que hayas visto recientemente aparecerán aquí.</p></div>';
+                    statusContainer.classList.remove('disabled');
+                }
+            }
+        } else if (currentView === 'searches') {
+            const hasContent = history.searches.length > 0;
+    
+            if (hasContent) {
+                historyContainer.style.display = 'block';
+                if (isSearchHistoryPaused) {
+                    pausedAlert.classList.remove('disabled');
+                }
+
+                const searchesToShow = history.searches.slice(0, historySearchesShown);
+                searchesToShow.forEach(search => {
+                    const item = document.createElement('div');
+                    item.className = 'search-history-item';
+                    item.innerHTML = `
+                        <div class="search-history-text">
+                            <span class="search-term">"${search.term}"</span>
+                            <span class="search-details">en ${search.section} - ${new Date(search.searched_at).toLocaleString()}</span>
+                        </div>
+                        <div class="search-history-actions">
+                            <button class="search-history-delete-btn" data-action="delete-search-item" data-timestamp="${search.searched_at}" data-tooltip="Eliminar">
+                                <span class="material-symbols-rounded">close</span>
+                            </button>
+                        </div>
+                    `;
+                    searchesList.appendChild(item);
+                });
+
+                if (history.searches.length > historySearchesShown) {
+                    searchesLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-searches">Mostrar más</button>`;
+                    searchesLoadMore.classList.remove('disabled');
+                }
+            } else {
+                if (isSearchHistoryPaused) {
+                    statusContainer.innerHTML = '<div><h2>El historial de búsqueda está pausado</h2><p>Tus búsquedas no se guardarán mientras esta opción esté desactivada.</p></div>';
+                    statusContainer.classList.remove('disabled');
+                } else {
+                    statusContainer.innerHTML = '<div><h2>No tienes búsquedas recientes</h2><p>Los términos que busques en la aplicación aparecerán aquí.</p></div>';
+                    statusContainer.classList.remove('disabled');
+                }
+            }
         }
     }
 
@@ -1147,7 +1339,6 @@ function initSettingsController() {
                             fetchAndDisplayGalleryPhotos(currentGalleryForPhotoView, currentGalleryNameForPhotoView, true);
                         }
                         break;
-                    // *** NUEVOS CASOS PARA EL HISTORIAL ***
                     case 'load-more-history-profiles':
                         historyProfilesShown += HISTORY_PROFILES_BATCH;
                         displayHistory();
@@ -1228,15 +1419,14 @@ function initSettingsController() {
                                     const nextPhoto = listToUse[nextIndex];
                                     navigateToUrl('main', 'photoView', { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id });
                                     
-                                    // Lógica de anuncios para navegación
-                                    if (!adCooldownActive && Math.random() < 0.15) { // 15% de probabilidad
+                                    if (!adCooldownActive && Math.random() < 0.15) {
                                         adContext = 'navigation';
                                         photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id } };
                                         handleStateChange('main', 'adView');
-                                        adCooldownActive = true; // Activa el cooldown
+                                        adCooldownActive = true;
                                     } else {
                                         renderPhotoView(nextPhoto.gallery_uuid, nextPhoto.id, listToUse);
-                                        adCooldownActive = false; // Resetea el cooldown
+                                        adCooldownActive = false;
                                     }
                                 }
                             }
@@ -1264,9 +1454,13 @@ function initSettingsController() {
                         const cardForCopy = actionTarget.closest('.card');
                         const urlToCopy = `${window.location.origin}${window.BASE_PATH}/gallery/${cardForCopy.dataset.galleryUuid}/photo/${cardForCopy.dataset.photoId}`;
                         copyTextToClipboard(urlToCopy).then(() => {
+                            showNotification("Enlace copiado al portapapeles.");
                             actionTarget.closest('.photo-context-menu').classList.add('disabled');
                             actionTarget.closest('.card-actions-container').classList.remove('force-visible');
-                        }).catch(err => console.error('Failed to copy: ', err));
+                        }).catch(err => {
+                            showNotification("Error al copiar el enlace.", 'error');
+                            console.error('Failed to copy: ', err);
+                        });
                         break;
                     case 'download-photo':
                         const cardForDownload = actionTarget.closest('.card.photo-card');
@@ -1337,7 +1531,6 @@ function initSettingsController() {
                 else if (selectId === 'language-select') {
                     setLanguage(value);
                 } else if (selectId.includes('history-select')) {
-                    // Reseteamos contadores al cambiar de vista en el historial
                     historyProfilesShown = HISTORY_PROFILES_BATCH;
                     historyPhotosShown = HISTORY_PHOTOS_BATCH;
                     historySearchesShown = HISTORY_SEARCHES_BATCH;
@@ -1499,175 +1692,7 @@ function initSettingsController() {
             favoritesSortSelectMobile.innerHTML = favoritesSortSelect.innerHTML;
         }
     }
-
-    // *** FUNCIÓN DE HISTORIAL COMPLETAMENTE ACTUALIZADA ***
-    function displayHistory() {
-        const history = getHistory();
-        const mainContainer = document.querySelector('[data-section="history"]');
-        if (!mainContainer) return;
     
-        const historyContainer = mainContainer.querySelector('#history-container');
-        const profilesGrid = mainContainer.querySelector('#history-profiles-grid');
-        const photosGrid = mainContainer.querySelector('#history-photos-grid');
-        const searchesList = mainContainer.querySelector('#history-searches-list');
-        const statusContainer = mainContainer.querySelector('.status-message-container');
-        const pausedAlert = mainContainer.querySelector('.history-paused-alert');
-        const historySelect = mainContainer.querySelector('#history-select');
-        
-        const profilesLoadMore = mainContainer.querySelector('#history-profiles-load-more');
-        const photosLoadMore = mainContainer.querySelector('#history-photos-load-more');
-        const searchesLoadMore = mainContainer.querySelector('#history-searches-load-more');
-
-        const currentView = historySelect ? (historySelect.querySelector('.menu-link.active')?.dataset.value || 'views') : 'views';
-        const isViewHistoryPaused = localStorage.getItem('enable-view-history') === 'false';
-        const isSearchHistoryPaused = localStorage.getItem('enable-search-history') === 'false';
-    
-        historyContainer.style.display = 'none';
-        statusContainer.classList.add('disabled');
-        pausedAlert.classList.add('disabled');
-        profilesGrid.innerHTML = '';
-        photosGrid.innerHTML = '';
-        searchesList.innerHTML = '';
-        profilesLoadMore.innerHTML = '';
-        photosLoadMore.innerHTML = '';
-        searchesLoadMore.innerHTML = '';
-        profilesLoadMore.classList.add('disabled');
-        photosLoadMore.classList.add('disabled');
-        searchesLoadMore.classList.add('disabled');
-    
-        if (currentView === 'views') {
-            const hasContent = history.profiles.length > 0 || history.photos.length > 0;
-    
-            if (hasContent) {
-                historyContainer.style.display = 'block';
-                if (isViewHistoryPaused) {
-                    pausedAlert.classList.remove('disabled');
-                }
-                
-                // Mostrar perfiles vistos
-                if (history.profiles.length > 0) {
-                    const profilesToShow = history.profiles.slice(0, historyProfilesShown);
-                    profilesToShow.forEach(profile => {
-                        const card = document.createElement('div');
-                        card.className = 'card';
-                        card.dataset.uuid = profile.id;
-                        card.dataset.name = profile.name;
-                        card.dataset.privacy = profile.privacy;
-                        if (profile.background_photo_url) {
-                            const background = document.createElement('div');
-                            background.className = 'card-background';
-                            background.style.backgroundImage = `url('${profile.background_photo_url}')`;
-                            card.appendChild(background);
-                        }
-                        const overlay = document.createElement('div');
-                        overlay.className = 'card-content-overlay';
-                        const icon = document.createElement('div');
-                        icon.className = 'card-icon';
-                        if (profile.profile_picture_url) {
-                            icon.style.backgroundImage = `url('${profile.profile_picture_url}')`;
-                        }
-                        overlay.appendChild(icon);
-                        const textContainer = document.createElement('div');
-                        textContainer.className = 'card-text';
-                        textContainer.innerHTML = `<span>${profile.name}</span><span style="font-size: 0.8rem; display: block;">Visto: ${new Date(profile.visited_at).toLocaleString()}</span>`;
-                        overlay.appendChild(textContainer);
-                        card.appendChild(overlay);
-                        profilesGrid.appendChild(card);
-                    });
-
-                    if (history.profiles.length > historyProfilesShown) {
-                        profilesLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-profiles">Mostrar más</button>`;
-                        profilesLoadMore.classList.remove('disabled');
-                    }
-                }
-                
-                // Mostrar fotos vistas
-                if (history.photos.length > 0) {
-                    const photosToShow = history.photos.slice(0, historyPhotosShown);
-                    photosToShow.forEach(photo => {
-                        const card = document.createElement('div');
-                        card.className = 'card photo-card';
-                        card.dataset.photoUrl = photo.photo_url;
-                        card.dataset.photoId = photo.id;
-                        card.dataset.galleryUuid = photo.gallery_uuid;
-                        const background = document.createElement('div');
-                        background.className = 'card-background';
-                        background.style.backgroundImage = `url('${photo.photo_url}')`;
-                        card.appendChild(background);
-                        const overlay = document.createElement('div');
-                        overlay.className = 'card-content-overlay';
-                        const icon = document.createElement('div');
-                        icon.className = 'card-icon';
-                        if (photo.profile_picture_url) {
-                            icon.style.backgroundImage = `url('${photo.profile_picture_url}')`;
-                        }
-                        overlay.appendChild(icon);
-                        const textContainer = document.createElement('div');
-                        textContainer.className = 'card-text';
-                        textContainer.innerHTML = `<span>${photo.gallery_name}</span><span style="font-size: 0.8rem; display: block;">Visto: ${new Date(photo.visited_at).toLocaleString()}</span>`;
-                        overlay.appendChild(textContainer);
-                        card.appendChild(overlay);
-                        photosGrid.appendChild(card);
-                    });
-
-                    if (history.photos.length > historyPhotosShown) {
-                        photosLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-photos">Mostrar más</button>`;
-                        photosLoadMore.classList.remove('disabled');
-                    }
-                }
-            } else {
-                if (isViewHistoryPaused) {
-                    statusContainer.innerHTML = '<div><h2>El historial de perfiles y fotos está pausado</h2><p>Tu actividad de visualización no se guardará mientras esta opción esté desactivada.</p></div>';
-                    statusContainer.classList.remove('disabled');
-                } else {
-                    statusContainer.innerHTML = '<div><h2>No hay actividad para mostrar</h2><p>Los perfiles y fotos que hayas visto recientemente aparecerán aquí.</p></div>';
-                    statusContainer.classList.remove('disabled');
-                }
-            }
-        } else if (currentView === 'searches') {
-            const hasContent = history.searches.length > 0;
-    
-            if (hasContent) {
-                historyContainer.style.display = 'block';
-                if (isSearchHistoryPaused) {
-                    pausedAlert.classList.remove('disabled');
-                }
-
-                const searchesToShow = history.searches.slice(0, historySearchesShown);
-                searchesToShow.forEach(search => {
-                    const item = document.createElement('div');
-                    item.className = 'search-history-item';
-                    item.innerHTML = `
-                        <div class="search-history-text">
-                            <span class="search-term">"${search.term}"</span>
-                            <span class="search-details">en ${search.section} - ${new Date(search.searched_at).toLocaleString()}</span>
-                        </div>
-                        <div class="search-history-actions">
-                            <button class="search-history-delete-btn" data-action="delete-search-item" data-timestamp="${search.searched_at}" data-tooltip="Eliminar">
-                                <span class="material-symbols-rounded">close</span>
-                            </button>
-                        </div>
-                    `;
-                    searchesList.appendChild(item);
-                });
-
-                if (history.searches.length > historySearchesShown) {
-                    searchesLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-searches">Mostrar más</button>`;
-                    searchesLoadMore.classList.remove('disabled');
-                }
-            } else {
-                if (isSearchHistoryPaused) {
-                    statusContainer.innerHTML = '<div><h2>El historial de búsqueda está pausado</h2><p>Tus búsquedas no se guardarán mientras esta opción esté desactivada.</p></div>';
-                    statusContainer.classList.remove('disabled');
-                } else {
-                    statusContainer.innerHTML = '<div><h2>No tienes búsquedas recientes</h2><p>Los términos que busques en la aplicación aparecerán aquí.</p></div>';
-                    statusContainer.classList.remove('disabled');
-                }
-            }
-        }
-    }
-
-
     async function handleStateChange(view, section, data) {
         const contentContainer = document.querySelector('.general-content-scrolleable');
         if (contentContainer) {
@@ -1680,7 +1705,9 @@ function initSettingsController() {
 
         try {
             const response = await fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=section&view=${view}&section=${section}`);
-            if (!response.ok) throw new Error('Network response was not ok');
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
             const html = await response.text();
             if (contentContainer) {
                 contentContainer.innerHTML = html;
@@ -1688,8 +1715,13 @@ function initSettingsController() {
         } catch (error) {
             console.error("Failed to fetch section:", error);
             if (contentContainer) {
-                const errorHtml = await fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=section&view=main&section=404`).then(res => res.text());
-                contentContainer.innerHTML = errorHtml;
+                contentContainer.innerHTML = `
+                    <div class="status-message-container active">
+                        <div>
+                            <h2>Error de Conexión</h2>
+                            <p>Hubo un problema al intentar cargar el contenido. Por favor, inténtalo de nuevo más tarde.</p>
+                        </div>
+                    </div>`;
             }
             return;
         }
@@ -1719,7 +1751,6 @@ function initSettingsController() {
                 initSettingsController();
                 break;
             case 'history':
-                // Reseteamos contadores al entrar a la sección de historial
                 historyProfilesShown = HISTORY_PROFILES_BATCH;
                 historyPhotosShown = HISTORY_PHOTOS_BATCH;
                 historySearchesShown = HISTORY_SEARCHES_BATCH;
@@ -1856,7 +1887,7 @@ function initSettingsController() {
                             skipButton.textContent = 'Omitir Anuncio';
                             startAdCountdown();
                         } else {
-                            const destination = galleryAfterAd; // Solo para desbloqueo
+                            const destination = galleryAfterAd;
                             if (destination) {
                                 const unlockedGalleries = JSON.parse(localStorage.getItem('unlockedGalleries') || '{}');
                                 const galleryUuidToUnlock = destination.data.uuid;
@@ -1867,10 +1898,10 @@ function initSettingsController() {
                                 handleStateChange(destination.view, destination.section, destination.data);
                                 galleryAfterAd = null;
                             }
-                            adContext = 'navigation'; // Reset context
+                            adContext = 'navigation';
                         }
                     };
-                } else { // adContext is 'navigation'
+                } else {
                     adTitle.textContent = 'Anuncio';
                     adContentTitle.textContent = 'Aquí va el anuncio';
                     skipButton.textContent = 'Omitir Anuncio';

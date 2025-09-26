@@ -1,19 +1,16 @@
 <?php
-require_once '../config/db.php';
-
 // --- MANEJO DE SOLICITUDES GET ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $request_type = isset($_GET['request_type']) ? $_GET['request_type'] : '';
 
-    // --- NUEVO ENDPOINT PARA CARGA DINÁMICA DE SECCIONES HTML ---
+    // --- ENDPOINT PARA CARGA DINÁMICA DE SECCIONES HTML ---
+    // NO REQUIERE CONEXIÓN A LA BASE DE DATOS
     if ($request_type === 'section') {
-        header('Content-Type: text/html'); // Devolver HTML en lugar de JSON
+        header('Content-Type: text/html');
 
         $view = isset($_GET['view']) ? $_GET['view'] : 'main';
         $section = isset($_GET['section']) ? $_GET['section'] : 'home';
 
-        // --- MEDIDA DE SEGURIDAD: Whitelist para prevenir Directory Traversal ---
-        // Solo los archivos definidos en este array pueden ser incluidos.
         $allowed_sections = [
             'main-home' => '../includes/sections/main/home.php',
             'main-favorites' => '../includes/sections/main/favorites.php',
@@ -40,29 +37,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         if (array_key_exists($section_key, $allowed_sections)) {
             $file_path = $allowed_sections[$section_key];
             
-            // Variables que los archivos de sección podrían necesitar
             $CURRENT_VIEW = $view;
             $CURRENT_SECTION = $section;
 
-            // Capturar la salida del archivo PHP a un string
             ob_start();
             include $file_path;
             $html_content = ob_get_clean();
             
             echo $html_content;
         } else {
-            // Si la sección no está permitida, mostrar un error 404
             http_response_code(404);
             include '../includes/sections/main/404.php';
         }
         exit;
     }
 
-    // --- LÓGICA EXISTENTE PARA DATOS JSON ---
+    // --- LÓGICA PARA DATOS JSON ---
+    // ESTAS SECCIONES SÍ REQUIEREN CONEXIÓN A LA BASE DE DATOS
     header('Content-Type: application/json');
+    require_once '../config/db.php';
 
     if ($request_type === 'galleries') {
-        // ... (resto del código sin cambios)
         if (isset($_GET['uuid'])) {
             $uuid = $_GET['uuid'];
             $sql = "SELECT g.uuid, g.name, g.privacy, gm.last_edited, gpp.profile_picture_url
@@ -137,7 +132,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode($galleries);
 
     } elseif ($request_type === 'photos') {
-        // ... (resto del código sin cambios)
         if (isset($_GET['photo_id'])) {
             $photo_id = $_GET['photo_id'];
             $sql = "SELECT id, gallery_uuid, photo_url FROM gallery_photos WHERE id = ?";
@@ -183,7 +177,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode($photos);
 
     } elseif ($request_type === 'trending_users') {
-        // ... (resto del código sin cambios)
         $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
         $search_term = isset($_GET['search']) ? $_GET['search'] : '';
         $where_clause = "";
@@ -220,7 +213,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode($users);
 
     } elseif ($request_type === 'trending_photos') {
-        // ... (resto del código sin cambios)
         $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
         $sql = "SELECT p.id, p.photo_url, p.gallery_uuid, g.name AS gallery_name, gpp.profile_picture_url, pm.likes, pm.interactions
                 FROM gallery_photos p
@@ -247,10 +239,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 // --- MANEJO DE SOLICITUDES POST ---
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
+    require_once '../config/db.php';
+
     $action_type = isset($_POST['action_type']) ? $_POST['action_type'] : '';
 
    if ($action_type === 'increment_interaction') {
-        // ... (código sin cambios)
         $uuid = isset($_POST['uuid']) ? $_POST['uuid'] : '';
         if (!empty($uuid)) {
             $sql = "UPDATE galleries_metadata SET total_interactions = total_interactions + 1 WHERE gallery_uuid = ?";
@@ -264,10 +257,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['success' => false, 'message' => 'Falta el UUID de la galería.']);
         }
     } elseif ($action_type === 'increment_photo_interaction') {
-        // ... (código sin cambios)
         $photo_id = isset($_POST['photo_id']) ? (int)$_POST['photo_id'] : 0;
         if ($photo_id > 0) {
-            // Solo incrementamos la interacción en la foto
             $sql = "UPDATE gallery_photos_metadata SET interactions = interactions + 1 WHERE photo_id = ?";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("i", $photo_id);
@@ -279,24 +270,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['success' => false, 'message' => 'Falta el ID de la foto.']);
         }
     } elseif ($action_type === 'toggle_like') {
-        // ... (código sin cambios)
         $photo_id = isset($_POST['photo_id']) ? (int)$_POST['photo_id'] : 0;
         $gallery_uuid = isset($_POST['gallery_uuid']) ? $_POST['gallery_uuid'] : '';
         $is_liked = isset($_POST['is_liked']) ? filter_var($_POST['is_liked'], FILTER_VALIDATE_BOOLEAN) : false;
 
         if ($photo_id > 0 && !empty($gallery_uuid)) {
-            $like_change = $is_liked ? 1 : -1; // +1 si es like, -1 si es unlike
+            $like_change = $is_liked ? 1 : -1;
 
             $conn->begin_transaction();
             try {
-                // Actualizar likes de la foto (suma o resta)
                 $sql_photo = "UPDATE gallery_photos_metadata SET likes = likes + ? WHERE photo_id = ?";
                 $stmt_photo = $conn->prepare($sql_photo);
                 $stmt_photo->bind_param("ii", $like_change, $photo_id);
                 $stmt_photo->execute();
                 $stmt_photo->close();
 
-                // Actualizar total_likes de la galería (suma o resta)
                 $sql_gallery = "UPDATE galleries_metadata SET total_likes = total_likes + ? WHERE gallery_uuid = ?";
                 $stmt_gallery = $conn->prepare($sql_gallery);
                 $stmt_gallery->bind_param("is", $like_change, $gallery_uuid);
@@ -319,9 +307,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode(['error' => 'Invalid POST action type']);
     }
 } else {
-    http_response_code(405); // Method Not Allowed
+    http_response_code(405);
     echo json_encode(['error' => 'Request method not supported']);
 }
 
-$conn->close();
+if (isset($conn) && $conn) {
+    $conn->close();
+}
 ?>
