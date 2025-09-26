@@ -7,7 +7,7 @@
                         <span class="material-symbols-rounded">search</span>
                     </div>
                     <div class="search-input-text">
-                        <input type="text" placeholder="Buscar en tendencias...">
+                        <input type="text" data-i18n-placeholder="trends.searchInputPlaceholder">
                     </div>
                 </div>
             </div>
@@ -18,7 +18,7 @@
         <div class="category-section">
             <div class="category-section-title">
                 <span class="material-symbols-rounded">trending_up</span>
-                <span>Usuarios en Tendencia</span>
+                <span data-i18n="trends.trendingUsers"></span>
             </div>
             <div class="card-grid" id="trending-users-grid">
                 </div>
@@ -26,7 +26,7 @@
         <div class="category-section">
             <div class="category-section-title">
                 <span class="material-symbols-rounded">photo_camera</span>
-                <span>Fotos en Tendencia</span>
+                <span data-i18n="trends.trendingPhotos"></span>
             </div>
             <div class="card-grid" id="trending-photos-grid">
                 </div>

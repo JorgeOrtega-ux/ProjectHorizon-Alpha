@@ -2,8 +2,8 @@
     <div class="settings-page-container">
         <div class="content-section header-section">
             <div class="item-details">
-                <h2>Política de Cookies</h2>
-                <p>Contenido de la política de cookies...</p>
+                <h2 data-i18n="help.cookiePolicy.title"></h2>
+                <p data-i18n="help.cookiePolicy.content"></p>
             </div>
         </div>
     </div>

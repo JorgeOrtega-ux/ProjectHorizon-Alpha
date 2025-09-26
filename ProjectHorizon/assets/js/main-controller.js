@@ -180,7 +180,7 @@ export function initMainController() {
 
         console.log("Accessibility Settings Initialized:");
         console.log(`- Theme: ${localStorage.getItem('theme') || 'system'}`);
-        console.log(`- Language: ${localStorage.getItem('language') || 'es-LA'}`);
+        console.log(`- Language: ${localStorage.getItem('language') || 'es-419'}`);
         console.log(`- Open links in new tab: ${localStorage.getItem(settingsToggles['open-links-in-new-tab'].key)}`);
         console.log(`- Longer notification duration: ${localStorage.getItem(settingsToggles['longer-message-duration'].key)}`);
     }
@@ -229,19 +229,16 @@ export function initMainController() {
                 const totalItems = history.profiles.length + history.photos.length + history.searches.length;
 
                 if (totalItems === 0) {
-                    showNotification("Tu historial ya está vacío.");
+                    showNotification(window.getTranslation('notifications.historyEmpty'));
                     return;
                 }
 
-                const message = `
-                    <p>Esta acción eliminará permanentemente todo tu historial de la aplicación. No podrás deshacer esta acción.</p>
-                    <a href="#" data-action="view-history-help">Más información</a>`;
-
-                const confirmed = await showCustomConfirm('¿Eliminar todo el historial?', message);
+                const message = window.getTranslation('dialogs.clearHistoryMessage');
+                const confirmed = await showCustomConfirm(window.getTranslation('dialogs.clearHistoryTitle'), message);
 
                 if (confirmed) {
                     localStorage.removeItem('viewHistory');
-                    showNotification("Historial eliminado correctamente.");
+                    showNotification(window.getTranslation('notifications.historyCleared'));
                     if (currentAppSection === 'history' || currentAppSection === 'historyPrivacy') {
                         handleStateChange(currentAppView, currentAppSection, null);
                     }
@@ -393,7 +390,7 @@ export function initMainController() {
             } else {
                 byUserContainer.classList.add('disabled');
                 statusContainer.classList.remove('disabled');
-                statusContainer.innerHTML = '<div><h2>No se encontraron favoritos</h2><p>Prueba a buscar en otra sección o añade nuevas fotos a tu colección.</p></div>';
+                statusContainer.innerHTML = `<div><h2 data-i18n="favorites.noFavoritesTitle">${window.getTranslation('favorites.noFavoritesTitle')}</h2><p data-i18n="favorites.noFavoritesMessage">${window.getTranslation('favorites.noFavoritesMessage')}</p></div>`;
             }
 
         } else {
@@ -446,7 +443,7 @@ export function initMainController() {
             } else {
                 allPhotosContainer.classList.add('disabled');
                 statusContainer.classList.remove('disabled');
-                statusContainer.innerHTML = '<div><h2>No se encontraron favoritos</h2><p>Prueba a buscar en otra sección o añade nuevas fotos a tu colección.</p></div>';
+                statusContainer.innerHTML = `<div><h2 data-i18n="favorites.noFavoritesTitle">${window.getTranslation('favorites.noFavoritesTitle')}</h2><p data-i18n="favorites.noFavoritesMessage">${window.getTranslation('favorites.noFavoritesMessage')}</p></div>`;
             }
         }
     }
@@ -575,16 +572,16 @@ export function initMainController() {
         return (now - unlockedGalleries[uuid]) < sixtyMinutes;
     }
 
-    function displayFetchError(containerSelector, title, message) {
+    function displayFetchError(containerSelector, titleKey, messageKey) {
         const section = document.querySelector(containerSelector);
         if (!section) return;
-
+    
         const statusContainer = section.querySelector('.status-message-container');
         const grid = section.querySelector('.card-grid');
-
+    
         if (statusContainer) {
             statusContainer.classList.remove('disabled');
-            statusContainer.innerHTML = `<div><h2>${title}</h2><p>${message}</p></div>`;
+            statusContainer.innerHTML = `<div><h2 data-i18n="${titleKey}">${window.getTranslation(titleKey)}</h2><p data-i18n="${messageKey}">${window.getTranslation(messageKey)}</p></div>`;
         }
         if (grid) {
             grid.classList.add('disabled');
@@ -640,8 +637,10 @@ export function initMainController() {
                 if (data.length > 0) {
                     displayGalleriesAsGrid(data, gridContainer, sortBy, append);
                 } else if (!append) {
-                    if (statusContainer) statusContainer.classList.remove('disabled');
-                    if (statusContainer) statusContainer.innerHTML = '<div><h2>No se encontraron resultados</h2><p>Prueba con una búsqueda diferente para encontrar lo que buscas.</p></div>';
+                    if (statusContainer) {
+                        statusContainer.classList.remove('disabled');
+                        statusContainer.innerHTML = `<div><h2 data-i18n="general.noResultsTitle">${window.getTranslation('general.noResultsTitle')}</h2><p data-i18n="general.noResultsMessage">${window.getTranslation('general.noResultsMessage')}</p></div>`;
+                    }
                     if (gridContainer) gridContainer.classList.add('disabled');
                 }
 
@@ -658,9 +657,9 @@ export function initMainController() {
             .catch(error => {
                 console.error('Error al obtener las galerías:', error);
                 if (!append) {
-                    displayFetchError('[data-section="home"]', 'Error de Conexión', 'Hubo un problema al intentar cargar el contenido. Por favor, inténtalo de nuevo más tarde.');
+                    displayFetchError('[data-section="home"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
                 } else {
-                    showNotification("No se pudo cargar más contenido.", 'error');
+                    showNotification(window.getTranslation('general.connectionErrorMessage'), 'error');
                 }
             })
             .finally(() => {
@@ -680,7 +679,7 @@ export function initMainController() {
         if (!append) {
             photosCurrentPage = 1;
             currentGalleryPhotoList = [];
-            if (title) title.textContent = galleryName || 'Cargando...';
+            if (title) title.textContent = galleryName || window.getTranslation('general.loading');
             if (grid) grid.innerHTML = '';
             if (statusContainer) {
                 statusContainer.classList.remove('disabled');
@@ -748,7 +747,7 @@ export function initMainController() {
                     });
                 } else if (!append && statusContainer) {
                     statusContainer.classList.remove('disabled');
-                    statusContainer.innerHTML = '<div><h2>Galería vacía</h2><p>Este usuario aún no ha subido ninguna foto a esta galería.</p></div>';
+                    statusContainer.innerHTML = `<div><h2 data-i18n="userPhotos.emptyGalleryTitle">${window.getTranslation('userPhotos.emptyGalleryTitle')}</h2><p data-i18n="userPhotos.emptyGalleryMessage">${window.getTranslation('userPhotos.emptyGalleryMessage')}</p></div>`;
                 }
 
                 if (loadMoreContainer) {
@@ -763,9 +762,9 @@ export function initMainController() {
             .catch(error => {
                 console.error('Error al obtener las fotos:', error);
                 if (!append) {
-                     displayFetchError('[data-section="galleryPhotos"]', 'Error de Conexión', 'Hubo un problema al intentar cargar el contenido. Por favor, inténtalo de nuevo más tarde.');
+                     displayFetchError('[data-section="galleryPhotos"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
                 } else {
-                    showNotification("No se pudo cargar más contenido.", 'error');
+                    showNotification(window.getTranslation('general.connectionErrorMessage'), 'error');
                 }
             })
             .finally(() => {
@@ -814,7 +813,7 @@ export function initMainController() {
                 } else {
                     if (statusContainer) {
                         statusContainer.classList.remove('disabled');
-                        statusContainer.innerHTML = '<div><h2>No se encontraron resultados</h2><p>No hay usuarios en tendencia que coincidan con tu búsqueda.</p></div>';
+                        statusContainer.innerHTML = `<div><h2 data-i18n="general.noResultsTitle">${window.getTranslation('general.noResultsTitle')}</h2><p data-i18n="trends.noTrendingUsersMessage">${window.getTranslation('trends.noTrendingUsersMessage')}</p></div>`;
                     }
                 }
 
@@ -869,7 +868,7 @@ export function initMainController() {
             })
             .catch(error => {
                 console.error('Error fetching trends:', error);
-                displayFetchError('[data-section="trends"]', 'Error de Conexión', 'Hubo un problema al intentar cargar el contenido. Por favor, inténtalo de nuevo más tarde.');
+                displayFetchError('[data-section="trends"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
             });
     }
 
@@ -969,7 +968,7 @@ export function initMainController() {
         if (moreOptionsMenu) {
             const filterLink = moreOptionsMenu.querySelector('[data-action="toggle-select"] .menu-link-text span');
             if (filterLink) {
-                filterLink.textContent = `Filtros (${filterText})`;
+                filterLink.textContent = `${window.getTranslation('home.filterTooltip')} (${filterText})`;
             }
         }
     }
@@ -1030,7 +1029,7 @@ export function initMainController() {
             document.body.removeChild(a);
         } catch (error) {
             console.error('Error downloading the image:', error);
-            showNotification('Error al descargar la imagen.', 'error');
+            showNotification(window.getTranslation('notifications.downloadError'), 'error');
         }
     }
 
@@ -1146,7 +1145,7 @@ export function initMainController() {
                     });
 
                     if (history.profiles.length > historyProfilesShown) {
-                        profilesLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-profiles">Mostrar más</button>`;
+                        profilesLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-profiles" data-i18n="settings.history.showMore">${window.getTranslation('settings.history.showMore')}</button>`;
                         profilesLoadMore.classList.remove('disabled');
                     }
                 }
@@ -1180,16 +1179,16 @@ export function initMainController() {
                     });
 
                     if (history.photos.length > historyPhotosShown) {
-                        photosLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-photos">Mostrar más</button>`;
+                        photosLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-photos" data-i18n="settings.history.showMore">${window.getTranslation('settings.history.showMore')}</button>`;
                         photosLoadMore.classList.remove('disabled');
                     }
                 }
             } else {
                 if (isViewHistoryPaused) {
-                    statusContainer.innerHTML = '<div><h2>El historial de perfiles y fotos está pausado</h2><p>Tu actividad de visualización no se guardará mientras esta opción esté desactivada.</p></div>';
+                    statusContainer.innerHTML = `<div><h2 data-i18n="settings.history.viewsPausedTitle">${window.getTranslation('settings.history.viewsPausedTitle')}</h2><p data-i18n="settings.history.viewsPausedMessage">${window.getTranslation('settings.history.viewsPausedMessage')}</p></div>`;
                     statusContainer.classList.remove('disabled');
                 } else {
-                    statusContainer.innerHTML = '<div><h2>No hay actividad para mostrar</h2><p>Los perfiles y fotos que hayas visto recientemente aparecerán aquí.</p></div>';
+                    statusContainer.innerHTML = `<div><h2 data-i18n="settings.history.noActivityTitle">${window.getTranslation('settings.history.noActivityTitle')}</h2><p data-i18n="settings.history.noActivityMessage">${window.getTranslation('settings.history.noActivityMessage')}</p></div>`;
                     statusContainer.classList.remove('disabled');
                 }
             }
@@ -1221,15 +1220,15 @@ export function initMainController() {
                 });
 
                 if (history.searches.length > historySearchesShown) {
-                    searchesLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-searches">Mostrar más</button>`;
+                    searchesLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-searches" data-i18n="settings.history.showMore">${window.getTranslation('settings.history.showMore')}</button>`;
                     searchesLoadMore.classList.remove('disabled');
                 }
             } else {
                 if (isSearchHistoryPaused) {
-                    statusContainer.innerHTML = '<div><h2>El historial de búsqueda está pausado</h2><p>Tus búsquedas no se guardarán mientras esta opción esté desactivada.</p></div>';
+                    statusContainer.innerHTML = `<div><h2 data-i18n="settings.history.searchesPausedTitle">${window.getTranslation('settings.history.searchesPausedTitle')}</h2><p data-i18n="settings.history.searchesPausedMessage">${window.getTranslation('settings.history.searchesPausedMessage')}</p></div>`;
                     statusContainer.classList.remove('disabled');
                 } else {
-                    statusContainer.innerHTML = '<div><h2>No tienes búsquedas recientes</h2><p>Los términos que busques en la aplicación aparecerán aquí.</p></div>';
+                    statusContainer.innerHTML = `<div><h2 data-i18n="settings.history.noSearchesTitle">${window.getTranslation('settings.history.noSearchesTitle')}</h2><p data-i18n="settings.history.noSearchesMessage">${window.getTranslation('settings.history.noSearchesMessage')}</p></div>`;
                     statusContainer.classList.remove('disabled');
                 }
             }
@@ -1444,11 +1443,11 @@ export function initMainController() {
                         const cardForCopy = actionTarget.closest('.card');
                         const urlToCopy = `${window.location.origin}${window.BASE_PATH}/gallery/${cardForCopy.dataset.galleryUuid}/photo/${cardForCopy.dataset.photoId}`;
                         copyTextToClipboard(urlToCopy).then(() => {
-                            showNotification("Enlace copiado al portapapeles.");
+                            showNotification(window.getTranslation('notifications.linkCopied'));
                             actionTarget.closest('.photo-context-menu').classList.add('disabled');
                             actionTarget.closest('.card-actions-container').classList.remove('force-visible');
                         }).catch(err => {
-                            showNotification("Error al copiar el enlace.", 'error');
+                            showNotification(window.getTranslation('notifications.errorCopyingLink'), 'error');
                             console.error('Failed to copy: ', err);
                         });
                         break;
@@ -1701,17 +1700,12 @@ export function initMainController() {
             const html = await response.text();
             if (contentContainer) {
                 contentContainer.innerHTML = html;
+                window.applyTranslations(contentContainer);
             }
         } catch (error) {
             console.error("Failed to fetch section:", error);
             if (contentContainer) {
-                contentContainer.innerHTML = `
-                    <div class="status-message-container active">
-                        <div>
-                            <h2>Error de Conexión</h2>
-                            <p>Hubo un problema al intentar cargar el contenido. Por favor, inténtalo de nuevo más tarde.</p>
-                        </div>
-                    </div>`;
+                displayFetchError('.general-content-scrolleable', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
             }
             return;
         }
@@ -1737,7 +1731,7 @@ export function initMainController() {
                 break;
             case 'accessibility':
                 updateThemeSelectorUI(localStorage.getItem('theme') || 'system');
-                updateLanguageSelectorUI(localStorage.getItem('language') || 'es-LA');
+                updateLanguageSelectorUI(localStorage.getItem('language') || 'es-419');
                 initSettingsController();
                 break;
             case 'history':
@@ -1831,7 +1825,7 @@ export function initMainController() {
                         .then(res => res.json())
                         .then(gallery => {
                             if (gallery && gallery.name && titleElement) {
-                                titleElement.textContent = `Galería de ${gallery.name}`;
+                                titleElement.textContent = window.getTranslation('accessCodePrompt.galleryOf', { galleryName: gallery.name });
                             }
                         });
                 }
@@ -1864,17 +1858,17 @@ export function initMainController() {
             
                 if (adContext === 'unlock') {
                     let adStep = 1;
-                    adTitle.textContent = 'Anuncio 1 de 2';
-                    adContentTitle.textContent = 'Aquí va el primer anuncio';
-                    skipButton.textContent = 'Siguiente Anuncio';
+                    adTitle.textContent = window.getTranslation('adView.adOf', { current: 1, total: 2 });
+                    adContentTitle.textContent = window.getTranslation('adView.adContentTitle');
+                    skipButton.textContent = window.getTranslation('adView.nextAd');
                     startAdCountdown();
             
                     skipButton.onclick = () => {
                         if (adStep === 1) {
                             adStep = 2;
-                            adTitle.textContent = 'Anuncio 2 de 2';
-                            adContentTitle.textContent = 'Aquí va el segundo anuncio';
-                            skipButton.textContent = 'Omitir Anuncio';
+                            adTitle.textContent = window.getTranslation('adView.adOf', { current: 2, total: 2 });
+                            adContentTitle.textContent = window.getTranslation('adView.adContentTitle');
+                            skipButton.textContent = window.getTranslation('adView.skipAd');
                             startAdCountdown();
                         } else {
                             const destination = galleryAfterAd;
@@ -1892,9 +1886,9 @@ export function initMainController() {
                         }
                     };
                 } else {
-                    adTitle.textContent = 'Anuncio';
-                    adContentTitle.textContent = 'Aquí va el anuncio';
-                    skipButton.textContent = 'Omitir Anuncio';
+                    adTitle.textContent = window.getTranslation('adView.ad');
+                    adContentTitle.textContent = window.getTranslation('adView.adContentTitle');
+                    skipButton.textContent = window.getTranslation('adView.skipAd');
                     startAdCountdown();
             
                     skipButton.onclick = () => {
@@ -1924,7 +1918,7 @@ export function initMainController() {
                         if (userFavorites.length > 0) {
                             grid.classList.remove('disabled');
                             statusContainer.classList.add('disabled');
-                            title.textContent = `Favoritos de ${userFavorites[0].gallery_name}`;
+                            title.textContent = window.getTranslation('userSpecificFavorites.titleFrom', { userName: userFavorites[0].gallery_name });
                             userFavorites.forEach(photo => {
                                 const card = document.createElement('div');
                                 card.className = 'card photo-card';
@@ -1942,8 +1936,8 @@ export function initMainController() {
                         } else {
                             grid.classList.add('disabled');
                             statusContainer.classList.remove('disabled');
-                            title.textContent = 'Sin favoritos';
-                            statusContainer.innerHTML = '<div><h2>No tienes favoritos de este usuario</h2><p>Las fotos que marques como favoritas de este usuario aparecerán aquí.</p></div>';
+                            title.textContent = window.getTranslation('userSpecificFavorites.title');
+                            statusContainer.innerHTML = `<div><h2 data-i18n="userSpecificFavorites.noUserFavoritesTitle">${window.getTranslation('userSpecificFavorites.noUserFavoritesTitle')}</h2><p data-i18n="userSpecificFavorites.noUserFavoritesMessage">${window.getTranslation('userSpecificFavorites.noUserFavoritesMessage')}</p></div>`;
                         }
                     }
                 }

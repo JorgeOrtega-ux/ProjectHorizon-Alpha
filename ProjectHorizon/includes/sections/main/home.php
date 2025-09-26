@@ -7,7 +7,7 @@
                         <span class="material-symbols-rounded">search</span>
                     </div>
                     <div class="search-input-text">
-                        <input type="text" placeholder="Buscar...">
+                        <input type="text" data-i18n-placeholder="home.searchInputPlaceholder">
                     </div>
                 </div>
             </div>
@@ -18,7 +18,7 @@
                             <div class="select-trigger-icon">
                                 <span class="material-symbols-rounded">swap_vert</span>
                             </div>
-                            <span class="select-trigger-text">Más relevante</span>
+                            <span class="select-trigger-text" data-i18n="home.filterRelevant"></span>
                             <div class="select-trigger-icon select-trigger-arrow">
                                 <span class="material-symbols-rounded">expand_more</span>
                             </div>
@@ -28,23 +28,23 @@
                                 <div class="menu-list">
                                     <div class="menu-link" data-value="relevant">
                                         <div class="menu-link-icon"><span class="material-symbols-rounded">star_shine</span></div>
-                                        <div class="menu-link-text"><span>Más relevante</span></div>
+                                        <div class="menu-link-text"><span data-i18n="home.filterRelevant"></span></div>
                                     </div>
                                     <div class="menu-link" data-value="newest">
                                         <div class="menu-link-icon"><span class="material-symbols-rounded">schedule</span></div>
-                                        <div class="menu-link-text"><span>Ediciones más recientes</span></div>
+                                        <div class="menu-link-text"><span data-i18n="home.filterNewest"></span></div>
                                     </div>
                                     <div class="menu-link" data-value="oldest">
                                         <div class="menu-link-icon"><span class="material-symbols-rounded">schedule</span></div>
-                                        <div class="menu-link-text"><span>Ediciones más antiguas</span></div>
+                                        <div class="menu-link-text"><span data-i18n="home.filterOldest"></span></div>
                                     </div>
                                     <div class="menu-link" data-value="alpha-asc">
                                         <div class="menu-link-icon"><span class="material-symbols-rounded">arrow_upward</span></div>
-                                        <div class="menu-link-text"><span>Ordenar alfabéticamente (A-Z)</span></div>
+                                        <div class="menu-link-text"><span data-i18n="home.filterAlphaAsc"></span></div>
                                     </div>
                                     <div class="menu-link" data-value="alpha-desc">
                                         <div class="menu-link-icon"><span class="material-symbols-rounded">arrow_downward</span></div>
-                                        <div class="menu-link-text"><span>Ordenar alfabéticamente (Z-A)</span></div>
+                                        <div class="menu-link-text"><span data-i18n="home.filterAlphaDesc"></span></div>
                                     </div>
                                 </div>
                             </div>
@@ -52,7 +52,7 @@
                     </div>
                 </div>
                 <div class="header-item show-on-mobile">
-                    <div class="header-button" data-action="toggle-select" data-target="relevance-select-mobile" data-tooltip="Filtros">
+                    <div class="header-button" data-action="toggle-select" data-target="relevance-select-mobile" data-i18n-tooltip="home.filterTooltip">
                         <span class="material-symbols-rounded">filter_list</span>
                     </div>
                     <div class="module-content module-select body-title disabled" id="relevance-select-mobile">
@@ -65,7 +65,7 @@
         <div class="status-message-container disabled"></div>
         <div class="card-grid active" id="grid-view"></div>
         <div class="load-more-container disabled" id="users-load-more-container">
-            <button class="load-more-btn" data-action="load-more-users">Mostrar más</button>
+            <button class="load-more-btn" data-action="load-more-users" data-i18n="home.showMore"></button>
         </div>
     </div>
 </div>

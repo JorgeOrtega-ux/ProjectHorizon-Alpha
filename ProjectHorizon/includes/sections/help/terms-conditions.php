@@ -2,8 +2,8 @@
     <div class="settings-page-container">
         <div class="content-section header-section">
             <div class="item-details">
-                <h2>Términos y Condiciones</h2>
-                <p>Contenido de los términos y condiciones...</p>
+                <h2 data-i18n="help.termsConditions.title"></h2>
+                <p data-i18n="help.termsConditions.content"></p>
             </div>
         </div>
     </div>

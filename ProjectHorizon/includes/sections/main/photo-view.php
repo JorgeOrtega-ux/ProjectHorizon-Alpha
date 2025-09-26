@@ -2,11 +2,11 @@
     <div class="section-content-header">
         <div class="content-header-wrapper">
             <div class="content-header-left">
-                <div class="header-button" data-action="returnToUserPhotos" data-tooltip="Volver">
+                <div class="header-button" data-action="returnToUserPhotos" data-i18n-tooltip="photoView.backButtonTooltip">
                     <span class="material-symbols-rounded">arrow_left</span>
                 </div>
                 <div class="header-title-container">
-                    <span id="photo-view-user-title">Usuario</span>
+                    <span id="photo-view-user-title" data-i18n="photoView.userTitle"></span>
                 </div>
             </div>
             <div class="content-header-center">

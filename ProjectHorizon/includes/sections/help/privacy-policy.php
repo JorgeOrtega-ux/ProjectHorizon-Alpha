@@ -2,8 +2,8 @@
     <div class="settings-page-container">
         <div class="content-section header-section">
             <div class="item-details">
-                <h2>Política de Privacidad</h2>
-                <p>Contenido de la política de privacidad...</p>
+                <h2 data-i18n="help.privacyPolicy.title"></h2>
+                <p data-i18n="help.privacyPolicy.content"></p>
             </div>
         </div>
     </div>

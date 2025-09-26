@@ -30,11 +30,11 @@
     
     <div id="custom-confirm-overlay" class="custom-confirm-overlay disabled">
         <div class="custom-confirm-box">
-            <h2 id="custom-confirm-title">Confirmar Acción</h2>
+            <h2 id="custom-confirm-title" data-i18n="dialogs.clearHistoryTitle"></h2>
             <div id="custom-confirm-message"></div>
             <div class="custom-confirm-buttons">
-                <button id="custom-confirm-cancel" class="load-more-btn">Cancelar</button>
-                <button id="custom-confirm-ok" class="load-more-btn btn-danger">Confirmar</button>
+                <button id="custom-confirm-cancel" class="load-more-btn" data-i18n="general.cancel"></button>
+                <button id="custom-confirm-ok" class="load-more-btn btn-danger" data-i18n="general.confirm"></button>
             </div>
         </div>
     </div>

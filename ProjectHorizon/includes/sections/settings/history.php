@@ -2,11 +2,11 @@
     <div class="section-content-header">
         <div class="content-header-wrapper">
             <div class="content-header-left">
-                <div class="header-button" data-action="toggleSectionHistoryPrivacy" data-tooltip="Volver">
+                <div class="header-button" data-action="toggleSectionHistoryPrivacy" data-i18n-tooltip="settings.history.backButtonTooltip">
                     <span class="material-symbols-rounded">arrow_left</span>
                 </div>
                 <div class="header-title-container">
-                    <span>Mi historial</span>
+                    <span data-i18n="settings.history.title"></span>
                 </div>
             </div>
             <div class="content-header-right">
@@ -16,7 +16,7 @@
                             <div class="select-trigger-icon">
                                 <span class="material-symbols-rounded">filter_list</span>
                             </div>
-                            <span class="select-trigger-text">Vistos recientes</span>
+                            <span class="select-trigger-text" data-i18n="settings.history.filterRecentViews"></span>
                             <div class="select-trigger-icon select-trigger-arrow">
                                 <span class="material-symbols-rounded">expand_more</span>
                             </div>
@@ -26,11 +26,11 @@
                                 <div class="menu-list">
                                     <div class="menu-link active" data-value="views">
                                         <div class="menu-link-icon"><span class="material-symbols-rounded">visibility</span></div>
-                                        <div class="menu-link-text"><span>Vistos recientes</span></div>
+                                        <div class="menu-link-text"><span data-i18n="settings.history.filterRecentViews"></span></div>
                                     </div>
                                     <div class="menu-link" data-value="searches">
                                         <div class="menu-link-icon"><span class="material-symbols-rounded">search</span></div>
-                                        <div class="menu-link-text"><span>Historial de búsqueda</span></div>
+                                        <div class="menu-link-text"><span data-i18n="settings.history.filterSearchHistory"></span></div>
                                     </div>
                                 </div>
                             </div>
@@ -44,13 +44,13 @@
         <div class="status-message-container disabled"></div>
         <div class="history-paused-alert disabled">
             <span class="material-symbols-rounded">pause_circle</span>
-            <span>El historial está pausado. No se guardará tu actividad.</span>
+            <span data-i18n="settings.history.historyPausedAlert"></span>
         </div>
         <div id="history-container">
             <div class="category-section" data-history-view="views">
                 <div class="category-section-title">
                     <span class="material-symbols-rounded">person</span>
-                    <span>Perfiles vistos recientemente</span>
+                    <span data-i18n="settings.history.recentProfiles"></span>
                 </div>
                 <div class="card-grid" id="history-profiles-grid"></div>
                 <div class="load-more-container disabled" id="history-profiles-load-more"></div>
@@ -58,7 +58,7 @@
             <div class="category-section" data-history-view="views">
                 <div class="category-section-title">
                     <span class="material-symbols-rounded">photo_camera</span>
-                    <span>Fotos vistas recientemente</span>
+                    <span data-i18n="settings.history.recentPhotos"></span>
                 </div>
                 <div class="card-grid" id="history-photos-grid"></div>
                 <div class="load-more-container disabled" id="history-photos-load-more"></div>
@@ -66,7 +66,7 @@
             <div class="category-section" data-history-view="searches" style="display: none;">
                 <div class="category-section-title">
                     <span class="material-symbols-rounded">search</span>
-                    <span>Búsquedas Recientes</span>
+                    <span data-i18n="settings.history.recentSearches"></span>
                 </div>
                 <div id="history-searches-list"></div>
                 <div class="load-more-container disabled" id="history-searches-load-more"></div>

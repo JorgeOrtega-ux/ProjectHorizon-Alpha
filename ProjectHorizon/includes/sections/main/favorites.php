@@ -7,7 +7,7 @@
                         <span class="material-symbols-rounded">search</span>
                     </div>
                     <div class="search-input-text">
-                        <input type="text" id="favorites-search-input" placeholder="Buscar en favoritos...">
+                        <input type="text" id="favorites-search-input" data-i18n-placeholder="favorites.searchInputPlaceholder">
                     </div>
                 </div>
             </div>
@@ -18,7 +18,7 @@
                             <div class="select-trigger-icon">
                                 <span class="material-symbols-rounded">swap_vert</span>
                             </div>
-                            <span class="select-trigger-text">Agrupar por usuario</span>
+                            <span class="select-trigger-text" data-i18n="favorites.sortUser"></span>
                             <div class="select-trigger-icon select-trigger-arrow">
                                 <span class="material-symbols-rounded">expand_more</span>
                             </div>
@@ -28,15 +28,15 @@
                                 <div class="menu-list">
                                     <div class="menu-link" data-value="newest">
                                         <div class="menu-link-icon"><span class="material-symbols-rounded">schedule</span></div>
-                                        <div class="menu-link-text"><span>Agregados recientemente</span></div>
+                                        <div class="menu-link-text"><span data-i18n="favorites.sortNewest"></span></div>
                                     </div>
                                     <div class="menu-link" data-value="oldest">
                                         <div class="menu-link-icon"><span class="material-symbols-rounded">schedule</span></div>
-                                        <div class="menu-link-text"><span>Agregados antiguamente</span></div>
+                                        <div class="menu-link-text"><span data-i18n="favorites.sortOldest"></span></div>
                                     </div>
                                     <div class="menu-link" data-value="user">
                                         <div class="menu-link-icon"><span class="material-symbols-rounded">person</span></div>
-                                        <div class="menu-link-text"><span>Agrupar por usuario</span></div>
+                                        <div class="menu-link-text"><span data-i18n="favorites.sortUser"></span></div>
                                     </div>
                                 </div>
                             </div>
@@ -44,7 +44,7 @@
                     </div>
                 </div>
                 <div class="header-item show-on-mobile">
-                    <div class="header-button" data-action="toggle-select" data-target="favorites-sort-select-mobile" data-tooltip="Filtros">
+                    <div class="header-button" data-action="toggle-select" data-target="favorites-sort-select-mobile" data-i18n-tooltip="favorites.filterTooltip">
                         <span class="material-symbols-rounded">filter_list</span>
                     </div>
                     <div class="module-content module-select disabled" id="favorites-sort-select-mobile">

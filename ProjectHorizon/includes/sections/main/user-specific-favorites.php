@@ -2,11 +2,11 @@
     <div class="section-content-header">
         <div class="content-header-wrapper">
             <div class="content-header-left">
-                <div class="header-button" data-action="returnToFavorites" data-tooltip="Volver a favoritos">
+                <div class="header-button" data-action="returnToFavorites" data-i18n-tooltip="userSpecificFavorites.backButtonTooltip">
                     <span class="material-symbols-rounded">arrow_left</span>
                 </div>
                 <div class="header-title-container">
-                    <span id="user-specific-favorites-title">Favoritos</span>
+                    <span id="user-specific-favorites-title" data-i18n="userSpecificFavorites.title"></span>
                 </div>
             </div>
         </div>

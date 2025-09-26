@@ -2,8 +2,8 @@
     <div class="settings-page-container">
         <div class="content-section header-section">
             <div class="item-details">
-                <h2>Historial y Privacidad</h2>
-                <p>Gestiona tu historial de visualización y configura tus opciones de privacidad.</p>
+                <h2 data-i18n="settings.historyPrivacy.title"></h2>
+                <p data-i18n="settings.historyPrivacy.description"></p>
             </div>
         </div>
 
@@ -11,8 +11,8 @@
            <div class="data-item">
         <div class="view-container active">
             <div class="item-details">
-                <h4>Guardar vistos recientemente</h4>
-                <p>Guarda los perfiles y las fotos que has visto.</p>
+                <h4 data-i18n="settings.historyPrivacy.saveViewsTitle"></h4>
+                <p data-i18n="settings.historyPrivacy.saveViewsDescription"></p>
             </div>
             <div class="item-actions">
                 <div class="toggle-switch active" data-setting="enable-view-history">
@@ -25,8 +25,8 @@
     <div class="data-item">
         <div class="view-container active">
             <div class="item-details">
-                <h4>Guardar historial de búsqueda</h4>
-                <p>Guarda los términos que buscas en la aplicación.</p>
+                <h4 data-i18n="settings.historyPrivacy.saveSearchesTitle"></h4>
+                <p data-i18n="settings.historyPrivacy.saveSearchesDescription"></p>
             </div>
             <div class="item-actions">
                 <div class="toggle-switch active" data-setting="enable-search-history">
@@ -39,21 +39,21 @@
 
         <div class="content-section content-section-stacked">
             <div class="item-details">
-                <h4>Mi historial</h4>
-                <p>Consulta los perfiles, fotos y búsquedas que has realizado.</p>
+                <h4 data-i18n="settings.historyPrivacy.myHistoryTitle"></h4>
+                <p data-i18n="settings.historyPrivacy.myHistoryDescription"></p>
             </div>
             <div class="item-actions">
-                <button class="load-more-btn" data-action="toggleSectionHistory">Administrar mi historial</button>
+                <button class="load-more-btn" data-action="toggleSectionHistory" data-i18n="settings.historyPrivacy.manageHistoryButton"></button>
             </div>
         </div>
 
         <div class="content-section content-section-stacked">
             <div class="item-details">
-                <h4>Borrar datos de navegación</h4>
-                <p>Elimina permanentemente todo tu historial de la aplicación.</p>
+                <h4 data-i18n="settings.historyPrivacy.clearDataTitle"></h4>
+                <p data-i18n="settings.historyPrivacy.clearDataDescription"></p>
             </div>
             <div class="item-actions">
-                <button class="load-more-btn" data-action="clear-history">Borrar historial</button>
+                <button class="load-more-btn" data-action="clear-history" data-i18n="settings.historyPrivacy.clearHistoryButton"></button>
             </div>
         </div>
     </div>

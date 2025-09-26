@@ -3,20 +3,20 @@
         <div class="content-header-wrapper">
             <div class="content-header-left">
                 <div class="header-title-container">
-                    <span id="ad-title">Anuncio</span>
+                    <span id="ad-title" data-i18n="adView.ad"></span>
                 </div>
             </div>
             <div class="content-header-right">
                 <div class="ad-timer-container">
                     <div id="ad-timer">5</div>
                 </div>
-                <button id="skip-ad-button" class="load-more-btn" disabled>Omitir Anuncio</button>
+                <button id="skip-ad-button" class="load-more-btn" disabled data-i18n="adView.skipAd"></button>
             </div>
         </div>
     </div>
     <div class="section-content-block overflow-y">
         <div class="ad-container">
-            <h1 id="ad-content-title">Aquí va el anuncio</h1>
+            <h1 id="ad-content-title" data-i18n="adView.adContentTitle"></h1>
         </div>
     </div>
 </div>

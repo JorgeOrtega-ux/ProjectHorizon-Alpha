@@ -2,14 +2,14 @@
     <div class="settings-page-container">
         <div class="content-section header-section">
             <div class="item-details">
-                <h2>Accesibilidad</h2>
-                <p>Configura las opciones de accesibilidad para adaptar la interfaz a tus necesidades.</p>
+                <h2 data-i18n="settings.accessibility.title"></h2>
+                <p data-i18n="settings.accessibility.description"></p>
             </div>
         </div>
         <div class="content-section select-section">
             <div class="item-details">
-                <h4>Idioma</h4>
-                <p>Elige tu idioma de preferencia para la interfaz.</p>
+                <h4 data-i18n="settings.accessibility.languageTitle"></h4>
+                <p data-i18n="settings.accessibility.languageDescription"></p>
             </div>
             <div class="form-controls">
                 <div class="select-wrapper body-title">
@@ -25,8 +25,7 @@
                     <div class="module-content module-select disabled" id="language-select">
                         <div class="menu-content">
                             <div class="menu-list">
-                                <div class="menu-link" data-value="es-LA">
-                                    <div class="menu-link-icon"><span class="material-symbols-rounded">language</span></div>
+                                <div class="menu-link" data-value="es-419"> <div class="menu-link-icon"><span class="material-symbols-rounded">language</span></div>
                                     <div class="menu-link-text"><span>Español (Latinoamérica)</span></div>
                                 </div>
                                 <div class="menu-link" data-value="en-US">
@@ -53,8 +52,8 @@
         </div>
         <div class="content-section select-section">
             <div class="item-details">
-                <h4>Tema</h4>
-                <p>Personaliza la apariencia de tu cuenta. Selecciona un tema o sincroniza temas con las preferencias de tu sistema.</p>
+                <h4 data-i18n="settings.accessibility.themeTitle"></h4>
+                <p data-i18n="settings.accessibility.themeDescription"></p>
             </div>
             <div class="form-controls">
                 <div class="select-wrapper body-title">
@@ -92,8 +91,8 @@
             <div class="data-item">
                 <div class="view-container active">
                     <div class="item-details">
-                        <h4>Abrir los enlaces en una pestaña nueva</h4>
-                        <p>Al activar esta opción, todos los enlaces se abrirán en una nueva pestaña para no interrumpir tu navegación actual.</p>
+                        <h4 data-i18n="settings.accessibility.openLinksTitle"></h4>
+                        <p data-i18n="settings.accessibility.openLinksDescription"></p>
                     </div>
                     <div class="item-actions">
                         <div class="toggle-switch" data-setting="open-links-in-new-tab">
@@ -105,8 +104,8 @@
             <div class="data-item">
                 <div class="view-container active">
                     <div class="item-details">
-                        <h4>Aumenta el tiempo de permanencia de una notificación en la pantalla.</h4>
-                        <p>Las notificaciones permanecerán más tiempo en pantalla antes de desaparecer.</p>
+                        <h4 data-i18n="settings.accessibility.longerNotificationsTitle"></h4>
+                        <p data-i18n="settings.accessibility.longerNotificationsDescription"></p>
                     </div>
                     <div class="item-actions">
                         <div class="toggle-switch" data-setting="longer-message-duration">

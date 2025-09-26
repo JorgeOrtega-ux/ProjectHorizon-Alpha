@@ -2,11 +2,11 @@
     <div class="section-content-header">
         <div class="content-header-wrapper">
             <div class="content-header-left">
-                <div class="header-button" data-action="returnToHome" data-tooltip="Volver">
+                <div class="header-button" data-action="returnToHome" data-i18n-tooltip="userPhotos.backButtonTooltip">
                     <span class="material-symbols-rounded">arrow_left</span>
                 </div>
                 <div class="header-title-container">
-                    <span id="user-photos-title">Fotos de Usuario</span>
+                    <span id="user-photos-title" data-i18n="userPhotos.title"></span>
                 </div>
             </div>
         </div>
@@ -17,7 +17,7 @@
         </div>
 
         <div class="load-more-container disabled" id="photos-load-more-container">
-            <button class="load-more-btn" data-action="load-more-photos">Mostrar más</button>
+            <button class="load-more-btn" data-action="load-more-photos" data-i18n="userPhotos.showMore"></button>
         </div>
     </div>
 </div>
