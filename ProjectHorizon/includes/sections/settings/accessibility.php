@@ -37,6 +37,14 @@
                                     <div class="menu-link-icon"><span class="material-symbols-rounded">language</span></div>
                                     <div class="menu-link-text"><span>Français (France)</span></div>
                                 </div>
+                                <div class="menu-link" data-value="de-DE">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">language</span></div>
+                                    <div class="menu-link-text"><span>Deutsch (Deutschland)</span></div>
+                                </div>
+                                <div class="menu-link" data-value="pt-BR">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">language</span></div>
+                                    <div class="menu-link-text"><span>Português (Brasil)</span></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -97,11 +105,11 @@
             <div class="data-item">
                 <div class="view-container active">
                     <div class="item-details">
-                        <h4>Los atajos necesitan un modificador</h4>
-                        <p>Para crear atajos, es necesario usar la tecla modificadora Alt.</p>
+                        <h4>Aumenta el tiempo de permanencia de una notificación en la pantalla.</h4>
+                        <p>Las notificaciones permanecerán más tiempo en pantalla antes de desaparecer.</p>
                     </div>
                     <div class="item-actions">
-                        <div class="toggle-switch" data-setting="require-modifier-for-shortcuts">
+                        <div class="toggle-switch" data-setting="longer-message-duration">
                             <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
                         </div>
                     </div>

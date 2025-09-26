@@ -3,7 +3,9 @@
 const availableLanguages = {
     'es-LA': 'Español (Latinoamérica)',
     'en-US': 'English (United States)',
-    'fr-FR': 'Français (France)'
+    'fr-FR': 'Français (France)',
+    'de-DE': 'Deutsch (Deutschland)',
+    'pt-BR': 'Português (Brasil)'
 };
 
 function getBestLanguageMatch() {

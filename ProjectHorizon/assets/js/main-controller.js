@@ -117,49 +117,49 @@ export function initMainController() {
 
     let activeScrollHandlers = [];
 
-    function initSettingsController() {
-        const settingsToggles = {
-            'open-links-in-new-tab': {
-                element: document.querySelector('[data-setting="open-links-in-new-tab"]'),
-                key: 'openLinksInNewTab',
-                defaultValue: false
-            },
-            'require-modifier-for-shortcuts': {
-                element: document.querySelector('[data-setting="require-modifier-for-shortcuts"]'),
-                key: 'requireModifierForShortcuts',
-                defaultValue: false
-            }
-        };
-
-        function updateToggleUI(setting) {
-            const value = localStorage.getItem(setting.key) === 'true';
-            if (setting.element) {
-                setting.element.classList.toggle('active', value);
-            }
+function initSettingsController() {
+    const settingsToggles = {
+        'open-links-in-new-tab': {
+            element: document.querySelector('[data-setting="open-links-in-new-tab"]'),
+            key: 'openLinksInNewTab',
+            defaultValue: false
+        },
+        'longer-message-duration': {
+            element: document.querySelector('[data-setting="longer-message-duration"]'),
+            key: 'longerMessageDuration',
+            defaultValue: false
         }
+    };
 
-        for (const id in settingsToggles) {
-            const setting = settingsToggles[id];
-            if (setting.element) {
-                if (localStorage.getItem(setting.key) === null) {
-                    localStorage.setItem(setting.key, setting.defaultValue);
-                }
-                updateToggleUI(setting);
-
-                setting.element.addEventListener('click', () => {
-                    const currentValue = localStorage.getItem(setting.key) === 'true';
-                    localStorage.setItem(setting.key, !currentValue);
-                    updateToggleUI(setting);
-                });
-            }
+    function updateToggleUI(setting) {
+        const value = localStorage.getItem(setting.key) === 'true';
+        if (setting.element) {
+            setting.element.classList.toggle('active', value);
         }
-
-        console.log("Accessibility Settings Initialized:");
-        console.log(`- Theme: ${localStorage.getItem('theme') || 'system'}`);
-        console.log(`- Language: ${localStorage.getItem('language') || 'es-LA'}`);
-        console.log(`- Open links in new tab: ${localStorage.getItem(settingsToggles['open-links-in-new-tab'].key)}`);
-        console.log(`- Require modifier for shortcuts: ${localStorage.getItem(settingsToggles['require-modifier-for-shortcuts'].key)}`);
     }
+
+    for (const id in settingsToggles) {
+        const setting = settingsToggles[id];
+        if (setting.element) {
+            if (localStorage.getItem(setting.key) === null) {
+                localStorage.setItem(setting.key, setting.defaultValue);
+            }
+            updateToggleUI(setting);
+
+            setting.element.addEventListener('click', () => {
+                const currentValue = localStorage.getItem(setting.key) === 'true';
+                localStorage.setItem(setting.key, !currentValue);
+                updateToggleUI(setting);
+            });
+        }
+    }
+
+    console.log("Accessibility Settings Initialized:");
+    console.log(`- Theme: ${localStorage.getItem('theme') || 'system'}`);
+    console.log(`- Language: ${localStorage.getItem('language') || 'es-LA'}`);
+    console.log(`- Open links in new tab: ${localStorage.getItem(settingsToggles['open-links-in-new-tab'].key)}`);
+    console.log(`- Longer notification duration: ${localStorage.getItem(settingsToggles['longer-message-duration'].key)}`); // <--- Texto del log actualizado
+}
 
     function initHistoryPrivacySettings() {
         const settingsToggles = {
@@ -403,7 +403,7 @@ export function initMainController() {
                     <div class="module-content module-select photo-context-menu disabled body-title">
                         <div class="menu-content"><div class="menu-list">
                             <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
-                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></a>
+                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
                             <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
                         </div></div>
                     </div>
@@ -676,7 +676,7 @@ export function initMainController() {
                                 <div class="module-content module-select photo-context-menu disabled body-title">
                                     <div class="menu-content"><div class="menu-list">
                                         <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
-                                        <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></a>
+                                        <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
                                         <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
                                     </div></div>
                                 </div>
@@ -793,7 +793,7 @@ export function initMainController() {
                                     <div class="module-content module-select photo-context-menu disabled body-title">
                                         <div class="menu-content"><div class="menu-list">
                                             <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
-                                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></a>
+                                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
                                             <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
                                         </div></div>
                                     </div>
