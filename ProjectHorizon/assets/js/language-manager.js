@@ -18,7 +18,7 @@ async function fetchTranslations(langCode) {
         translations = await response.json();
     } catch (error) {
         console.error("Failed to fetch translations:", error);
-        translations = {}; 
+        translations = {};
     }
     applyTranslations(document.body);
 }
@@ -42,7 +42,7 @@ function getTranslation(key, replacements = {}) {
     return result;
 }
 
-function applyTranslations(element) {
+export function applyTranslations(element) {
     element.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.dataset.i18n;
         el.textContent = getTranslation(key);

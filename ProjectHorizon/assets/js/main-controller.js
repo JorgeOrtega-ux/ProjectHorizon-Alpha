@@ -2,7 +2,7 @@
 
 import { generateUrl, navigateToUrl, setupPopStateHandler, setInitialHistoryState } from './url-manager.js';
 import { setTheme, updateThemeSelectorUI } from './theme-manager.js';
-import { setLanguage, updateLanguageSelectorUI } from './language-manager.js';
+import { setLanguage, updateLanguageSelectorUI, applyTranslations } from './language-manager.js';
 import { initTooltips } from './tooltip-manager.js';
 import { showNotification } from './notification-manager.js';
 
@@ -126,6 +126,8 @@ export function initMainController() {
 
             titleEl.textContent = title;
             messageEl.innerHTML = message;
+            
+            applyTranslations(overlay);
 
             overlay.classList.remove('disabled');
 
@@ -329,7 +331,7 @@ export function initMainController() {
         }
 
         if (currentFavoritesSortBy === 'oldest') {
-            favorites.sort((a, b) => (a.added_at || 0) - (b.added_at || 0));
+            favorites.sort((a, b) => (a.added_at || 0) - (a.added_at || 0));
         } else if (currentFavoritesSortBy === 'newest') {
             favorites.sort((a, b) => (b.added_at || 0) - (a.added_at || 0));
         }
@@ -381,7 +383,8 @@ export function initMainController() {
 
                     const textContainer = document.createElement('div');
                     textContainer.className = 'card-text';
-                    textContainer.innerHTML = `<span>${gallery.name}</span><span style="font-size: 0.8rem; display: block;">${gallery.photos.length} ${gallery.photos.length > 1 ? 'fotos' : 'foto'}</span>`;
+                    const photoCountText = gallery.photos.length > 1 ? window.getTranslation('general.photosCount', { count: gallery.photos.length }) : window.getTranslation('general.photoCount', { count: 1 });
+                    textContainer.innerHTML = `<span>${gallery.name}</span><span style="font-size: 0.8rem; display: block;">${photoCountText}</span>`;
                     overlay.appendChild(textContainer);
 
                     card.appendChild(overlay);
@@ -390,7 +393,8 @@ export function initMainController() {
             } else {
                 byUserContainer.classList.add('disabled');
                 statusContainer.classList.remove('disabled');
-                statusContainer.innerHTML = `<div><h2 data-i18n="favorites.noFavoritesTitle">${window.getTranslation('favorites.noFavoritesTitle')}</h2><p data-i18n="favorites.noFavoritesMessage">${window.getTranslation('favorites.noFavoritesMessage')}</p></div>`;
+                statusContainer.innerHTML = `<div><h2>${window.getTranslation('favorites.noFavoritesTitle')}</h2><p>${window.getTranslation('favorites.noFavoritesMessage')}</p></div>`;
+
             }
 
         } else {
@@ -415,12 +419,13 @@ export function initMainController() {
                     card.appendChild(background);
 
                     const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
+                    const addedDate = window.getTranslation('general.added', { date: new Date(photo.added_at).toLocaleString() });
                     card.innerHTML += `
                 <div class="card-content-overlay">
                     <div class="card-icon" style="background-image: url('${photo.profile_picture_url || ''}')"></div>
                     <div class="card-text">
                         <span>${photo.gallery_name}</span>
-                        <span style="font-size: 0.8rem; display: block;">${new Date(photo.added_at).toLocaleString()}</span>
+                        <span style="font-size: 0.8rem; display: block;">${addedDate}</span>
                     </div>
                 </div>
                 <div class="card-actions-container">
@@ -432,9 +437,9 @@ export function initMainController() {
                     </div>
                     <div class="module-content module-select photo-context-menu disabled body-title">
                         <div class="menu-content"><div class="menu-list">
-                            <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
-                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
-                            <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
+                            <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.openInNewTab')}</span></div></a>
+                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.copyLink')}</span></div></div>
+                            <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.download')}</span></div></a>
                         </div></div>
                     </div>
                 </div>`;
@@ -443,9 +448,10 @@ export function initMainController() {
             } else {
                 allPhotosContainer.classList.add('disabled');
                 statusContainer.classList.remove('disabled');
-                statusContainer.innerHTML = `<div><h2 data-i18n="favorites.noFavoritesTitle">${window.getTranslation('favorites.noFavoritesTitle')}</h2><p data-i18n="favorites.noFavoritesMessage">${window.getTranslation('favorites.noFavoritesMessage')}</p></div>`;
+                statusContainer.innerHTML = `<div><h2>${window.getTranslation('favorites.noFavoritesTitle')}</h2><p>${window.getTranslation('favorites.noFavoritesMessage')}</p></div>`;
             }
         }
+        applyTranslations(section);
     }
     
     function updateCardPrivacyStatus(uuid, unlockedTimestamp) {
@@ -454,8 +460,8 @@ export function initMainController() {
 
         if (card.dataset.privacy !== '1') {
             const badge = card.querySelector('.privacy-badge');
-            if (badge && !badge.innerHTML.includes('Público')) {
-                badge.innerHTML = `<span class="material-symbols-rounded">public</span> Público`;
+            if (badge && !badge.innerHTML.includes(window.getTranslation('general.public'))) {
+                 badge.innerHTML = `<span class="material-symbols-rounded">public</span> ${window.getTranslation('general.public')}`;
             }
             return;
         }
@@ -470,10 +476,10 @@ export function initMainController() {
         if (remainingTime > 0) {
             const minutes = Math.floor(remainingTime / 60000);
             const seconds = Math.floor((remainingTime % 60000) / 1000);
-            badge.innerHTML = `<span class="material-symbols-rounded">lock_open</span> Desbloqueado (${minutes}:${seconds.toString().padStart(2, '0')})`;
+            badge.innerHTML = `<span class="material-symbols-rounded">lock_open</span> ${window.getTranslation('general.unlocked')} (${minutes}:${seconds.toString().padStart(2, '0')})`;
             badge.className = 'privacy-badge';
         } else {
-            badge.innerHTML = `<span class="material-symbols-rounded">lock</span> Privado`;
+            badge.innerHTML = `<span class="material-symbols-rounded">lock</span> ${window.getTranslation('general.private')}`;
             badge.className = 'privacy-badge';
         }
     }
@@ -512,9 +518,9 @@ export function initMainController() {
             badge.className = 'privacy-badge';
 
             if (gallery.privacy === 1) {
-                badge.innerHTML = `<span class="material-symbols-rounded">lock</span> Privado`;
+                badge.innerHTML = `<span class="material-symbols-rounded">lock</span> ${window.getTranslation('general.private')}`;
             } else {
-                badge.innerHTML = `<span class="material-symbols-rounded">public</span> Público`;
+                badge.innerHTML = `<span class="material-symbols-rounded">public</span> ${window.getTranslation('general.public')}`;
             }
             card.appendChild(badge);
 
@@ -536,7 +542,8 @@ export function initMainController() {
 
             if (sortBy === 'newest' || sortBy === 'oldest') {
                 const editedSpan = document.createElement('span');
-                editedSpan.textContent = `Editado: ${new Date(gallery.last_edited).toLocaleDateString()}`;
+                const editedDate = window.getTranslation('general.edited', { date: new Date(gallery.last_edited).toLocaleDateString() });
+                editedSpan.textContent = editedDate;
                 editedSpan.style.fontSize = '0.8rem';
                 editedSpan.style.display = 'block';
                 textContainer.appendChild(editedSpan);
@@ -639,7 +646,7 @@ export function initMainController() {
                 } else if (!append) {
                     if (statusContainer) {
                         statusContainer.classList.remove('disabled');
-                        statusContainer.innerHTML = `<div><h2 data-i18n="general.noResultsTitle">${window.getTranslation('general.noResultsTitle')}</h2><p data-i18n="general.noResultsMessage">${window.getTranslation('general.noResultsMessage')}</p></div>`;
+                        statusContainer.innerHTML = `<div><h2>${window.getTranslation('general.noResultsTitle')}</h2><p>${window.getTranslation('general.noResultsMessage')}</p></div>`;
                     }
                     if (gridContainer) gridContainer.classList.add('disabled');
                 }
@@ -734,9 +741,9 @@ export function initMainController() {
                                 </div>
                                 <div class="module-content module-select photo-context-menu disabled body-title">
                                     <div class="menu-content"><div class="menu-list">
-                                        <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
-                                        <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
-                                        <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
+                                        <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.openInNewTab')}</span></div></a>
+                                        <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.copyLink')}</span></div></div>
+                                        <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.download')}</span></div></a>
                                     </div></div>
                                 </div>
                             </div>
@@ -747,7 +754,7 @@ export function initMainController() {
                     });
                 } else if (!append && statusContainer) {
                     statusContainer.classList.remove('disabled');
-                    statusContainer.innerHTML = `<div><h2 data-i18n="userPhotos.emptyGalleryTitle">${window.getTranslation('userPhotos.emptyGalleryTitle')}</h2><p data-i18n="userPhotos.emptyGalleryMessage">${window.getTranslation('userPhotos.emptyGalleryMessage')}</p></div>`;
+                    statusContainer.innerHTML = `<div><h2>${window.getTranslation('userPhotos.emptyGalleryTitle')}</h2><p>${window.getTranslation('userPhotos.emptyGalleryMessage')}</p></div>`;
                 }
 
                 if (loadMoreContainer) {
@@ -813,7 +820,7 @@ export function initMainController() {
                 } else {
                     if (statusContainer) {
                         statusContainer.classList.remove('disabled');
-                        statusContainer.innerHTML = `<div><h2 data-i18n="general.noResultsTitle">${window.getTranslation('general.noResultsTitle')}</h2><p data-i18n="trends.noTrendingUsersMessage">${window.getTranslation('trends.noTrendingUsersMessage')}</p></div>`;
+                        statusContainer.innerHTML = `<div><h2>${window.getTranslation('general.noResultsTitle')}</h2><p>${window.getTranslation('trends.noTrendingUsersMessage')}</p></div>`;
                     }
                 }
 
@@ -834,13 +841,15 @@ export function initMainController() {
                             card.appendChild(background);
 
                             const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
+                            const likesText = window.getTranslation('general.likesCount', { count: photo.likes });
+                            const interactionsText = window.getTranslation('general.interactionsCount', { count: photo.interactions });
 
                             card.innerHTML += `
                                 <div class="card-content-overlay">
                                     <div class="card-icon" style="background-image: url('${photo.profile_picture_url || ''}')"></div>
                                     <div class="card-text">
                                         <span>${photo.gallery_name}</span>
-                                        <span style="font-size: 0.8rem; display: block;">${photo.likes} Me gusta - ${photo.interactions} Vistas</span>
+                                        <span style="font-size: 0.8rem; display: block;">${likesText} - ${interactionsText}</span>
                                     </div>
                                 </div>
                                 <div class="card-actions-container">
@@ -852,9 +861,9 @@ export function initMainController() {
                                     </div>
                                     <div class="module-content module-select photo-context-menu disabled body-title">
                                         <div class="menu-content"><div class="menu-list">
-                                            <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a>
-                                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div>
-                                            <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a>
+                                            <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.openInNewTab')}</span></div></a>
+                                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.copyLink')}</span></div></div>
+                                            <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.download')}</span></div></a>
                                         </div></div>
                                     </div>
                                 </div>`;
@@ -862,7 +871,7 @@ export function initMainController() {
                             updateFavoriteCardState(photo.id);
                         });
                     } else {
-                        if (photosGrid) photosGrid.innerHTML = '<p>No hay fotos en tendencia en este momento.</p>';
+                        if (photosGrid) photosGrid.innerHTML = `<p>No hay fotos en tendencia en este momento.</p>`;
                     }
                 }
             })
@@ -1138,7 +1147,8 @@ export function initMainController() {
                         overlay.appendChild(icon);
                         const textContainer = document.createElement('div');
                         textContainer.className = 'card-text';
-                        textContainer.innerHTML = `<span>${profile.name}</span><span style="font-size: 0.8rem; display: block;">Visto: ${new Date(profile.visited_at).toLocaleString()}</span>`;
+                        const viewedDate = window.getTranslation('general.viewed', { date: new Date(profile.visited_at).toLocaleString() });
+                        textContainer.innerHTML = `<span>${profile.name}</span><span style="font-size: 0.8rem; display: block;">${viewedDate}</span>`;
                         overlay.appendChild(textContainer);
                         card.appendChild(overlay);
                         profilesGrid.appendChild(card);
@@ -1172,7 +1182,8 @@ export function initMainController() {
                         overlay.appendChild(icon);
                         const textContainer = document.createElement('div');
                         textContainer.className = 'card-text';
-                        textContainer.innerHTML = `<span>${photo.gallery_name}</span><span style="font-size: 0.8rem; display: block;">Visto: ${new Date(photo.visited_at).toLocaleString()}</span>`;
+                        const viewedDate = window.getTranslation('general.viewed', { date: new Date(photo.visited_at).toLocaleString() });
+                        textContainer.innerHTML = `<span>${photo.gallery_name}</span><span style="font-size: 0.8rem; display: block;">${viewedDate}</span>`;
                         overlay.appendChild(textContainer);
                         card.appendChild(overlay);
                         photosGrid.appendChild(card);
@@ -1185,10 +1196,10 @@ export function initMainController() {
                 }
             } else {
                 if (isViewHistoryPaused) {
-                    statusContainer.innerHTML = `<div><h2 data-i18n="settings.history.viewsPausedTitle">${window.getTranslation('settings.history.viewsPausedTitle')}</h2><p data-i18n="settings.history.viewsPausedMessage">${window.getTranslation('settings.history.viewsPausedMessage')}</p></div>`;
+                    statusContainer.innerHTML = `<div><h2>${window.getTranslation('settings.history.viewsPausedTitle')}</h2><p>${window.getTranslation('settings.history.viewsPausedMessage')}</p></div>`;
                     statusContainer.classList.remove('disabled');
                 } else {
-                    statusContainer.innerHTML = `<div><h2 data-i18n="settings.history.noActivityTitle">${window.getTranslation('settings.history.noActivityTitle')}</h2><p data-i18n="settings.history.noActivityMessage">${window.getTranslation('settings.history.noActivityMessage')}</p></div>`;
+                    statusContainer.innerHTML = `<div><h2>${window.getTranslation('settings.history.noActivityTitle')}</h2><p>${window.getTranslation('settings.history.noActivityMessage')}</p></div>`;
                     statusContainer.classList.remove('disabled');
                 }
             }
@@ -1205,10 +1216,11 @@ export function initMainController() {
                 searchesToShow.forEach(search => {
                     const item = document.createElement('div');
                     item.className = 'search-history-item';
+                    const searchedInText = window.getTranslation('general.searchedIn', { section: search.section });
                     item.innerHTML = `
                         <div class="search-history-text">
                             <span class="search-term">"${search.term}"</span>
-                            <span class="search-details">en ${search.section} - ${new Date(search.searched_at).toLocaleString()}</span>
+                            <span class="search-details">${searchedInText} - ${new Date(search.searched_at).toLocaleString()}</span>
                         </div>
                         <div class="search-history-actions">
                             <button class="search-history-delete-btn" data-action="delete-search-item" data-timestamp="${search.searched_at}" data-tooltip="Eliminar">
@@ -1225,14 +1237,15 @@ export function initMainController() {
                 }
             } else {
                 if (isSearchHistoryPaused) {
-                    statusContainer.innerHTML = `<div><h2 data-i18n="settings.history.searchesPausedTitle">${window.getTranslation('settings.history.searchesPausedTitle')}</h2><p data-i18n="settings.history.searchesPausedMessage">${window.getTranslation('settings.history.searchesPausedMessage')}</p></div>`;
+                    statusContainer.innerHTML = `<div><h2>${window.getTranslation('settings.history.searchesPausedTitle')}</h2><p>${window.getTranslation('settings.history.searchesPausedMessage')}</p></div>`;
                     statusContainer.classList.remove('disabled');
                 } else {
-                    statusContainer.innerHTML = `<div><h2 data-i18n="settings.history.noSearchesTitle">${window.getTranslation('settings.history.noSearchesTitle')}</h2><p data-i18n="settings.history.noSearchesMessage">${window.getTranslation('settings.history.noSearchesMessage')}</p></div>`;
+                    statusContainer.innerHTML = `<div><h2>${window.getTranslation('settings.history.noSearchesTitle')}</h2><p>${window.getTranslation('settings.history.noSearchesMessage')}</p></div>`;
                     statusContainer.classList.remove('disabled');
                 }
             }
         }
+        applyTranslations(mainContainer);
     }
 
     function setupEventListeners() {
@@ -1600,7 +1613,10 @@ export function initMainController() {
             if (event.key === 'Enter' && input.tagName.toLowerCase() === 'input' && input.closest('.search-input-wrapper')) {
                 event.preventDefault();
                 
-                const searchTerm = input.value.trim();
+                let searchTerm = input.value.trim();
+                if (searchTerm.length > 64) {
+                    searchTerm = searchTerm.substring(0, 64);
+                }
                 const section = input.closest('.section-content')?.dataset.section;
 
                 if (section === 'home') {
@@ -1930,14 +1946,14 @@ export function initMainController() {
                                 background.style.backgroundImage = `url('${photo.photo_url}')`;
                                 card.appendChild(background);
                                 const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
-                                card.innerHTML += `<div class="card-actions-container"><div class="card-hover-overlay"><div class="card-hover-icons"><div class="icon-wrapper active" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div><div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div></div></div><div class="module-content module-select photo-context-menu disabled body-title"><div class="menu-content"><div class="menu-list"><a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>Abrir en una pestaña nueva</span></div></a><div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>Copiar el enlace</span></div></div><a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>Descargar</span></div></a></div></div></div></div>`;
+                                card.innerHTML += `<div class="card-actions-container"><div class="card-hover-overlay"><div class="card-hover-icons"><div class="icon-wrapper active" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div><div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div></div></div><div class="module-content module-select photo-context-menu disabled body-title"><div class="menu-content"><div class="menu-list"><a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.openInNewTab')}</span></div></a><div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.copyLink')}</span></div></div><a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.download')}</span></div></a></div></div></div></div>`;
                                 grid.appendChild(card);
                             });
                         } else {
                             grid.classList.add('disabled');
                             statusContainer.classList.remove('disabled');
                             title.textContent = window.getTranslation('userSpecificFavorites.title');
-                            statusContainer.innerHTML = `<div><h2 data-i18n="userSpecificFavorites.noUserFavoritesTitle">${window.getTranslation('userSpecificFavorites.noUserFavoritesTitle')}</h2><p data-i18n="userSpecificFavorites.noUserFavoritesMessage">${window.getTranslation('userSpecificFavorites.noUserFavoritesMessage')}</p></div>`;
+                            statusContainer.innerHTML = `<div><h2>${window.getTranslation('userSpecificFavorites.noUserFavoritesTitle')}</h2><p>${window.getTranslation('userSpecificFavorites.noUserFavoritesMessage')}</p></div>`;
                         }
                     }
                 }
@@ -1947,6 +1963,7 @@ export function initMainController() {
         setupScrollShadows();
         updateHeaderAndMenuStates(view, section);
         initTooltips();
+        applyTranslations(document.body);
     }
 
     // --- INICIALIZACIÓN ---

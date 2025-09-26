@@ -7,7 +7,7 @@
                         <span class="material-symbols-rounded">search</span>
                     </div>
                     <div class="search-input-text">
-                        <input type="text" id="favorites-search-input" data-i18n-placeholder="favorites.searchInputPlaceholder">
+                        <input type="text" id="favorites-search-input" data-i18n-placeholder="favorites.searchInputPlaceholder" maxlength="64">
                     </div>
                 </div>
             </div>
