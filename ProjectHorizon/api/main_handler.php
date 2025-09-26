@@ -232,7 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("i", $limit);
         $stmt->execute();
-        $result = $result->get_result();
+        $result = $stmt->get_result();
         $photos = array();
         while($row = $result->fetch_assoc()) {
             $photos[] = $row;
