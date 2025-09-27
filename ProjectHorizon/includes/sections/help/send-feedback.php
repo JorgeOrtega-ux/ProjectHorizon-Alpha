@@ -65,7 +65,10 @@
 
 
                 <div class="form-group form-actions">
-                    <button class="load-more-btn" id="send-feedback-btn" data-i18n="help.sendFeedback.sendButton"></button>
+                    <button class="load-more-btn" id="send-feedback-btn">
+                        <span class="button-text" data-i18n="help.sendFeedback.sendButton"></span>
+                        <div class="button-spinner"></div>
+                    </button>
                 </div>
             </div>
         </div>

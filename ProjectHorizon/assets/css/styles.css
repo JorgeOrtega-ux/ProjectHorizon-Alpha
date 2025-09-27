@@ -1700,4 +1700,31 @@ h1, h2, h3, h4, h5, h6 {
 .dark-theme .section-content-header.shadow {
     box-shadow: none;
     border-bottom-color: var(--border-color) !important;
+}.load-more-btn {
+    position: relative;
+    transition: all 0.2s ease-in-out;
+}
+
+.button-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin-top: -10px;
+    margin-left: -10px;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--text-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: none;
+}
+
+.load-more-btn.loading .button-text {
+    visibility: hidden;
+    opacity: 0;
+}
+
+.load-more-btn.loading .button-spinner {
+    display: block;
 }

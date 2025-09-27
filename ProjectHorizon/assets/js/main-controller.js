@@ -1945,7 +1945,6 @@ export function initMainController() {
                     const otherTitle = document.getElementById('feedback-other-title').value.trim();
                     const description = document.getElementById('feedback-description').value.trim();
                     
-                    // ✅ **VALIDACIÓN MEJORADA: Comprueba que se haya seleccionado un tipo**
                     if (!issueType) {
                         showNotification(window.getTranslation('notifications.selectIssueType'), 'error');
                         return;
@@ -1962,7 +1961,7 @@ export function initMainController() {
                     });
 
                     sendBtn.disabled = true;
-                    sendBtn.textContent = 'Enviando...';
+                    sendBtn.classList.add('loading');
 
                     try {
                         const response = await fetch(`${window.BASE_PATH}/api/main_handler.php`, {
@@ -1992,7 +1991,7 @@ export function initMainController() {
                         showNotification('Error de conexión. Inténtalo de nuevo.', 'error');
                     } finally {
                         sendBtn.disabled = false;
-                        sendBtn.textContent = 'Enviar Comentario';
+                        sendBtn.classList.remove('loading');
                     }
                 });
             }
