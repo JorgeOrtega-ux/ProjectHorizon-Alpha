@@ -92,6 +92,7 @@ export function initMainController() {
     let unlockCountdownInterval = null;
     
     let currentPhotoViewList = [];
+    let currentRotation = 0;
 
     let galleriesCurrentPage = 1;
     let photosCurrentPage = 1;
@@ -892,6 +893,14 @@ export function initMainController() {
         });
     }
 
+    function rotatePhoto(direction) {
+        const photoViewerImage = document.getElementById('photo-viewer-image');
+        if (photoViewerImage) {
+            currentRotation += direction === 'right' ? 90 : -90;
+            photoViewerImage.style.transform = `rotate(${currentRotation}deg)`;
+        }
+    }
+
     function renderPhotoView(uuid, photoId, photoList) {
         const photoViewerImage = document.getElementById('photo-viewer-image');
         const photoCounter = document.getElementById('photo-counter');
@@ -905,6 +914,9 @@ export function initMainController() {
         }
 
         incrementPhotoInteraction(photoId);
+        currentRotation = 0;
+        photoViewerImage.style.transform = `rotate(0deg)`;
+
 
         const photoIndex = photoList.findIndex(p => p.id == photoId);
 
@@ -1477,6 +1489,23 @@ export function initMainController() {
                         const timestamp = actionTarget.dataset.timestamp;
                         if (timestamp) {
                             removeSearchFromHistory(timestamp);
+                        }
+                        break;
+                    case 'toggle-photo-options-menu':
+                        const menu = document.querySelector('.photo-options-menu');
+                        if (menu) {
+                            menu.classList.toggle('disabled');
+                        }
+                        break;
+                    case 'rotate-photo-left':
+                        rotatePhoto('left');
+                        break;
+                    case 'rotate-photo-right':
+                        rotatePhoto('right');
+                        break;
+                    case 'download-photo-view':
+                        if (currentPhotoData && currentPhotoData.photo_url) {
+                            downloadPhoto(currentPhotoData.photo_url);
                         }
                         break;
                 }

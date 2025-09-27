@@ -72,7 +72,10 @@
   "photoView": {
     "backButtonTooltip": "Volver",
     "userTitle": "Usuario",
-    "favoriteButtonTooltip": "Añadir a favoritos"
+    "favoriteButtonTooltip": "Añadir a favoritos",
+    "rotateLeft": "Girar a la izquierda",
+    "rotateRight": "Girar a la derecha",
+    "download": "Descargar"
   },
   "photoCard": {
     "openInNewTab": "Abrir en una pestaña nueva",

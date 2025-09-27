@@ -16,6 +16,27 @@
                 <div class="header-button" data-action="toggle-favorite">
                     <span class="material-symbols-rounded">favorite</span>
                 </div>
+                <div class="header-button" data-action="toggle-photo-options-menu">
+                    <span class="material-symbols-rounded">more_vert</span>
+                </div>
+                <div class="module-content module-select photo-options-menu disabled body-title">
+                    <div class="menu-content">
+                        <div class="menu-list">
+                            <div class="menu-link" data-action="rotate-photo-left">
+                                <div class="menu-link-icon"><span class="material-symbols-rounded">rotate_left</span></div>
+                                <div class="menu-link-text"><span data-i18n="photoView.rotateLeft"></span></div>
+                            </div>
+                            <div class="menu-link" data-action="rotate-photo-right">
+                                <div class="menu-link-icon"><span class="material-symbols-rounded">rotate_right</span></div>
+                                <div class="menu-link-text"><span data-i18n="photoView.rotateRight"></span></div>
+                            </div>
+                            <div class="menu-link" data-action="download-photo-view">
+                                <div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div>
+                                <div class="menu-link-text"><span data-i18n="photoView.download"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="photo-nav-control">
                     <div class="photo-nav-button" data-action="previous-photo">
                         <span class="material-symbols-rounded">chevron_left</span>

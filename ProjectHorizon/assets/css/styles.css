@@ -749,6 +749,7 @@ body {
     object-fit: contain;
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease-in-out;
 }
 
 .content-header-center {
@@ -1510,4 +1511,11 @@ body {
     color: #6c757d;
     max-width: 500px;
     line-height: 1.6;
+}
+
+.photo-options-menu {
+    position: absolute;
+    top: 50px;
+    right: 50px;
+    width: 250px;
 }
