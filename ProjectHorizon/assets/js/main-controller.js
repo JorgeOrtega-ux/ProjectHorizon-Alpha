@@ -1570,6 +1570,8 @@ export function initMainController() {
                     });
                     updateSelectActiveState('history-select', value);
                     displayHistory();
+                } else if (selectId === 'feedback-issue-type-select') {
+                    updateSelectActiveState('feedback-issue-type-select', value);
                 }
 
                 document.querySelectorAll('.module-select').forEach(menu => {
@@ -1863,6 +1865,90 @@ export function initMainController() {
                 }
                 break;
             
+            case 'sendFeedback':
+                const uploadBtn = document.getElementById('feedback-upload-btn');
+                const fileInput = document.getElementById('feedback-file-input');
+                const previewContainer = document.getElementById('feedback-file-preview');
+                const issueTypeSelect = document.querySelector('[data-target="feedback-issue-type-select"]');
+                const otherTitleGroup = document.getElementById('feedback-other-title-group');
+                const MAX_FILES = 3;
+                const MAX_TOTAL_SIZE_MB = 12;
+                let uploadedFiles = [];
+
+                if (issueTypeSelect) {
+                    issueTypeSelect.closest('.select-wrapper').addEventListener('click', (event) => {
+                        const selectedOption = event.target.closest('.menu-link');
+                        if (selectedOption && selectedOption.dataset.value) {
+                            if (selectedOption.dataset.value === 'other') {
+                                otherTitleGroup.classList.remove('disabled');
+                            } else {
+                                otherTitleGroup.classList.add('disabled');
+                            }
+                        }
+                    });
+                }
+
+                if (uploadBtn && fileInput) {
+                    uploadBtn.addEventListener('click', () => fileInput.click());
+
+                    fileInput.addEventListener('change', (event) => {
+                        const files = Array.from(event.target.files);
+                        handleFiles(files);
+                    });
+                }
+
+                function handleFiles(files) {
+                    let currentTotalSize = uploadedFiles.reduce((acc, file) => acc + file.size, 0);
+                    
+                    for (const file of files) {
+                        if (uploadedFiles.length >= MAX_FILES) {
+                            showNotification(`No puedes subir más de ${MAX_FILES} archivos.`, 'error');
+                            break;
+                        }
+
+                        if (currentTotalSize + file.size > MAX_TOTAL_SIZE_MB * 1024 * 1024) {
+                            showNotification(`El tamaño total no puede exceder los ${MAX_TOTAL_SIZE_MB} MB.`, 'error');
+                            continue;
+                        }
+
+                        if (file.type.startsWith('image/')) {
+                            uploadedFiles.push(file);
+                            currentTotalSize += file.size;
+                            createPreview(file);
+                        } else {
+                            showNotification(`El archivo '${file.name}' no es una imagen.`, 'error');
+                        }
+                    }
+                    fileInput.value = '';
+                }
+                
+                function createPreview(file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const previewItem = document.createElement('div');
+                        previewItem.className = 'file-preview-item';
+                        
+                        const img = document.createElement('img');
+                        img.className = 'file-preview-img';
+                        img.src = e.target.result;
+                        
+                        const removeBtn = document.createElement('button');
+                        removeBtn.className = 'file-preview-remove-btn';
+                        removeBtn.innerHTML = '<span class="material-symbols-rounded">close</span>';
+                        
+                        removeBtn.addEventListener('click', () => {
+                            uploadedFiles = uploadedFiles.filter(f => f !== file);
+                            previewContainer.removeChild(previewItem);
+                        });
+
+                        previewItem.appendChild(img);
+                        previewItem.appendChild(removeBtn);
+                        previewContainer.appendChild(previewItem);
+                    };
+                    reader.readAsDataURL(file);
+                }
+                break;
+
             case 'accessCodePrompt':
                 if (data && data.uuid) {
                     const titleElement = document.getElementById('access-code-title');

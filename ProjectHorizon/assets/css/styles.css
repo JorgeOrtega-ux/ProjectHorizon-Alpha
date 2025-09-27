@@ -1540,6 +1540,128 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ====================================== */
+/* ====== ESTILOS FEEDBACK FORM ========= */
+/* ====================================== */
+
+.feedback-form-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.feedback-textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: var(--primary-bg);
+    color: var(--text-color);
+    font-size: 1rem;
+    resize: vertical;
+    min-height: 100px;
+}
+
+.feedback-textarea:focus {
+    outline: none;
+    border-color: var(--focus-border-color);
+}
+
+.file-upload-wrapper {
+    display: flex;
+}
+
+#feedback-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.file-upload-info {
+    font-size: 0.8rem;
+    color: var(--muted-text-color);
+    margin: 4px 0 0 0;
+}
+
+.file-preview-container {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.file-preview-item {
+    position: relative;
+    width: 50px;
+    height: 50px;
+}
+
+.file-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.file-preview-remove-btn {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--danger-color);
+    color: var(--danger-text-color);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.file-preview-remove-btn .material-symbols-rounded {
+    font-size: 14px;
+}
+
+.form-actions {
+    align-items: flex-end;
+}
+
+#feedback-other-title-group.disabled {
+    display: none;
+}
+
+.feedback-input {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: var(--primary-bg);
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+.feedback-input:focus {
+    outline: none;
+    border-color: var(--focus-border-color);
+}
+
+/* ====================================== */
 /* ============ DARK MODE BORDERS =========== */
 /* ====================================== */
 .dark-theme .general-content,

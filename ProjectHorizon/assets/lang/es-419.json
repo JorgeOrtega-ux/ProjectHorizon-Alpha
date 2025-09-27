@@ -183,7 +183,20 @@
     },
     "sendFeedback": {
       "title": "Enviar Comentarios",
-      "content": "Formulario para enviar comentarios..."
+      "description": "Tu opinión es importante para nosotros. Ayúdanos a mejorar Project Horizon.",
+      "issueTypeLabel": "Tipo de comentario",
+      "issueTypeDefault": "Selecciona una opción",
+      "issueTypeSuggestion": "Sugerir una mejora",
+      "issueTypeProblem": "Reportar un problema",
+      "issueTypeOther": "Otro",
+      "otherTitleLabel": "Por favor, especifica",
+      "otherTitlePlaceholder": "Escribe un título corto para tu comentario...",
+      "descriptionLabel": "Describe tu comentario",
+      "descriptionPlaceholder": "Escribe aquí los detalles...",
+      "attachmentsLabel": "Adjuntar capturas de pantalla (opcional)",
+      "uploadButton": "Añadir imágenes",
+      "fileUploadInfo": "Máximo 3 archivos. Límite total de 12 MB.",
+      "sendButton": "Enviar Comentario"
     }
   },
   "notifications": {
