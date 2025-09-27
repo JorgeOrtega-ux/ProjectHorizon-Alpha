@@ -1583,11 +1583,12 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
 }
 
-#feedback-upload-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+#feedback-upload-btn:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
 }
+
 
 .file-upload-info {
     font-size: 0.8rem;
@@ -1604,37 +1605,48 @@ h1, h2, h3, h4, h5, h6 {
 
 .file-preview-item {
     position: relative;
-    width: 50px;
-    height: 50px;
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .file-preview-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 8px;
     border: 1px solid var(--border-color);
+    border-radius: 8px;
 }
 
 .file-preview-remove-btn {
     position: absolute;
-    top: -5px;
-    right: -5px;
-    width: 20px;
-    height: 20px;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    background-color: var(--danger-color);
-    color: var(--danger-text-color);
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
     border: none;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s;
 }
 
+.file-preview-item:hover .file-preview-remove-btn {
+    opacity: 1;
+    visibility: visible;
+}
+
+
 .file-preview-remove-btn .material-symbols-rounded {
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .form-actions {
@@ -1661,6 +1673,11 @@ h1, h2, h3, h4, h5, h6 {
     border-color: var(--focus-border-color);
 }
 
+.feedback-actions-toolbar {
+    display: flex;
+    justify-content: flex-end;
+}
+
 /* ====================================== */
 /* ============ DARK MODE BORDERS =========== */
 /* ====================================== */
@@ -1683,17 +1700,4 @@ h1, h2, h3, h4, h5, h6 {
 .dark-theme .section-content-header.shadow {
     box-shadow: none;
     border-bottom-color: var(--border-color) !important;
-}/* jorgeortega-ux/projecthorizon-alpha/ProjectHorizon-Alpha-3f6a2a6ada97a0d7cdffe5dcca1c7e90f7f57a7e/ProjectHorizon/assets/css/styles.css */
-
-/* ... (otros estilos) ... */
-
-/* ====== ESTILOS FEEDBACK FORM ========= */
-/* ... (otros estilos del formulario) ... */
-
-#feedback-upload-btn:disabled {
-    opacity: 0.5;
-    pointer-events: none;
-    cursor: not-allowed;
 }
-
-/* ... (el resto de tus estilos) ... */

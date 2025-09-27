@@ -50,20 +50,19 @@
                 <div class="form-group">
                     <label class="form-label" for="feedback-description" data-i18n="help.sendFeedback.descriptionLabel"></label>
                     <textarea id="feedback-description" class="feedback-textarea" rows="6" data-i18n-placeholder="help.sendFeedback.descriptionPlaceholder"></textarea>
+                     <div class="feedback-actions-toolbar">
+                        <div class="header-button" id="feedback-upload-btn" data-i18n-tooltip="help.sendFeedback.uploadButtonTooltip">
+                            <span class="material-symbols-rounded">attachment</span>
+                        </div>
+                        <input type="file" id="feedback-file-input" multiple accept="image/*" style="display: none;">
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" data-i18n="help.sendFeedback.attachmentsLabel"></label>
-                    <div class="file-upload-wrapper">
-                        <button class="load-more-btn" id="feedback-upload-btn">
-                            <span class="material-symbols-rounded">add_photo_alternate</span>
-                            <span data-i18n="help.sendFeedback.uploadButton"></span>
-                        </button>
-                        <input type="file" id="feedback-file-input" multiple accept="image/*" style="display: none;">
-                    </div>
-                    <p class="file-upload-info" data-i18n="help.sendFeedback.fileUploadInfo"></p>
                     <div class="file-preview-container" id="feedback-file-preview"></div>
+                     <p class="file-upload-info" data-i18n="help.sendFeedback.fileUploadInfo"></p>
                 </div>
+
 
                 <div class="form-group form-actions">
                     <button class="load-more-btn" id="send-feedback-btn" data-i18n="help.sendFeedback.sendButton"></button>

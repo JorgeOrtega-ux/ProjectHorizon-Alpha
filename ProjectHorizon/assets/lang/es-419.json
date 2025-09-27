@@ -195,6 +195,7 @@
       "descriptionPlaceholder": "Escribe aquí los detalles...",
       "attachmentsLabel": "Adjuntar capturas de pantalla (opcional)",
       "uploadButton": "Añadir imágenes",
+      "uploadButtonTooltip": "Adjuntar archivos",
       "fileUploadInfo": "Máximo 3 archivos. Límite total de 12 MB.",
       "sendButton": "Enviar Comentario"
     }
