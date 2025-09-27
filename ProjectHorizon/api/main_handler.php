@@ -303,14 +303,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     $file_error = $_FILES['attachments']['error'][$i];
     
                     if ($file_error === UPLOAD_ERR_OK) {
-                        $file_mime_type = mime_content_type($file_tmp);
-    
-                        if ($file_size > $max_file_size) {
-                            $errors[] = "El archivo {$file_name} supera el tamaño máximo de 4MB.";
+                        // ✅ **COMIENZO DE LA CORRECCIÓN DE SEGURIDAD**
+                        // 1. Validar el contenido real de la imagen
+                        if (getimagesize($file_tmp) === false) {
+                            $errors[] = "El archivo {$file_name} no es una imagen válida.";
                             continue;
                         }
+
+                        // 2. Validar el tipo MIME (como segunda capa de defensa)
+                        $file_mime_type = mime_content_type($file_tmp);
                         if (!in_array($file_mime_type, $allowed_mime_types)) {
                             $errors[] = "El archivo {$file_name} tiene un formato no permitido.";
+                            continue;
+                        }
+                        // ✅ **FIN DE LA CORRECCIÓN DE SEGURIDAD**
+
+                        if ($file_size > $max_file_size) {
+                            $errors[] = "El archivo {$file_name} supera el tamaño máximo de 4MB.";
                             continue;
                         }
     
