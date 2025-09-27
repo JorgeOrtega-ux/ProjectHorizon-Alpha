@@ -5,6 +5,36 @@ CREATE DATABASE project_horizon;
 
 -- Selecciona la base de datos para usarla
 USE project_horizon;
+
+-- --------------------------------------------------------
+--
+-- Estructura de la tabla `feedback`
+--
+-- --------------------------------------------------------
+CREATE TABLE `feedback` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uuid` varchar(36) NOT NULL,
+  `issue_type` varchar(50) NOT NULL,
+  `title` varchar(100) DEFAULT NULL,
+  `description` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uuid` (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+--
+-- Estructura de la tabla `feedback_attachments`
+--
+-- --------------------------------------------------------
+CREATE TABLE `feedback_attachments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `feedback_uuid` varchar(36) NOT NULL,
+  `attachment_url` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `feedback_uuid` (`feedback_uuid`),
+  CONSTRAINT `feedback_attachments_ibfk_1` FOREIGN KEY (`feedback_uuid`) REFERENCES `feedback` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 -- --------------------------------------------------------
 --
 -- Estructura de la tabla `galleries` (CORREGIDA)

@@ -90,7 +90,7 @@ export function initMainController() {
     let photoAfterAd = null;
     let galleryAfterAd = null;
     let unlockCountdownInterval = null;
-    
+
     let currentPhotoViewList = [];
     let currentRotation = 0;
 
@@ -109,7 +109,7 @@ export function initMainController() {
 
     let currentFavoritesSortBy = 'user';
     let currentFavoritesList = [];
-    
+
     let adCooldownActive = false;
     let adContext = 'navigation';
 
@@ -127,7 +127,7 @@ export function initMainController() {
 
             titleEl.textContent = title;
             messageEl.innerHTML = message;
-            
+
             applyTranslations(overlay);
 
             overlay.classList.remove('disabled');
@@ -313,7 +313,7 @@ export function initMainController() {
         const statusContainer = section.querySelector('.status-message-container');
         const searchInput = document.getElementById('favorites-search-input');
         const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
-        
+
         if (searchTerm) {
             addSearchToHistory(searchTerm, 'favorites');
         }
@@ -454,7 +454,7 @@ export function initMainController() {
         }
         applyTranslations(section);
     }
-    
+
     function updateCardPrivacyStatus(uuid, unlockedTimestamp) {
         const card = document.querySelector(`.card[data-uuid="${uuid}"]`);
         if (!card) return;
@@ -462,7 +462,7 @@ export function initMainController() {
         if (card.dataset.privacy !== '1') {
             const badge = card.querySelector('.privacy-badge');
             if (badge && !badge.innerHTML.includes(window.getTranslation('general.public'))) {
-                 badge.innerHTML = `<span class="material-symbols-rounded">public</span> ${window.getTranslation('general.public')}`;
+                badge.innerHTML = `<span class="material-symbols-rounded">public</span> ${window.getTranslation('general.public')}`;
             }
             return;
         }
@@ -484,7 +484,7 @@ export function initMainController() {
             badge.className = 'privacy-badge';
         }
     }
-    
+
     function startUnlockCountdownTimer() {
         if (unlockCountdownInterval) {
             clearInterval(unlockCountdownInterval);
@@ -554,7 +554,7 @@ export function initMainController() {
             overlay.appendChild(textContainer);
             card.appendChild(overlay);
             container.appendChild(card);
-            
+
             if (gallery.privacy === 1) {
                 const unlockedGalleries = JSON.parse(localStorage.getItem('unlockedGalleries') || '{}');
                 if (unlockedGalleries[gallery.uuid]) {
@@ -563,7 +563,7 @@ export function initMainController() {
             }
         });
     }
-    
+
     async function promptToWatchAd(uuid, name) {
         adContext = 'unlock';
         galleryAfterAd = { view: 'main', section: 'galleryPhotos', data: { uuid, galleryName: name } };
@@ -583,10 +583,10 @@ export function initMainController() {
     function displayFetchError(containerSelector, titleKey, messageKey) {
         const section = document.querySelector(containerSelector);
         if (!section) return;
-    
+
         const statusContainer = section.querySelector('.status-message-container');
         const grid = section.querySelector('.card-grid');
-    
+
         if (statusContainer) {
             statusContainer.classList.remove('disabled');
             statusContainer.innerHTML = `<div><h2 data-i18n="${titleKey}">${window.getTranslation(titleKey)}</h2><p data-i18n="${messageKey}">${window.getTranslation(messageKey)}</p></div>`;
@@ -600,7 +600,7 @@ export function initMainController() {
     function fetchAndDisplayGalleries(sortBy = 'relevant', searchTerm = '', append = false) {
         if (isLoadingGalleries) return;
         isLoadingGalleries = true;
-        
+
         if (searchTerm) {
             addSearchToHistory(searchTerm, 'home');
         }
@@ -641,7 +641,7 @@ export function initMainController() {
                 }
 
                 if (gridContainer) gridContainer.classList.remove('disabled');
-                
+
                 if (data.length > 0) {
                     displayGalleriesAsGrid(data, gridContainer, sortBy, append);
                 } else if (!append) {
@@ -770,7 +770,7 @@ export function initMainController() {
             .catch(error => {
                 console.error('Error al obtener las fotos:', error);
                 if (!append) {
-                     displayFetchError('[data-section="galleryPhotos"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
+                    displayFetchError('[data-section="galleryPhotos"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
                 } else {
                     showNotification(window.getTranslation('general.connectionErrorMessage'), 'error');
                 }
@@ -805,8 +805,8 @@ export function initMainController() {
         if (usersSection) usersSection.style.display = 'none';
         if (photosSection) photosSection.style.display = 'none';
 
-        const fetchUsers = fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=trending_users&search=${encodedSearchTerm}&limit=8`).then(res => { if(!res.ok) throw new Error('Server error'); return res.json(); });
-        const fetchPhotos = searchTerm === '' ? fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=trending_photos&limit=12`).then(res => { if(!res.ok) throw new Error('Server error'); return res.json(); }) : Promise.resolve([]);
+        const fetchUsers = fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=trending_users&search=${encodedSearchTerm}&limit=8`).then(res => { if (!res.ok) throw new Error('Server error'); return res.json(); });
+        const fetchPhotos = searchTerm === '' ? fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=trending_photos&limit=12`).then(res => { if (!res.ok) throw new Error('Server error'); return res.json(); }) : Promise.resolve([]);
 
         Promise.all([fetchUsers, fetchPhotos])
             .then(([users, photos]) => {
@@ -954,7 +954,7 @@ export function initMainController() {
             photoViewerImage.src = photo.photo_url;
             photoCounter.textContent = `${photoIndex + 1} / ${photoList.length}`;
             currentGalleryForPhotoView = uuid;
-            
+
             addToHistory('photos', {
                 id: currentPhotoData.id,
                 gallery_uuid: currentPhotoData.gallery_uuid,
@@ -1079,24 +1079,22 @@ export function initMainController() {
         }
     }
 
-    // ✅ **FUNCIÓN RESTAURADA**
     function removeSearchFromHistory(timestamp) {
         let history = getHistory();
         const indexToRemove = history.searches.findIndex(item => item.searched_at == timestamp);
-        
+
         if (indexToRemove > -1) {
             history.searches.splice(indexToRemove, 1);
             localStorage.setItem('viewHistory', JSON.stringify(history));
             displayHistory();
         }
     }
-    
-    // ✅ **FUNCIÓN RESTAURADA**
+
     function displayHistory() {
         const history = getHistory();
         const mainContainer = document.querySelector('[data-section="history"]');
         if (!mainContainer) return;
-    
+
         const historyContainer = mainContainer.querySelector('#history-container');
         const profilesGrid = mainContainer.querySelector('#history-profiles-grid');
         const photosGrid = mainContainer.querySelector('#history-photos-grid');
@@ -1104,7 +1102,7 @@ export function initMainController() {
         const statusContainer = mainContainer.querySelector('.status-message-container');
         const pausedAlert = mainContainer.querySelector('.history-paused-alert');
         const historySelect = mainContainer.querySelector('#history-select');
-        
+
         const profilesLoadMore = mainContainer.querySelector('#history-profiles-load-more');
         const photosLoadMore = mainContainer.querySelector('#history-photos-load-more');
         const searchesLoadMore = mainContainer.querySelector('#history-searches-load-more');
@@ -1112,7 +1110,7 @@ export function initMainController() {
         const currentView = historySelect ? (historySelect.querySelector('.menu-link.active')?.dataset.value || 'views') : 'views';
         const isViewHistoryPaused = localStorage.getItem('enable-view-history') === 'false';
         const isSearchHistoryPaused = localStorage.getItem('enable-search-history') === 'false';
-    
+
         historyContainer.style.display = 'none';
         statusContainer.classList.add('disabled');
         pausedAlert.classList.add('disabled');
@@ -1125,16 +1123,16 @@ export function initMainController() {
         profilesLoadMore.classList.add('disabled');
         photosLoadMore.classList.add('disabled');
         searchesLoadMore.classList.add('disabled');
-    
+
         if (currentView === 'views') {
             const hasContent = history.profiles.length > 0 || history.photos.length > 0;
-    
+
             if (hasContent) {
                 historyContainer.style.display = 'block';
                 if (isViewHistoryPaused) {
                     pausedAlert.classList.remove('disabled');
                 }
-                
+
                 if (history.profiles.length > 0) {
                     const profilesToShow = history.profiles.slice(0, historyProfilesShown);
                     profilesToShow.forEach(profile => {
@@ -1171,7 +1169,7 @@ export function initMainController() {
                         profilesLoadMore.classList.remove('disabled');
                     }
                 }
-                
+
                 if (history.photos.length > 0) {
                     const photosToShow = history.photos.slice(0, historyPhotosShown);
                     photosToShow.forEach(photo => {
@@ -1217,7 +1215,7 @@ export function initMainController() {
             }
         } else if (currentView === 'searches') {
             const hasContent = history.searches.length > 0;
-    
+
             if (hasContent) {
                 historyContainer.style.display = 'block';
                 if (isSearchHistoryPaused) {
@@ -1417,22 +1415,22 @@ export function initMainController() {
                             }
                         }
                         break;
-                    
+
                     case 'previous-photo':
                     case 'next-photo':
                         if (!actionTarget.classList.contains('disabled-nav')) {
-                            const listToUse = currentPhotoViewList; 
-                            
+                            const listToUse = currentPhotoViewList;
+
                             const currentId = currentPhotoData ? currentPhotoData.id : null;
                             if (!currentId || listToUse.length === 0) return;
-                    
+
                             const currentIndex = listToUse.findIndex(p => p.id == currentId);
                             if (currentIndex !== -1) {
                                 let nextIndex = (action === 'next-photo') ? currentIndex + 1 : currentIndex - 1;
                                 if (nextIndex >= 0 && nextIndex < listToUse.length) {
                                     const nextPhoto = listToUse[nextIndex];
                                     navigateToUrl('main', 'photoView', { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id });
-                                    
+
                                     if (!adCooldownActive && Math.random() < 0.15) {
                                         adContext = 'navigation';
                                         photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id } };
@@ -1446,7 +1444,7 @@ export function initMainController() {
                             }
                         }
                         break;
-                    
+
                     case 'toggle-photo-menu':
                         const currentContainer = actionTarget.closest('.card-actions-container');
                         const currentMenu = currentContainer.querySelector('.photo-context-menu');
@@ -1532,7 +1530,7 @@ export function initMainController() {
                     targetSelect.classList.toggle('active');
                 }
             }
-            
+
             const selectedOption = event.target.closest('.module-select .menu-link');
             if (selectedOption) {
                 const value = selectedOption.dataset.value;
@@ -1572,6 +1570,10 @@ export function initMainController() {
                     displayHistory();
                 } else if (selectId === 'feedback-issue-type-select') {
                     updateSelectActiveState('feedback-issue-type-select', value);
+                    const otherTitleGroup = document.getElementById('feedback-other-title-group');
+                    if (otherTitleGroup) {
+                        otherTitleGroup.classList.toggle('disabled', value !== 'other');
+                    }
                 }
 
                 document.querySelectorAll('.module-select').forEach(menu => {
@@ -1621,7 +1623,7 @@ export function initMainController() {
                     const galleryUuid = photoCard.dataset.galleryUuid || currentGalleryForPhotoView;
                     const photoId = photoCard.dataset.photoId;
                     incrementInteraction(galleryUuid);
-    
+
                     if (!adCooldownActive && Math.random() < 0.10) {
                         adContext = 'navigation';
                         photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: galleryUuid, photoId: photoId } };
@@ -1643,7 +1645,7 @@ export function initMainController() {
 
             if (event.key === 'Enter' && input.tagName.toLowerCase() === 'input' && input.closest('.search-input-wrapper')) {
                 event.preventDefault();
-                
+
                 let searchTerm = input.value.trim();
                 if (searchTerm.length > 64) {
                     searchTerm = searchTerm.substring(0, 64);
@@ -1728,358 +1730,362 @@ export function initMainController() {
             favoritesSortSelectMobile.innerHTML = favoritesSortSelect.innerHTML;
         }
     }
-    
+
     async function handleStateChange(view, section, data) {
-        const contentContainer = document.querySelector('.general-content-scrolleable');
+    const contentContainer = document.querySelector('.general-content-scrolleable');
+    if (contentContainer) {
+        contentContainer.innerHTML = loaderHTML;
+    }
+
+    updateHeaderAndMenuStates(view, section);
+    currentAppView = view;
+    currentAppSection = section;
+
+    try {
+        const response = await fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=section&view=${view}&section=${section}`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const html = await response.text();
         if (contentContainer) {
-            contentContainer.innerHTML = loaderHTML;
+            contentContainer.innerHTML = html;
+            window.applyTranslations(contentContainer);
         }
-
-        updateHeaderAndMenuStates(view, section);
-        currentAppView = view;
-        currentAppSection = section;
-
-        try {
-            const response = await fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=section&view=${view}&section=${section}`);
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const html = await response.text();
-            if (contentContainer) {
-                contentContainer.innerHTML = html;
-                window.applyTranslations(contentContainer);
-            }
-        } catch (error) {
-            console.error("Failed to fetch section:", error);
-            if (contentContainer) {
-                displayFetchError('.general-content-scrolleable', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
-            }
-            return;
+    } catch (error) {
+        console.error("Failed to fetch section:", error);
+        if (contentContainer) {
+            displayFetchError('.general-content-scrolleable', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
         }
+        return;
+    }
 
-        if (section !== 'photoView') {
-            lastVisitedView = section;
-            lastVisitedData = data;
-        }
+    if (section !== 'photoView') {
+        lastVisitedView = section;
+        lastVisitedData = data;
+    }
 
-        switch (section) {
-            case 'home':
-                setupMoreOptionsMenu();
-                updateSelectActiveState('relevance-select', currentSortBy);
-                fetchAndDisplayGalleries(currentSortBy);
-                break;
-            case 'favorites':
-                setupMoreOptionsMenu();
-                updateSelectActiveState('favorites-sort-select', currentFavoritesSortBy);
-                displayFavoritePhotos();
-                break;
-            case 'trends':
-                fetchAndDisplayTrends();
-                break;
-            case 'accessibility':
-                updateThemeSelectorUI(localStorage.getItem('theme') || 'system');
-                updateLanguageSelectorUI(localStorage.getItem('language') || 'es-419');
-                initSettingsController();
-                break;
-            case 'history':
-                historyProfilesShown = HISTORY_PROFILES_BATCH;
-                historyPhotosShown = HISTORY_PHOTOS_BATCH;
-                historySearchesShown = HISTORY_SEARCHES_BATCH;
-                displayHistory();
-                break;
-            case 'historyPrivacy':
-                initHistoryPrivacySettings();
-                break;
-            case 'privateGalleryProxy':
-                if (data && data.uuid) {
-                    if (isPrivateGalleryUnlocked(data.uuid)) {
-                        navigateToUrl('main', 'galleryPhotos', { uuid: data.uuid });
-                        handleStateChange('main', 'galleryPhotos', { uuid: data.uuid, galleryName: data.galleryName });
-                    } else {
-                        promptToWatchAd(data.uuid, data.galleryName);
-                    }
+    switch (section) {
+        case 'home':
+            setupMoreOptionsMenu();
+            updateSelectActiveState('relevance-select', currentSortBy);
+            fetchAndDisplayGalleries(currentSortBy);
+            break;
+        case 'favorites':
+            setupMoreOptionsMenu();
+            updateSelectActiveState('favorites-sort-select', currentFavoritesSortBy);
+            displayFavoritePhotos();
+            break;
+        case 'trends':
+            fetchAndDisplayTrends();
+            break;
+        case 'accessibility':
+            updateThemeSelectorUI(localStorage.getItem('theme') || 'system');
+            updateLanguageSelectorUI(localStorage.getItem('language') || 'es-419');
+            initSettingsController();
+            break;
+        case 'history':
+            historyProfilesShown = HISTORY_PROFILES_BATCH;
+            historyPhotosShown = HISTORY_PHOTOS_BATCH;
+            historySearchesShown = HISTORY_SEARCHES_BATCH;
+            displayHistory();
+            break;
+        case 'historyPrivacy':
+            initHistoryPrivacySettings();
+            break;
+        case 'privateGalleryProxy':
+            if (data && data.uuid) {
+                if (isPrivateGalleryUnlocked(data.uuid)) {
+                    navigateToUrl('main', 'galleryPhotos', { uuid: data.uuid });
+                    handleStateChange('main', 'galleryPhotos', { uuid: data.uuid, galleryName: data.galleryName });
+                } else {
+                    promptToWatchAd(data.uuid, data.galleryName);
                 }
-                break;
-            case 'galleryPhotos':
-                if (data && data.uuid) {
-                    fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${data.uuid}`)
-                        .then(res => res.json())
-                        .then(gallery => {
-                            if (gallery && gallery.name) {
-                                if (gallery.privacy === 1 && !isPrivateGalleryUnlocked(gallery.uuid)) {
-                                    const privateUrl = generateUrl('main', 'privateGalleryProxy', { uuid: gallery.uuid });
-                                    history.replaceState({ view: 'main', section: 'privateGalleryProxy', data: { uuid: gallery.uuid, galleryName: gallery.name } }, '', privateUrl);
-                                    handleStateChange('main', 'privateGalleryProxy', { uuid: gallery.uuid, galleryName: gallery.name });
-                                } else {
-                                    addToHistory('profiles', { 
-                                        id: gallery.uuid, 
-                                        name: gallery.name, 
-                                        privacy: gallery.privacy,
-                                        profile_picture_url: gallery.profile_picture_url,
-                                        background_photo_url: gallery.background_photo_url 
-                                    });
-                                    fetchAndDisplayGalleryPhotos(gallery.uuid, gallery.name);
-                                }
+            }
+            break;
+        case 'galleryPhotos':
+            if (data && data.uuid) {
+                fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${data.uuid}`)
+                    .then(res => res.json())
+                    .then(gallery => {
+                        if (gallery && gallery.name) {
+                            if (gallery.privacy === 1 && !isPrivateGalleryUnlocked(gallery.uuid)) {
+                                const privateUrl = generateUrl('main', 'privateGalleryProxy', { uuid: gallery.uuid });
+                                history.replaceState({ view: 'main', section: 'privateGalleryProxy', data: { uuid: gallery.uuid, galleryName: gallery.name } }, '', privateUrl);
+                                handleStateChange('main', 'privateGalleryProxy', { uuid: gallery.uuid, galleryName: gallery.name });
                             } else {
-                                handleStateChange('main', '404');
-                            }
-                        })
-                        .catch(error => {
-                            console.error("Failed to fetch gallery info:", error);
-                            handleStateChange('main', '404');
-                        });
-                }
-                break;
-            
-            case 'photoView':
-                if (data && data.uuid && data.photoId) {
-                    let photoListPromise;
-
-                    if (lastVisitedView === 'userSpecificFavorites' && lastVisitedData && lastVisitedData.uuid) {
-                        photoListPromise = Promise.resolve(getFavorites().filter(p => p.gallery_uuid === data.uuid));
-                    } else if (lastVisitedView === 'favorites') {
-                        photoListPromise = Promise.resolve(currentFavoritesList);
-                    } else if (lastVisitedView === 'trends') {
-                        photoListPromise = Promise.resolve(currentTrendingPhotosList);
-                    } else if (lastVisitedView === 'history') {
-                        currentHistoryPhotosList = getHistory().photos;
-                        photoListPromise = Promise.resolve(currentHistoryPhotosList);
-                    } else {
-                        if (currentGalleryForPhotoView === data.uuid && currentGalleryPhotoList.length > 0) {
-                            photoListPromise = Promise.resolve(currentGalleryPhotoList);
-                        } else {
-                            photoListPromise = fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=photos&uuid=${data.uuid}&limit=1000`)
-                                .then(res => res.json())
-                                .then(photos => {
-                                    currentGalleryPhotoList = photos;
-                                    currentGalleryForPhotoView = data.uuid;
-                                    return photos;
+                                addToHistory('profiles', { 
+                                    id: gallery.uuid, 
+                                    name: gallery.name, 
+                                    privacy: gallery.privacy,
+                                    profile_picture_url: gallery.profile_picture_url,
+                                    background_photo_url: gallery.background_photo_url 
                                 });
-                        }
-                    }
-                    
-                    photoListPromise.then(photoList => {
-                        currentPhotoViewList = photoList;
-                        renderPhotoView(data.uuid, data.photoId, currentPhotoViewList);
-                    });
-                }
-                break;
-            
-            case 'sendFeedback':
-                const uploadBtn = document.getElementById('feedback-upload-btn');
-                const fileInput = document.getElementById('feedback-file-input');
-                const previewContainer = document.getElementById('feedback-file-preview');
-                const issueTypeSelect = document.querySelector('[data-target="feedback-issue-type-select"]');
-                const otherTitleGroup = document.getElementById('feedback-other-title-group');
-                const MAX_FILES = 3;
-                const MAX_TOTAL_SIZE_MB = 12;
-                let uploadedFiles = [];
-
-                if (issueTypeSelect) {
-                    issueTypeSelect.closest('.select-wrapper').addEventListener('click', (event) => {
-                        const selectedOption = event.target.closest('.menu-link');
-                        if (selectedOption && selectedOption.dataset.value) {
-                            if (selectedOption.dataset.value === 'other') {
-                                otherTitleGroup.classList.remove('disabled');
-                            } else {
-                                otherTitleGroup.classList.add('disabled');
+                                fetchAndDisplayGalleryPhotos(gallery.uuid, gallery.name);
                             }
-                        }
-                    });
-                }
-
-                if (uploadBtn && fileInput) {
-                    uploadBtn.addEventListener('click', () => fileInput.click());
-
-                    fileInput.addEventListener('change', (event) => {
-                        const files = Array.from(event.target.files);
-                        handleFiles(files);
-                    });
-                }
-
-                function handleFiles(files) {
-                    let currentTotalSize = uploadedFiles.reduce((acc, file) => acc + file.size, 0);
-                    
-                    for (const file of files) {
-                        if (uploadedFiles.length >= MAX_FILES) {
-                            showNotification(`No puedes subir más de ${MAX_FILES} archivos.`, 'error');
-                            break;
-                        }
-
-                        if (currentTotalSize + file.size > MAX_TOTAL_SIZE_MB * 1024 * 1024) {
-                            showNotification(`El tamaño total no puede exceder los ${MAX_TOTAL_SIZE_MB} MB.`, 'error');
-                            continue;
-                        }
-
-                        if (file.type.startsWith('image/')) {
-                            uploadedFiles.push(file);
-                            currentTotalSize += file.size;
-                            createPreview(file);
                         } else {
-                            showNotification(`El archivo '${file.name}' no es una imagen.`, 'error');
+                            handleStateChange('main', '404');
                         }
+                    })
+                    .catch(error => {
+                        console.error("Failed to fetch gallery info:", error);
+                        handleStateChange('main', '404');
+                    });
+            }
+            break;
+        
+        case 'photoView':
+            if (data && data.uuid && data.photoId) {
+                let photoListPromise;
+
+                if (lastVisitedView === 'userSpecificFavorites' && lastVisitedData && lastVisitedData.uuid) {
+                    photoListPromise = Promise.resolve(getFavorites().filter(p => p.gallery_uuid === data.uuid));
+                } else if (lastVisitedView === 'favorites') {
+                    photoListPromise = Promise.resolve(currentFavoritesList);
+                } else if (lastVisitedView === 'trends') {
+                    photoListPromise = Promise.resolve(currentTrendingPhotosList);
+                } else if (lastVisitedView === 'history') {
+                    currentHistoryPhotosList = getHistory().photos;
+                    photoListPromise = Promise.resolve(currentHistoryPhotosList);
+                } else {
+                    if (currentGalleryForPhotoView === data.uuid && currentGalleryPhotoList.length > 0) {
+                        photoListPromise = Promise.resolve(currentGalleryPhotoList);
+                    } else {
+                        photoListPromise = fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=photos&uuid=${data.uuid}&limit=1000`)
+                            .then(res => res.json())
+                            .then(photos => {
+                                currentGalleryPhotoList = photos;
+                                currentGalleryForPhotoView = data.uuid;
+                                return photos;
+                            });
                     }
-                    fileInput.value = '';
                 }
                 
-                function createPreview(file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const previewItem = document.createElement('div');
-                        previewItem.className = 'file-preview-item';
-                        
-                        const img = document.createElement('img');
-                        img.className = 'file-preview-img';
-                        img.src = e.target.result;
-                        
-                        const removeBtn = document.createElement('button');
-                        removeBtn.className = 'file-preview-remove-btn';
-                        removeBtn.innerHTML = '<span class="material-symbols-rounded">close</span>';
-                        
-                        removeBtn.addEventListener('click', () => {
-                            uploadedFiles = uploadedFiles.filter(f => f !== file);
-                            previewContainer.removeChild(previewItem);
+                photoListPromise.then(photoList => {
+                    currentPhotoViewList = photoList;
+                    renderPhotoView(data.uuid, data.photoId, currentPhotoViewList);
+                });
+            }
+            break;
+        
+        case 'sendFeedback':
+            const uploadBtn = document.getElementById('feedback-upload-btn');
+            const fileInput = document.getElementById('feedback-file-input');
+            const previewContainer = document.getElementById('feedback-file-preview');
+            const otherTitleGroup = document.getElementById('feedback-other-title-group');
+            const sendBtn = document.getElementById('send-feedback-btn');
+            let uploadedFiles = [];
+
+            updateSelectActiveState('feedback-issue-type-select', 'suggestion');
+            if(otherTitleGroup) {
+                otherTitleGroup.classList.add('disabled');
+            }
+
+            if (uploadBtn && fileInput) {
+                uploadBtn.addEventListener('click', () => fileInput.click());
+
+                fileInput.addEventListener('change', (event) => {
+                    uploadedFiles = Array.from(event.target.files);
+                    previewContainer.innerHTML = '';
+                    uploadedFiles.forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const previewItem = document.createElement('div');
+                            previewItem.className = 'file-preview-item';
+                            previewItem.innerHTML = `<img src="${e.target.result}" class="file-preview-img"><button class="file-preview-remove-btn"><span class="material-symbols-rounded">close</span></button>`;
+                            previewContainer.appendChild(previewItem);
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                });
+            }
+
+            if (sendBtn) {
+                sendBtn.addEventListener('click', async () => {
+                    // ✅ **LÍNEA CORREGIDA: Usa el selector de ID (#) correcto**
+                    const issueType = document.querySelector('#feedback-issue-type-select .menu-link.active')?.dataset.value || null;
+                    const otherTitle = document.getElementById('feedback-other-title').value.trim();
+                    const description = document.getElementById('feedback-description').value.trim();
+                    
+                    const formData = new FormData();
+                    formData.append('action_type', 'submit_feedback');
+                    formData.append('issue_type', issueType);
+                    formData.append('other_title', otherTitle);
+                    formData.append('description', description);
+                    
+                    uploadedFiles.forEach(file => {
+                        formData.append('attachments[]', file, file.name);
+                    });
+
+                    sendBtn.disabled = true;
+                    sendBtn.textContent = 'Enviando...';
+
+                    try {
+                        const response = await fetch(`${window.BASE_PATH}/api/main_handler.php`, {
+                            method: 'POST',
+                            body: formData
                         });
 
-                        previewItem.appendChild(img);
-                        previewItem.appendChild(removeBtn);
-                        previewContainer.appendChild(previewItem);
-                    };
-                    reader.readAsDataURL(file);
-                }
-                break;
+                        const result = await response.json();
 
-            case 'accessCodePrompt':
-                if (data && data.uuid) {
-                    const titleElement = document.getElementById('access-code-title');
-                    fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${data.uuid}`)
-                        .then(res => res.json())
-                        .then(gallery => {
-                            if (gallery && gallery.name && titleElement) {
-                                titleElement.textContent = window.getTranslation('accessCodePrompt.galleryOf', { galleryName: gallery.name });
+                        if (response.ok) {
+                            showNotification(result.message, 'success');
+                            // Asumiendo que .feedback-form-container es el <form> o un div que lo envuelve
+                            const form = document.querySelector('.feedback-form-container');
+                            if (form) {
+                                const inputs = form.querySelectorAll('input, textarea');
+                                inputs.forEach(input => input.value = '');
+                                updateSelectActiveState('feedback-issue-type-select', 'suggestion');
+                                otherTitleGroup.classList.add('disabled');
                             }
-                        });
-                }
-                break;
-            case 'adView':
-                const adTitle = document.getElementById('ad-title');
-                const adContentTitle = document.getElementById('ad-content-title');
-                const timerElement = document.getElementById('ad-timer');
-                const skipButton = document.getElementById('skip-ad-button');
-            
-                if (adCountdownInterval) {
-                    clearInterval(adCountdownInterval);
-                }
-            
-                function startAdCountdown() {
-                    let countdown = 5;
-                    timerElement.textContent = countdown;
-                    skipButton.disabled = true;
-            
-                    adCountdownInterval = setInterval(() => {
-                        countdown--;
-                        timerElement.textContent = countdown;
-                        if (countdown <= 0) {
-                            clearInterval(adCountdownInterval);
-                            timerElement.textContent = '0';
-                            skipButton.disabled = false;
-                        }
-                    }, 1000);
-                }
-            
-                if (adContext === 'unlock') {
-                    let adStep = 1;
-                    adTitle.textContent = window.getTranslation('adView.adOf', { current: 1, total: 2 });
-                    adContentTitle.textContent = window.getTranslation('adView.adContentTitle');
-                    skipButton.textContent = window.getTranslation('adView.nextAd');
-                    startAdCountdown();
-            
-                    skipButton.onclick = () => {
-                        if (adStep === 1) {
-                            adStep = 2;
-                            adTitle.textContent = window.getTranslation('adView.adOf', { current: 2, total: 2 });
-                            adContentTitle.textContent = window.getTranslation('adView.adContentTitle');
-                            skipButton.textContent = window.getTranslation('adView.skipAd');
-                            startAdCountdown();
+                            previewContainer.innerHTML = '';
+                            uploadedFiles = [];
+
                         } else {
-                            const destination = galleryAfterAd;
-                            if (destination) {
-                                const unlockedGalleries = JSON.parse(localStorage.getItem('unlockedGalleries') || '{}');
-                                const galleryUuidToUnlock = destination.data.uuid;
-                                unlockedGalleries[galleryUuidToUnlock] = new Date().getTime();
-                                localStorage.setItem('unlockedGalleries', JSON.stringify(unlockedGalleries));
-            
-                                navigateToUrl(destination.view, destination.section, destination.data);
-                                handleStateChange(destination.view, destination.section, destination.data);
-                                galleryAfterAd = null;
-                            }
-                            adContext = 'navigation';
+                            showNotification(result.message || 'Error al enviar el comentario.', 'error');
                         }
-                    };
-                } else {
-                    adTitle.textContent = window.getTranslation('adView.ad');
-                    adContentTitle.textContent = window.getTranslation('adView.adContentTitle');
-                    skipButton.textContent = window.getTranslation('adView.skipAd');
-                    startAdCountdown();
-            
-                    skipButton.onclick = () => {
-                        const destination = galleryAfterAd || photoAfterAd;
+                    } catch (error) {
+                        showNotification('Error de conexión. Inténtalo de nuevo.', 'error');
+                    } finally {
+                        sendBtn.disabled = false;
+                        sendBtn.textContent = 'Enviar Comentario';
+                    }
+                });
+            }
+            break;
+
+        case 'accessCodePrompt':
+            if (data && data.uuid) {
+                const titleElement = document.getElementById('access-code-title');
+                fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${data.uuid}`)
+                    .then(res => res.json())
+                    .then(gallery => {
+                        if (gallery && gallery.name && titleElement) {
+                            titleElement.textContent = window.getTranslation('accessCodePrompt.galleryOf', { galleryName: gallery.name });
+                        }
+                    });
+            }
+            break;
+        case 'adView':
+            const adTitle = document.getElementById('ad-title');
+            const adContentTitle = document.getElementById('ad-content-title');
+            const timerElement = document.getElementById('ad-timer');
+            const skipButton = document.getElementById('skip-ad-button');
+        
+            if (adCountdownInterval) {
+                clearInterval(adCountdownInterval);
+            }
+        
+            function startAdCountdown() {
+                let countdown = 5;
+                timerElement.textContent = countdown;
+                skipButton.disabled = true;
+        
+                adCountdownInterval = setInterval(() => {
+                    countdown--;
+                    timerElement.textContent = countdown;
+                    if (countdown <= 0) {
+                        clearInterval(adCountdownInterval);
+                        timerElement.textContent = '0';
+                        skipButton.disabled = false;
+                    }
+                }, 1000);
+            }
+        
+            if (adContext === 'unlock') {
+                let adStep = 1;
+                adTitle.textContent = window.getTranslation('adView.adOf', { current: 1, total: 2 });
+                adContentTitle.textContent = window.getTranslation('adView.adContentTitle');
+                skipButton.textContent = window.getTranslation('adView.nextAd');
+                startAdCountdown();
+        
+                skipButton.onclick = () => {
+                    if (adStep === 1) {
+                        adStep = 2;
+                        adTitle.textContent = window.getTranslation('adView.adOf', { current: 2, total: 2 });
+                        adContentTitle.textContent = window.getTranslation('adView.adContentTitle');
+                        skipButton.textContent = window.getTranslation('adView.skipAd');
+                        startAdCountdown();
+                    } else {
+                        const destination = galleryAfterAd;
                         if (destination) {
+                            const unlockedGalleries = JSON.parse(localStorage.getItem('unlockedGalleries') || '{}');
+                            const galleryUuidToUnlock = destination.data.uuid;
+                            unlockedGalleries[galleryUuidToUnlock] = new Date().getTime();
+                            localStorage.setItem('unlockedGalleries', JSON.stringify(unlockedGalleries));
+        
                             navigateToUrl(destination.view, destination.section, destination.data);
                             handleStateChange(destination.view, destination.section, destination.data);
-                            photoAfterAd = null;
                             galleryAfterAd = null;
-                        } else {
-                            navigateToUrl('main', 'home');
-                            handleStateChange('main', 'home');
                         }
-                    };
-                }
-                break;
-            case 'userSpecificFavorites':
-                if (data && data.uuid) {
-                    const userFavorites = getFavorites().filter(p => p.gallery_uuid === data.uuid);
-                    const sectionEl = document.querySelector('[data-section="userSpecificFavorites"]');
-                    if (sectionEl) {
-                        const grid = sectionEl.querySelector('#user-specific-favorites-grid');
-                        const statusContainer = sectionEl.querySelector('.status-message-container');
-                        const title = sectionEl.querySelector('#user-specific-favorites-title');
-                        sectionEl.dataset.uuid = data.uuid;
+                        adContext = 'navigation';
+                    }
+                };
+            } else {
+                adTitle.textContent = window.getTranslation('adView.ad');
+                adContentTitle.textContent = window.getTranslation('adView.adContentTitle');
+                skipButton.textContent = window.getTranslation('adView.skipAd');
+                startAdCountdown();
+        
+                skipButton.onclick = () => {
+                    const destination = galleryAfterAd || photoAfterAd;
+                    if (destination) {
+                        navigateToUrl(destination.view, destination.section, destination.data);
+                        handleStateChange(destination.view, destination.section, destination.data);
+                        photoAfterAd = null;
+                        galleryAfterAd = null;
+                    } else {
+                        navigateToUrl('main', 'home');
+                        handleStateChange('main', 'home');
+                    }
+                };
+            }
+            break;
+        case 'userSpecificFavorites':
+            if (data && data.uuid) {
+                const userFavorites = getFavorites().filter(p => p.gallery_uuid === data.uuid);
+                const sectionEl = document.querySelector('[data-section="userSpecificFavorites"]');
+                if (sectionEl) {
+                    const grid = sectionEl.querySelector('#user-specific-favorites-grid');
+                    const statusContainer = sectionEl.querySelector('.status-message-container');
+                    const title = sectionEl.querySelector('#user-specific-favorites-title');
+                    sectionEl.dataset.uuid = data.uuid;
 
-                        if (userFavorites.length > 0) {
-                            grid.classList.remove('disabled');
-                            statusContainer.classList.add('disabled');
-                            title.textContent = window.getTranslation('userSpecificFavorites.titleFrom', { userName: userFavorites[0].gallery_name });
-                            userFavorites.forEach(photo => {
-                                const card = document.createElement('div');
-                                card.className = 'card photo-card';
-                                card.dataset.photoUrl = photo.photo_url;
-                                card.dataset.photoId = photo.id;
-                                card.dataset.galleryUuid = photo.gallery_uuid;
-                                const background = document.createElement('div');
-                                background.className = 'card-background';
-                                background.style.backgroundImage = `url('${photo.photo_url}')`;
-                                card.appendChild(background);
-                                const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
-                                card.innerHTML += `<div class="card-actions-container"><div class="card-hover-overlay"><div class="card-hover-icons"><div class="icon-wrapper active" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div><div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div></div></div><div class="module-content module-select photo-context-menu disabled body-title"><div class="menu-content"><div class="menu-list"><a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.openInNewTab')}</span></div></a><div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.copyLink')}</span></div></div><a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.download')}</span></div></a></div></div></div></div>`;
-                                grid.appendChild(card);
-                            });
-                        } else {
-                            grid.classList.add('disabled');
-                            statusContainer.classList.remove('disabled');
-                            title.textContent = window.getTranslation('userSpecificFavorites.title');
-                            statusContainer.innerHTML = `<div><h2>${window.getTranslation('userSpecificFavorites.noUserFavoritesTitle')}</h2><p>${window.getTranslation('userSpecificFavorites.noUserFavoritesMessage')}</p></div>`;
-                        }
+                    if (userFavorites.length > 0) {
+                        grid.innerHTML = '';
+                        grid.classList.remove('disabled');
+                        statusContainer.classList.add('disabled');
+                        title.textContent = window.getTranslation('userSpecificFavorites.titleFrom', { userName: userFavorites[0].gallery_name });
+                        userFavorites.forEach(photo => {
+                            const card = document.createElement('div');
+                            card.className = 'card photo-card';
+                            card.dataset.photoUrl = photo.photo_url;
+                            card.dataset.photoId = photo.id;
+                            card.dataset.galleryUuid = photo.gallery_uuid;
+                            const background = document.createElement('div');
+                            background.className = 'card-background';
+                            background.style.backgroundImage = `url('${photo.photo_url}')`;
+                            card.appendChild(background);
+                            const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
+                            card.innerHTML += `<div class="card-actions-container"><div class="card-hover-overlay"><div class="card-hover-icons"><div class="icon-wrapper active" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div><div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div></div></div><div class="module-content module-select photo-context-menu disabled body-title"><div class="menu-content"><div class="menu-list"><a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.openInNewTab')}</span></div></a><div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.copyLink')}</span></div></div><a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.download')}</span></div></a></div></div></div></div>`;
+                            grid.appendChild(card);
+                        });
+                    } else {
+                        grid.innerHTML = '';
+                        grid.classList.add('disabled');
+                        statusContainer.classList.remove('disabled');
+                        title.textContent = window.getTranslation('userSpecificFavorites.title');
+                        statusContainer.innerHTML = `<div><h2>${window.getTranslation('userSpecificFavorites.noUserFavoritesTitle')}</h2><p>${window.getTranslation('userSpecificFavorites.noUserFavoritesMessage')}</p></div>`;
                     }
                 }
-                break;
-        }
-
-        setupScrollShadows();
-        updateHeaderAndMenuStates(view, section);
-        initTooltips();
-        applyTranslations(document.body);
+            }
+            break;
     }
+
+    setupScrollShadows();
+    updateHeaderAndMenuStates(view, section);
+    initTooltips();
+    applyTranslations(document.body);
+}
 
     // --- INICIALIZACIÓN ---
     setupEventListeners();

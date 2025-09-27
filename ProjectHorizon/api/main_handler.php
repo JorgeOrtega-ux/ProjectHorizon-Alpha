@@ -1,13 +1,23 @@
 <?php
+// --- FUNCIÓN PARA GENERAR UUID v4 ---
+function generate_uuid_v4() {
+    return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+        mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+        mt_rand(0, 0xffff),
+        mt_rand(0, 0x0fff) | 0x4000,
+        mt_rand(0, 0x3fff) | 0x8000,
+        mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+    );
+}
+
 // --- MANEJO DE SOLICITUDES GET ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $request_type = isset($_GET['request_type']) ? $_GET['request_type'] : '';
 
     // --- ENDPOINT PARA CARGA DINÁMICA DE SECCIONES HTML ---
-    // NO REQUIERE CONEXIÓN A LA BASE DE DATOS
     if ($request_type === 'section') {
         header('Content-Type: text/html');
-
+        // (El resto del código GET para secciones permanece igual...)
         $view = isset($_GET['view']) ? $_GET['view'] : 'main';
         $section = isset($_GET['section']) ? $_GET['section'] : 'home';
 
@@ -53,10 +63,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     // --- LÓGICA PARA DATOS JSON ---
-    // ESTAS SECCIONES SÍ REQUIEREN CONEXIÓN A LA BASE DE DATOS
     header('Content-Type: application/json');
     require_once '../config/db.php';
-
+    // (Todo el código GET para 'galleries', 'photos', etc., permanece igual...)
     if ($request_type === 'galleries') {
         if (isset($_GET['uuid'])) {
             $uuid = $_GET['uuid'];
@@ -242,8 +251,126 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     require_once '../config/db.php';
 
     $action_type = isset($_POST['action_type']) ? $_POST['action_type'] : '';
+    
+    // ✅ **NUEVA SECCIÓN PARA MANEJAR EL ENVÍO DE COMENTARIOS**
+    if ($action_type === 'submit_feedback') {
+        // Sanitización y validación de datos
+        $issue_type = filter_input(INPUT_POST, 'issue_type', FILTER_SANITIZE_STRING);
+        $other_title = filter_input(INPUT_POST, 'other_title', FILTER_SANITIZE_STRING);
+        $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_STRING);
+    
+        $errors = [];
+    
+        if (empty($issue_type) || !in_array($issue_type, ['suggestion', 'problem', 'other'])) {
+            $errors[] = 'El tipo de comentario no es válido.';
+        }
+    
+        if ($issue_type === 'other' && empty($other_title)) {
+            $errors[] = 'El título es obligatorio para el tipo "Otro".';
+        }
+    
+        if (empty($description)) {
+            $errors[] = 'La descripción no puede estar vacía.';
+        }
+    
+        if (!empty($errors)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => implode(' ', $errors)]);
+            exit;
+        }
+    
+        // Gestión de subida de imágenes
+        $allowed_mime_types = ['image/jpeg', 'image/png', 'image/gif'];
+        $max_file_size = 4 * 1024 * 1024; // 4MB por archivo
+        $max_total_size = 12 * 1024 * 1024; // 12MB en total
+        $upload_dir = '../uploads/feedback_attachments/';
+    
+        if (!file_exists($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+    
+        $uploaded_files_urls = [];
+        $total_size = 0;
+    
+        if (isset($_FILES['attachments'])) {
+            if (count($_FILES['attachments']['name']) > 3) {
+                $errors[] = 'No se pueden subir más de 3 archivos.';
+            } else {
+                for ($i = 0; $i < count($_FILES['attachments']['name']); $i++) {
+                    $file_name = $_FILES['attachments']['name'][$i];
+                    $file_tmp = $_FILES['attachments']['tmp_name'][$i];
+                    $file_size = $_FILES['attachments']['size'][$i];
+                    $file_error = $_FILES['attachments']['error'][$i];
+    
+                    if ($file_error === UPLOAD_ERR_OK) {
+                        $file_mime_type = mime_content_type($file_tmp);
+    
+                        if ($file_size > $max_file_size) {
+                            $errors[] = "El archivo {$file_name} supera el tamaño máximo de 4MB.";
+                            continue;
+                        }
+                        if (!in_array($file_mime_type, $allowed_mime_types)) {
+                            $errors[] = "El archivo {$file_name} tiene un formato no permitido.";
+                            continue;
+                        }
+    
+                        $total_size += $file_size;
+                        if ($total_size > $max_total_size) {
+                            $errors[] = 'El tamaño total de los archivos supera los 12MB.';
+                            break;
+                        }
+    
+                        $new_file_name = uniqid('', true) . '.' . pathinfo($file_name, PATHINFO_EXTENSION);
+                        $destination = $upload_dir . $new_file_name;
+    
+                        if (move_uploaded_file($file_tmp, $destination)) {
+                            $uploaded_files_urls[] = 'uploads/feedback_attachments/' . $new_file_name;
+                        } else {
+                            $errors[] = "Error al mover el archivo {$file_name}.";
+                        }
+                    }
+                }
+            }
+        }
+    
+        if (!empty($errors)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => implode(' ', $errors)]);
+            exit;
+        }
+    
+        // Insertar en la base de datos
+        $feedback_uuid = generate_uuid_v4();
+        $title_to_insert = ($issue_type === 'other') ? $other_title : null;
+    
+        $conn->begin_transaction();
+        try {
+            $stmt_feedback = $conn->prepare("INSERT INTO feedback (uuid, issue_type, title, description) VALUES (?, ?, ?, ?)");
+            $stmt_feedback->bind_param("ssss", $feedback_uuid, $issue_type, $title_to_insert, $description);
+            $stmt_feedback->execute();
+            $stmt_feedback->close();
+    
+            if (!empty($uploaded_files_urls)) {
+                $stmt_attachments = $conn->prepare("INSERT INTO feedback_attachments (feedback_uuid, attachment_url) VALUES (?, ?)");
+                foreach ($uploaded_files_urls as $url) {
+                    $stmt_attachments->bind_param("ss", $feedback_uuid, $url);
+                    $stmt_attachments->execute();
+                }
+                $stmt_attachments->close();
+            }
+    
+            $conn->commit();
+            echo json_encode(['success' => true, 'message' => 'Comentario enviado con éxito.']);
+        } catch (mysqli_sql_exception $exception) {
+            $conn->rollback();
+            error_log("Error en la base de datos: " . $exception->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno del servidor.']);
+        }
+        exit;
+    }
 
-   if ($action_type === 'increment_interaction') {
+    if ($action_type === 'increment_interaction') {
         $uuid = isset($_POST['uuid']) ? $_POST['uuid'] : '';
         if (!empty($uuid)) {
             $sql = "UPDATE galleries_metadata SET total_interactions = total_interactions + 1 WHERE gallery_uuid = ?";
