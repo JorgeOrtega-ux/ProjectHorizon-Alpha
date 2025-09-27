@@ -117,3 +117,9 @@
 [26-Sep-2025 19:37:01 Europe/Berlin] Error de conexión a la base de datos: Access denied for user 'rosot'@'localhost' (using password: NO)
 [26-Sep-2025 19:37:01 Europe/Berlin] Error de conexión a la base de datos: Access denied for user 'rosot'@'localhost' (using password: NO)
 [26-Sep-2025 20:50:27 Europe/Berlin] Error de conexión a la base de datos: Access denied for user 'ro2ot'@'localhost' (using password: NO)
+[27-Sep-2025 04:13:14 Europe/Berlin] Error de conexión a la base de datos: php_network_getaddresses: getaddrinfo failed: Host desconocido. 
+[27-Sep-2025 04:13:15 Europe/Berlin] Error de conexión a la base de datos: php_network_getaddresses: getaddrinfo failed: Host desconocido. 
+[27-Sep-2025 04:13:20 Europe/Berlin] Error de conexión a la base de datos: php_network_getaddresses: getaddrinfo failed: Host desconocido. 
+[27-Sep-2025 04:13:28 Europe/Berlin] Error de conexión a la base de datos: php_network_getaddresses: getaddrinfo failed: Host desconocido. 
+[27-Sep-2025 04:13:28 Europe/Berlin] Error de conexión a la base de datos: php_network_getaddresses: getaddrinfo failed: Host desconocido. 
+[27-Sep-2025 04:13:34 Europe/Berlin] Error de conexión a la base de datos: php_network_getaddresses: getaddrinfo failed: Host desconocido. 
