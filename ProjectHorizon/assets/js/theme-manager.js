@@ -19,18 +19,15 @@ export function setTheme(theme) {
     updateThemeSelectorUI(theme);
 }
 
-// La función ahora es exportada
+// La función ahora usa la traducción
 export function updateThemeSelectorUI(theme) {
     const themeSelector = document.querySelector('[data-target="theme-select"]');
     if (themeSelector) {
         const themeText = themeSelector.querySelector('.select-trigger-text');
-        const options = {
-            'system': 'Sincronizar con el sistema',
-            'dark': 'Tema oscuro',
-            'light': 'Tema claro'
-        };
-        if (themeText && options[theme]) {
-            themeText.textContent = options[theme];
+        
+        // El cambio clave: usar window.getTranslation para obtener el texto del JSON
+        if (themeText && window.getTranslation) {
+            themeText.textContent = window.getTranslation(`theme.${theme}`);
         }
     }
     const themeOptionsContainer = document.getElementById('theme-select');
