@@ -1600,13 +1600,15 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
-    margin-top: 12px;
+    border: 1px solid #00000020;
+    border-radius: 8px;
+    padding: 8px;
 }
 
 .file-preview-item {
     position: relative;
-    width: 80px;
-    height: 80px;
+    width: 55px;
+    height: 55px;
     border-radius: 8px;
     overflow: hidden;
 }
