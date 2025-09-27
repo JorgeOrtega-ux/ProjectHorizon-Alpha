@@ -204,7 +204,8 @@
     "errorCopyingLink": "Error al copiar el enlace.",
     "downloadError": "Error al descargar la imagen.",
     "historyCleared": "Historial eliminado correctamente.",
-    "historyEmpty": "Tu historial ya está vacío."
+    "historyEmpty": "Tu historial ya está vacío.",
+    "selectIssueType": "Por favor, selecciona un tipo de comentario."
   },
   "dialogs": {
     "clearHistoryTitle": "¿Eliminar todo el historial?",

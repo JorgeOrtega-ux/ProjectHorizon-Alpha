@@ -1683,4 +1683,17 @@ h1, h2, h3, h4, h5, h6 {
 .dark-theme .section-content-header.shadow {
     box-shadow: none;
     border-bottom-color: var(--border-color) !important;
+}/* jorgeortega-ux/projecthorizon-alpha/ProjectHorizon-Alpha-3f6a2a6ada97a0d7cdffe5dcca1c7e90f7f57a7e/ProjectHorizon/assets/css/styles.css */
+
+/* ... (otros estilos) ... */
+
+/* ====== ESTILOS FEEDBACK FORM ========= */
+/* ... (otros estilos del formulario) ... */
+
+#feedback-upload-btn:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
 }
+
+/* ... (el resto de tus estilos) ... */

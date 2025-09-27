@@ -1,4 +1,4 @@
-// assets/js/main-controller.js
+// jorgeortega-ux/projecthorizon-alpha/ProjectHorizon-Alpha-3f6a2a6ada97a0d7cdffe5dcca1c7e90f7f57a7e/ProjectHorizon/assets/js/main-controller.js
 
 import { generateUrl, navigateToUrl, setupPopStateHandler, setInitialHistoryState } from './url-manager.js';
 import { setTheme, updateThemeSelectorUI } from './theme-manager.js';
@@ -994,38 +994,43 @@ export function initMainController() {
         }
     }
 
+    // ✅ **FUNCIÓN CORREGIDA Y MEJORADA**
     function updateSelectActiveState(selectId, value) {
-        let activeText = '';
         const selectContainers = document.querySelectorAll(`#${selectId}, #${selectId}-mobile`);
-
+    
         selectContainers.forEach(selectContainer => {
-            if (selectContainer) {
-                const allLinks = selectContainer.querySelectorAll('.menu-link');
-                allLinks.forEach(link => {
-                    link.classList.remove('active');
-                });
-                const activeLink = selectContainer.querySelector(`.menu-link[data-value="${value}"]`);
-                if (activeLink) {
-                    activeLink.classList.add('active');
-                    activeText = activeLink.querySelector('.menu-link-text span').textContent;
-
-                    const wrapper = selectContainer.closest('.select-wrapper');
-                    if (wrapper) {
-                        const trigger = wrapper.querySelector('[data-action="toggle-select"]');
-                        const triggerText = trigger.querySelector('.select-trigger-text');
-                        if (triggerText) {
-                            triggerText.textContent = activeText;
-                        }
-                    }
+            if (!selectContainer) return;
+    
+            const allLinks = selectContainer.querySelectorAll('.menu-link');
+            allLinks.forEach(link => link.classList.remove('active'));
+    
+            const wrapper = selectContainer.closest('.select-wrapper');
+            const trigger = wrapper ? wrapper.querySelector('[data-action="toggle-select"]') : document.querySelector(`[data-target="${selectId}"]`);
+            const triggerTextEl = trigger ? trigger.querySelector('.select-trigger-text') : null;
+    
+            if (!triggerTextEl) return;
+    
+            const activeLink = selectContainer.querySelector(`.menu-link[data-value="${value}"]`);
+            let activeText = '';
+    
+            if (activeLink) {
+                activeLink.classList.add('active');
+                activeText = activeLink.querySelector('.menu-link-text span').textContent;
+                triggerTextEl.textContent = activeText;
+            } else {
+                // Si no hay valor seleccionado, mostramos el placeholder
+                const placeholderKey = triggerTextEl.dataset.i18n;
+                if (placeholderKey) {
+                    triggerTextEl.textContent = window.getTranslation(placeholderKey);
                 }
             }
+    
+            if (selectId.includes('relevance')) {
+                updateMoreOptionsFilterText(activeText, '#more-options-menu');
+            } else if (selectId.includes('favorites-sort')) {
+                updateMoreOptionsFilterText(activeText, '#more-options-menu-fav');
+            }
         });
-
-        if (selectId.includes('relevance')) {
-            updateMoreOptionsFilterText(activeText, '#more-options-menu');
-        } else if (selectId.includes('favorites-sort')) {
-            updateMoreOptionsFilterText(activeText, '#more-options-menu-fav');
-        }
     }
 
     async function downloadPhoto(url) {
@@ -1534,7 +1539,7 @@ export function initMainController() {
             const selectedOption = event.target.closest('.module-select .menu-link');
             if (selectedOption) {
                 const value = selectedOption.dataset.value;
-                if (!value) return;
+                if (value === undefined || value === null) return;
 
                 const selectContainer = selectedOption.closest('.module-select');
                 const selectId = selectContainer.id;
@@ -1730,7 +1735,8 @@ export function initMainController() {
             favoritesSortSelectMobile.innerHTML = favoritesSortSelect.innerHTML;
         }
     }
-
+    
+    // ✅ **FUNCIÓN handleStateChange COMPLETA Y ACTUALIZADA**
     async function handleStateChange(view, section, data) {
     const contentContainer = document.querySelector('.general-content-scrolleable');
     if (contentContainer) {
@@ -1874,8 +1880,32 @@ export function initMainController() {
             const otherTitleGroup = document.getElementById('feedback-other-title-group');
             const sendBtn = document.getElementById('send-feedback-btn');
             let uploadedFiles = [];
+            const MAX_FILES = 3;
 
-            updateSelectActiveState('feedback-issue-type-select', 'suggestion');
+            const updateUploadButtonState = () => {
+                if (uploadedFiles.length >= MAX_FILES) {
+                    uploadBtn.disabled = true;
+                } else {
+                    uploadBtn.disabled = false;
+                }
+            };
+            
+            const renderPreviews = () => {
+                previewContainer.innerHTML = '';
+                uploadedFiles.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const previewItem = document.createElement('div');
+                        previewItem.className = 'file-preview-item';
+                        previewItem.innerHTML = `<img src="${e.target.result}" class="file-preview-img"><button class="file-preview-remove-btn" data-index="${index}"><span class="material-symbols-rounded">close</span></button>`;
+                        previewContainer.appendChild(previewItem);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            // ✅ **INICIALIZACIÓN CORREGIDA: Sin selección por defecto**
+            updateSelectActiveState('feedback-issue-type-select', null); 
             if(otherTitleGroup) {
                 otherTitleGroup.classList.add('disabled');
             }
@@ -1884,28 +1914,43 @@ export function initMainController() {
                 uploadBtn.addEventListener('click', () => fileInput.click());
 
                 fileInput.addEventListener('change', (event) => {
-                    uploadedFiles = Array.from(event.target.files);
-                    previewContainer.innerHTML = '';
-                    uploadedFiles.forEach(file => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            const previewItem = document.createElement('div');
-                            previewItem.className = 'file-preview-item';
-                            previewItem.innerHTML = `<img src="${e.target.result}" class="file-preview-img"><button class="file-preview-remove-btn"><span class="material-symbols-rounded">close</span></button>`;
-                            previewContainer.appendChild(previewItem);
-                        };
-                        reader.readAsDataURL(file);
-                    });
+                    const newFiles = Array.from(event.target.files);
+                    if (uploadedFiles.length + newFiles.length > MAX_FILES) {
+                        showNotification(`Puedes subir un máximo de ${MAX_FILES} archivos.`, 'error');
+                        fileInput.value = "";
+                        return;
+                    }
+                    uploadedFiles.push(...newFiles);
+                    renderPreviews();
+                    updateUploadButtonState();
+                    fileInput.value = "";
                 });
             }
 
+            if (previewContainer) {
+                previewContainer.addEventListener('click', (event) => {
+                    const removeBtn = event.target.closest('.file-preview-remove-btn');
+                    if (removeBtn) {
+                        const indexToRemove = parseInt(removeBtn.dataset.index, 10);
+                        uploadedFiles.splice(indexToRemove, 1);
+                        renderPreviews();
+                        updateUploadButtonState();
+                    }
+                });
+            }
+            
             if (sendBtn) {
                 sendBtn.addEventListener('click', async () => {
-                    // ✅ **LÍNEA CORREGIDA: Usa el selector de ID (#) correcto**
-                    const issueType = document.querySelector('#feedback-issue-type-select .menu-link.active')?.dataset.value || null;
+                    const issueType = document.querySelector('#feedback-issue-type-select .menu-link.active')?.dataset.value;
                     const otherTitle = document.getElementById('feedback-other-title').value.trim();
                     const description = document.getElementById('feedback-description').value.trim();
                     
+                    // ✅ **VALIDACIÓN MEJORADA: Comprueba que se haya seleccionado un tipo**
+                    if (!issueType) {
+                        showNotification(window.getTranslation('notifications.selectIssueType'), 'error');
+                        return;
+                    }
+
                     const formData = new FormData();
                     formData.append('action_type', 'submit_feedback');
                     formData.append('issue_type', issueType);
@@ -1929,16 +1974,16 @@ export function initMainController() {
 
                         if (response.ok) {
                             showNotification(result.message, 'success');
-                            // Asumiendo que .feedback-form-container es el <form> o un div que lo envuelve
                             const form = document.querySelector('.feedback-form-container');
                             if (form) {
                                 const inputs = form.querySelectorAll('input, textarea');
                                 inputs.forEach(input => input.value = '');
-                                updateSelectActiveState('feedback-issue-type-select', 'suggestion');
+                                updateSelectActiveState('feedback-issue-type-select', null);
                                 otherTitleGroup.classList.add('disabled');
                             }
                             previewContainer.innerHTML = '';
                             uploadedFiles = [];
+                            updateUploadButtonState();
 
                         } else {
                             showNotification(result.message || 'Error al enviar el comentario.', 'error');
@@ -2085,7 +2130,7 @@ export function initMainController() {
     updateHeaderAndMenuStates(view, section);
     initTooltips();
     applyTranslations(document.body);
-}
+    }
 
     // --- INICIALIZACIÓN ---
     setupEventListeners();
