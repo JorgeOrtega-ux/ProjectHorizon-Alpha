@@ -185,17 +185,5 @@
   "404": {
     "title": "404 - Not Found",
     "message": "The page you are looking for does not exist."
-  },
-  "theme": {
-    "system": "Sincronizar con el sistema",
-    "dark": "Tema oscuro",
-    "light": "Tema claro"
-  },
-  "language": {
-    "es-419": "Español (Latinoamérica)",
-    "en-US": "English (United States)",
-    "fr-FR": "Français (France)",
-    "de-DE": "Deutsch (Deutschland)",
-    "pt-BR": "Português (Brasil)"
   }
 }

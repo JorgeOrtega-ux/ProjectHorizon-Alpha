@@ -17,7 +17,7 @@
                         <div class="select-trigger-icon">
                             <span class="material-symbols-rounded">language</span>
                         </div>
-                        <span class="select-trigger-text" data-i18n="language.es-419"></span>
+                        <span class="select-trigger-text">Español (Latinoamérica)</span>
                         <div class="select-trigger-icon select-trigger-arrow">
                             <span class="material-symbols-rounded">expand_more</span>
                         </div>
@@ -26,23 +26,23 @@
                         <div class="menu-content">
                             <div class="menu-list">
                                 <div class="menu-link" data-value="es-419"> <div class="menu-link-icon"><span class="material-symbols-rounded">language</span></div>
-                                    <div class="menu-link-text"><span data-i18n="language.es-419"></span></div>
+                                    <div class="menu-link-text"><span>Español (Latinoamérica)</span></div>
                                 </div>
                                 <div class="menu-link" data-value="en-US">
                                     <div class="menu-link-icon"><span class="material-symbols-rounded">language</span></div>
-                                    <div class="menu-link-text"><span data-i18n="language.en-US"></span></div>
+                                    <div class="menu-link-text"><span>English (United States)</span></div>
                                 </div>
                                 <div class="menu-link" data-value="fr-FR">
                                     <div class="menu-link-icon"><span class="material-symbols-rounded">language</span></div>
-                                    <div class="menu-link-text"><span data-i18n="language.fr-FR"></span></div>
+                                    <div class="menu-link-text"><span>Français (France)</span></div>
                                 </div>
                                 <div class="menu-link" data-value="de-DE">
                                     <div class="menu-link-icon"><span class="material-symbols-rounded">language</span></div>
-                                    <div class="menu-link-text"><span data-i18n="language.de-DE"></span></div>
+                                    <div class="menu-link-text"><span>Deutsch (Deutschland)</span></div>
                                 </div>
                                 <div class="menu-link" data-value="pt-BR">
                                     <div class="menu-link-icon"><span class="material-symbols-rounded">language</span></div>
-                                    <div class="menu-link-text"><span data-i18n="language.pt-BR"></span></div>
+                                    <div class="menu-link-text"><span>Português (Brasil)</span></div>
                                 </div>
                             </div>
                         </div>
@@ -61,7 +61,7 @@
                         <div class="select-trigger-icon">
                             <span class="material-symbols-rounded">desktop_windows</span>
                         </div>
-                        <span class="select-trigger-text" data-i18n="theme.system"></span>
+                        <span class="select-trigger-text">Sincronizar con el sistema</span>
                         <div class="select-trigger-icon select-trigger-arrow">
                             <span class="material-symbols-rounded">expand_more</span>
                         </div>
@@ -71,15 +71,15 @@
                             <div class="menu-list">
                                 <div class="menu-link" data-value="system">
                                     <div class="menu-link-icon"><span class="material-symbols-rounded">desktop_windows</span></div>
-                                    <div class="menu-link-text"><span data-i18n="theme.system"></span></div>
+                                    <div class="menu-link-text"><span>Sincronizar con el sistema</span></div>
                                 </div>
                                 <div class="menu-link" data-value="dark">
                                     <div class="menu-link-icon"><span class="material-symbols-rounded">dark_mode</span></div>
-                                    <div class="menu-link-text"><span data-i18n="theme.dark"></span></div>
+                                    <div class="menu-link-text"><span>Tema oscuro</span></div>
                                 </div>
                                 <div class="menu-link" data-value="light">
                                     <div class="menu-link-icon"><span class="material-symbols-rounded">light_mode</span></div>
-                                    <div class="menu-link-text"><span data-i18n="theme.light"></span></div>
+                                    <div class="menu-link-text"><span>Tema claro</span></div>
                                 </div>
                             </div>
                         </div>
