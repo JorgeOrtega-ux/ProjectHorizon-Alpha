@@ -117,7 +117,19 @@
       "openLinksTitle": "Abrir los enlaces en una pestaña nueva",
       "openLinksDescription": "Al activar esta opción, todos los enlaces se abrirán en una nueva pestaña para no interrumpir tu navegación actual.",
       "longerNotificationsTitle": "Aumenta el tiempo de permanencia de una notificación en la pantalla.",
-      "longerNotificationsDescription": "Las notificaciones permanecerán más tiempo en pantalla antes de desaparecer."
+      "longerNotificationsDescription": "Las notificaciones permanecerán más tiempo en pantalla antes de desaparecer.",
+      "languageOptions": {
+        "es-419": "Español (Latinoamérica)",
+        "en-US": "English (United States)",
+        "fr-FR": "Français (France)",
+        "de-DE": "Deutsch (Deutschland)",
+        "pt-BR": "Português (Brasil)"
+      },
+      "themeOptions": {
+        "system": "Sincronizar con el sistema",
+        "dark": "Tema oscuro",
+        "light": "Tema claro"
+      }
     },
     "historyPrivacy": {
       "title": "Historial y Privacidad",

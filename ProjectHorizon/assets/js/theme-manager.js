@@ -19,18 +19,22 @@ export function setTheme(theme) {
     updateThemeSelectorUI(theme);
 }
 
-// La función ahora es exportada
+// ✅ FUNCIÓN CORREGIDA
 export function updateThemeSelectorUI(theme) {
     const themeSelector = document.querySelector('[data-target="theme-select"]');
     if (themeSelector) {
         const themeText = themeSelector.querySelector('.select-trigger-text');
-        const options = {
-            'system': 'Sincronizar con el sistema',
-            'dark': 'Tema oscuro',
-            'light': 'Tema claro'
+        // Mapea los valores del tema a sus claves de traducción
+        const translationKeys = {
+            'system': 'settings.accessibility.themeOptions.system',
+            'dark': 'settings.accessibility.themeOptions.dark',
+            'light': 'settings.accessibility.themeOptions.light'
         };
-        if (themeText && options[theme]) {
-            themeText.textContent = options[theme];
+        if (themeText && translationKeys[theme]) {
+            // 1. Establece el atributo data-i18n con la clave correcta
+            themeText.setAttribute('data-i18n', translationKeys[theme]);
+            // 2. Usa la función de traducción para obtener y mostrar el texto
+            themeText.textContent = window.getTranslation(translationKeys[theme]);
         }
     }
     const themeOptionsContainer = document.getElementById('theme-select');
@@ -46,11 +50,9 @@ export function updateThemeSelectorUI(theme) {
     }
 }
 
+
 export function initThemeManager() {
     applyTheme();
-
-    // Ya no llamamos a updateThemeSelectorUI aquí porque el HTML puede no existir.
-    // Se llamará desde el main-controller cuando sea necesario.
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
         if (localStorage.getItem('theme') === 'system') {

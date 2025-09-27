@@ -2,7 +2,7 @@
 
 let translations = {};
 const availableLanguages = {
-    'es-419': 'Español (Latinoamérica)', // Corregido a es-419
+    'es-419': 'Español (Latinoamérica)',
     'en-US': 'English (United States)',
     'fr-FR': 'Français (France)',
     'de-DE': 'Deutsch (Deutschland)',
@@ -65,18 +65,30 @@ function getBestLanguageMatch() {
         return browserLang;
     }
     const primaryLang = browserLang.split('-')[0];
-    if (primaryLang === 'es') return 'es-419'; // Corregido
+    if (primaryLang === 'es') return 'es-419';
     if (primaryLang === 'en') return 'en-US';
 
-    return 'es-419'; // Idioma por defecto corregido
+    return 'es-419';
 }
 
+// ✅ FUNCIÓN CORREGIDA
 export function updateLanguageSelectorUI(langCode) {
     const langSelector = document.querySelector('[data-target="language-select"]');
     if (langSelector) {
         const langText = langSelector.querySelector('.select-trigger-text');
-        if (langText && availableLanguages[langCode]) {
-            langText.textContent = availableLanguages[langCode];
+        // Mapea los códigos de idioma a sus claves de traducción
+        const translationKeys = {
+            'es-419': 'settings.accessibility.languageOptions.es-419',
+            'en-US': 'settings.accessibility.languageOptions.en-US',
+            'fr-FR': 'settings.accessibility.languageOptions.fr-FR',
+            'de-DE': 'settings.accessibility.languageOptions.de-DE',
+            'pt-BR': 'settings.accessibility.languageOptions.pt-BR'
+        };
+        if (langText && translationKeys[langCode]) {
+            // 1. Establece el atributo data-i18n con la clave correcta
+            langText.setAttribute('data-i18n', translationKeys[langCode]);
+            // 2. Usa la función de traducción para obtener y mostrar el texto
+            langText.textContent = window.getTranslation(translationKeys[langCode]);
         }
     }
     const langOptionsContainer = document.getElementById('language-select');
