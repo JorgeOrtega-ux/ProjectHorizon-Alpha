@@ -1514,6 +1514,11 @@ export function initMainController() {
                         navigateToUrl('main', 'home');
                         handleStateChange('main', 'home');
                         break;
+                    case 'toggleAdminPanel':
+                        if (currentAppView === 'admin' && currentAppSection === 'manageUsers') return;
+                        navigateToUrl('admin', 'manageUsers');
+                        handleStateChange('admin', 'manageUsers');
+                        break;
                     case 'toggleSectionHome':
                     case 'toggleSectionTrends':
                     case 'toggleSectionFavorites':
@@ -1526,6 +1531,8 @@ export function initMainController() {
                     case 'toggleSectionSendFeedback':
                     case 'toggleSectionLogin':
                     case 'toggleSectionRegister':
+                    case 'toggleSectionManageUsers':
+                    case 'toggleSectionManageContent':
                         const sectionName = action.substring("toggleSection".length);
                         const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
                         const parentMenu = actionTarget.closest('[data-menu]');
@@ -2338,7 +2345,7 @@ export function initMainController() {
 
     const path = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1);
 
-    const routes = {
+const routes = {
         '': { view: 'main', section: 'home' },
         'trends': { view: 'main', section: 'trends' },
         'favorites': { view: 'main', section: 'favorites' },
@@ -2349,10 +2356,12 @@ export function initMainController() {
         'help/terms-conditions': { view: 'help', section: 'termsConditions' },
         'help/cookie-policy': { view: 'help', section: 'cookiePolicy' },
         'help/send-feedback': { view: 'help', section: 'sendFeedback' },
-        'login': { view: 'auth', section: 'login' }, // <-- LÍNEA AÑADIDA
-        'register': { view: 'auth', section: 'register' } // <-- LÍNEA AÑADIDA
+        'login': { view: 'auth', section: 'login' },
+        'register': { view: 'auth', section: 'register' },
+        // --- AÑADIR ESTAS DOS LÍNEAS ---
+        'admin/users': { view: 'admin', section: 'manageUsers' },
+        'admin/content': { view: 'admin', section: 'manageContent' }
     };
-
     let initialRoute = routes[path] || null;
     let initialStateData = null;
 
