@@ -165,11 +165,12 @@
         "light": "Tema claro"
       }
     },
-    "loginSecurity": {
+  "loginSecurity": {
         "title": "Inicio de sesión y seguridad",
         "description": "Administra tu contraseña y la configuración de seguridad de tu cuenta.",
         "passwordTitle": "Contraseña",
-        "passwordLastUpdated": "Última actualización de tu contraseña: 30 de septiembre de 2024",
+        "passwordLastUpdated": "Última actualización de tu contraseña: {date}",
+        "passwordLastUpdatedNever": "Nunca has cambiado tu contraseña.",
         "updateButton": "Actualizar",
         "deleteAccountTitle": "Eliminar tu cuenta",
         "deleteAccountDescription": "Si eliminas tu cuenta, ya no podrás acceder a tu contenido ni iniciar sesión en Project Horizon. Esta acción es permanente.",

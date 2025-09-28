@@ -37,17 +37,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         exit;
     }
 
-    // --- ENDPOINT PARA VERIFICAR EL ESTADO DE LA SESIÓN ---
+// --- ENDPOINT PARA VERIFICAR EL ESTADO DE LA SESIÓN ---
     if ($request_type === 'check_session') {
         header('Content-Type: application/json');
         if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true && isset($_SESSION['user_uuid'])) {
             require_once '../config/db.php';
-            $stmt = $conn->prepare("SELECT role FROM users WHERE uuid = ?");
+            // Se añade 'password_last_updated_at' a la consulta
+            $stmt = $conn->prepare("SELECT role, password_last_updated_at FROM users WHERE uuid = ?");
             $stmt->bind_param("s", $_SESSION['user_uuid']);
             $stmt->execute();
             $result = $stmt->get_result();
+            $password_last_updated_at = null;
             if ($user = $result->fetch_assoc()) {
                 $_SESSION['user_role'] = $user['role']; // Actualiza el rol en la sesión
+                $password_last_updated_at = $user['password_last_updated_at'];
             }
             $stmt->close();
             $conn->close();
@@ -58,7 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     'uuid' => $_SESSION['user_uuid'],
                     'username' => $_SESSION['username'],
                     'email' => $_SESSION['email'],
-                    'role' => $_SESSION['user_role']
+                    'role' => $_SESSION['user_role'],
+                    'password_last_updated_at' => $password_last_updated_at // Se añade el nuevo campo a la respuesta
                 ]
             ]);
         } else {
@@ -587,7 +591,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         exit;
     }
 
-    if ($action_type === 'update_password') {
+   if ($action_type === 'update_password') {
         if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             http_response_code(401);
             echo json_encode(['success' => false, 'message' => 'No autorizado.']);
@@ -611,7 +615,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
 
-        $stmt = $conn->prepare("UPDATE users SET password_hash = ? WHERE uuid = ?");
+        // Se actualiza 'password_last_updated_at' a la fecha y hora actual (NOW())
+        $stmt = $conn->prepare("UPDATE users SET password_hash = ?, password_last_updated_at = NOW() WHERE uuid = ?");
         $stmt->bind_param("ss", $password_hash, $user_uuid);
 
         if ($stmt->execute()) {

@@ -13,7 +13,7 @@
             </div>
             <div class="item-details">
                 <h4 data-i18n="settings.loginSecurity.passwordTitle"></h4>
-                <p data-i18n="settings.loginSecurity.passwordLastUpdated"></p>
+                <p id="password-last-updated"></p>
             </div>
             <div class="item-actions">
                <button class="load-more-btn" data-action="update-password" data-i18n="settings.loginSecurity.updateButton"></button>
