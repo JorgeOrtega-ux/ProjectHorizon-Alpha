@@ -1,4 +1,7 @@
 <?php
+// Iniciar la sesión al principio de cualquier script que necesite acceso a variables de sesión
+session_start();
+
 // --- FUNCIÓN PARA GENERAR UUID v4 ---
 function generate_uuid_v4() {
     return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
@@ -13,6 +16,24 @@ function generate_uuid_v4() {
 // --- MANEJO DE SOLICITUDES GET ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $request_type = isset($_GET['request_type']) ? $_GET['request_type'] : '';
+
+    // --- ENDPOINT PARA VERIFICAR EL ESTADO DE LA SESIÓN ---
+    if ($request_type === 'check_session') {
+        header('Content-Type: application/json');
+        if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
+            echo json_encode([
+                'loggedin' => true,
+                'user' => [
+                    'uuid' => $_SESSION['user_uuid'],
+                    'username' => $_SESSION['username'],
+                    'email' => $_SESSION['email']
+                ]
+            ]);
+        } else {
+            echo json_encode(['loggedin' => false]);
+        }
+        exit;
+    }
 
     // --- ENDPOINT PARA CARGA DINÁMICA DE SECCIONES HTML ---
     if ($request_type === 'section') {
@@ -253,6 +274,110 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     require_once '../config/db.php';
 
     $action_type = isset($_POST['action_type']) ? $_POST['action_type'] : '';
+
+    if ($action_type === 'register_user') {
+        $username = trim($_POST['username'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+
+        if (empty($username) || empty($email) || empty($password)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios.']);
+            exit;
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'El formato del correo electrónico no es válido.']);
+            exit;
+        }
+        if (strlen($password) < 6) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres.']);
+            exit;
+        }
+
+        $stmt_check = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
+        $stmt_check->bind_param("ss", $username, $email);
+        $stmt_check->execute();
+        $stmt_check->store_result();
+        if ($stmt_check->num_rows > 0) {
+            http_response_code(409);
+            echo json_encode(['success' => false, 'message' => 'El nombre de usuario o el correo electrónico ya existen.']);
+            $stmt_check->close();
+            exit;
+        }
+        $stmt_check->close();
+
+        $uuid = generate_uuid_v4();
+        $password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+        $stmt_insert = $conn->prepare("INSERT INTO users (uuid, username, email, password_hash) VALUES (?, ?, ?, ?)");
+        $stmt_insert->bind_param("ssss", $uuid, $username, $email, $password_hash);
+
+        if ($stmt_insert->execute()) {
+            $_SESSION['loggedin'] = true;
+            $_SESSION['user_uuid'] = $uuid;
+            $_SESSION['username'] = $username;
+            $_SESSION['email'] = $email;
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Registro exitoso.',
+                'user' => ['uuid' => $uuid, 'username' => $username, 'email' => $email]
+            ]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error en el servidor al registrar el usuario.']);
+        }
+        $stmt_insert->close();
+        exit;
+    }
+
+    if ($action_type === 'login_user') {
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+
+        if (empty($email) || empty($password)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Correo y contraseña son obligatorios.']);
+            exit;
+        }
+
+        $stmt = $conn->prepare("SELECT uuid, username, email, password_hash FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($user = $result->fetch_assoc()) {
+            if (password_verify($password, $user['password_hash'])) {
+                $_SESSION['loggedin'] = true;
+                $_SESSION['user_uuid'] = $user['uuid'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['email'] = $user['email'];
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Inicio de sesión exitoso.',
+                    'user' => ['uuid' => $user['uuid'], 'username' => $user['username'], 'email' => $user['email']]
+                ]);
+            } else {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas.']);
+            }
+        } else {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas.']);
+        }
+        $stmt->close();
+        exit;
+    }
+    
+    if ($action_type === 'logout_user') {
+        session_unset();
+        session_destroy();
+        echo json_encode(['success' => true, 'message' => 'Sesión cerrada correctamente.']);
+        exit;
+    }
     
     // ✅ **NUEVA SECCIÓN PARA MANEJAR EL ENVÍO DE COMENTARIOS**
     if ($action_type === 'submit_feedback') {

@@ -31,7 +31,10 @@
     "mainMenuTooltip": "Menú principal",
     "helpTooltip": "Ayuda",
     "settingsTooltip": "Configuración",
-    "login": "Acceder"
+    "login": "Acceder",
+    "logout": "Cerrar sesión",
+    "settings": "Configuración",
+    "help": "Ayuda"
   },
   "moduleSurface": {
     "mainPage": "Pagina principal",
@@ -121,7 +124,10 @@
     "registerSubtitle": "Únete a nuestra comunidad y empieza a compartir.",
     "usernamePlaceholder": "Nombre de usuario",
     "registerButton": "Registrarse",
-    "loginPrompt": "¿Ya tienes una cuenta? Inicia sesión"
+    "loginPrompt": "¿Ya tienes una cuenta? Inicia sesión",
+    "loginSuccess": "Inicio de sesión exitoso.",
+    "registerSuccess": "¡Cuenta creada con éxito! Bienvenido.",
+    "logoutSuccess": "Has cerrado sesión."
   },
   "settings": {
     "accessibility": {

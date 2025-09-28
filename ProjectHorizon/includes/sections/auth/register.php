@@ -38,13 +38,21 @@
     .dark-theme .password-toggle-btn:hover {
         background-color: var(--hover-bg);
     }
+    
+    .auth-error-message {
+        color: var(--danger-color);
+        font-size: 0.875rem;
+        margin-top: -8px;
+        margin-bottom: 8px;
+        min-height: 20px;
+    }
 </style>
 
 <div class="section-content <?php echo ($CURRENT_SECTION === 'register') ? 'active' : 'disabled'; ?>" data-section="register">
     <div class="auth-container">
         <h2 data-i18n="auth.registerTitle"></h2>
         <p data-i18n="auth.registerSubtitle"></p>
-        <div class="auth-form">
+        <div class="auth-form" id="register-form">
             <div class="form-field">
                 <input type="text" id="register-username" class="auth-input" placeholder=" " autocomplete="username">
                 <label for="register-username" class="auth-label" data-i18n="auth.usernamePlaceholder"></label>
@@ -60,7 +68,8 @@
                     <span class="material-symbols-rounded">visibility</span>
                 </button>
             </div>
-            <button class="load-more-btn" data-i18n="auth.registerButton"></button>
+            <div class="auth-error-message" id="register-error-message"></div>
+            <button class="load-more-btn" data-action="submit-register" data-i18n="auth.registerButton"></button>
         </div>
         <p class="auth-switch-prompt"><a href="#" data-action="toggleSectionLogin" data-i18n="auth.loginPrompt"></a></p>
     </div>

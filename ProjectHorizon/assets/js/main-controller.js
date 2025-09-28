@@ -118,6 +118,153 @@ export function initMainController() {
 
     let activeScrollHandlers = [];
 
+    // --- FUNCIONES DE AUTENTICACIÓN ---
+
+    function getInitials(name) {
+        if (!name) return '';
+        const words = name.split(' ');
+        if (words.length > 1) {
+            return (words[0][0] + words[1][0]).toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
+    }
+
+    function updateUserUI(userData) {
+        const loggedOutContainer = document.getElementById('auth-container-logged-out');
+        const loggedInContainer = document.getElementById('auth-container-logged-in');
+        const helpBtn = document.getElementById('help-btn');
+        const settingsBtn = document.getElementById('settings-btn');
+        
+        if (userData) {
+            loggedOutContainer.classList.add('disabled');
+            loggedInContainer.classList.remove('disabled');
+            helpBtn.classList.add('disabled');
+            settingsBtn.classList.add('disabled');
+            
+            const initialsSpan = loggedInContainer.querySelector('.profile-initials');
+            initialsSpan.textContent = getInitials(userData.username);
+
+        } else {
+            loggedOutContainer.classList.remove('disabled');
+            loggedInContainer.classList.add('disabled');
+            helpBtn.classList.remove('disabled');
+            settingsBtn.classList.remove('disabled');
+        }
+        applyTranslations(document.querySelector('.header-right'));
+    }
+
+    async function checkSession() {
+        try {
+            const response = await fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=check_session`);
+            const data = await response.json();
+            if (data.loggedin) {
+                updateUserUI(data.user);
+            } else {
+                updateUserUI(null);
+            }
+        } catch (error) {
+            console.error('Error checking session:', error);
+            updateUserUI(null);
+        }
+    }
+
+    async function handleLogin(form) {
+        const email = form.querySelector('#login-email').value;
+        const password = form.querySelector('#login-password').value;
+        const errorMessageEl = form.querySelector('#login-error-message');
+        const button = form.querySelector('[data-action="submit-login"]');
+        
+        errorMessageEl.textContent = '';
+        button.classList.add('loading');
+
+        const formData = new FormData();
+        formData.append('action_type', 'login_user');
+        formData.append('email', email);
+        formData.append('password', password);
+
+        try {
+            const response = await fetch(`${window.BASE_PATH}/api/main_handler.php`, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            if (response.ok) {
+                updateUserUI(result.user);
+                showNotification(window.getTranslation('auth.loginSuccess'), 'success');
+                navigateToUrl('main', 'home');
+                handleStateChange('main', 'home');
+            } else {
+                errorMessageEl.textContent = result.message;
+            }
+        } catch (error) {
+            errorMessageEl.textContent = 'Error de conexión.';
+        } finally {
+            button.classList.remove('loading');
+        }
+    }
+
+    async function handleRegister(form) {
+        const username = form.querySelector('#register-username').value;
+        const email = form.querySelector('#register-email').value;
+        const password = form.querySelector('#register-password').value;
+        const errorMessageEl = form.querySelector('#register-error-message');
+        const button = form.querySelector('[data-action="submit-register"]');
+
+        errorMessageEl.textContent = '';
+        button.classList.add('loading');
+        
+        const formData = new FormData();
+        formData.append('action_type', 'register_user');
+        formData.append('username', username);
+        formData.append('email', email);
+        formData.append('password', password);
+
+        try {
+            const response = await fetch(`${window.BASE_PATH}/api/main_handler.php`, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (response.ok) {
+                updateUserUI(result.user);
+                showNotification(window.getTranslation('auth.registerSuccess'), 'success');
+                navigateToUrl('main', 'home');
+                handleStateChange('main', 'home');
+            } else {
+                errorMessageEl.textContent = result.message;
+            }
+        } catch (error) {
+            errorMessageEl.textContent = 'Error de conexión.';
+        } finally {
+            button.classList.remove('loading');
+        }
+    }
+
+    async function handleLogout() {
+        try {
+            const formData = new FormData();
+            formData.append('action_type', 'logout_user');
+            const response = await fetch(`${window.BASE_PATH}/api/main_handler.php`, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (response.ok) {
+                updateUserUI(null);
+                showNotification(window.getTranslation('auth.logoutSuccess'));
+                if (currentAppView === 'settings' || currentAppView === 'help') {
+                    navigateToUrl('main', 'home');
+                    handleStateChange('main', 'home');
+                }
+            }
+        } catch (error) {
+            console.error('Error logging out:', error);
+        }
+    }
+
+
     function showCustomConfirm(title, message) {
         return new Promise((resolve) => {
             const overlay = document.getElementById('custom-confirm-overlay');
@@ -1312,6 +1459,17 @@ export function initMainController() {
                 }
 
                 switch (action) {
+                    case 'submit-login':
+                        const loginForm = document.getElementById('login-form');
+                        if(loginForm) handleLogin(loginForm);
+                        break;
+                    case 'submit-register':
+                        const registerForm = document.getElementById('register-form');
+                        if(registerForm) handleRegister(registerForm);
+                        break;
+                    case 'logout':
+                        handleLogout();
+                        break;
                     case 'toggleModuleSurface':
                         const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
                         if (moduleSurface) moduleSurface.classList.toggle('disabled');
@@ -2141,6 +2299,7 @@ export function initMainController() {
     }
     // --- INICIALIZACIÓN ---
     setupEventListeners();
+    checkSession();
     startUnlockCountdownTimer();
 
     setupPopStateHandler((view, section, pushState, data) => {
