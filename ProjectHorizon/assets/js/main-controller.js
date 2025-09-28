@@ -2113,6 +2113,29 @@ export function initMainController() {
             updateLanguageSelectorUI(localStorage.getItem('language') || 'es-419');
             initSettingsController();
             break;
+        case 'loginSecurity':
+            {
+                const sessionData = await api.checkSession();
+                if (sessionData.loggedin && sessionData.user) {
+                    const passwordLastUpdatedEl = document.getElementById('password-last-updated');
+                    if (passwordLastUpdatedEl) {
+                        if (sessionData.user.password_last_updated_at) {
+                            const date = new Date(sessionData.user.password_last_updated_at);
+                            const formattedDate = date.toLocaleDateString(undefined, {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            });
+                            passwordLastUpdatedEl.textContent = window.getTranslation('settings.loginSecurity.passwordLastUpdated', {
+                                date: formattedDate
+                            });
+                        } else {
+                            passwordLastUpdatedEl.textContent = window.getTranslation('settings.loginSecurity.passwordLastUpdatedNever');
+                        }
+                    }
+                }
+            }
+            break;
         case 'login':
             fetchAndSetCsrfToken('login-form');
             break;
