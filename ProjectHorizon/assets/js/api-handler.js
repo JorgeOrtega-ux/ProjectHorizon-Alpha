@@ -64,6 +64,13 @@ export function updateUserPassword(formData) {
     });
 }
 
+export function deleteAccount(formData) {
+    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
 export function getGalleries(sortBy, searchTerm, page, limit) {
     const encodedSearchTerm = encodeURIComponent(searchTerm);
     const url = `${window.BASE_PATH}/api/main_handler.php?request_type=galleries&sort=${sortBy}&search=${encodedSearchTerm}&page=${page}&limit=${limit}`;

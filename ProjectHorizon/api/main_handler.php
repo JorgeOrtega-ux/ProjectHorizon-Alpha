@@ -657,6 +657,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt->close();
         exit;
     }
+    
+    if ($action_type === 'delete_account') {
+        if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'No autorizado.']);
+            exit;
+        }
+    
+        if (!isset($_POST['csrf_token']) || !validate_csrf_token($_POST['csrf_token'])) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Error de validación CSRF.']);
+            exit;
+        }
+    
+        $password = $_POST['password'] ?? '';
+        $user_uuid = $_SESSION['user_uuid'];
+    
+        $stmt = $conn->prepare("SELECT password_hash FROM users WHERE uuid = ?");
+        $stmt->bind_param("s", $user_uuid);
+        $stmt->execute();
+        $result = $stmt->get_result();
+    
+        if ($user = $result->fetch_assoc()) {
+            if (password_verify($password, $user['password_hash'])) {
+                $stmt_delete = $conn->prepare("UPDATE users SET status = 'deleted' WHERE uuid = ?");
+                $stmt_delete->bind_param("s", $user_uuid);
+                if ($stmt_delete->execute()) {
+                    session_unset();
+                    session_destroy();
+                    echo json_encode(['success' => true, 'message' => 'Cuenta eliminada.']);
+                } else {
+                    http_response_code(500);
+                    echo json_encode(['success' => false, 'message' => 'Error al eliminar la cuenta.']);
+                }
+                $stmt_delete->close();
+            } else {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'message' => 'La contraseña es incorrecta.']);
+            }
+        } else {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'Usuario no encontrado.']);
+        }
+        $stmt->close();
+        exit;
+    }
 
     if ($action_type === 'increment_interaction') {
         $uuid = isset($_POST['uuid']) ? $_POST['uuid'] : '';

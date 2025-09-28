@@ -1567,447 +1567,479 @@ async function handleLogout() {
         applyTranslations(mainContainer);
     }
 
-    function setupEventListeners() {
-        document.addEventListener('click', function (event) {
-            const actionTarget = event.target.closest('[data-action]');
-            const selectTrigger = event.target.closest('[data-action="toggle-select"]');
+async function showDeleteAccountDialog() {
+    const title = window.getTranslation('dialogs.deleteAccountTitle');
+    const message = window.getTranslation('dialogs.deleteAccountMessage');
 
-            const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
-            if (moduleSurface && !moduleSurface.classList.contains('disabled')) {
-                if (!actionTarget?.matches('[data-action="toggleModuleSurface"]') && !event.target.closest('[data-module="moduleSurface"]')) {
+    const confirmed = await showCustomConfirm(title, message, true);
+
+    if (confirmed && confirmed.password) {
+        const formData = new FormData();
+        formData.append('action_type', 'delete_account');
+        formData.append('password', confirmed.password);
+        formData.append('csrf_token', confirmed.csrf_token);
+
+        try {
+            const result = await api.deleteAccount(formData);
+            if (result.success) {
+                showNotification(window.getTranslation('notifications.accountDeleted'), 'success');
+                updateUserUI(null);
+                navigateToUrl('main', 'home');
+                handleStateChange('main', 'home');
+            } else {
+                showNotification(result.message, 'error');
+            }
+        } catch (error) {
+            const errorResult = await error.json();
+            showNotification(errorResult.message, 'error');
+        }
+    }
+}
+
+function setupEventListeners() {
+    document.addEventListener('click', function (event) {
+        const actionTarget = event.target.closest('[data-action]');
+        const selectTrigger = event.target.closest('[data-action="toggle-select"]');
+
+        const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
+        if (moduleSurface && !moduleSurface.classList.contains('disabled')) {
+            if (!actionTarget?.matches('[data-action="toggleModuleSurface"]') && !event.target.closest('[data-module="moduleSurface"]')) {
+                moduleSurface.classList.add('disabled');
+            }
+        }
+
+        if (!selectTrigger) {
+            document.querySelectorAll('.module-select:not(.photo-context-menu).active').forEach(menu => {
+                menu.classList.remove('active');
+                menu.classList.add('disabled');
+            });
+            document.querySelectorAll('.active-trigger').forEach(trigger => trigger.classList.remove('active-trigger'));
+        }
+
+        if (!event.target.closest('.card-actions-container')) {
+            document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
+                menu.classList.remove('active');
+                menu.classList.add('disabled');
+                menu.closest('.card-actions-container').classList.remove('force-visible');
+            });
+        }
+
+        if (actionTarget) {
+            const action = actionTarget.dataset.action;
+
+            if (window.matchMedia('(max-width: 468px)').matches && actionTarget.closest('[data-module="moduleSurface"] .menu-link')) {
+                const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
+                if (moduleSurface) {
                     moduleSurface.classList.add('disabled');
                 }
             }
 
-            if (!selectTrigger) {
-                document.querySelectorAll('.module-select:not(.photo-context-menu).active').forEach(menu => {
-                    menu.classList.remove('active');
-                    menu.classList.add('disabled');
-                });
-                document.querySelectorAll('.active-trigger').forEach(trigger => trigger.classList.remove('active-trigger'));
+            if (action !== 'download-photo' && !actionTarget.closest('a[target="_blank"]')) {
+                const link = actionTarget.closest('.menu-link');
+                if (link && link.tagName.toLowerCase() === 'a' && !link.getAttribute('href').startsWith('#')) {
+                } else {
+                    event.preventDefault();
+                }
             }
 
-            if (!event.target.closest('.card-actions-container')) {
-                document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
-                    menu.classList.remove('active');
-                    menu.classList.add('disabled');
-                    menu.closest('.card-actions-container').classList.remove('force-visible');
-                });
-            }
-
-            if (actionTarget) {
-                const action = actionTarget.dataset.action;
-
-                if (window.matchMedia('(max-width: 468px)').matches && actionTarget.closest('[data-module="moduleSurface"] .menu-link')) {
+            switch (action) {
+                case 'submit-login':
+                    const loginForm = document.getElementById('login-form');
+                    if (loginForm) handleLogin(loginForm);
+                    break;
+                case 'submit-register':
+                    const registerForm = document.getElementById('register-form');
+                    if (registerForm) handleRegister(registerForm);
+                    break;
+                case 'logout':
+                    handleLogout();
+                    break;
+                case 'update-password':
+                    showUpdatePasswordDialog();
+                    break;
+                case 'delete-account':
+                    showDeleteAccountDialog();
+                    break;
+                case 'toggleModuleSurface':
                     const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
-                    if (moduleSurface) {
-                        moduleSurface.classList.add('disabled');
+                    if (moduleSurface) moduleSurface.classList.toggle('disabled');
+                    break;
+                case 'toggleAuth':
+                    if (currentAppView === 'auth' && currentAppSection === 'login') return;
+                    navigateToUrl('auth', 'login');
+                    handleStateChange('auth', 'login');
+                    break;
+                case 'toggleSettings':
+                    if (currentAppView === 'settings' && currentAppSection === 'accessibility') return;
+                    navigateToUrl('settings', 'accessibility');
+                    handleStateChange('settings', 'accessibility');
+                    break;
+                case 'toggleHelp':
+                    if (currentAppView === 'help' && currentAppSection === 'privacyPolicy') return;
+                    navigateToUrl('help', 'privacyPolicy');
+                    handleStateChange('help', 'privacyPolicy');
+                    break;
+                case 'toggleMainView':
+                    if (currentAppView === 'main' && currentAppSection === 'home') return;
+                    navigateToUrl('main', 'home');
+                    handleStateChange('main', 'home');
+                    break;
+                case 'toggleAdminPanel':
+                    if (currentAppView === 'admin' && currentAppSection === 'manageUsers') return;
+                    navigateToUrl('admin', 'manageUsers');
+                    handleStateChange('admin', 'manageUsers');
+                    break;
+                case 'toggleSectionHome':
+                case 'toggleSectionTrends':
+                case 'toggleSectionFavorites':
+                case 'toggleSectionAccessibility':
+                case 'toggleSectionLoginSecurity':
+                case 'toggleSectionHistoryPrivacy':
+                case 'toggleSectionHistory':
+                case 'toggleSectionPrivacyPolicy':
+                case 'toggleSectionTermsConditions':
+                case 'toggleSectionCookiePolicy':
+                case 'toggleSectionSendFeedback':
+                case 'toggleSectionLogin':
+                case 'toggleSectionRegister':
+                case 'toggleSectionManageUsers':
+                case 'toggleSectionManageContent':
+                    const sectionName = action.substring("toggleSection".length);
+                    const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
+                    const parentMenu = actionTarget.closest('[data-menu]');
+                    let targetView = parentMenu ? parentMenu.dataset.menu : currentAppView;
+                    if (action === 'toggleSectionLogin' || action === 'toggleSectionRegister') {
+                        targetView = 'auth';
                     }
-                }
-
-                if (action !== 'download-photo' && !actionTarget.closest('a[target="_blank"]')) {
-                    const link = actionTarget.closest('.menu-link');
-                    if (link && link.tagName.toLowerCase() === 'a' && !link.getAttribute('href').startsWith('#')) {
-                    } else {
-                        event.preventDefault();
+                    if (currentAppView === targetView && currentAppSection === targetSection) return;
+                    navigateToUrl(targetView, targetSection);
+                    handleStateChange(targetView, targetSection);
+                    break;
+                case 'load-more-users':
+                    const homeSearch = document.querySelector('.search-input-text input');
+                    fetchAndDisplayGalleries(currentSortBy, homeSearch ? homeSearch.value.trim() : '', true);
+                    break;
+                case 'load-more-photos':
+                    if (currentGalleryForPhotoView && currentGalleryNameForPhotoView) {
+                        fetchAndDisplayGalleryPhotos(currentGalleryForPhotoView, currentGalleryNameForPhotoView, true);
                     }
-                }
-
-                switch (action) {
-                    case 'submit-login':
-                        const loginForm = document.getElementById('login-form');
-                        if (loginForm) handleLogin(loginForm);
-                        break;
-                    case 'submit-register':
-                        const registerForm = document.getElementById('register-form');
-                        if (registerForm) handleRegister(registerForm);
-                        break;
-                    case 'logout':
-                        handleLogout();
-                        break;
-                    case 'update-password':
-                        showUpdatePasswordDialog();
-                        break;
-                    case 'toggleModuleSurface':
-                        const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
-                        if (moduleSurface) moduleSurface.classList.toggle('disabled');
-                        break;
-                    case 'toggleAuth':
-                        if (currentAppView === 'auth' && currentAppSection === 'login') return;
-                        navigateToUrl('auth', 'login');
-                        handleStateChange('auth', 'login');
-                        break;
-                    case 'toggleSettings':
-                        if (currentAppView === 'settings' && currentAppSection === 'accessibility') return;
-                        navigateToUrl('settings', 'accessibility');
-                        handleStateChange('settings', 'accessibility');
-                        break;
-                    case 'toggleHelp':
-                        if (currentAppView === 'help' && currentAppSection === 'privacyPolicy') return;
-                        navigateToUrl('help', 'privacyPolicy');
-                        handleStateChange('help', 'privacyPolicy');
-                        break;
-                    case 'toggleMainView':
-                        if (currentAppView === 'main' && currentAppSection === 'home') return;
-                        navigateToUrl('main', 'home');
-                        handleStateChange('main', 'home');
-                        break;
-                    case 'toggleAdminPanel':
-                        if (currentAppView === 'admin' && currentAppSection === 'manageUsers') return;
-                        navigateToUrl('admin', 'manageUsers');
-                        handleStateChange('admin', 'manageUsers');
-                        break;
-                    case 'toggleSectionHome':
-                    case 'toggleSectionTrends':
-                    case 'toggleSectionFavorites':
-                    case 'toggleSectionAccessibility':
-                    case 'toggleSectionLoginSecurity':
-                    case 'toggleSectionHistoryPrivacy':
-                    case 'toggleSectionHistory':
-                    case 'toggleSectionPrivacyPolicy':
-                    case 'toggleSectionTermsConditions':
-                    case 'toggleSectionCookiePolicy':
-                    case 'toggleSectionSendFeedback':
-                    case 'toggleSectionLogin':
-                    case 'toggleSectionRegister':
-                    case 'toggleSectionManageUsers':
-                    case 'toggleSectionManageContent':
-                        const sectionName = action.substring("toggleSection".length);
-                        const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
-                        const parentMenu = actionTarget.closest('[data-menu]');
-                        let targetView = parentMenu ? parentMenu.dataset.menu : currentAppView;
-                        if (action === 'toggleSectionLogin' || action === 'toggleSectionRegister') {
-                            targetView = 'auth';
-                        }
-                        if (currentAppView === targetView && currentAppSection === targetSection) return;
-                        navigateToUrl(targetView, targetSection);
-                        handleStateChange(targetView, targetSection);
-                        break;
-                    case 'load-more-users':
-                        const homeSearch = document.querySelector('.search-input-text input');
-                        fetchAndDisplayGalleries(currentSortBy, homeSearch ? homeSearch.value.trim() : '', true);
-                        break;
-                    case 'load-more-photos':
-                        if (currentGalleryForPhotoView && currentGalleryNameForPhotoView) {
-                            fetchAndDisplayGalleryPhotos(currentGalleryForPhotoView, currentGalleryNameForPhotoView, true);
-                        }
-                        break;
-                    case 'load-more-history-profiles':
-                        historyProfilesShown += HISTORY_PROFILES_BATCH;
-                        displayHistory();
-                        break;
-                    case 'load-more-history-photos':
-                        historyPhotosShown += HISTORY_PHOTOS_BATCH;
-                        displayHistory();
-                        break;
-                    case 'load-more-history-searches':
-                        historySearchesShown += HISTORY_SEARCHES_BATCH;
-                        displayHistory();
-                        break;
-                    case 'returnToUserPhotos':
-                        if (lastVisitedView === 'history') {
-                            navigateToUrl('settings', 'history');
-                            handleStateChange('settings', 'history');
-                        } else if (lastVisitedView === 'favorites') {
-                            navigateToUrl('main', 'favorites');
-                            handleStateChange('main', 'favorites');
-                        } else if (lastVisitedView === 'userSpecificFavorites' && lastVisitedData && lastVisitedData.uuid) {
-                            navigateToUrl('main', 'userSpecificFavorites', { uuid: lastVisitedData.uuid });
-                            handleStateChange('main', 'userSpecificFavorites', { uuid: lastVisitedData.uuid });
-                        } else if (currentGalleryForPhotoView) {
-                            navigateToUrl('main', 'galleryPhotos', { uuid: currentGalleryForPhotoView });
-                            handleStateChange('main', 'galleryPhotos', { uuid: currentGalleryForPhotoView });
-                        } else {
-                            navigateToUrl('main', 'home');
-                            handleStateChange('main', 'home');
-                        }
-                        break;
-                    case 'returnToHome':
-                        navigateToUrl('main', 'home');
-                        handleStateChange('main', 'home');
-                        break;
-                    case 'returnToFavorites':
+                    break;
+                case 'load-more-history-profiles':
+                    historyProfilesShown += HISTORY_PROFILES_BATCH;
+                    displayHistory();
+                    break;
+                case 'load-more-history-photos':
+                    historyPhotosShown += HISTORY_PHOTOS_BATCH;
+                    displayHistory();
+                    break;
+                case 'load-more-history-searches':
+                    historySearchesShown += HISTORY_SEARCHES_BATCH;
+                    displayHistory();
+                    break;
+                case 'returnToUserPhotos':
+                    if (lastVisitedView === 'history') {
+                        navigateToUrl('settings', 'history');
+                        handleStateChange('settings', 'history');
+                    } else if (lastVisitedView === 'favorites') {
                         navigateToUrl('main', 'favorites');
                         handleStateChange('main', 'favorites');
-                        break;
-                    case 'toggle-favorite':
-                        if (currentPhotoData) toggleFavorite(currentPhotoData);
-                        break;
-                    case 'toggle-favorite-card':
-                        const photoIdFav = actionTarget.dataset.photoId;
-                        const allPhotos = [...getFavorites(), ...currentGalleryPhotoList, ...currentTrendingPhotosList, ...currentHistoryPhotosList];
-                        const photoDataFav = allPhotos.find(p => p.id == photoIdFav);
+                    } else if (lastVisitedView === 'userSpecificFavorites' && lastVisitedData && lastVisitedData.uuid) {
+                        navigateToUrl('main', 'userSpecificFavorites', { uuid: lastVisitedData.uuid });
+                        handleStateChange('main', 'userSpecificFavorites', { uuid: lastVisitedData.uuid });
+                    } else if (currentGalleryForPhotoView) {
+                        navigateToUrl('main', 'galleryPhotos', { uuid: currentGalleryForPhotoView });
+                        handleStateChange('main', 'galleryPhotos', { uuid: currentGalleryForPhotoView });
+                    } else {
+                        navigateToUrl('main', 'home');
+                        handleStateChange('main', 'home');
+                    }
+                    break;
+                case 'returnToHome':
+                    navigateToUrl('main', 'home');
+                    handleStateChange('main', 'home');
+                    break;
+                case 'returnToFavorites':
+                    navigateToUrl('main', 'favorites');
+                    handleStateChange('main', 'favorites');
+                    break;
+                case 'toggle-favorite':
+                    if (currentPhotoData) toggleFavorite(currentPhotoData);
+                    break;
+                case 'toggle-favorite-card':
+                    const photoIdFav = actionTarget.dataset.photoId;
+                    const allPhotos = [...getFavorites(), ...currentGalleryPhotoList, ...currentTrendingPhotosList, ...currentHistoryPhotosList];
+                    const photoDataFav = allPhotos.find(p => p.id == photoIdFav);
 
-                        if (photoDataFav) {
-                            const fullPhotoData = {
-                                id: photoDataFav.id,
-                                gallery_uuid: photoDataFav.gallery_uuid || currentGalleryForPhotoView,
-                                photo_url: photoDataFav.photo_url,
-                                gallery_name: photoDataFav.gallery_name || currentGalleryNameForPhotoView,
-                                profile_picture_url: photoDataFav.profile_picture_url
-                            };
-                            toggleFavorite(fullPhotoData);
-                            const activeSection = document.querySelector('.general-content-scrolleable > div')?.dataset.section;
+                    if (photoDataFav) {
+                        const fullPhotoData = {
+                            id: photoDataFav.id,
+                            gallery_uuid: photoDataFav.gallery_uuid || currentGalleryForPhotoView,
+                            photo_url: photoDataFav.photo_url,
+                            gallery_name: photoDataFav.gallery_name || currentGalleryNameForPhotoView,
+                            profile_picture_url: photoDataFav.profile_picture_url
+                        };
+                        toggleFavorite(fullPhotoData);
+                        const activeSection = document.querySelector('.general-content-scrolleable > div')?.dataset.section;
 
-                            if (activeSection === 'userSpecificFavorites') {
-                                handleStateChange('main', 'userSpecificFavorites', { uuid: document.querySelector('[data-section="userSpecificFavorites"]').dataset.uuid });
-                            } else if (activeSection === 'favorites') {
-                                displayFavoritePhotos();
-                            }
+                        if (activeSection === 'userSpecificFavorites') {
+                            handleStateChange('main', 'userSpecificFavorites', { uuid: document.querySelector('[data-section="userSpecificFavorites"]').dataset.uuid });
+                        } else if (activeSection === 'favorites') {
+                            displayFavoritePhotos();
                         }
-                        break;
+                    }
+                    break;
 
-                    case 'previous-photo':
-                    case 'next-photo':
-                        if (!actionTarget.classList.contains('disabled-nav')) {
-                            const listToUse = currentPhotoViewList;
+                case 'previous-photo':
+                case 'next-photo':
+                    if (!actionTarget.classList.contains('disabled-nav')) {
+                        const listToUse = currentPhotoViewList;
 
-                            const currentId = currentPhotoData ? currentPhotoData.id : null;
-                            if (!currentId || listToUse.length === 0) return;
+                        const currentId = currentPhotoData ? currentPhotoData.id : null;
+                        if (!currentId || listToUse.length === 0) return;
 
-                            const currentIndex = listToUse.findIndex(p => p.id == currentId);
-                            if (currentIndex !== -1) {
-                                let nextIndex = (action === 'next-photo') ? currentIndex + 1 : currentIndex - 1;
-                                if (nextIndex >= 0 && nextIndex < listToUse.length) {
-                                    const nextPhoto = listToUse[nextIndex];
-                                    navigateToUrl('main', 'photoView', { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id });
+                        const currentIndex = listToUse.findIndex(p => p.id == currentId);
+                        if (currentIndex !== -1) {
+                            let nextIndex = (action === 'next-photo') ? currentIndex + 1 : currentIndex - 1;
+                            if (nextIndex >= 0 && nextIndex < listToUse.length) {
+                                const nextPhoto = listToUse[nextIndex];
+                                navigateToUrl('main', 'photoView', { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id });
 
-                                    if (!adCooldownActive && Math.random() < 0.15) {
-                                        adContext = 'navigation';
-                                        photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id } };
-                                        handleStateChange('main', 'adView');
-                                        adCooldownActive = true;
-                                    } else {
-                                        renderPhotoView(nextPhoto.gallery_uuid, nextPhoto.id, listToUse);
-                                        adCooldownActive = false;
-                                    }
+                                if (!adCooldownActive && Math.random() < 0.15) {
+                                    adContext = 'navigation';
+                                    photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id } };
+                                    handleStateChange('main', 'adView');
+                                    adCooldownActive = true;
+                                } else {
+                                    renderPhotoView(nextPhoto.gallery_uuid, nextPhoto.id, listToUse);
+                                    adCooldownActive = false;
                                 }
                             }
                         }
-                        break;
-
-                    case 'toggle-photo-menu':
-                        const currentContainer = actionTarget.closest('.card-actions-container');
-                        const currentMenu = currentContainer.querySelector('.photo-context-menu');
-                        const isOpening = currentMenu.classList.contains('disabled');
-
-                        document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
-                            if (menu !== currentMenu) {
-                                menu.classList.remove('active');
-                                menu.classList.add('disabled');
-                                menu.closest('.card-actions-container').classList.remove('force-visible');
-                            }
-                        });
-
-                        currentMenu.classList.toggle('disabled', !isOpening);
-                        currentMenu.classList.toggle('active', isOpening);
-                        currentContainer.classList.toggle('force-visible', isOpening);
-                        break;
-                    case 'copy-link':
-                        const cardForCopy = actionTarget.closest('.card');
-                        const urlToCopy = `${window.location.origin}${window.BASE_PATH}/gallery/${cardForCopy.dataset.galleryUuid}/photo/${cardForCopy.dataset.photoId}`;
-                        copyTextToClipboard(urlToCopy).then(() => {
-                            showNotification(window.getTranslation('notifications.linkCopied'));
-                            actionTarget.closest('.photo-context-menu').classList.add('disabled');
-                            actionTarget.closest('.card-actions-container').classList.remove('force-visible');
-                        }).catch(err => {
-                            showNotification(window.getTranslation('notifications.errorCopyingLink'), 'error');
-                            console.error('Failed to copy: ', err);
-                        });
-                        break;
-                    case 'download-photo':
-                        const cardForDownload = actionTarget.closest('.card.photo-card');
-                        if (cardForDownload && cardForDownload.dataset.photoUrl) {
-                            downloadPhoto(cardForDownload.dataset.photoUrl);
-                        }
-                        break;
-                    case 'watch-ad-to-unlock':
-                        handleStateChange('main', 'adView');
-                        break;
-                    case 'delete-search-item':
-                        const timestamp = actionTarget.dataset.timestamp;
-                        if (timestamp) {
-                            removeSearchFromHistory(timestamp);
-                        }
-                        break;
-                    case 'toggle-photo-options-menu':
-                        const menu = document.querySelector('.photo-options-menu');
-                        if (menu) {
-                            menu.classList.toggle('disabled');
-                        }
-                        break;
-                    case 'rotate-photo-left':
-                        rotatePhoto('left');
-                        break;
-                    case 'rotate-photo-right':
-                        rotatePhoto('right');
-                        break;
-                    case 'download-photo-view':
-                        if (currentPhotoData && currentPhotoData.photo_url) {
-                            downloadPhoto(currentPhotoData.photo_url);
-                        }
-                        break;
-                }
-            }
-
-            if (selectTrigger) {
-                const targetId = selectTrigger.dataset.target;
-                const targetSelect = document.getElementById(targetId);
-                const wasActive = selectTrigger.classList.contains('active-trigger');
-
-                document.querySelectorAll('.active-trigger').forEach(t => {
-                    if (t !== selectTrigger) t.classList.remove('active-trigger');
-                });
-                document.querySelectorAll('.module-select').forEach(s => {
-                    if (s.id !== targetId) {
-                        s.classList.add('disabled');
-                        s.classList.remove('active');
                     }
-                });
+                    break;
 
-                selectTrigger.classList.toggle('active-trigger');
-                if (targetSelect) {
-                    targetSelect.classList.toggle('disabled');
-                    targetSelect.classList.toggle('active');
-                }
-            }
+                case 'toggle-photo-menu':
+                    const currentContainer = actionTarget.closest('.card-actions-container');
+                    const currentMenu = currentContainer.querySelector('.photo-context-menu');
+                    const isOpening = currentMenu.classList.contains('disabled');
 
-            const selectedOption = event.target.closest('.module-select .menu-link');
-            if (selectedOption) {
-                const value = selectedOption.dataset.value;
-                if (value === undefined || value === null) return;
-
-                const selectContainer = selectedOption.closest('.module-select');
-                const selectId = selectContainer.id;
-
-                if (selectId.includes('relevance-select')) {
-                    if (value !== currentSortBy) {
-                        currentSortBy = value;
-                        const homeSearch = document.querySelector('.search-input-text input');
-                        fetchAndDisplayGalleries(currentSortBy, homeSearch ? homeSearch.value.trim() : '', '');
-                        updateSelectActiveState('relevance-select', currentSortBy);
-                    }
-                }
-                else if (selectId.includes('favorites-sort-select')) {
-                    if (value !== currentFavoritesSortBy) {
-                        currentFavoritesSortBy = value;
-                        displayFavoritePhotos();
-                        updateSelectActiveState('favorites-sort-select', currentFavoritesSortBy);
-                    }
-                }
-                else if (selectId === 'theme-select') {
-                    setTheme(value);
-                }
-                else if (selectId === 'language-select') {
-                    setLanguage(value);
-                } else if (selectId.includes('history-select')) {
-                    historyProfilesShown = HISTORY_PROFILES_BATCH;
-                    historyPhotosShown = HISTORY_PHOTOS_BATCH;
-                    historySearchesShown = HISTORY_SEARCHES_BATCH;
-                    document.querySelectorAll('[data-history-view]').forEach(view => {
-                        view.style.display = view.dataset.historyView === value ? '' : 'none';
+                    document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
+                        if (menu !== currentMenu) {
+                            menu.classList.remove('active');
+                            menu.classList.add('disabled');
+                            menu.closest('.card-actions-container').classList.remove('force-visible');
+                        }
                     });
-                    updateSelectActiveState('history-select', value);
-                    displayHistory();
-                } else if (selectId === 'feedback-issue-type-select') {
-                    updateSelectActiveState('feedback-issue-type-select', value);
-                    const otherTitleGroup = document.getElementById('feedback-other-title-group');
-                    if (otherTitleGroup) {
-                        otherTitleGroup.classList.toggle('disabled', value !== 'other');
-                    }
-                }
 
-                document.querySelectorAll('.module-select').forEach(menu => {
-                    menu.classList.add('disabled');
-                    menu.classList.remove('active');
+                    currentMenu.classList.toggle('disabled', !isOpening);
+                    currentMenu.classList.toggle('active', isOpening);
+                    currentContainer.classList.toggle('force-visible', isOpening);
+                    break;
+                case 'copy-link':
+                    const cardForCopy = actionTarget.closest('.card');
+                    const urlToCopy = `${window.location.origin}${window.BASE_PATH}/gallery/${cardForCopy.dataset.galleryUuid}/photo/${cardForCopy.dataset.photoId}`;
+                    copyTextToClipboard(urlToCopy).then(() => {
+                        showNotification(window.getTranslation('notifications.linkCopied'));
+                        actionTarget.closest('.photo-context-menu').classList.add('disabled');
+                        actionTarget.closest('.card-actions-container').classList.remove('force-visible');
+                    }).catch(err => {
+                        showNotification(window.getTranslation('notifications.errorCopyingLink'), 'error');
+                        console.error('Failed to copy: ', err);
+                    });
+                    break;
+                case 'download-photo':
+                    const cardForDownload = actionTarget.closest('.card.photo-card');
+                    if (cardForDownload && cardForDownload.dataset.photoUrl) {
+                        downloadPhoto(cardForDownload.dataset.photoUrl);
+                    }
+                    break;
+                case 'watch-ad-to-unlock':
+                    handleStateChange('main', 'adView');
+                    break;
+                case 'delete-search-item':
+                    const timestamp = actionTarget.dataset.timestamp;
+                    if (timestamp) {
+                        removeSearchFromHistory(timestamp);
+                    }
+                    break;
+                case 'toggle-photo-options-menu':
+                    const menu = document.querySelector('.photo-options-menu');
+                    if (menu) {
+                        menu.classList.toggle('disabled');
+                    }
+                    break;
+                case 'rotate-photo-left':
+                    rotatePhoto('left');
+                    break;
+                case 'rotate-photo-right':
+                    rotatePhoto('right');
+                    break;
+                case 'download-photo-view':
+                    if (currentPhotoData && currentPhotoData.photo_url) {
+                        downloadPhoto(currentPhotoData.photo_url);
+                    }
+                    break;
+            }
+        }
+
+        if (selectTrigger) {
+            const targetId = selectTrigger.dataset.target;
+            const targetSelect = document.getElementById(targetId);
+            const wasActive = selectTrigger.classList.contains('active-trigger');
+
+            document.querySelectorAll('.active-trigger').forEach(t => {
+                if (t !== selectTrigger) t.classList.remove('active-trigger');
+            });
+            document.querySelectorAll('.module-select').forEach(s => {
+                if (s.id !== targetId) {
+                    s.classList.add('disabled');
+                    s.classList.remove('active');
+                }
+            });
+
+            selectTrigger.classList.toggle('active-trigger');
+            if (targetSelect) {
+                targetSelect.classList.toggle('disabled');
+                targetSelect.classList.toggle('active');
+            }
+        }
+
+        const selectedOption = event.target.closest('.module-select .menu-link');
+        if (selectedOption) {
+            const value = selectedOption.dataset.value;
+            if (value === undefined || value === null) return;
+
+            const selectContainer = selectedOption.closest('.module-select');
+            const selectId = selectContainer.id;
+
+            if (selectId.includes('relevance-select')) {
+                if (value !== currentSortBy) {
+                    currentSortBy = value;
+                    const homeSearch = document.querySelector('.search-input-text input');
+                    fetchAndDisplayGalleries(currentSortBy, homeSearch ? homeSearch.value.trim() : '', '');
+                    updateSelectActiveState('relevance-select', currentSortBy);
+                }
+            }
+            else if (selectId.includes('favorites-sort-select')) {
+                if (value !== currentFavoritesSortBy) {
+                    currentFavoritesSortBy = value;
+                    displayFavoritePhotos();
+                    updateSelectActiveState('favorites-sort-select', currentFavoritesSortBy);
+                }
+            }
+            else if (selectId === 'theme-select') {
+                setTheme(value);
+            }
+            else if (selectId === 'language-select') {
+                setLanguage(value);
+            } else if (selectId.includes('history-select')) {
+                historyProfilesShown = HISTORY_PROFILES_BATCH;
+                historyPhotosShown = HISTORY_PHOTOS_BATCH;
+                historySearchesShown = HISTORY_SEARCHES_BATCH;
+                document.querySelectorAll('[data-history-view]').forEach(view => {
+                    view.style.display = view.dataset.historyView === value ? '' : 'none';
                 });
-                document.querySelectorAll('.active-trigger').forEach(trigger => trigger.classList.remove('active-trigger'));
+                updateSelectActiveState('history-select', value);
+                displayHistory();
+            } else if (selectId === 'feedback-issue-type-select') {
+                updateSelectActiveState('feedback-issue-type-select', value);
+                const otherTitleGroup = document.getElementById('feedback-other-title-group');
+                if (otherTitleGroup) {
+                    otherTitleGroup.classList.toggle('disabled', value !== 'other');
+                }
             }
 
-            if (!actionTarget) {
-                const userCardFavorite = event.target.closest('#favorites-grid-view-by-user .user-card');
-                if (userCardFavorite) {
-                    const uuid = userCardFavorite.dataset.uuid;
-                    navigateToUrl('main', 'userSpecificFavorites', { uuid: uuid });
-                    handleStateChange('main', 'userSpecificFavorites', { uuid: uuid });
-                    return;
-                }
+            document.querySelectorAll('.module-select').forEach(menu => {
+                menu.classList.add('disabled');
+                menu.classList.remove('active');
+            });
+            document.querySelectorAll('.active-trigger').forEach(trigger => trigger.classList.remove('active-trigger'));
+        }
 
-                const galleryElement = event.target.closest('.card:not(.photo-card):not(.user-card)');
-                if (galleryElement && galleryElement.dataset.uuid) {
-                    const uuid = galleryElement.dataset.uuid;
-                    const name = galleryElement.dataset.name;
-                    const isPrivate = galleryElement.dataset.privacy === '1';
+        if (!actionTarget) {
+            const userCardFavorite = event.target.closest('#favorites-grid-view-by-user .user-card');
+            if (userCardFavorite) {
+                const uuid = userCardFavorite.dataset.uuid;
+                navigateToUrl('main', 'userSpecificFavorites', { uuid: uuid });
+                handleStateChange('main', 'userSpecificFavorites', { uuid: uuid });
+                return;
+            }
 
-                    api.incrementGalleryInteraction(uuid);
+            const galleryElement = event.target.closest('.card:not(.photo-card):not(.user-card)');
+            if (galleryElement && galleryElement.dataset.uuid) {
+                const uuid = galleryElement.dataset.uuid;
+                const name = galleryElement.dataset.name;
+                const isPrivate = galleryElement.dataset.privacy === '1';
 
-                    if (isPrivate) {
-                        navigateToUrl('main', 'privateGalleryProxy', { uuid: uuid });
-                        handleStateChange('main', 'privateGalleryProxy', { uuid: uuid, galleryName: name });
-                    } else {
-                        if (!adCooldownActive && Math.random() < 0.10) {
-                            adContext = 'navigation';
-                            galleryAfterAd = { view: 'main', section: 'galleryPhotos', data: { uuid: uuid, galleryName: name } };
-                            handleStateChange('main', 'adView');
-                            adCooldownActive = true;
-                        } else {
-                            navigateToUrl('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
-                            handleStateChange('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
-                            adCooldownActive = false;
-                        }
-                    }
-                    return;
-                }
+                api.incrementGalleryInteraction(uuid);
 
-                const photoCard = event.target.closest('.card.photo-card');
-                if (photoCard) {
-                    const galleryUuid = photoCard.dataset.galleryUuid || currentGalleryForPhotoView;
-                    const photoId = photoCard.dataset.photoId;
-                    api.incrementGalleryInteraction(galleryUuid);
-
+                if (isPrivate) {
+                    navigateToUrl('main', 'privateGalleryProxy', { uuid: uuid });
+                    handleStateChange('main', 'privateGalleryProxy', { uuid: uuid, galleryName: name });
+                } else {
                     if (!adCooldownActive && Math.random() < 0.10) {
                         adContext = 'navigation';
-                        photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: galleryUuid, photoId: photoId } };
+                        galleryAfterAd = { view: 'main', section: 'galleryPhotos', data: { uuid: uuid, galleryName: name } };
                         handleStateChange('main', 'adView');
                         adCooldownActive = true;
                     } else {
-                        navigateToUrl('main', 'photoView', { uuid: galleryUuid, photoId: photoId });
-                        handleStateChange('main', 'photoView', { uuid: galleryUuid, photoId: photoId });
+                        navigateToUrl('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
+                        handleStateChange('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
                         adCooldownActive = false;
                     }
-                    return;
                 }
+                return;
             }
 
-        });
+            const photoCard = event.target.closest('.card.photo-card');
+            if (photoCard) {
+                const galleryUuid = photoCard.dataset.galleryUuid || currentGalleryForPhotoView;
+                const photoId = photoCard.dataset.photoId;
+                api.incrementGalleryInteraction(galleryUuid);
 
-        document.addEventListener('keydown', function (event) {
-            const input = event.target;
-
-            if (event.key === 'Enter' && input.tagName.toLowerCase() === 'input' && input.closest('.search-input-wrapper')) {
-                event.preventDefault();
-
-                let searchTerm = input.value.trim();
-                if (searchTerm.length > 64) {
-                    searchTerm = searchTerm.substring(0, 64);
+                if (!adCooldownActive && Math.random() < 0.10) {
+                    adContext = 'navigation';
+                    photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: galleryUuid, photoId: photoId } };
+                    handleStateChange('main', 'adView');
+                    adCooldownActive = true;
+                } else {
+                    navigateToUrl('main', 'photoView', { uuid: galleryUuid, photoId: photoId });
+                    handleStateChange('main', 'photoView', { uuid: galleryUuid, photoId: photoId });
+                    adCooldownActive = false;
                 }
-                const section = input.closest('.section-content')?.dataset.section;
-
-                if (section === 'home') {
-                    fetchAndDisplayGalleries(currentSortBy, searchTerm);
-                } else if (section === 'trends') {
-                    fetchAndDisplayTrends(searchTerm);
-                } else if (section === 'favorites') {
-                    displayFavoritePhotos();
-                }
+                return;
             }
+        }
 
-            const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
-            if (event.key === 'Escape' && moduleSurface && !moduleSurface.classList.contains('disabled')) {
-                moduleSurface.classList.add('disabled');
+    });
+
+    document.addEventListener('keydown', function (event) {
+        const input = event.target;
+
+        if (event.key === 'Enter' && input.tagName.toLowerCase() === 'input' && input.closest('.search-input-wrapper')) {
+            event.preventDefault();
+
+            let searchTerm = input.value.trim();
+            if (searchTerm.length > 64) {
+                searchTerm = searchTerm.substring(0, 64);
             }
-        });
-    }
+            const section = input.closest('.section-content')?.dataset.section;
+
+            if (section === 'home') {
+                fetchAndDisplayGalleries(currentSortBy, searchTerm);
+            } else if (section === 'trends') {
+                fetchAndDisplayTrends(searchTerm);
+            } else if (section === 'favorites') {
+                displayFavoritePhotos();
+            }
+        }
+
+        const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
+        if (event.key === 'Escape' && moduleSurface && !moduleSurface.classList.contains('disabled')) {
+            moduleSurface.classList.add('disabled');
+        }
+    });
+}
 
     function setupScrollShadows() {
         activeScrollHandlers.forEach(({ element, listener }) => {

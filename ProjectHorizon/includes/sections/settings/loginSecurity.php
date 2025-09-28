@@ -26,7 +26,7 @@
                 <p data-i18n="settings.loginSecurity.deleteAccountDescription"></p>
             </div>
             <div class="item-actions">
-                <button class="load-more-btn" data-i18n="settings.loginSecurity.deleteAccountButton"></button>
+                <button class="load-more-btn btn-danger" data-action="delete-account" data-i18n="settings.loginSecurity.deleteAccountButton"></button>
             </div>
         </div>
     </div>

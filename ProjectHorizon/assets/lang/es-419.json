@@ -252,7 +252,8 @@
     "historyEmpty": "Tu historial ya está vacío.",
     "selectIssueType": "Por favor, selecciona un tipo de comentario.",
     "passwordMismatch": "Las contraseñas no coinciden.",
-    "passwordUpdated": "Contraseña actualizada correctamente."
+    "passwordUpdated": "Contraseña actualizada correctamente.",
+    "accountDeleted": "Tu cuenta ha sido eliminada permanentemente."
   },
   "dialogs": {
     "clearHistoryTitle": "¿Eliminar todo el historial?",
@@ -261,7 +262,9 @@
     "updatePasswordMessage": "Para continuar, ingresa tu contraseña actual.",
     "enterNewPasswordTitle": "Ingresa tu nueva contraseña",
     "enterNewPasswordMessage": "Elige una contraseña segura que no uses en otros sitios.",
-    "confirmPasswordLabel": "Confirmar nueva contraseña"
+    "confirmPasswordLabel": "Confirmar nueva contraseña",
+    "deleteAccountTitle": "¿Estás seguro de que quieres eliminar tu cuenta?",
+    "deleteAccountMessage": "Esta acción es irreversible. Para confirmar, por favor ingresa tu contraseña actual."
   
   },
   "404": {
