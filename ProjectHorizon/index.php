@@ -67,6 +67,16 @@
         </div>
     </div>
 
+    <div id="delete-account-overlay" class="custom-confirm-overlay disabled">
+        <div class="custom-confirm-box">
+            <h2 id="delete-account-title"></h2>
+            <div id="delete-account-content"></div>
+            <div class="custom-confirm-buttons">
+                <button id="delete-account-cancel" class="load-more-btn"></button>
+                <button id="delete-account-ok" class="load-more-btn btn-danger"></button>
+            </div>
+        </div>
+    </div>
     <script src="https://unpkg.com/@popperjs/core@2"></script>
     <script type="module" src="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'); ?>/assets/js/app-init.js"></script>
 </body>

@@ -499,6 +499,84 @@ async function handleLogout() {
         overlay.classList.remove('disabled');
     }
 
+    // =================================================================
+    // == ✅ INICIO: NUEVA FUNCIÓN PARA ELIMINAR CUENTA ==
+    // =================================================================
+    async function showDeleteAccountDialog() {
+        const overlay = document.getElementById('delete-account-overlay');
+        const titleEl = document.getElementById('delete-account-title');
+        const contentEl = document.getElementById('delete-account-content');
+        const cancelBtn = document.getElementById('delete-account-cancel');
+        const okBtn = document.getElementById('delete-account-ok');
+
+        const closeDialog = () => {
+            overlay.classList.add('disabled');
+            cancelBtn.onclick = null;
+            okBtn.onclick = null;
+        };
+
+        const { csrf_token } = await api.getCsrfToken();
+
+        titleEl.setAttribute('data-i18n', 'dialogs.deleteAccountTitle');
+        contentEl.innerHTML = `
+            <p data-i18n="dialogs.deleteAccountMessage"></p>
+            <input type="hidden" name="csrf_token" value="${csrf_token}">
+            <div class="form-field password-wrapper" style="margin-top: 16px;">
+                <input type="password" id="delete-confirm-password" class="auth-input" placeholder=" " autocomplete="current-password">
+                <label for="delete-confirm-password" class="auth-label" data-i18n="auth.passwordPlaceholder"></label>
+            </div>
+            <div class="auth-error-message-container" id="delete-error-container" style="display: none; margin-top: 16px;">
+                <ul id="delete-error-list"></ul>
+            </div>
+        `;
+        
+        okBtn.setAttribute('data-i18n', 'settings.loginSecurity.deleteAccountButton');
+        cancelBtn.setAttribute('data-i18n', 'general.cancel');
+        
+        applyTranslations(overlay);
+
+        okBtn.onclick = async () => {
+            const password = document.getElementById('delete-confirm-password').value;
+            const csrfToken = contentEl.querySelector('input[name="csrf_token"]').value;
+
+            if (!password) {
+                displayAuthErrors('delete-error-container', 'delete-error-list', window.getTranslation('auth.errors.passwordRequired'));
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('action_type', 'delete_account');
+            formData.append('password', password);
+            formData.append('csrf_token', csrfToken);
+            
+            okBtn.classList.add('loading');
+
+            try {
+                const result = await api.deleteAccount(formData);
+                if (result.success) {
+                    showNotification(window.getTranslation('notifications.accountDeleted'), 'success');
+                    updateUserUI(null);
+                    closeDialog();
+                    navigateToUrl('main', 'home');
+                    handleStateChange('main', 'home');
+                }
+            } catch (error) {
+                const errorResult = await error.json();
+                displayAuthErrors('delete-error-container', 'delete-error-list', errorResult.message);
+                const newCsrf = await api.getCsrfToken();
+                contentEl.querySelector('input[name="csrf_token"]').value = newCsrf.csrf_token;
+            } finally {
+                 okBtn.classList.remove('loading');
+            }
+        };
+
+        cancelBtn.onclick = closeDialog;
+        overlay.classList.remove('disabled');
+    }
+    // =================================================================
+    // == ✅ FIN: NUEVA FUNCIÓN PARA ELIMINAR CUENTA ==
+    // =================================================================
+
     function initSettingsController() {
         const settingsToggles = {
             'open-links-in-new-tab': {
@@ -1567,35 +1645,6 @@ async function handleLogout() {
         applyTranslations(mainContainer);
     }
 
-async function showDeleteAccountDialog() {
-    const title = window.getTranslation('dialogs.deleteAccountTitle');
-    const message = window.getTranslation('dialogs.deleteAccountMessage');
-
-    const confirmed = await showCustomConfirm(title, message, true);
-
-    if (confirmed && confirmed.password) {
-        const formData = new FormData();
-        formData.append('action_type', 'delete_account');
-        formData.append('password', confirmed.password);
-        formData.append('csrf_token', confirmed.csrf_token);
-
-        try {
-            const result = await api.deleteAccount(formData);
-            if (result.success) {
-                showNotification(window.getTranslation('notifications.accountDeleted'), 'success');
-                updateUserUI(null);
-                navigateToUrl('main', 'home');
-                handleStateChange('main', 'home');
-            } else {
-                showNotification(result.message, 'error');
-            }
-        } catch (error) {
-            const errorResult = await error.json();
-            showNotification(errorResult.message, 'error');
-        }
-    }
-}
-
 function setupEventListeners() {
     document.addEventListener('click', function (event) {
         const actionTarget = event.target.closest('[data-action]');
@@ -1657,9 +1706,15 @@ function setupEventListeners() {
                 case 'update-password':
                     showUpdatePasswordDialog();
                     break;
+                // =================================================================
+                // == ✅ INICIO: CAMBIO CLAVE EN EL MANEJADOR DE EVENTOS ==
+                // =================================================================
                 case 'delete-account':
-                    showDeleteAccountDialog();
+                    showDeleteAccountDialog(); // Se llama a la nueva función correcta
                     break;
+                // =================================================================
+                // == ✅ FIN: CAMBIO CLAVE EN EL MANEJADOR DE EVENTOS ==
+                // =================================================================
                 case 'toggleModuleSurface':
                     const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
                     if (moduleSurface) moduleSurface.classList.toggle('disabled');
