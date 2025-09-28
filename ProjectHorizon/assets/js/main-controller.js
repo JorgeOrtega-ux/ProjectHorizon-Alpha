@@ -1,10 +1,11 @@
-// jorgeortega-ux/projecthorizon-alpha/ProjectHorizon-Alpha-3f6a2a6ada97a0d7cdffe5dcca1c7e90f7f57a7e/ProjectHorizon/assets/js/main-controller.js
+// assets/js/main-controller.js
 
 import { generateUrl, navigateToUrl, setupPopStateHandler, setInitialHistoryState } from './url-manager.js';
 import { setTheme, updateThemeSelectorUI } from './theme-manager.js';
 import { setLanguage, updateLanguageSelectorUI, applyTranslations } from './language-manager.js';
 import { initTooltips } from './tooltip-manager.js';
 import { showNotification } from './notification-manager.js';
+import * as api from './api-handler.js';
 
 function getFavorites() {
     const favorites = localStorage.getItem('favoritePhotos');
@@ -122,8 +123,7 @@ export function initMainController() {
 
     async function fetchAndSetCsrfToken(formId) {
         try {
-            const response = await fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=get_csrf_token`);
-            const data = await response.json();
+            const data = await api.getCsrfToken();
             const form = document.getElementById(formId);
             if (form) {
                 const tokenInput = form.querySelector('input[name="csrf_token"]');
@@ -213,10 +213,9 @@ export function initMainController() {
         }
         applyTranslations(document.querySelector('.header-right'));
     }
-    async function checkSession() {
+    async function checkSessionStatus() {
         try {
-            const response = await fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=check_session`);
-            const data = await response.json();
+            const data = await api.checkSession();
             if (data.loggedin) {
                 updateUserUI(data.user);
             } else {
@@ -257,22 +256,14 @@ export function initMainController() {
         formData.append('csrf_token', csrfToken);
 
         try {
-            const response = await fetch(`${window.BASE_PATH}/api/main_handler.php`, {
-                method: 'POST',
-                body: formData
-            });
-            const result = await response.json();
-            if (response.ok) {
-                updateUserUI(result.user);
-                showNotification(window.getTranslation('auth.loginSuccess'), 'success');
-                navigateToUrl('main', 'home');
-                handleStateChange('main', 'home');
-            } else {
-                displayAuthErrors('login-error-container', 'login-error-list', result.message);
-                fetchAndSetCsrfToken('login-form');
-            }
+            const result = await api.loginUser(formData);
+            updateUserUI(result.user);
+            showNotification(window.getTranslation('auth.loginSuccess'), 'success');
+            navigateToUrl('main', 'home');
+            handleStateChange('main', 'home');
         } catch (error) {
-            displayAuthErrors('login-error-container', 'login-error-list', 'Error de conexión.');
+            const errorResult = await error.response.json();
+            displayAuthErrors('login-error-container', 'login-error-list', errorResult.message);
             fetchAndSetCsrfToken('login-form');
         } finally {
             button.classList.remove('loading');
@@ -317,23 +308,14 @@ export function initMainController() {
         formData.append('csrf_token', csrfToken);
 
         try {
-            const response = await fetch(`${window.BASE_PATH}/api/main_handler.php`, {
-                method: 'POST',
-                body: formData
-            });
-            const result = await response.json();
-
-            if (response.ok) {
-                updateUserUI(result.user);
-                showNotification(window.getTranslation('auth.registerSuccess'), 'success');
-                navigateToUrl('main', 'home');
-                handleStateChange('main', 'home');
-            } else {
-                displayAuthErrors('register-error-container', 'register-error-list', result.message);
-                fetchAndSetCsrfToken('register-form');
-            }
+            const result = await api.registerUser(formData);
+            updateUserUI(result.user);
+            showNotification(window.getTranslation('auth.registerSuccess'), 'success');
+            navigateToUrl('main', 'home');
+            handleStateChange('main', 'home');
         } catch (error) {
-            displayAuthErrors('register-error-container', 'register-error-list', 'Error de conexión.');
+            const errorResult = await error.response.json();
+            displayAuthErrors('register-error-container', 'register-error-list', errorResult.message);
             fetchAndSetCsrfToken('register-form');
         } finally {
             button.classList.remove('loading');
@@ -342,15 +324,8 @@ export function initMainController() {
 
     async function handleLogout() {
         try {
-            const formData = new FormData();
-            formData.append('action_type', 'logout_user');
-            const response = await fetch(`${window.BASE_PATH}/api/main_handler.php`, {
-                method: 'POST',
-                body: formData
-            });
-            const result = await response.json();
-
-            if (response.ok) {
+            const result = await api.logoutUser();
+            if (result.success) {
                 updateUserUI(null);
                 showNotification(window.getTranslation('auth.logoutSuccess'));
                 if (currentAppView === 'settings' || currentAppView === 'help') {
@@ -521,20 +496,12 @@ export function initMainController() {
         updateFavoriteButtonState(photoData.id);
         updateFavoriteCardState(photoData.id);
 
-        const formData = new FormData();
-        formData.append('action_type', 'toggle_like');
-        formData.append('photo_id', photoData.id);
-        formData.append('gallery_uuid', photoData.gallery_uuid);
-        formData.append('is_liked', isLiked);
-
-        fetch(`${window.BASE_PATH}/api/main_handler.php`, {
-            method: 'POST',
-            body: formData
-        }).then(res => res.json()).then(data => {
-            if (!data.success) {
-                console.error('Error al actualizar el like.');
-            }
-        });
+        api.toggleFavoriteOnServer(photoData.id, photoData.gallery_uuid, isLiked)
+            .then(data => {
+                if (!data.success) {
+                    console.error('Error al actualizar el like.');
+                }
+            });
     }
 
     function updateFavoriteButtonState(photoId) {
@@ -872,16 +839,7 @@ export function initMainController() {
             }
         }
 
-        const encodedSearchTerm = encodeURIComponent(searchTerm);
-        const url = `${window.BASE_PATH}/api/main_handler.php?request_type=galleries&sort=${sortBy}&search=${encodedSearchTerm}&page=${galleriesCurrentPage}&limit=${BATCH_SIZE}`;
-
-        fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Server error');
-                }
-                return response.json();
-            })
+        api.getGalleries(sortBy, searchTerm, galleriesCurrentPage, BATCH_SIZE)
             .then(data => {
                 if (statusContainer) {
                     statusContainer.classList.add('disabled');
@@ -949,13 +907,7 @@ export function initMainController() {
         currentGalleryForPhotoView = uuid;
         currentGalleryNameForPhotoView = galleryName;
 
-        fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=photos&uuid=${uuid}&page=${photosCurrentPage}&limit=${BATCH_SIZE}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Server error');
-                }
-                return response.json();
-            })
+        api.getGalleryPhotos(uuid, photosCurrentPage, BATCH_SIZE)
             .then(photos => {
                 if (statusContainer) {
                     statusContainer.classList.add('disabled');
@@ -1041,7 +993,6 @@ export function initMainController() {
         const statusContainer = section.querySelector('.status-message-container');
         const usersSection = usersGrid.closest('.category-section');
         const photosSection = photosGrid.closest('.category-section');
-        const encodedSearchTerm = encodeURIComponent(searchTerm);
 
         if (statusContainer) {
             statusContainer.classList.remove('disabled');
@@ -1053,10 +1004,7 @@ export function initMainController() {
         if (usersSection) usersSection.style.display = 'none';
         if (photosSection) photosSection.style.display = 'none';
 
-        const fetchUsers = fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=trending_users&search=${encodedSearchTerm}&limit=8`).then(res => { if (!res.ok) throw new Error('Server error'); return res.json(); });
-        const fetchPhotos = searchTerm === '' ? fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=trending_photos&limit=12`).then(res => { if (!res.ok) throw new Error('Server error'); return res.json(); }) : Promise.resolve([]);
-
-        Promise.all([fetchUsers, fetchPhotos])
+        api.getTrends(searchTerm)
             .then(([users, photos]) => {
                 if (statusContainer) {
                     statusContainer.classList.add('disabled');
@@ -1130,17 +1078,6 @@ export function initMainController() {
             });
     }
 
-    function incrementPhotoInteraction(photoId) {
-        const formData = new FormData();
-        formData.append('action_type', 'increment_photo_interaction');
-        formData.append('photo_id', photoId);
-
-        fetch(`${window.BASE_PATH}/api/main_handler.php`, {
-            method: 'POST',
-            body: formData
-        });
-    }
-
     function rotatePhoto(direction) {
         const photoViewerImage = document.getElementById('photo-viewer-image');
         if (photoViewerImage) {
@@ -1161,7 +1098,7 @@ export function initMainController() {
             return;
         }
 
-        incrementPhotoInteraction(photoId);
+        api.incrementPhotoInteraction(photoId);
         currentRotation = 0;
         photoViewerImage.style.transform = `rotate(0deg)`;
 
@@ -1178,8 +1115,7 @@ export function initMainController() {
                 if (photoViewUserTitle && currentGalleryNameForPhotoView) {
                     photoViewUserTitle.textContent = currentGalleryNameForPhotoView;
                 } else {
-                    fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${uuid}`)
-                        .then(res => res.json())
+                    api.getGalleryDetails(uuid)
                         .then(gallery => {
                             if (gallery && gallery.name) {
                                 currentGalleryNameForPhotoView = gallery.name;
@@ -1219,17 +1155,6 @@ export function initMainController() {
             console.error("Photo not found in list, navigating to 404.");
             handleStateChange('main', '404');
         }
-    }
-
-    function incrementInteraction(uuid) {
-        const formData = new FormData();
-        formData.append('action_type', 'increment_interaction');
-        formData.append('uuid', uuid);
-
-        fetch(`${window.BASE_PATH}/api/main_handler.php`, {
-            method: 'POST',
-            body: formData
-        });
     }
 
     function updateMoreOptionsFilterText(filterText, menuId) {
@@ -1878,7 +1803,7 @@ export function initMainController() {
                     const name = galleryElement.dataset.name;
                     const isPrivate = galleryElement.dataset.privacy === '1';
 
-                    incrementInteraction(uuid);
+                    api.incrementGalleryInteraction(uuid);
 
                     if (isPrivate) {
                         navigateToUrl('main', 'privateGalleryProxy', { uuid: uuid });
@@ -1902,7 +1827,7 @@ export function initMainController() {
                 if (photoCard) {
                     const galleryUuid = photoCard.dataset.galleryUuid || currentGalleryForPhotoView;
                     const photoId = photoCard.dataset.photoId;
-                    incrementInteraction(galleryUuid);
+                    api.incrementGalleryInteraction(galleryUuid);
 
                     if (!adCooldownActive && Math.random() < 0.10) {
                         adContext = 'navigation';
@@ -2018,8 +1943,7 @@ export function initMainController() {
     }
 
     if (view === 'admin') {
-        const response = await fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=check_session`);
-        const sessionData = await response.json();
+        const sessionData = await api.checkSession();
         if (!sessionData.loggedin || sessionData.user.role !== 'administrator') {
             handleStateChange('main', '404');
             return;
@@ -2031,11 +1955,7 @@ export function initMainController() {
     currentAppSection = section;
 
     try {
-        const response = await fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=section&view=${view}&section=${section}`);
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const html = await response.text();
+        const html = await api.getSectionHTML(view, section);
         if (contentContainer) {
             contentContainer.innerHTML = html;
             window.applyTranslations(contentContainer);
@@ -2099,8 +2019,7 @@ export function initMainController() {
             break;
         case 'galleryPhotos':
             if (data && data.uuid) {
-                fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${data.uuid}`)
-                    .then(res => res.json())
+                api.getGalleryDetails(data.uuid)
                     .then(gallery => {
                         if (gallery && gallery.name) {
                             if (gallery.privacy === 1 && !isPrivateGalleryUnlocked(gallery.uuid)) {
@@ -2145,8 +2064,7 @@ export function initMainController() {
                     if (currentGalleryForPhotoView === data.uuid && currentGalleryPhotoList.length > 0) {
                         photoListPromise = Promise.resolve(currentGalleryPhotoList);
                     } else {
-                        photoListPromise = fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=photos&uuid=${data.uuid}&limit=1000`)
-                            .then(res => res.json())
+                        photoListPromise = api.getGalleryPhotos(data.uuid, 1, 1000)
                             .then(photos => {
                                 currentGalleryPhotoList = photos;
                                 currentGalleryForPhotoView = data.uuid;
@@ -2252,31 +2170,22 @@ export function initMainController() {
                     sendBtn.classList.add('loading');
 
                     try {
-                        const response = await fetch(`${window.BASE_PATH}/api/main_handler.php`, {
-                            method: 'POST',
-                            body: formData
-                        });
-
-                        const result = await response.json();
-
-                        if (response.ok) {
-                            showNotification(result.message, 'success');
-                            const form = document.querySelector('.feedback-form-container');
-                            if (form) {
-                                const inputs = form.querySelectorAll('input, textarea');
-                                inputs.forEach(input => input.value = '');
-                                updateSelectActiveState('feedback-issue-type-select', null);
-                                otherTitleGroup.classList.add('disabled');
-                            }
-                            previewContainer.innerHTML = '';
-                            uploadedFiles = [];
-                            updateUploadButtonState();
-
-                        } else {
-                            showNotification(result.message || 'Error al enviar el comentario.', 'error');
+                        const result = await api.submitFeedback(formData);
+                        showNotification(result.message, 'success');
+                        const form = document.querySelector('.feedback-form-container');
+                        if (form) {
+                            const inputs = form.querySelectorAll('input, textarea');
+                            inputs.forEach(input => input.value = '');
+                            updateSelectActiveState('feedback-issue-type-select', null);
+                            otherTitleGroup.classList.add('disabled');
                         }
+                        previewContainer.innerHTML = '';
+                        uploadedFiles = [];
+                        updateUploadButtonState();
+
                     } catch (error) {
-                        showNotification('Error de conexión. Inténtalo de nuevo.', 'error');
+                        const errorResult = await error.response.json();
+                        showNotification(errorResult.message || 'Error al enviar el comentario.', 'error');
                     } finally {
                         sendBtn.disabled = false;
                         sendBtn.classList.remove('loading');
@@ -2288,8 +2197,7 @@ export function initMainController() {
         case 'accessCodePrompt':
             if (data && data.uuid) {
                 const titleElement = document.getElementById('access-code-title');
-                fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=galleries&uuid=${data.uuid}`)
-                    .then(res => res.json())
+                api.getGalleryDetails(data.uuid)
                     .then(gallery => {
                         if (gallery && gallery.name && titleElement) {
                             titleElement.textContent = window.getTranslation('accessCodePrompt.galleryOf', { galleryName: gallery.name });
@@ -2417,7 +2325,7 @@ export function initMainController() {
 
     // --- INICIALIZACIÓN ---
     setupEventListeners();
-    checkSession();
+    checkSessionStatus();
     startUnlockCountdownTimer();
 
     setupPopStateHandler((view, section, pushState, data) => {

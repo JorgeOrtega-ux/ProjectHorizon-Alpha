@@ -16,7 +16,7 @@
                 <p data-i18n="settings.loginSecurity.passwordLastUpdated"></p>
             </div>
             <div class="item-actions">
-                <button class="load-more-btn" data-i18n="settings.loginSecurity.updateButton"></button>
+               <button class="load-more-btn" data-action="update-password" data-i18n="settings.loginSecurity.updateButton"></button>
             </div>
         </div>
 
