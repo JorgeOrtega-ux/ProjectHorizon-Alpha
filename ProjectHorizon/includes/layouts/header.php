@@ -29,7 +29,7 @@ $is_logged_in = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
             </div>
 
             <div id="auth-container-logged-in" class="header-item <?php echo !$is_logged_in ? 'disabled' : ''; ?>">
-                <div class="header-button profile-btn" data-action="toggle-select" data-target="profile-menu">
+                <div class="header-button profile-btn" data-action="toggle-select" data-target="profile-menu" data-user-role="<?php echo isset($_SESSION['user_role']) ? $_SESSION['user_role'] : 'user'; ?>">
                     <span class="profile-initials"></span>
                 </div>
                 <div class="module-content module-select disabled" id="profile-menu">

@@ -26,7 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 'user' => [
                     'uuid' => $_SESSION['user_uuid'],
                     'username' => $_SESSION['username'],
-                    'email' => $_SESSION['email']
+                    'email' => $_SESSION['email'],
+                    'role' => $_SESSION['user_role']
                 ]
             ]);
         } else {
@@ -319,11 +320,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $_SESSION['user_uuid'] = $uuid;
             $_SESSION['username'] = $username;
             $_SESSION['email'] = $email;
+            $_SESSION['user_role'] = 'user';
 
             echo json_encode([
                 'success' => true,
                 'message' => 'Registro exitoso.',
-                'user' => ['uuid' => $uuid, 'username' => $username, 'email' => $email]
+                'user' => ['uuid' => $uuid, 'username' => $username, 'email' => $email, 'role' => 'user']
             ]);
         } else {
             http_response_code(500);
@@ -343,7 +345,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             exit;
         }
 
-        $stmt = $conn->prepare("SELECT uuid, username, email, password_hash FROM users WHERE email = ?");
+        $stmt = $conn->prepare("SELECT uuid, username, email, password_hash, role FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -354,11 +356,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 $_SESSION['user_uuid'] = $user['uuid'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['email'] = $user['email'];
+                $_SESSION['user_role'] = $user['role'];
 
                 echo json_encode([
                     'success' => true,
                     'message' => 'Inicio de sesión exitoso.',
-                    'user' => ['uuid' => $user['uuid'], 'username' => $user['username'], 'email' => $user['email']]
+                    'user' => ['uuid' => $user['uuid'], 'username' => $user['username'], 'email' => $user['email'], 'role' => $user['role']]
                 ]);
             } else {
                 http_response_code(401);
