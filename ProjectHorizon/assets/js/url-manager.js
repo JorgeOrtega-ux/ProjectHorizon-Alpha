@@ -15,6 +15,8 @@ const urlMap = {
     'main-privateGalleryProxy': 'gallery/private/{uuid}',
     'main-photoView': 'gallery/{uuid}/photo/{photoId}',
     'main-userSpecificFavorites': 'favorites/{uuid}',
+    'admin-manageUsers': 'admin/users',
+    'admin-manageContent': 'admin/content',
     'main-404': '404'
 };
 

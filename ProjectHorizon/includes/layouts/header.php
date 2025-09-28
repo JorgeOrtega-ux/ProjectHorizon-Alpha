@@ -43,6 +43,10 @@ $is_logged_in = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
                                 <div class="menu-link-icon"><span class="material-symbols-rounded">help</span></div>
                                 <div class="menu-link-text"><span data-i18n="header.help"></span></div>
                             </div>
+                            <div class="menu-link admin-only" data-action="toggleAdminPanel" style="display: none;">
+                                <div class="menu-link-icon"><span class="material-symbols-rounded">admin_panel_settings</span></div>
+                                <div class="menu-link-text"><span data-i18n="header.adminPanel"></span></div>
+                            </div>
                             <div class="menu-link" data-action="logout">
                                 <div class="menu-link-icon"><span class="material-symbols-rounded">logout</span></div>
                                 <div class="menu-link-text"><span data-i18n="header.logout"></span></div>

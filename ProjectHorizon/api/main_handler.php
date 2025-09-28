@@ -74,7 +74,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'help-cookiePolicy' => '../includes/sections/help/cookie-policy.php',
             'help-sendFeedback' => '../includes/sections/help/send-feedback.php',
             'auth-login' => '../includes/sections/auth/login.php',
-            'auth-register' => '../includes/sections/auth/register.php'
+            'auth-register' => '../includes/sections/auth/register.php',
+            'admin-manageUsers' => '../includes/sections/admin/manage-users.php',
+            'admin-manageContent' => '../includes/sections/admin/manage-content.php'
         ];
 
         $section_key = $view . '-' . $section;

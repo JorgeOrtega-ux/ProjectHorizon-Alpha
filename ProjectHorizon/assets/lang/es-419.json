@@ -34,7 +34,8 @@
     "login": "Acceder",
     "logout": "Cerrar sesión",
     "settings": "Configuración",
-    "help": "Ayuda"
+    "help": "Ayuda",
+    "adminPanel": "Panel de administración"
   },
   "moduleSurface": {
     "mainPage": "Pagina principal",
@@ -46,7 +47,9 @@
     "privacyPolicy": "Política de Privacidad",
     "termsConditions": "Términos y Condiciones",
     "cookiePolicy": "Política de Cookies",
-    "sendFeedback": "Enviar Comentarios"
+    "sendFeedback": "Enviar Comentarios",
+    "manageUsers": "Administrar usuarios",
+    "manageContent": "Administrar contenido"
   },
   "home": {
     "searchInputPlaceholder": "Buscar...",
@@ -236,5 +239,15 @@
     "badge": "404",
     "title": "¡Vaya! Página no encontrada.",
     "message": "No pudimos encontrar la página que estás buscando. Puede que haya sido movida o que ya no exista."
-  }
+  },
+    "admin": {
+        "manageUsers": {
+            "title": "Administrar usuarios",
+            "description": "Administra los usuarios de la aplicación."
+        },
+        "manageContent": {
+            "title": "Administrar contenido",
+            "description": "Administra el contenido de la aplicación."
+        }
+    }
 }

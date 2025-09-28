@@ -57,4 +57,21 @@
             </div>
         </div>
     </div>
+    
+    <div class="menu-content <?php echo ($CURRENT_VIEW === 'admin') ? 'active' : 'disabled'; ?>" data-menu="admin">
+        <div class="menu-list">
+            <div class="menu-link" data-action="toggleMainView">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">arrow_back</span></div>
+                <div class="menu-link-text"><span data-i18n="moduleSurface.backToHome"></span></div>
+            </div>
+            <div class="menu-link <?php echo ($CURRENT_SECTION === 'manageUsers') ? 'active' : ''; ?>" data-action="toggleSectionManageUsers">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">manage_accounts</span></div>
+                <div class="menu-link-text"><span data-i18n="moduleSurface.manageUsers"></span></div>
+            </div>
+            <div class="menu-link <?php echo ($CURRENT_SECTION === 'manageContent') ? 'active' : ''; ?>" data-action="toggleSectionManageContent">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">folder_managed</span></div>
+                <div class="menu-link-text"><span data-i18n="moduleSurface.manageContent"></span></div>
+            </div>
+        </div>
+    </div>
 </div>

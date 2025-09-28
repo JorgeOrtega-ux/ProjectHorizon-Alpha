@@ -135,21 +135,30 @@ export function initMainController() {
         const helpBtn = document.getElementById('help-btn');
         const settingsBtn = document.getElementById('settings-btn');
         const profileBtn = loggedInContainer ? loggedInContainer.querySelector('.profile-btn') : null;
-    
+        const adminPanelLink = document.querySelector('[data-action="toggleAdminPanel"]');
+
         if (userData && profileBtn) {
             loggedOutContainer.classList.add('disabled');
             loggedInContainer.classList.remove('disabled');
             helpBtn.classList.add('disabled');
             settingsBtn.classList.add('disabled');
-    
+
             const initialsSpan = profileBtn.querySelector('.profile-initials');
             initialsSpan.textContent = getInitials(userData.username);
-    
+
             // Lógica de roles
             profileBtn.classList.remove('profile-btn--user', 'profile-btn--moderator', 'profile-btn--administrator');
             profileBtn.classList.add(`profile-btn--${userData.role || 'user'}`);
             profileBtn.dataset.userRole = userData.role || 'user';
-    
+
+            if (adminPanelLink) {
+                if (userData.role === 'administrator') {
+                    adminPanelLink.style.display = 'flex';
+                } else {
+                    adminPanelLink.style.display = 'none';
+                }
+            }
+
         } else {
             loggedOutContainer.classList.remove('disabled');
             loggedInContainer.classList.add('disabled');
@@ -158,10 +167,12 @@ export function initMainController() {
             if (profileBtn) {
                 profileBtn.classList.remove('profile-btn--user', 'profile-btn--moderator', 'profile-btn--administrator');
             }
+            if (adminPanelLink) {
+                adminPanelLink.style.display = 'none';
+            }
         }
         applyTranslations(document.querySelector('.header-right'));
     }
-
     async function checkSession() {
         try {
             const response = await fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=check_session`);
@@ -182,7 +193,7 @@ export function initMainController() {
         const password = form.querySelector('#login-password').value;
         const errorMessageEl = form.querySelector('#login-error-message');
         const button = form.querySelector('[data-action="submit-login"]');
-        
+
         errorMessageEl.textContent = '';
         button.classList.add('loading');
 
@@ -221,7 +232,7 @@ export function initMainController() {
 
         errorMessageEl.textContent = '';
         button.classList.add('loading');
-        
+
         const formData = new FormData();
         formData.append('action_type', 'register_user');
         formData.append('username', username);
@@ -1470,11 +1481,11 @@ export function initMainController() {
                 switch (action) {
                     case 'submit-login':
                         const loginForm = document.getElementById('login-form');
-                        if(loginForm) handleLogin(loginForm);
+                        if (loginForm) handleLogin(loginForm);
                         break;
                     case 'submit-register':
                         const registerForm = document.getElementById('register-form');
-                        if(registerForm) handleRegister(registerForm);
+                        if (registerForm) handleRegister(registerForm);
                         break;
                     case 'logout':
                         handleLogout();
@@ -1916,11 +1927,20 @@ export function initMainController() {
     }
 
     // ✅ **FUNCIÓN handleStateChange COMPLETA Y ACTUALIZADA**
-   // ✅ **FUNCIÓN handleStateChange COMPLETA Y ACTUALIZADA**
-    async function handleStateChange(view, section, data) {
+    // ✅ **FUNCIÓN handleStateChange COMPLETA Y ACTUALIZADA**
+   async function handleStateChange(view, section, data) {
     const contentContainer = document.querySelector('.general-content-scrolleable');
     if (contentContainer) {
         contentContainer.innerHTML = loaderHTML;
+    }
+
+    if (view === 'admin') {
+        const response = await fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=check_session`);
+        const sessionData = await response.json();
+        if (!sessionData.loggedin || sessionData.user.role !== 'administrator') {
+            handleStateChange('main', '404');
+            return;
+        }
     }
 
     updateHeaderAndMenuStates(view, section);
@@ -2305,7 +2325,8 @@ export function initMainController() {
     updateHeaderAndMenuStates(view, section);
     initTooltips();
     applyTranslations(document.body);
-    }
+}
+
     // --- INICIALIZACIÓN ---
     setupEventListeners();
     checkSession();
@@ -2317,7 +2338,7 @@ export function initMainController() {
 
     const path = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1);
 
-   const routes = {
+    const routes = {
         '': { view: 'main', section: 'home' },
         'trends': { view: 'main', section: 'trends' },
         'favorites': { view: 'main', section: 'favorites' },
