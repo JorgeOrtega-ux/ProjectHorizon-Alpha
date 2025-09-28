@@ -11,19 +11,32 @@ USE project_horizon;
 -- Estructura de la tabla `users` (NUEVA)
 --
 -- --------------------------------------------------------
+-- Borra la base de datos si ya existe para empezar desde cero
+DROP DATABASE IF EXISTS project_horizon;
+-- Crea la base de datos
+CREATE DATABASE project_horizon;
+
+-- Selecciona la base de datos para usarla
+USE project_horizon;
+-- --------------------------------------------------------
+--
+-- Estructura de la tabla `users` (CORREGIDA)
+--
+-- --------------------------------------------------------
 CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `uuid` varchar(36) NOT NULL,
   `username` varchar(50) NOT NULL,
   `email` varchar(255) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
+  `role` ENUM('user','moderator','administrator') NOT NULL DEFAULT 'user',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid` (`uuid`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
+-- (El resto del archivo permanece igual...)
 -- --------------------------------------------------------
 --
 -- Estructura de la tabla `feedback`
