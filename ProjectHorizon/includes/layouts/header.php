@@ -32,20 +32,20 @@ $is_logged_in = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
                 <div class="header-button profile-btn" data-action="toggle-select" data-target="profile-menu" data-user-role="<?php echo isset($_SESSION['user_role']) ? $_SESSION['user_role'] : 'user'; ?>">
                     <span class="profile-initials"></span>
                 </div>
-                <div class="module-content module-select disabled" id="profile-menu">
+                <div class="module-content module-select disabled body-title" id="profile-menu">
                     <div class="menu-content">
                         <div class="menu-list">
                              <div class="menu-link" data-action="toggleSettings">
                                 <div class="menu-link-icon"><span class="material-symbols-rounded">settings</span></div>
                                 <div class="menu-link-text"><span data-i18n="header.settings"></span></div>
                             </div>
-                             <div class="menu-link" data-action="toggleHelp">
-                                <div class="menu-link-icon"><span class="material-symbols-rounded">help</span></div>
-                                <div class="menu-link-text"><span data-i18n="header.help"></span></div>
-                            </div>
                             <div class="menu-link admin-only" data-action="toggleAdminPanel" style="display: none;">
                                 <div class="menu-link-icon"><span class="material-symbols-rounded">admin_panel_settings</span></div>
                                 <div class="menu-link-text"><span data-i18n="header.adminPanel"></span></div>
+                            </div>
+                             <div class="menu-link" data-action="toggleHelp">
+                                <div class="menu-link-icon"><span class="material-symbols-rounded">help</span></div>
+                                <div class="menu-link-text"><span data-i18n="header.help"></span></div>
                             </div>
                             <div class="menu-link" data-action="logout">
                                 <div class="menu-link-icon"><span class="material-symbols-rounded">logout</span></div>

@@ -611,6 +611,10 @@ h6 {
     -webkit-overflow-scrolling: touch;
 }
 
+.dark-theme .overflow-y {
+    scrollbar-color: #5f5f5f transparent;
+}
+
 .card {
     position: relative;
     border-radius: 12px;
@@ -699,26 +703,6 @@ h6 {
     display: none;
 }
 
-@media (max-width: 768px) {
-    .content-header-wrapper {
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .content-header-left {
-        width: 100%;
-    }
-
-    .search-input-wrapper {
-        max-width: 100%;
-    }
-
-    .content-header-right {
-        width: 100%;
-        justify-content: flex-end;
-    }
-}
-
 .card-actions-container {
     position: absolute;
     top: 12px;
@@ -769,21 +753,6 @@ h6 {
     right: 0;
     width: 280px;
     left: auto;
-}
-
-@media (max-width:468px) {
-    .module-content.module-surface {
-        width: 100%;
-        height: 100%;
-        padding: 0;
-    }
-
-    .module-surface .menu-content {
-        width: 100%;
-        height: 100%;
-        border-radius: 0;
-        box-shadow: unset;
-    }
 }
 
 .photo-viewer-container {
@@ -986,27 +955,6 @@ h6 {
     height: 42px;
 }
 
-@media (max-width: 768px) {
-    .view-container.active {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
-    }
-
-    .item-actions {
-        width: 100%;
-        justify-content: flex-end;
-    }
-
-    .main-content {
-        padding: 0;
-    }
-
-    .general-content {
-        border-radius: 0;
-    }
-}
-
 .loader-container {
     display: flex;
     justify-content: center;
@@ -1130,25 +1078,6 @@ h6 {
 
 .show-on-mobile {
     display: none;
-}
-
-@media (max-width: 768px) {
-    .content-header-wrapper {
-        flex-direction: row;
-        align-items: center;
-    }
-
-    .content-header-right {
-        width: auto;
-    }
-
-    .hide-on-mobile {
-        display: none;
-    }
-
-    .show-on-mobile {
-        display: flex;
-    }
 }
 
 .content-section-stacked {
@@ -1898,10 +1827,6 @@ h6 {
     background-color: #6a3a3a;
 }
 
-/* ... (todo el contenido existente de styles.css) ... */
-
-/* AÑADE ESTAS NUEVAS LÍNEAS AL FINAL DEL ARCHIVO */
-
 .content-section .item-icon {
     display: flex;
     align-items: center;
@@ -1925,4 +1850,66 @@ h6 {
 
 #update-password-content .auth-error-message-container {
     margin-top: 16px;
+}
+
+/* ====================================== */
+/* ======== MOBILE RESPONSIVE STYLES ======== */
+/* ====================================== */
+
+@media (max-width: 768px) {
+    .content-header-wrapper {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .content-header-right {
+        width: auto;
+    }
+
+    .hide-on-mobile {
+        display: none;
+    }
+
+    .show-on-mobile {
+        display: flex;
+    }
+
+    .view-container.active {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .item-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .main-content {
+        padding: 0;
+    }
+
+    .general-content {
+        border-radius: 0;
+    }
+}
+
+@media (max-width: 468px) {
+    .module-content.module-surface {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+    }
+
+    .module-surface .menu-content {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        box-shadow: unset;
+        border: none;
+    }
+
+    .dark-theme .module-surface .menu-content {
+        border: none;
+    }
 }

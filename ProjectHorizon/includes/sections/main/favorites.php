@@ -23,7 +23,7 @@
                                 <span class="material-symbols-rounded">expand_more</span>
                             </div>
                         </div>
-                        <div class="module-content module-select disabled" id="favorites-sort-select">
+                        <div class="module-content module-select disabled body-title" id="favorites-sort-select">
                             <div class="menu-content">
                                 <div class="menu-list">
                                     <div class="menu-link" data-value="newest">
@@ -47,7 +47,7 @@
                     <div class="header-button" data-action="toggle-select" data-target="favorites-sort-select-mobile" data-i18n-tooltip="favorites.filterTooltip">
                         <span class="material-symbols-rounded">filter_list</span>
                     </div>
-                    <div class="module-content module-select disabled" id="favorites-sort-select-mobile">
+                    <div class="module-content module-select disabled body-title" id="favorites-sort-select-mobile">
                     </div>
                 </div>
             </div>
