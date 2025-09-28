@@ -6,3 +6,4 @@
 <div class="section-container active" data-view="main"></div>
 <div class="section-container disabled" data-view="settings"></div>
 <div class="section-container disabled" data-view="help"></div>
+<div class="section-container disabled" data-view="auth"></div>

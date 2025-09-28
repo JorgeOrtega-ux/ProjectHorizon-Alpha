@@ -997,22 +997,22 @@ export function initMainController() {
     // ✅ **FUNCIÓN CORREGIDA Y MEJORADA**
     function updateSelectActiveState(selectId, value) {
         const selectContainers = document.querySelectorAll(`#${selectId}, #${selectId}-mobile`);
-    
+
         selectContainers.forEach(selectContainer => {
             if (!selectContainer) return;
-    
+
             const allLinks = selectContainer.querySelectorAll('.menu-link');
             allLinks.forEach(link => link.classList.remove('active'));
-    
+
             const wrapper = selectContainer.closest('.select-wrapper');
             const trigger = wrapper ? wrapper.querySelector('[data-action="toggle-select"]') : document.querySelector(`[data-target="${selectId}"]`);
             const triggerTextEl = trigger ? trigger.querySelector('.select-trigger-text') : null;
-    
+
             if (!triggerTextEl) return;
-    
+
             const activeLink = selectContainer.querySelector(`.menu-link[data-value="${value}"]`);
             let activeText = '';
-    
+
             if (activeLink) {
                 activeLink.classList.add('active');
                 activeText = activeLink.querySelector('.menu-link-text span').textContent;
@@ -1024,7 +1024,7 @@ export function initMainController() {
                     triggerTextEl.textContent = window.getTranslation(placeholderKey);
                 }
             }
-    
+
             if (selectId.includes('relevance')) {
                 updateMoreOptionsFilterText(activeText, '#more-options-menu');
             } else if (selectId.includes('favorites-sort')) {
@@ -1314,6 +1314,11 @@ export function initMainController() {
                         const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
                         if (moduleSurface) moduleSurface.classList.toggle('disabled');
                         break;
+                    case 'toggleAuth':
+                        if (currentAppView === 'auth' && currentAppSection === 'login') return;
+                        navigateToUrl('auth', 'login');
+                        handleStateChange('auth', 'login');
+                        break;
                     case 'toggleSettings':
                         if (currentAppView === 'settings' && currentAppSection === 'accessibility') return;
                         navigateToUrl('settings', 'accessibility');
@@ -1339,10 +1344,15 @@ export function initMainController() {
                     case 'toggleSectionTermsConditions':
                     case 'toggleSectionCookiePolicy':
                     case 'toggleSectionSendFeedback':
+                    case 'toggleSectionLogin':
+                    case 'toggleSectionRegister':
                         const sectionName = action.substring("toggleSection".length);
                         const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
                         const parentMenu = actionTarget.closest('[data-menu]');
-                        const targetView = parentMenu ? parentMenu.dataset.menu : currentAppView;
+                        let targetView = parentMenu ? parentMenu.dataset.menu : currentAppView;
+                        if (action === 'toggleSectionLogin' || action === 'toggleSectionRegister') {
+                            targetView = 'auth';
+                        }
                         if (currentAppView === targetView && currentAppSection === targetSection) return;
                         navigateToUrl(targetView, targetSection);
                         handleStateChange(targetView, targetSection);
@@ -1735,8 +1745,9 @@ export function initMainController() {
             favoritesSortSelectMobile.innerHTML = favoritesSortSelect.innerHTML;
         }
     }
-    
+
     // ✅ **FUNCIÓN handleStateChange COMPLETA Y ACTUALIZADA**
+   // ✅ **FUNCIÓN handleStateChange COMPLETA Y ACTUALIZADA**
     async function handleStateChange(view, section, data) {
     const contentContainer = document.querySelector('.general-content-scrolleable');
     if (contentContainer) {
@@ -2130,7 +2141,6 @@ export function initMainController() {
     initTooltips();
     applyTranslations(document.body);
     }
-
     // --- INICIALIZACIÓN ---
     setupEventListeners();
     startUnlockCountdownTimer();

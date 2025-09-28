@@ -14,6 +14,20 @@
             <div class="header-button" data-action="toggleSettings" data-i18n-tooltip="header.settingsTooltip">
                 <span class="material-symbols-rounded">settings</span>
             </div>
+            <button class="header-button login-btn" data-action="toggleAuth">
+                <span data-i18n="header.login"></span>
+            </button>
         </div>
     </div>
 </div>
+<style>
+    .login-btn {
+    width: auto;
+    padding: 0 16px;
+}
+
+.login-btn span {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+</style>

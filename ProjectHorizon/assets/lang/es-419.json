@@ -30,7 +30,8 @@
   "header": {
     "mainMenuTooltip": "Menú principal",
     "helpTooltip": "Ayuda",
-    "settingsTooltip": "Configuración"
+    "settingsTooltip": "Configuración",
+    "login": "Acceder"
   },
   "moduleSurface": {
     "mainPage": "Pagina principal",
@@ -108,6 +109,19 @@
     "galleryOf": "Galería de {galleryName}",
     "unlockMessage": "Para ver el contenido de esta galería privada, necesitas ver un par de anuncios. Esto desbloqueará el acceso durante 60 minutos.",
     "unlockButton": "Ver anuncios para desbloquear"
+  },
+  "auth": {
+    "loginTitle": "Iniciar Sesión",
+    "loginSubtitle": "Bienvenido de nuevo. Accede a tu cuenta.",
+    "emailPlaceholder": "Correo electrónico",
+    "passwordPlaceholder": "Contraseña",
+    "loginButton": "Iniciar Sesión",
+    "registerPrompt": "¿No tienes una cuenta? Regístrate",
+    "registerTitle": "Crear una Cuenta",
+    "registerSubtitle": "Únete a nuestra comunidad y empieza a compartir.",
+    "usernamePlaceholder": "Nombre de usuario",
+    "registerButton": "Registrarse",
+    "loginPrompt": "¿Ya tienes una cuenta? Inicia sesión"
   },
   "settings": {
     "accessibility": {
@@ -214,7 +228,7 @@
   },
   "404": {
     "badge": "404",
-    "title": "Oops! Page not found.",
-    "message": "We couldn't find the page you're looking for. It might have been moved or doesn't exist anymore."
+    "title": "¡Vaya! Página no encontrada.",
+    "message": "No pudimos encontrar la página que estás buscando. Puede que haya sido movida o que ya no exista."
   }
 }

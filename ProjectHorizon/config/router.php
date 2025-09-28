@@ -10,7 +10,9 @@ class Router {
         'help/privacy-policy' => ['view' => 'help', 'section' => 'privacyPolicy'],
         'help/terms-conditions' => ['view' => 'help', 'section' => 'termsConditions'],
         'help/cookie-policy' => ['view' => 'help', 'section' => 'cookiePolicy'],
-        'help/send-feedback' => ['view' => 'help', 'section' => 'sendFeedback']
+        'help/send-feedback' => ['view' => 'help', 'section' => 'sendFeedback'],
+        'login' => ['view' => 'auth', 'section' => 'login'],
+        'register' => ['view' => 'auth', 'section' => 'register']
     ];
 
     public static function getRouteConfig($path) {
