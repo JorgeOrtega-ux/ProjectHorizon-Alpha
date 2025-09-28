@@ -2,6 +2,8 @@
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
+// La variable $is_logged_in ya no es necesaria para la lógica de este archivo,
+// pero la mantenemos por si se usa en otros contextos.
 $is_logged_in = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
 ?>
 <div class="module-content module-surface body-title disabled" data-module="moduleSurface">
@@ -32,12 +34,12 @@ $is_logged_in = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
                 <div class="menu-link-icon"><span class="material-symbols-rounded">accessibility</span></div>
                 <div class="menu-link-text"><span data-i18n="moduleSurface.accessibility"></span></div>
             </div>
-            <?php if ($is_logged_in): ?>
-                <div class="menu-link <?php echo ($CURRENT_SECTION === 'loginSecurity') ? 'active' : ''; ?>" data-action="toggleSectionLoginSecurity">
-                    <div class="menu-link-icon"><span class="material-symbols-rounded">security</span></div>
-                    <div class="menu-link-text"><span data-i18n="moduleSurface.loginSecurity"></span></div>
-                </div>
-            <?php endif; ?>
+            
+            <div class="menu-link auth-required disabled <?php echo ($CURRENT_SECTION === 'loginSecurity') ? 'active' : ''; ?>" data-action="toggleSectionLoginSecurity">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">security</span></div>
+                <div class="menu-link-text"><span data-i18n="moduleSurface.loginSecurity"></span></div>
+            </div>
+
             <div class="menu-link <?php echo ($CURRENT_SECTION === 'historyPrivacy') ? 'active' : ''; ?>" data-action="toggleSectionHistoryPrivacy">
                 <div class="menu-link-icon"><span class="material-symbols-rounded">history</span></div>
                 <div class="menu-link-text"><span data-i18n="moduleSurface.historyPrivacy"></span></div>

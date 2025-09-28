@@ -177,11 +177,17 @@ export function initMainController() {
         const profileBtn = loggedInContainer ? loggedInContainer.querySelector('.profile-btn') : null;
         const adminPanelLink = document.querySelector('[data-action="toggleAdminPanel"]');
 
+        // ✅ **CAMBIO CLAVE**: Seleccionamos todos los elementos que requieren autenticación.
+        const authRequiredLinks = document.querySelectorAll('.auth-required');
+
         if (userData && profileBtn) {
             loggedOutContainer.classList.add('disabled');
             loggedInContainer.classList.remove('disabled');
             helpBtn.classList.add('disabled');
             settingsBtn.classList.add('disabled');
+
+            // ✅ **CAMBIO CLAVE**: Mostramos los enlaces para usuarios autenticados.
+            authRequiredLinks.forEach(link => link.classList.remove('disabled'));
 
             const initialsSpan = profileBtn.querySelector('.profile-initials');
             initialsSpan.textContent = getInitials(userData.username);
@@ -203,6 +209,10 @@ export function initMainController() {
             loggedInContainer.classList.add('disabled');
             helpBtn.classList.remove('disabled');
             settingsBtn.classList.remove('disabled');
+
+            // ✅ **CAMBIO CLAVE**: Ocultamos los enlaces para usuarios no autenticados.
+            authRequiredLinks.forEach(link => link.classList.add('disabled'));
+
             if (profileBtn) {
                 profileBtn.classList.remove('profile-btn--user', 'profile-btn--moderator', 'profile-btn--administrator');
             }
@@ -212,20 +222,19 @@ export function initMainController() {
         }
         applyTranslations(document.querySelector('.header-right'));
     }
-
- async function checkSessionStatus() {
-    const response = await api.checkSession();
-    if (response.ok && response.data.loggedin) {
-        updateUserUI(response.data.user);
-    } else {
-        updateUserUI(null);
-        if (response.data && response.data.status === 'suspended') {
-            showNotification(window.getTranslation('auth.errors.accountSuspended'), 'error');
-        } else if (response.data && response.data.status === 'deleted') {
-            showNotification(window.getTranslation('auth.errors.accountDeleted'), 'error');
+    async function checkSessionStatus() {
+        const response = await api.checkSession();
+        if (response.ok && response.data.loggedin) {
+            updateUserUI(response.data.user);
+        } else {
+            updateUserUI(null);
+            if (response.data && response.data.status === 'suspended') {
+                showNotification(window.getTranslation('auth.errors.accountSuspended'), 'error');
+            } else if (response.data && response.data.status === 'deleted') {
+                showNotification(window.getTranslation('auth.errors.accountDeleted'), 'error');
+            }
         }
     }
-}
 
     async function handleLogin(form) {
         const email = form.querySelector('#login-email').value.trim();
@@ -488,40 +497,40 @@ export function initMainController() {
         overlay.classList.remove('disabled');
     }
 
-   async function showDeleteAccountDialog() {
-    const overlay = document.getElementById('delete-account-overlay');
-    const titleEl = document.getElementById('delete-account-title');
-    const contentEl = document.getElementById('delete-account-content');
-    const cancelBtn = document.getElementById('delete-account-cancel');
-    const okBtn = document.getElementById('delete-account-ok');
+    async function showDeleteAccountDialog() {
+        const overlay = document.getElementById('delete-account-overlay');
+        const titleEl = document.getElementById('delete-account-title');
+        const contentEl = document.getElementById('delete-account-content');
+        const cancelBtn = document.getElementById('delete-account-cancel');
+        const okBtn = document.getElementById('delete-account-ok');
 
-    const closeDialog = () => {
-        overlay.classList.add('disabled');
-        cancelBtn.onclick = null;
-        okBtn.onclick = null;
-    };
+        const closeDialog = () => {
+            overlay.classList.add('disabled');
+            cancelBtn.onclick = null;
+            okBtn.onclick = null;
+        };
 
-    const sessionResponse = await api.checkSession();
-    if (!sessionResponse.ok || !sessionResponse.data.loggedin) {
-        return;
-    }
-    const creationDate = sessionResponse.data.user.created_at;
-    const formattedDate = new Date(creationDate).toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
+        const sessionResponse = await api.checkSession();
+        if (!sessionResponse.ok || !sessionResponse.data.loggedin) {
+            return;
+        }
+        const creationDate = sessionResponse.data.user.created_at;
+        const formattedDate = new Date(creationDate).toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
 
-    const tokenResponse = await api.getCsrfToken();
-    if (!tokenResponse.ok) {
-        showNotification("No se pudo iniciar la acción. Inténtalo de nuevo.", "error");
-        return;
-    }
-    const csrf_token = tokenResponse.data.csrf_token;
+        const tokenResponse = await api.getCsrfToken();
+        if (!tokenResponse.ok) {
+            showNotification("No se pudo iniciar la acción. Inténtalo de nuevo.", "error");
+            return;
+        }
+        const csrf_token = tokenResponse.data.csrf_token;
 
-    titleEl.setAttribute('data-i18n', 'dialogs.deleteAccountTitle');
-    const message = window.getTranslation('dialogs.deleteAccountMessage', { date: formattedDate });
-    contentEl.innerHTML = `
+        titleEl.setAttribute('data-i18n', 'dialogs.deleteAccountTitle');
+        const message = window.getTranslation('dialogs.deleteAccountMessage', { date: formattedDate });
+        contentEl.innerHTML = `
         <p>${message}</p>
         <input type="hidden" name="csrf_token" value="${csrf_token}">
         <div class="form-field password-wrapper" style="margin-top: 16px;">
@@ -533,48 +542,48 @@ export function initMainController() {
         </div>
     `;
 
-    okBtn.setAttribute('data-i18n', 'settings.loginSecurity.deleteAccountButton');
-    cancelBtn.setAttribute('data-i18n', 'general.cancel');
+        okBtn.setAttribute('data-i18n', 'settings.loginSecurity.deleteAccountButton');
+        cancelBtn.setAttribute('data-i18n', 'general.cancel');
 
-    applyTranslations(overlay);
+        applyTranslations(overlay);
 
-    okBtn.onclick = async () => {
-        const password = document.getElementById('delete-confirm-password').value;
-        const csrfToken = contentEl.querySelector('input[name="csrf_token"]').value;
+        okBtn.onclick = async () => {
+            const password = document.getElementById('delete-confirm-password').value;
+            const csrfToken = contentEl.querySelector('input[name="csrf_token"]').value;
 
-        if (!password) {
-            displayAuthErrors('delete-error-container', 'delete-error-list', window.getTranslation('auth.errors.passwordRequired'));
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('action_type', 'delete_account');
-        formData.append('password', password);
-        formData.append('csrf_token', csrfToken);
-
-        okBtn.classList.add('loading');
-
-        const response = await api.deleteAccount(formData);
-        okBtn.classList.remove('loading');
-
-        if (response.ok && response.data.success) {
-            showNotification(window.getTranslation('notifications.accountDeleted'), 'success');
-            updateUserUI(null);
-            closeDialog();
-            navigateToUrl('main', 'home');
-            handleStateChange('main', 'home');
-        } else {
-            displayAuthErrors('delete-error-container', 'delete-error-list', response.data.message);
-            const newTokenResponse = await api.getCsrfToken();
-            if (newTokenResponse.ok) {
-                contentEl.querySelector('input[name="csrf_token"]').value = newTokenResponse.data.csrf_token;
+            if (!password) {
+                displayAuthErrors('delete-error-container', 'delete-error-list', window.getTranslation('auth.errors.passwordRequired'));
+                return;
             }
-        }
-    };
 
-    cancelBtn.onclick = closeDialog;
-    overlay.classList.remove('disabled');
-}
+            const formData = new FormData();
+            formData.append('action_type', 'delete_account');
+            formData.append('password', password);
+            formData.append('csrf_token', csrfToken);
+
+            okBtn.classList.add('loading');
+
+            const response = await api.deleteAccount(formData);
+            okBtn.classList.remove('loading');
+
+            if (response.ok && response.data.success) {
+                showNotification(window.getTranslation('notifications.accountDeleted'), 'success');
+                updateUserUI(null);
+                closeDialog();
+                navigateToUrl('main', 'home');
+                handleStateChange('main', 'home');
+            } else {
+                displayAuthErrors('delete-error-container', 'delete-error-list', response.data.message);
+                const newTokenResponse = await api.getCsrfToken();
+                if (newTokenResponse.ok) {
+                    contentEl.querySelector('input[name="csrf_token"]').value = newTokenResponse.data.csrf_token;
+                }
+            }
+        };
+
+        cancelBtn.onclick = closeDialog;
+        overlay.classList.remove('disabled');
+    }
 
     function initSettingsController() {
         const settingsToggles = {
@@ -2163,456 +2172,456 @@ export function initMainController() {
         }
     }
 
- async function handleStateChange(view, section, data) {
-    const contentContainer = document.querySelector('.general-content-scrolleable');
-    if (contentContainer) {
-        contentContainer.innerHTML = loaderHTML;
-    }
-
-    // ✅ **NUEVO: Array de secciones protegidas en el frontend**
-    const protected_sections = [
-        'settings-loginSecurity',
-        'settings-history',
-        'admin-manageUsers',
-        'admin-manageContent'
-    ];
-    const section_key = view + '-' + section;
-
-    // ✅ **NUEVO: Verificación de sesión en el cliente**
-    if (protected_sections.includes(section_key)) {
-        const sessionResponse = await api.checkSession();
-        if (!sessionResponse.ok || !sessionResponse.data.loggedin) {
-            // Si no está logueado, redirige a la página de login
-            navigateToUrl('auth', 'login');
-            handleStateChange('auth', 'login');
-            return;
-        }
-    }
-
-
-    if (view === 'admin') {
-        const sessionResponse = await api.checkSession();
-        if (!sessionResponse.ok || !sessionResponse.data.loggedin || sessionResponse.data.user.role !== 'administrator') {
-            handleStateChange('main', '404');
-            return;
-        }
-    }
-
-    updateHeaderAndMenuStates(view, section);
-    currentAppView = view;
-    currentAppSection = section;
-
-    const response = await api.getSectionHTML(view, section);
-
-    if (response.ok) {
+    async function handleStateChange(view, section, data) {
+        const contentContainer = document.querySelector('.general-content-scrolleable');
         if (contentContainer) {
-            contentContainer.innerHTML = response.data;
-            window.applyTranslations(contentContainer);
+            contentContainer.innerHTML = loaderHTML;
         }
-    } else {
-        console.error("Failed to fetch section:", response.data);
-        if (response.status === 403) {
-             navigateToUrl('auth', 'login');
-            handleStateChange('auth', 'login');
-        } else if (contentContainer) {
-            displayFetchError('.general-content-scrolleable', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
+
+        // ✅ **NUEVO: Array de secciones protegidas en el frontend**
+        const protected_sections = [
+            'settings-loginSecurity',
+            'settings-history',
+            'admin-manageUsers',
+            'admin-manageContent'
+        ];
+        const section_key = view + '-' + section;
+
+        // ✅ **NUEVO: Verificación de sesión en el cliente**
+        if (protected_sections.includes(section_key)) {
+            const sessionResponse = await api.checkSession();
+            if (!sessionResponse.ok || !sessionResponse.data.loggedin) {
+                // Si no está logueado, redirige a la página de login
+                navigateToUrl('auth', 'login');
+                handleStateChange('auth', 'login');
+                return;
+            }
         }
-        return;
-    }
 
-    if (section !== 'photoView') {
-        lastVisitedView = section;
-        lastVisitedData = data;
-    }
 
-    switch (section) {
-        case 'home':
-            setupMoreOptionsMenu();
-            updateSelectActiveState('relevance-select', currentSortBy);
-            fetchAndDisplayGalleries(currentSortBy);
-            break;
-        case 'favorites':
-            setupMoreOptionsMenu();
-            updateSelectActiveState('favorites-sort-select', currentFavoritesSortBy);
-            displayFavoritePhotos();
-            break;
-        case 'trends':
-            fetchAndDisplayTrends();
-            break;
-        case 'accessibility':
-            updateThemeSelectorUI(localStorage.getItem('theme') || 'system');
-            updateLanguageSelectorUI(localStorage.getItem('language') || 'es-419');
-            initSettingsController();
-            break;
-        case 'loginSecurity':
-            {
-                const sessionResponse = await api.checkSession();
-                if (sessionResponse.ok && sessionResponse.data.loggedin && sessionResponse.data.user) {
-                    const passwordLastUpdatedEl = document.getElementById('password-last-updated');
-                    
-                    if (passwordLastUpdatedEl) {
-                        if (sessionResponse.data.user.password_last_updated_at) {
-                            const date = new Date(sessionResponse.data.user.password_last_updated_at);
-                            const formattedDate = date.toLocaleDateString(undefined, {
+        if (view === 'admin') {
+            const sessionResponse = await api.checkSession();
+            if (!sessionResponse.ok || !sessionResponse.data.loggedin || sessionResponse.data.user.role !== 'administrator') {
+                handleStateChange('main', '404');
+                return;
+            }
+        }
+
+        updateHeaderAndMenuStates(view, section);
+        currentAppView = view;
+        currentAppSection = section;
+
+        const response = await api.getSectionHTML(view, section);
+
+        if (response.ok) {
+            if (contentContainer) {
+                contentContainer.innerHTML = response.data;
+                window.applyTranslations(contentContainer);
+            }
+        } else {
+            console.error("Failed to fetch section:", response.data);
+            if (response.status === 403) {
+                navigateToUrl('auth', 'login');
+                handleStateChange('auth', 'login');
+            } else if (contentContainer) {
+                displayFetchError('.general-content-scrolleable', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
+            }
+            return;
+        }
+
+        if (section !== 'photoView') {
+            lastVisitedView = section;
+            lastVisitedData = data;
+        }
+
+        switch (section) {
+            case 'home':
+                setupMoreOptionsMenu();
+                updateSelectActiveState('relevance-select', currentSortBy);
+                fetchAndDisplayGalleries(currentSortBy);
+                break;
+            case 'favorites':
+                setupMoreOptionsMenu();
+                updateSelectActiveState('favorites-sort-select', currentFavoritesSortBy);
+                displayFavoritePhotos();
+                break;
+            case 'trends':
+                fetchAndDisplayTrends();
+                break;
+            case 'accessibility':
+                updateThemeSelectorUI(localStorage.getItem('theme') || 'system');
+                updateLanguageSelectorUI(localStorage.getItem('language') || 'es-419');
+                initSettingsController();
+                break;
+            case 'loginSecurity':
+                {
+                    const sessionResponse = await api.checkSession();
+                    if (sessionResponse.ok && sessionResponse.data.loggedin && sessionResponse.data.user) {
+                        const passwordLastUpdatedEl = document.getElementById('password-last-updated');
+
+                        if (passwordLastUpdatedEl) {
+                            if (sessionResponse.data.user.password_last_updated_at) {
+                                const date = new Date(sessionResponse.data.user.password_last_updated_at);
+                                const formattedDate = date.toLocaleDateString(undefined, {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                });
+                                passwordLastUpdatedEl.textContent = window.getTranslation('settings.loginSecurity.passwordLastUpdated', {
+                                    date: formattedDate
+                                });
+                            } else {
+                                passwordLastUpdatedEl.textContent = window.getTranslation('settings.loginSecurity.passwordLastUpdatedNever');
+                            }
+                        }
+
+                        const deleteAccountDescriptionEl = document.getElementById('delete-account-description');
+                        if (deleteAccountDescriptionEl && sessionResponse.data.user.created_at) {
+                            const creationDate = new Date(sessionResponse.data.user.created_at);
+                            const formattedCreationDate = creationDate.toLocaleDateString(undefined, {
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric'
                             });
-                            passwordLastUpdatedEl.textContent = window.getTranslation('settings.loginSecurity.passwordLastUpdated', {
-                                date: formattedDate
+                            deleteAccountDescriptionEl.textContent = window.getTranslation('settings.loginSecurity.deleteAccountDescription', {
+                                date: formattedCreationDate
                             });
-                        } else {
-                            passwordLastUpdatedEl.textContent = window.getTranslation('settings.loginSecurity.passwordLastUpdatedNever');
                         }
                     }
-
-const deleteAccountDescriptionEl = document.getElementById('delete-account-description');
-                    if (deleteAccountDescriptionEl && sessionResponse.data.user.created_at) {
-                        const creationDate = new Date(sessionResponse.data.user.created_at);
-                        const formattedCreationDate = creationDate.toLocaleDateString(undefined, {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                        });
-                        deleteAccountDescriptionEl.textContent = window.getTranslation('settings.loginSecurity.deleteAccountDescription', {
-                            date: formattedCreationDate
-                        });
+                }
+                break;
+            case 'login':
+                fetchAndSetCsrfToken('login-form');
+                break;
+            case 'register':
+                fetchAndSetCsrfToken('register-form');
+                break;
+            case 'history':
+                historyProfilesShown = HISTORY_PROFILES_BATCH;
+                historyPhotosShown = HISTORY_PHOTOS_BATCH;
+                historySearchesShown = HISTORY_SEARCHES_BATCH;
+                displayHistory();
+                break;
+            case 'historyPrivacy':
+                initHistoryPrivacySettings();
+                break;
+            case 'privateGalleryProxy':
+                if (data && data.uuid) {
+                    if (isPrivateGalleryUnlocked(data.uuid)) {
+                        navigateToUrl('main', 'galleryPhotos', { uuid: data.uuid });
+                        handleStateChange('main', 'galleryPhotos', { uuid: data.uuid, galleryName: data.galleryName });
+                    } else {
+                        promptToWatchAd(data.uuid, data.galleryName);
                     }
                 }
-            }
-            break;
-        case 'login':
-            fetchAndSetCsrfToken('login-form');
-            break;
-        case 'register':
-            fetchAndSetCsrfToken('register-form');
-            break;
-        case 'history':
-            historyProfilesShown = HISTORY_PROFILES_BATCH;
-            historyPhotosShown = HISTORY_PHOTOS_BATCH;
-            historySearchesShown = HISTORY_SEARCHES_BATCH;
-            displayHistory();
-            break;
-        case 'historyPrivacy':
-            initHistoryPrivacySettings();
-            break;
-        case 'privateGalleryProxy':
-            if (data && data.uuid) {
-                if (isPrivateGalleryUnlocked(data.uuid)) {
-                    navigateToUrl('main', 'galleryPhotos', { uuid: data.uuid });
-                    handleStateChange('main', 'galleryPhotos', { uuid: data.uuid, galleryName: data.galleryName });
-                } else {
-                    promptToWatchAd(data.uuid, data.galleryName);
-                }
-            }
-            break;
-        case 'galleryPhotos':
-            if (data && data.uuid) {
-                const response = await api.getGalleryDetails(data.uuid);
-                if (response.ok) {
-                    const gallery = response.data;
-                    if (gallery && gallery.name) {
-                        if (gallery.privacy == 1 && !isPrivateGalleryUnlocked(gallery.uuid)) {
-                            const privateUrl = generateUrl('main', 'privateGalleryProxy', { uuid: gallery.uuid });
-                            history.replaceState({ view: 'main', section: 'privateGalleryProxy', data: { uuid: gallery.uuid, galleryName: gallery.name } }, '', privateUrl);
-                            handleStateChange('main', 'privateGalleryProxy', { uuid: gallery.uuid, galleryName: gallery.name });
+                break;
+            case 'galleryPhotos':
+                if (data && data.uuid) {
+                    const response = await api.getGalleryDetails(data.uuid);
+                    if (response.ok) {
+                        const gallery = response.data;
+                        if (gallery && gallery.name) {
+                            if (gallery.privacy == 1 && !isPrivateGalleryUnlocked(gallery.uuid)) {
+                                const privateUrl = generateUrl('main', 'privateGalleryProxy', { uuid: gallery.uuid });
+                                history.replaceState({ view: 'main', section: 'privateGalleryProxy', data: { uuid: gallery.uuid, galleryName: gallery.name } }, '', privateUrl);
+                                handleStateChange('main', 'privateGalleryProxy', { uuid: gallery.uuid, galleryName: gallery.name });
+                            } else {
+                                addToHistory('profiles', {
+                                    id: gallery.uuid,
+                                    name: gallery.name,
+                                    privacy: gallery.privacy,
+                                    profile_picture_url: gallery.profile_picture_url,
+                                    background_photo_url: gallery.background_photo_url
+                                });
+                                fetchAndDisplayGalleryPhotos(gallery.uuid, gallery.name);
+                            }
                         } else {
-                            addToHistory('profiles', { 
-                                id: gallery.uuid, 
-                                name: gallery.name, 
-                                privacy: gallery.privacy,
-                                profile_picture_url: gallery.profile_picture_url,
-                                background_photo_url: gallery.background_photo_url 
-                            });
-                            fetchAndDisplayGalleryPhotos(gallery.uuid, gallery.name);
+                            handleStateChange('main', '404');
                         }
                     } else {
+                        console.error("Failed to fetch gallery info:", response.data);
                         handleStateChange('main', '404');
                     }
-                } else {
-                    console.error("Failed to fetch gallery info:", response.data);
-                    handleStateChange('main', '404');
                 }
-            }
-            break;
-        
-        case 'photoView':
-            if (data && data.uuid && data.photoId) {
-                let photoListPromise;
+                break;
 
-                if (lastVisitedView === 'userSpecificFavorites' && lastVisitedData && lastVisitedData.uuid) {
-                    photoListPromise = Promise.resolve(getFavorites().filter(p => p.gallery_uuid === data.uuid));
-                } else if (lastVisitedView === 'favorites') {
-                    photoListPromise = Promise.resolve(currentFavoritesList);
-                } else if (lastVisitedView === 'trends') {
-                    photoListPromise = Promise.resolve(currentTrendingPhotosList);
-                } else if (lastVisitedView === 'history') {
-                    currentHistoryPhotosList = getHistory().photos;
-                    photoListPromise = Promise.resolve(currentHistoryPhotosList);
-                } else {
-                    if (currentGalleryForPhotoView === data.uuid && currentGalleryPhotoList.length > 0) {
-                        photoListPromise = Promise.resolve(currentGalleryPhotoList);
+            case 'photoView':
+                if (data && data.uuid && data.photoId) {
+                    let photoListPromise;
+
+                    if (lastVisitedView === 'userSpecificFavorites' && lastVisitedData && lastVisitedData.uuid) {
+                        photoListPromise = Promise.resolve(getFavorites().filter(p => p.gallery_uuid === data.uuid));
+                    } else if (lastVisitedView === 'favorites') {
+                        photoListPromise = Promise.resolve(currentFavoritesList);
+                    } else if (lastVisitedView === 'trends') {
+                        photoListPromise = Promise.resolve(currentTrendingPhotosList);
+                    } else if (lastVisitedView === 'history') {
+                        currentHistoryPhotosList = getHistory().photos;
+                        photoListPromise = Promise.resolve(currentHistoryPhotosList);
                     } else {
-                        photoListPromise = api.getGalleryPhotos(data.uuid, 1, 1000)
-                            .then(response => {
-                                if (response.ok) {
-                                    currentGalleryPhotoList = response.data;
-                                    currentGalleryForPhotoView = data.uuid;
-                                    return response.data;
-                                }
-                                return [];
-                            });
+                        if (currentGalleryForPhotoView === data.uuid && currentGalleryPhotoList.length > 0) {
+                            photoListPromise = Promise.resolve(currentGalleryPhotoList);
+                        } else {
+                            photoListPromise = api.getGalleryPhotos(data.uuid, 1, 1000)
+                                .then(response => {
+                                    if (response.ok) {
+                                        currentGalleryPhotoList = response.data;
+                                        currentGalleryForPhotoView = data.uuid;
+                                        return response.data;
+                                    }
+                                    return [];
+                                });
+                        }
                     }
+
+                    photoListPromise.then(photoList => {
+                        currentPhotoViewList = photoList;
+                        renderPhotoView(data.uuid, data.photoId, currentPhotoViewList);
+                    });
                 }
-                
-                photoListPromise.then(photoList => {
-                    currentPhotoViewList = photoList;
-                    renderPhotoView(data.uuid, data.photoId, currentPhotoViewList);
-                });
-            }
-            break;
-        
-        case 'sendFeedback':
-            const uploadBtn = document.getElementById('feedback-upload-btn');
-            const fileInput = document.getElementById('feedback-file-input');
-            const previewContainer = document.getElementById('feedback-file-preview');
-            const otherTitleGroup = document.getElementById('feedback-other-title-group');
-            const sendBtn = document.getElementById('send-feedback-btn');
-            let uploadedFiles = [];
-            const MAX_FILES = 3;
+                break;
 
-            const updateUploadButtonState = () => {
-                if (uploadedFiles.length >= MAX_FILES) {
-                    uploadBtn.disabled = true;
-                } else {
-                    uploadBtn.disabled = false;
-                }
-            };
-            
-            const renderPreviews = () => {
-                previewContainer.innerHTML = '';
-                uploadedFiles.forEach((file, index) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const previewItem = document.createElement('div');
-                        previewItem.className = 'file-preview-item';
-                        previewItem.innerHTML = `<img src="${e.target.result}" class="file-preview-img"><button class="file-preview-remove-btn" data-index="${index}"><span class="material-symbols-rounded">close</span></button>`;
-                        previewContainer.appendChild(previewItem);
-                    };
-                    reader.readAsDataURL(file);
-                });
-            };
+            case 'sendFeedback':
+                const uploadBtn = document.getElementById('feedback-upload-btn');
+                const fileInput = document.getElementById('feedback-file-input');
+                const previewContainer = document.getElementById('feedback-file-preview');
+                const otherTitleGroup = document.getElementById('feedback-other-title-group');
+                const sendBtn = document.getElementById('send-feedback-btn');
+                let uploadedFiles = [];
+                const MAX_FILES = 3;
 
-            updateSelectActiveState('feedback-issue-type-select', null); 
-            if(otherTitleGroup) {
-                otherTitleGroup.classList.add('disabled');
-            }
-
-            if (uploadBtn && fileInput) {
-                uploadBtn.addEventListener('click', () => fileInput.click());
-
-                fileInput.addEventListener('change', (event) => {
-                    const newFiles = Array.from(event.target.files);
-                    if (uploadedFiles.length + newFiles.length > MAX_FILES) {
-                        showNotification(`Puedes subir un máximo de ${MAX_FILES} archivos.`, 'error');
-                        fileInput.value = "";
-                        return;
+                const updateUploadButtonState = () => {
+                    if (uploadedFiles.length >= MAX_FILES) {
+                        uploadBtn.disabled = true;
+                    } else {
+                        uploadBtn.disabled = false;
                     }
-                    uploadedFiles.push(...newFiles);
-                    renderPreviews();
-                    updateUploadButtonState();
-                    fileInput.value = "";
-                });
-            }
+                };
 
-            if (previewContainer) {
-                previewContainer.addEventListener('click', (event) => {
-                    const removeBtn = event.target.closest('.file-preview-remove-btn');
-                    if (removeBtn) {
-                        const indexToRemove = parseInt(removeBtn.dataset.index, 10);
-                        uploadedFiles.splice(indexToRemove, 1);
+                const renderPreviews = () => {
+                    previewContainer.innerHTML = '';
+                    uploadedFiles.forEach((file, index) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const previewItem = document.createElement('div');
+                            previewItem.className = 'file-preview-item';
+                            previewItem.innerHTML = `<img src="${e.target.result}" class="file-preview-img"><button class="file-preview-remove-btn" data-index="${index}"><span class="material-symbols-rounded">close</span></button>`;
+                            previewContainer.appendChild(previewItem);
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                };
+
+                updateSelectActiveState('feedback-issue-type-select', null);
+                if (otherTitleGroup) {
+                    otherTitleGroup.classList.add('disabled');
+                }
+
+                if (uploadBtn && fileInput) {
+                    uploadBtn.addEventListener('click', () => fileInput.click());
+
+                    fileInput.addEventListener('change', (event) => {
+                        const newFiles = Array.from(event.target.files);
+                        if (uploadedFiles.length + newFiles.length > MAX_FILES) {
+                            showNotification(`Puedes subir un máximo de ${MAX_FILES} archivos.`, 'error');
+                            fileInput.value = "";
+                            return;
+                        }
+                        uploadedFiles.push(...newFiles);
                         renderPreviews();
                         updateUploadButtonState();
-                    }
-                });
-            }
-            
-            if (sendBtn) {
-                sendBtn.addEventListener('click', async () => {
-                    const issueType = document.querySelector('#feedback-issue-type-select .menu-link.active')?.dataset.value;
-                    const otherTitle = document.getElementById('feedback-other-title').value.trim();
-                    const description = document.getElementById('feedback-description').value.trim();
-                    
-                    if (!issueType) {
-                        showNotification(window.getTranslation('notifications.selectIssueType'), 'error');
-                        return;
-                    }
-
-                    const formData = new FormData();
-                    formData.append('action_type', 'submit_feedback');
-                    formData.append('issue_type', issueType);
-                    formData.append('other_title', otherTitle);
-                    formData.append('description', description);
-                    
-                    uploadedFiles.forEach(file => {
-                        formData.append('attachments[]', file, file.name);
+                        fileInput.value = "";
                     });
+                }
 
-                    sendBtn.disabled = true;
-                    sendBtn.classList.add('loading');
-
-                    const response = await api.submitFeedback(formData);
-                    sendBtn.disabled = false;
-                    sendBtn.classList.remove('loading');
-
-                    if(response.ok) {
-                        showNotification(response.data.message, 'success');
-                        const form = document.querySelector('.feedback-form-container');
-                        if (form) {
-                            const inputs = form.querySelectorAll('input, textarea');
-                            inputs.forEach(input => input.value = '');
-                            updateSelectActiveState('feedback-issue-type-select', null);
-                            otherTitleGroup.classList.add('disabled');
+                if (previewContainer) {
+                    previewContainer.addEventListener('click', (event) => {
+                        const removeBtn = event.target.closest('.file-preview-remove-btn');
+                        if (removeBtn) {
+                            const indexToRemove = parseInt(removeBtn.dataset.index, 10);
+                            uploadedFiles.splice(indexToRemove, 1);
+                            renderPreviews();
+                            updateUploadButtonState();
                         }
-                        previewContainer.innerHTML = '';
-                        uploadedFiles = [];
-                        updateUploadButtonState();
-                    } else {
-                        showNotification(response.data.message || 'Error al enviar el comentario.', 'error');
-                    }
-                });
-            }
-            break;
+                    });
+                }
 
-        case 'accessCodePrompt':
-            if (data && data.uuid) {
-                const titleElement = document.getElementById('access-code-title');
-                const response = await api.getGalleryDetails(data.uuid);
-                if (response.ok) {
-                    const gallery = response.data;
-                    if (gallery && gallery.name && titleElement) {
-                        titleElement.textContent = window.getTranslation('accessCodePrompt.galleryOf', { galleryName: gallery.name });
+                if (sendBtn) {
+                    sendBtn.addEventListener('click', async () => {
+                        const issueType = document.querySelector('#feedback-issue-type-select .menu-link.active')?.dataset.value;
+                        const otherTitle = document.getElementById('feedback-other-title').value.trim();
+                        const description = document.getElementById('feedback-description').value.trim();
+
+                        if (!issueType) {
+                            showNotification(window.getTranslation('notifications.selectIssueType'), 'error');
+                            return;
+                        }
+
+                        const formData = new FormData();
+                        formData.append('action_type', 'submit_feedback');
+                        formData.append('issue_type', issueType);
+                        formData.append('other_title', otherTitle);
+                        formData.append('description', description);
+
+                        uploadedFiles.forEach(file => {
+                            formData.append('attachments[]', file, file.name);
+                        });
+
+                        sendBtn.disabled = true;
+                        sendBtn.classList.add('loading');
+
+                        const response = await api.submitFeedback(formData);
+                        sendBtn.disabled = false;
+                        sendBtn.classList.remove('loading');
+
+                        if (response.ok) {
+                            showNotification(response.data.message, 'success');
+                            const form = document.querySelector('.feedback-form-container');
+                            if (form) {
+                                const inputs = form.querySelectorAll('input, textarea');
+                                inputs.forEach(input => input.value = '');
+                                updateSelectActiveState('feedback-issue-type-select', null);
+                                otherTitleGroup.classList.add('disabled');
+                            }
+                            previewContainer.innerHTML = '';
+                            uploadedFiles = [];
+                            updateUploadButtonState();
+                        } else {
+                            showNotification(response.data.message || 'Error al enviar el comentario.', 'error');
+                        }
+                    });
+                }
+                break;
+
+            case 'accessCodePrompt':
+                if (data && data.uuid) {
+                    const titleElement = document.getElementById('access-code-title');
+                    const response = await api.getGalleryDetails(data.uuid);
+                    if (response.ok) {
+                        const gallery = response.data;
+                        if (gallery && gallery.name && titleElement) {
+                            titleElement.textContent = window.getTranslation('accessCodePrompt.galleryOf', { galleryName: gallery.name });
+                        }
                     }
                 }
-            }
-            break;
-        case 'adView':
-            const adTitle = document.getElementById('ad-title');
-            const adContentTitle = document.getElementById('ad-content-title');
-            const timerElement = document.getElementById('ad-timer');
-            const skipButton = document.getElementById('skip-ad-button');
-        
-            if (adCountdownInterval) {
-                clearInterval(adCountdownInterval);
-            }
-        
-            function startAdCountdown() {
-                let countdown = 5;
-                timerElement.textContent = countdown;
-                skipButton.disabled = true;
-        
-                adCountdownInterval = setInterval(() => {
-                    countdown--;
+                break;
+            case 'adView':
+                const adTitle = document.getElementById('ad-title');
+                const adContentTitle = document.getElementById('ad-content-title');
+                const timerElement = document.getElementById('ad-timer');
+                const skipButton = document.getElementById('skip-ad-button');
+
+                if (adCountdownInterval) {
+                    clearInterval(adCountdownInterval);
+                }
+
+                function startAdCountdown() {
+                    let countdown = 5;
                     timerElement.textContent = countdown;
-                    if (countdown <= 0) {
-                        clearInterval(adCountdownInterval);
-                        timerElement.textContent = '0';
-                        skipButton.disabled = false;
-                    }
-                }, 1000);
-            }
-        
-            if (adContext === 'unlock') {
-                adTitle.textContent = window.getTranslation('adView.adOf', { current: adStep, total: 2 });
-                adContentTitle.textContent = window.getTranslation('adView.adContentTitle');
-                skipButton.textContent = (adStep === 1) ? window.getTranslation('adView.nextAd') : window.getTranslation('adView.skipAd');
-                startAdCountdown();
-        
-                skipButton.onclick = () => {
-                    if (adStep === 1) {
-                        adStep = 2;
-                        handleStateChange('main', 'adView');
-                    } else {
-                        const destination = galleryAfterAd;
+                    skipButton.disabled = true;
+
+                    adCountdownInterval = setInterval(() => {
+                        countdown--;
+                        timerElement.textContent = countdown;
+                        if (countdown <= 0) {
+                            clearInterval(adCountdownInterval);
+                            timerElement.textContent = '0';
+                            skipButton.disabled = false;
+                        }
+                    }, 1000);
+                }
+
+                if (adContext === 'unlock') {
+                    adTitle.textContent = window.getTranslation('adView.adOf', { current: adStep, total: 2 });
+                    adContentTitle.textContent = window.getTranslation('adView.adContentTitle');
+                    skipButton.textContent = (adStep === 1) ? window.getTranslation('adView.nextAd') : window.getTranslation('adView.skipAd');
+                    startAdCountdown();
+
+                    skipButton.onclick = () => {
+                        if (adStep === 1) {
+                            adStep = 2;
+                            handleStateChange('main', 'adView');
+                        } else {
+                            const destination = galleryAfterAd;
+                            if (destination) {
+                                const unlockedGalleries = JSON.parse(localStorage.getItem('unlockedGalleries') || '{}');
+                                const galleryUuidToUnlock = destination.data.uuid;
+                                unlockedGalleries[galleryUuidToUnlock] = new Date().getTime();
+                                localStorage.setItem('unlockedGalleries', JSON.stringify(unlockedGalleries));
+
+                                navigateToUrl(destination.view, destination.section, destination.data);
+                                handleStateChange(destination.view, destination.section, destination.data);
+                                galleryAfterAd = null;
+                            }
+                            adContext = 'navigation';
+                        }
+                    };
+                } else {
+                    adTitle.textContent = window.getTranslation('adView.ad');
+                    adContentTitle.textContent = window.getTranslation('adView.adContentTitle');
+                    skipButton.textContent = window.getTranslation('adView.skipAd');
+                    startAdCountdown();
+
+                    skipButton.onclick = () => {
+                        const destination = galleryAfterAd || photoAfterAd;
                         if (destination) {
-                            const unlockedGalleries = JSON.parse(localStorage.getItem('unlockedGalleries') || '{}');
-                            const galleryUuidToUnlock = destination.data.uuid;
-                            unlockedGalleries[galleryUuidToUnlock] = new Date().getTime();
-                            localStorage.setItem('unlockedGalleries', JSON.stringify(unlockedGalleries));
-        
                             navigateToUrl(destination.view, destination.section, destination.data);
                             handleStateChange(destination.view, destination.section, destination.data);
+                            photoAfterAd = null;
                             galleryAfterAd = null;
+                        } else {
+                            navigateToUrl('main', 'home');
+                            handleStateChange('main', 'home');
                         }
-                        adContext = 'navigation';
-                    }
-                };
-            } else {
-                adTitle.textContent = window.getTranslation('adView.ad');
-                adContentTitle.textContent = window.getTranslation('adView.adContentTitle');
-                skipButton.textContent = window.getTranslation('adView.skipAd');
-                startAdCountdown();
-        
-                skipButton.onclick = () => {
-                    const destination = galleryAfterAd || photoAfterAd;
-                    if (destination) {
-                        navigateToUrl(destination.view, destination.section, destination.data);
-                        handleStateChange(destination.view, destination.section, destination.data);
-                        photoAfterAd = null;
-                        galleryAfterAd = null;
-                    } else {
-                        navigateToUrl('main', 'home');
-                        handleStateChange('main', 'home');
-                    }
-                };
-            }
-            break;
-        case 'userSpecificFavorites':
-            if (data && data.uuid) {
-                const userFavorites = getFavorites().filter(p => p.gallery_uuid === data.uuid);
-                const sectionEl = document.querySelector('[data-section="userSpecificFavorites"]');
-                if (sectionEl) {
-                    const grid = sectionEl.querySelector('#user-specific-favorites-grid');
-                    const statusContainer = sectionEl.querySelector('.status-message-container');
-                    const title = sectionEl.querySelector('#user-specific-favorites-title');
-                    sectionEl.dataset.uuid = data.uuid;
+                    };
+                }
+                break;
+            case 'userSpecificFavorites':
+                if (data && data.uuid) {
+                    const userFavorites = getFavorites().filter(p => p.gallery_uuid === data.uuid);
+                    const sectionEl = document.querySelector('[data-section="userSpecificFavorites"]');
+                    if (sectionEl) {
+                        const grid = sectionEl.querySelector('#user-specific-favorites-grid');
+                        const statusContainer = sectionEl.querySelector('.status-message-container');
+                        const title = sectionEl.querySelector('#user-specific-favorites-title');
+                        sectionEl.dataset.uuid = data.uuid;
 
-                    if (userFavorites.length > 0) {
-                        grid.innerHTML = '';
-                        grid.classList.remove('disabled');
-                        statusContainer.classList.add('disabled');
-                        title.textContent = window.getTranslation('userSpecificFavorites.titleFrom', { userName: userFavorites[0].gallery_name });
-                        userFavorites.forEach(photo => {
-                            const card = document.createElement('div');
-                            card.className = 'card photo-card';
-                            card.dataset.photoUrl = photo.photo_url;
-                            card.dataset.photoId = photo.id;
-                            card.dataset.galleryUuid = photo.gallery_uuid;
-                            const background = document.createElement('div');
-                            background.className = 'card-background';
-                            background.style.backgroundImage = `url('${photo.photo_url}')`;
-                            card.appendChild(background);
-                            const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
-                            card.innerHTML += `<div class="card-actions-container"><div class="card-hover-overlay"><div class="card-hover-icons"><div class="icon-wrapper active" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div><div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div></div></div><div class="module-content module-select photo-context-menu disabled body-title"><div class="menu-content"><div class="menu-list"><a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.openInNewTab')}</span></div></a><div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.copyLink')}</span></div></div><a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.download')}</span></div></a></div></div></div></div>`;
-                            grid.appendChild(card);
-                        });
-                    } else {
-                        grid.innerHTML = '';
-                        grid.classList.add('disabled');
-                        statusContainer.classList.remove('disabled');
-                        title.textContent = window.getTranslation('userSpecificFavorites.title');
-                        statusContainer.innerHTML = `<div><h2>${window.getTranslation('userSpecificFavorites.noUserFavoritesTitle')}</h2><p>${window.getTranslation('userSpecificFavorites.noUserFavoritesMessage')}</p></div>`;
+                        if (userFavorites.length > 0) {
+                            grid.innerHTML = '';
+                            grid.classList.remove('disabled');
+                            statusContainer.classList.add('disabled');
+                            title.textContent = window.getTranslation('userSpecificFavorites.titleFrom', { userName: userFavorites[0].gallery_name });
+                            userFavorites.forEach(photo => {
+                                const card = document.createElement('div');
+                                card.className = 'card photo-card';
+                                card.dataset.photoUrl = photo.photo_url;
+                                card.dataset.photoId = photo.id;
+                                card.dataset.galleryUuid = photo.gallery_uuid;
+                                const background = document.createElement('div');
+                                background.className = 'card-background';
+                                background.style.backgroundImage = `url('${photo.photo_url}')`;
+                                card.appendChild(background);
+                                const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
+                                card.innerHTML += `<div class="card-actions-container"><div class="card-hover-overlay"><div class="card-hover-icons"><div class="icon-wrapper active" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div><div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div></div></div><div class="module-content module-select photo-context-menu disabled body-title"><div class="menu-content"><div class="menu-list"><a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.openInNewTab')}</span></div></a><div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.copyLink')}</span></div></div><a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.download')}</span></div></a></div></div></div></div>`;
+                                grid.appendChild(card);
+                            });
+                        } else {
+                            grid.innerHTML = '';
+                            grid.classList.add('disabled');
+                            statusContainer.classList.remove('disabled');
+                            title.textContent = window.getTranslation('userSpecificFavorites.title');
+                            statusContainer.innerHTML = `<div><h2>${window.getTranslation('userSpecificFavorites.noUserFavoritesTitle')}</h2><p>${window.getTranslation('userSpecificFavorites.noUserFavoritesMessage')}</p></div>`;
+                        }
                     }
                 }
-            }
-            break;
-    }
+                break;
+        }
 
-    setupScrollShadows();
-    updateHeaderAndMenuStates(view, section);
-    initTooltips();
-    applyTranslations(document.body);
-}
+        setupScrollShadows();
+        updateHeaderAndMenuStates(view, section);
+        initTooltips();
+        applyTranslations(document.body);
+    }
     // --- INICIALIZACIÓN ---
     setupEventListeners();
     checkSessionStatus();
