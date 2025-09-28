@@ -1,6 +1,3 @@
-<?php require_once 'config/router.php'; ?>
-<!DOCTYPE html>
-<html lang="es">
 
 <?php require_once 'config/router.php'; ?>
 <!DOCTYPE html>
