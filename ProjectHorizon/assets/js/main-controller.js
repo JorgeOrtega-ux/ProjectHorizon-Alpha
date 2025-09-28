@@ -112,6 +112,7 @@ export function initMainController() {
 
     let adCooldownActive = false;
     let adContext = 'navigation';
+    let adStep = 1; // Variable de estado para los anuncios
 
     const loaderHTML = '<div class="loader-container"><div class="spinner"></div></div>';
 
@@ -566,6 +567,7 @@ export function initMainController() {
 
     async function promptToWatchAd(uuid, name) {
         adContext = 'unlock';
+        adStep = 1; // Reiniciar el contador de anuncios
         galleryAfterAd = { view: 'main', section: 'galleryPhotos', data: { uuid, galleryName: name } };
         await handleStateChange('main', 'accessCodePrompt', { uuid });
     }
@@ -2047,19 +2049,15 @@ export function initMainController() {
             }
         
             if (adContext === 'unlock') {
-                let adStep = 1;
-                adTitle.textContent = window.getTranslation('adView.adOf', { current: 1, total: 2 });
+                adTitle.textContent = window.getTranslation('adView.adOf', { current: adStep, total: 2 });
                 adContentTitle.textContent = window.getTranslation('adView.adContentTitle');
-                skipButton.textContent = window.getTranslation('adView.nextAd');
+                skipButton.textContent = (adStep === 1) ? window.getTranslation('adView.nextAd') : window.getTranslation('adView.skipAd');
                 startAdCountdown();
         
                 skipButton.onclick = () => {
                     if (adStep === 1) {
                         adStep = 2;
-                        adTitle.textContent = window.getTranslation('adView.adOf', { current: 2, total: 2 });
-                        adContentTitle.textContent = window.getTranslation('adView.adContentTitle');
-                        skipButton.textContent = window.getTranslation('adView.skipAd');
-                        startAdCountdown();
+                        handleStateChange('main', 'adView');
                     } else {
                         const destination = galleryAfterAd;
                         if (destination) {

@@ -3,7 +3,7 @@
         <div class="content-header-wrapper">
             <div class="content-header-left">
                 <div class="header-title-container">
-                    <span id="ad-title" data-i18n="adView.ad"></span>
+                    <span id="ad-title"></span>
                 </div>
             </div>
             <div class="content-header-right">
