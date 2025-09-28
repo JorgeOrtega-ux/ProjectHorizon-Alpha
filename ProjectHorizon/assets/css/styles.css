@@ -1872,4 +1872,19 @@ h1, h2, h3, h4, h5, h6 {
 .dark-theme .profile-btn.profile-btn--administrator {
     border-color: #ff6a6a;
     background-color: #6a3a3a;
+}/* ... (todo el contenido existente de styles.css) ... */
+
+/* AÑADE ESTAS NUEVAS LÍNEAS AL FINAL DEL ARCHIVO */
+
+.content-section .item-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-right: 24px;
+}
+
+.content-section .item-icon .material-symbols-rounded {
+    font-size: 28px;
+    color: var(--muted-text-color);
 }

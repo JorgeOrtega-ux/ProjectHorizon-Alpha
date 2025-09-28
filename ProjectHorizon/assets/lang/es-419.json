@@ -43,6 +43,7 @@
     "favorites": "Mis favoritos",
     "backToHome": "Volver a inicio",
     "accessibility": "Accesibilidad",
+    "loginSecurity": "Inicio de sesión y seguridad",
     "historyPrivacy": "Historial y Privacidad",
     "privacyPolicy": "Política de Privacidad",
     "termsConditions": "Términos y Condiciones",
@@ -163,6 +164,16 @@
         "dark": "Tema oscuro",
         "light": "Tema claro"
       }
+    },
+    "loginSecurity": {
+        "title": "Inicio de sesión y seguridad",
+        "description": "Administra tu contraseña y la configuración de seguridad de tu cuenta.",
+        "passwordTitle": "Contraseña",
+        "passwordLastUpdated": "Última actualización de tu contraseña: 30 de septiembre de 2024",
+        "updateButton": "Actualizar",
+        "deleteAccountTitle": "Eliminar tu cuenta",
+        "deleteAccountDescription": "Si eliminas tu cuenta, ya no podrás acceder a tu contenido ni iniciar sesión en Project Horizon. Esta acción es permanente.",
+        "deleteAccountButton": "Eliminar cuenta"
     },
     "historyPrivacy": {
       "title": "Historial y Privacidad",

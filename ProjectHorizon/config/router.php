@@ -5,6 +5,7 @@ class Router {
         'trends' => ['view' => 'main', 'section' => 'trends'],
         'favorites' => ['view' => 'main', 'section' => 'favorites'],
         'settings/accessibility' => ['view' => 'settings', 'section' => 'accessibility'],
+        'settings/login-security' => ['view' => 'settings', 'section' => 'loginSecurity'],
         'settings/history-privacy' => ['view' => 'settings', 'section' => 'historyPrivacy'],
         'settings/history' => ['view' => 'settings', 'section' => 'history'],
         'help/privacy-policy' => ['view' => 'help', 'section' => 'privacyPolicy'],

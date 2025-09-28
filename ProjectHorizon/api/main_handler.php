@@ -86,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'main-adView' => '../includes/sections/main/ad-view.php',
             'main-privateGalleryProxy' => '../includes/sections/main/private-gallery-proxy.php',
             'settings-accessibility' => '../includes/sections/settings/accessibility.php',
+            'settings-loginSecurity' => '../includes/sections/settings/loginSecurity.php',
             'settings-historyPrivacy' => '../includes/sections/settings/historyPrivacy.php',
             'settings-history' => '../includes/sections/settings/history.php',
             'settings-historySearches' => '../includes/sections/settings/historySearches.php',

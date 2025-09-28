@@ -5,6 +5,7 @@ const urlMap = {
     'auth-login': 'login',
     'auth-register': 'register',
     'settings-accessibility': 'settings/accessibility',
+    'settings-loginSecurity': 'settings/login-security',
     'settings-historyPrivacy': 'settings/history-privacy',
     'settings-history': 'settings/history',
     'help-privacyPolicy': 'help/privacy-policy',

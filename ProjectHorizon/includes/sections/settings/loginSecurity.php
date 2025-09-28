@@ -1,0 +1,33 @@
+<div class="section-content <?php echo ($CURRENT_SECTION === 'loginSecurity') ? 'active' : 'disabled'; ?>" data-section="loginSecurity">
+    <div class="settings-page-container">
+        <div class="content-section header-section">
+            <div class="item-details">
+                <h2 data-i18n="settings.loginSecurity.title"></h2>
+                <p data-i18n="settings.loginSecurity.description"></p>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <div class="item-icon">
+                <span class="material-symbols-rounded">lock</span>
+            </div>
+            <div class="item-details">
+                <h4 data-i18n="settings.loginSecurity.passwordTitle"></h4>
+                <p data-i18n="settings.loginSecurity.passwordLastUpdated"></p>
+            </div>
+            <div class="item-actions">
+                <button class="load-more-btn" data-i18n="settings.loginSecurity.updateButton"></button>
+            </div>
+        </div>
+
+        <div class="content-section content-section-stacked">
+            <div class="item-details">
+                <h4 data-i18n="settings.loginSecurity.deleteAccountTitle"></h4>
+                <p data-i18n="settings.loginSecurity.deleteAccountDescription"></p>
+            </div>
+            <div class="item-actions">
+                <button class="load-more-btn" data-i18n="settings.loginSecurity.deleteAccountButton"></button>
+            </div>
+        </div>
+    </div>
+</div>
