@@ -81,6 +81,7 @@
         <h2 data-i18n="auth.registerTitle"></h2>
         <p data-i18n="auth.registerSubtitle"></p>
         <div class="auth-form" id="register-form">
+            <input type="hidden" name="csrf_token" value="">
             <div class="form-field">
                 <input type="text" id="register-username" class="auth-input" placeholder=" " autocomplete="username">
                 <label for="register-username" class="auth-label" data-i18n="auth.usernamePlaceholder"></label>

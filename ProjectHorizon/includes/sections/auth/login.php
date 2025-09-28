@@ -81,6 +81,7 @@
         <h2 data-i18n="auth.loginTitle"></h2>
         <p data-i18n="auth.loginSubtitle"></p>
         <div class="auth-form" id="login-form">
+            <input type="hidden" name="csrf_token" value="">
             <div class="form-field">
                 <input type="email" id="login-email" class="auth-input" placeholder=" " autocomplete="email">
                 <label for="login-email" class="auth-label" data-i18n="auth.emailPlaceholder"></label>

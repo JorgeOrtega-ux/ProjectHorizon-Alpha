@@ -2,6 +2,19 @@
 // Iniciar la sesión al principio de cualquier script que necesite acceso a variables de sesión
 session_start();
 
+// --- FUNCIÓN PARA GENERAR Y VALIDAR TOKEN CSRF ---
+function generate_csrf_token() {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function validate_csrf_token($token) {
+    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+}
+
+
 // --- FUNCIÓN PARA GENERAR UUID v4 ---
 function generate_uuid_v4() {
     return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
@@ -16,6 +29,13 @@ function generate_uuid_v4() {
 // --- MANEJO DE SOLICITUDES GET ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $request_type = isset($_GET['request_type']) ? $_GET['request_type'] : '';
+
+    // --- ENDPOINT PARA OBTENER EL TOKEN CSRF ---
+    if ($request_type === 'get_csrf_token') {
+        header('Content-Type: application/json');
+        echo json_encode(['csrf_token' => generate_csrf_token()]);
+        exit;
+    }
 
     // --- ENDPOINT PARA VERIFICAR EL ESTADO DE LA SESIÓN ---
     if ($request_type === 'check_session') {
@@ -288,8 +308,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     require_once '../config/db.php';
 
     $action_type = isset($_POST['action_type']) ? $_POST['action_type'] : '';
-
+    
     if ($action_type === 'register_user') {
+        if (!isset($_POST['csrf_token']) || !validate_csrf_token($_POST['csrf_token'])) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Error de validación CSRF.']);
+            exit;
+        }
+
         $username = trim($_POST['username'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
@@ -349,6 +375,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     if ($action_type === 'login_user') {
+        if (!isset($_POST['csrf_token']) || !validate_csrf_token($_POST['csrf_token'])) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Error de validación CSRF.']);
+            exit;
+        }
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
 

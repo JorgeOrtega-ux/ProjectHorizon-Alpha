@@ -120,6 +120,23 @@ export function initMainController() {
 
     // --- FUNCIONES DE AUTENTICACIÓN ---
 
+    async function fetchAndSetCsrfToken(formId) {
+        try {
+            const response = await fetch(`${window.BASE_PATH}/api/main_handler.php?request_type=get_csrf_token`);
+            const data = await response.json();
+            const form = document.getElementById(formId);
+            if (form) {
+                const tokenInput = form.querySelector('input[name="csrf_token"]');
+                if (tokenInput) {
+                    tokenInput.value = data.csrf_token;
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching CSRF token:', error);
+        }
+    }
+
+
     function getInitials(name) {
         if (!name) return '';
         const words = name.split(' ');
@@ -214,6 +231,7 @@ export function initMainController() {
     async function handleLogin(form) {
         const email = form.querySelector('#login-email').value.trim();
         const password = form.querySelector('#login-password').value.trim();
+        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
         const button = form.querySelector('[data-action="submit-login"]');
 
         let errors = [];
@@ -236,6 +254,7 @@ export function initMainController() {
         formData.append('action_type', 'login_user');
         formData.append('email', email);
         formData.append('password', password);
+        formData.append('csrf_token', csrfToken);
 
         try {
             const response = await fetch(`${window.BASE_PATH}/api/main_handler.php`, {
@@ -250,9 +269,11 @@ export function initMainController() {
                 handleStateChange('main', 'home');
             } else {
                 displayAuthErrors('login-error-container', 'login-error-list', result.message);
+                fetchAndSetCsrfToken('login-form');
             }
         } catch (error) {
             displayAuthErrors('login-error-container', 'login-error-list', 'Error de conexión.');
+            fetchAndSetCsrfToken('login-form');
         } finally {
             button.classList.remove('loading');
         }
@@ -262,6 +283,7 @@ export function initMainController() {
         const username = form.querySelector('#register-username').value.trim();
         const email = form.querySelector('#register-email').value.trim();
         const password = form.querySelector('#register-password').value.trim();
+        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
         const button = form.querySelector('[data-action="submit-register"]');
 
         let errors = [];
@@ -292,6 +314,7 @@ export function initMainController() {
         formData.append('username', username);
         formData.append('email', email);
         formData.append('password', password);
+        formData.append('csrf_token', csrfToken);
 
         try {
             const response = await fetch(`${window.BASE_PATH}/api/main_handler.php`, {
@@ -307,9 +330,11 @@ export function initMainController() {
                 handleStateChange('main', 'home');
             } else {
                 displayAuthErrors('register-error-container', 'register-error-list', result.message);
+                fetchAndSetCsrfToken('register-form');
             }
         } catch (error) {
             displayAuthErrors('register-error-container', 'register-error-list', 'Error de conexión.');
+            fetchAndSetCsrfToken('register-form');
         } finally {
             button.classList.remove('loading');
         }
@@ -2045,6 +2070,12 @@ export function initMainController() {
             updateThemeSelectorUI(localStorage.getItem('theme') || 'system');
             updateLanguageSelectorUI(localStorage.getItem('language') || 'es-419');
             initSettingsController();
+            break;
+        case 'login':
+            fetchAndSetCsrfToken('login-form');
+            break;
+        case 'register':
+            fetchAndSetCsrfToken('register-form');
             break;
         case 'history':
             historyProfilesShown = HISTORY_PROFILES_BATCH;
