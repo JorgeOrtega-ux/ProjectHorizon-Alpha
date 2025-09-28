@@ -381,35 +381,29 @@ export function initMainController() {
         });
     }
 
- // assets/js/main-controller.js
-
-// ... (resto del código del controlador) ...
-
     async function showUpdatePasswordDialog() {
         const overlay = document.getElementById('update-password-overlay');
         const titleEl = document.getElementById('update-password-title');
         const contentEl = document.getElementById('update-password-content');
         const cancelBtn = document.getElementById('update-password-cancel');
         const okBtn = document.getElementById('update-password-ok');
-
+    
         let currentStep = 'verify';
-
-        // --- INICIO DE CAMBIO: Obtener datos del usuario ---
+    
         const sessionResponse = await api.checkSession();
         if (!sessionResponse.ok || !sessionResponse.data.loggedin) {
-            return; // No mostrar el diálogo si no hay sesión
+            return;
         }
         const user = sessionResponse.data.user;
         const userInitial = getInitials(user.username);
-        // --- FIN DE CAMBIO ---
-
+    
         const closeDialog = () => {
             overlay.classList.add('disabled');
             cancelBtn.onclick = null;
             okBtn.onclick = null;
             overlay.querySelector('.dialog-icon')?.remove();
         };
-
+    
         const renderStep = async () => {
             const tokenResponse = await api.getCsrfToken();
             if (!tokenResponse.ok) {
@@ -419,7 +413,7 @@ export function initMainController() {
             const csrf_token = tokenResponse.data.csrf_token;
             
             titleEl.innerHTML = ''; 
-
+    
             if (currentStep === 'verify') {
                 titleEl.insertAdjacentHTML('beforebegin', `
                     <div class="dialog-icon">
@@ -427,7 +421,6 @@ export function initMainController() {
                     </div>
                 `);
                 titleEl.textContent = window.getTranslation('dialogs.updatePasswordTitle');
-                // --- INICIO DE CAMBIO: Añadir el "chip" de usuario ---
                 contentEl.innerHTML = `
                     <div class="dialog-user-chip">
                         <div class="dialog-user-initial">${userInitial}</div>
@@ -439,11 +432,10 @@ export function initMainController() {
                         <input type="password" id="current-password" class="auth-input" placeholder=" " autocomplete="current-password">
                         <label for="current-password" class="auth-label" data-i18n="auth.passwordPlaceholder"></label>
                     </div>
-                    <div class="auth-error-message-container" id="password-error-container" style="display: none;">
+                    <div class="auth-error-message-container" id="password-error-container">
                         <ul id="password-error-list"></ul>
                     </div>
                 `;
-                // --- FIN DE CAMBIO ---
                 okBtn.textContent = window.getTranslation('general.confirm');
                 cancelBtn.textContent = window.getTranslation('general.cancel');
                 okBtn.onclick = handleVerifyPassword;
@@ -455,7 +447,6 @@ export function initMainController() {
                     </div>
                 `);
                 titleEl.textContent = window.getTranslation('dialogs.enterNewPasswordTitle');
-                // --- INICIO DE CAMBIO: Añadir el "chip" de usuario ---
                 contentEl.innerHTML = `
                     <div class="dialog-user-chip">
                         <div class="dialog-user-initial">${userInitial}</div>
@@ -471,11 +462,10 @@ export function initMainController() {
                         <input type="password" id="confirm-password" class="auth-input" placeholder=" ">
                         <label for="confirm-password" class="auth-label" data-i18n="dialogs.confirmPasswordLabel"></label>
                     </div>
-                     <div class="auth-error-message-container" id="password-error-container" style="display: none;">
+                     <div class="auth-error-message-container" id="password-error-container">
                         <ul id="password-error-list"></ul>
                     </div>
                 `;
-                // --- FIN DE CAMBIO ---
                 okBtn.textContent = window.getTranslation('settings.loginSecurity.updateButton');
                 cancelBtn.textContent = window.getTranslation('general.back');
                 okBtn.onclick = handleUpdatePassword;
@@ -487,18 +477,18 @@ export function initMainController() {
             }
             applyTranslations(overlay);
         };
-
+    
         const handleVerifyPassword = async () => {
             const password = document.getElementById('current-password').value;
             const csrfToken = contentEl.querySelector('input[name="csrf_token"]').value;
-
+    
             const formData = new FormData();
             formData.append('action_type', 'verify_password');
             formData.append('password', password);
             formData.append('csrf_token', csrfToken);
-
+    
             const response = await api.verifyPassword(formData);
-
+    
             if (response.ok && response.data.success) {
                 overlay.querySelector('.dialog-icon')?.remove();
                 currentStep = 'update';
@@ -507,24 +497,24 @@ export function initMainController() {
                 displayAuthErrors('password-error-container', 'password-error-list', response.data.message);
             }
         };
-
+    
         const handleUpdatePassword = async () => {
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
             const csrfToken = contentEl.querySelector('input[name="csrf_token"]').value;
-
+    
             if (newPassword !== confirmPassword) {
                 displayAuthErrors('password-error-container', 'password-error-list', window.getTranslation('notifications.passwordMismatch'));
                 return;
             }
-
+    
             const formData = new FormData();
             formData.append('action_type', 'update_password');
             formData.append('new_password', newPassword);
             formData.append('csrf_token', csrfToken);
-
+    
             const response = await api.updateUserPassword(formData);
-
+    
             if (response.ok && response.data.success) {
                 showNotification(window.getTranslation('notifications.passwordUpdated'), 'success');
                 closeDialog();
@@ -532,41 +522,39 @@ export function initMainController() {
                 displayAuthErrors('password-error-container', 'password-error-list', response.data.message);
             }
         };
-
+    
         overlay.querySelector('.dialog-icon')?.remove();
         renderStep();
         overlay.classList.remove('disabled');
     }
-
+    
     async function showDeleteAccountDialog() {
         const overlay = document.getElementById('delete-account-overlay');
         const titleEl = document.getElementById('delete-account-title');
         const contentEl = document.getElementById('delete-account-content');
         const cancelBtn = document.getElementById('delete-account-cancel');
         const okBtn = document.getElementById('delete-account-ok');
-
+    
         const closeDialog = () => {
             overlay.classList.add('disabled');
             cancelBtn.onclick = null;
             okBtn.onclick = null;
             overlay.querySelector('.dialog-icon')?.remove();
         };
-
+    
         const sessionResponse = await api.checkSession();
         if (!sessionResponse.ok || !sessionResponse.data.loggedin) {
             return;
         }
-        // --- INICIO DE CAMBIO: Guardar datos del usuario ---
         const user = sessionResponse.data.user;
         const userInitial = getInitials(user.username);
         const creationDate = user.created_at;
-        // --- FIN DE CAMBIO ---
         const formattedDate = new Date(creationDate).toLocaleDateString(undefined, {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
         });
-
+    
         const tokenResponse = await api.getCsrfToken();
         if (!tokenResponse.ok) {
             showNotification("No se pudo iniciar la acción. Inténtalo de nuevo.", "error");
@@ -582,7 +570,6 @@ export function initMainController() {
         `);
         titleEl.setAttribute('data-i18n', 'dialogs.deleteAccountTitle');
         const message = window.getTranslation('dialogs.deleteAccountMessage', { date: formattedDate });
-        // --- INICIO DE CAMBIO: Añadir el "chip" de usuario ---
         contentEl.innerHTML = `
         <div class="dialog-user-chip">
             <div class="dialog-user-initial">${userInitial}</div>
@@ -594,36 +581,35 @@ export function initMainController() {
             <input type="password" id="delete-confirm-password" class="auth-input" placeholder=" " autocomplete="current-password">
             <label for="delete-confirm-password" class="auth-label" data-i18n="auth.passwordPlaceholder"></label>
         </div>
-        <div class="auth-error-message-container" id="delete-error-container" style="display: none; margin-top: 16px;">
+        <div class="auth-error-message-container" id="delete-error-container">
             <ul id="delete-error-list"></ul>
         </div>
         `;
-        // --- FIN DE CAMBIO ---
-
+    
         okBtn.setAttribute('data-i18n', 'settings.loginSecurity.deleteAccountButton');
         cancelBtn.setAttribute('data-i18n', 'general.cancel');
-
+    
         applyTranslations(overlay);
-
+    
         okBtn.onclick = async () => {
             const password = document.getElementById('delete-confirm-password').value;
             const csrfToken = contentEl.querySelector('input[name="csrf_token"]').value;
-
+    
             if (!password) {
                 displayAuthErrors('delete-error-container', 'delete-error-list', window.getTranslation('auth.errors.passwordRequired'));
                 return;
             }
-
+    
             const formData = new FormData();
             formData.append('action_type', 'delete_account');
             formData.append('password', password);
             formData.append('csrf_token', csrfToken);
-
+    
             okBtn.classList.add('loading');
-
+    
             const response = await api.deleteAccount(formData);
             okBtn.classList.remove('loading');
-
+    
             if (response.ok && response.data.success) {
                 showNotification(window.getTranslation('notifications.accountDeleted'), 'success');
                 updateUserUI(null);
@@ -638,12 +624,10 @@ export function initMainController() {
                 }
             }
         };
-
+    
         cancelBtn.onclick = closeDialog;
         overlay.classList.remove('disabled');
     }
-
-// ... (resto del código del controlador) ...
 
     function initSettingsController() {
         const settingsToggles = {
