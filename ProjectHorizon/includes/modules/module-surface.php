@@ -33,10 +33,10 @@ $is_logged_in = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
                 <div class="menu-link-text"><span data-i18n="moduleSurface.accessibility"></span></div>
             </div>
             <?php if ($is_logged_in): ?>
-            <div class="menu-link <?php echo ($CURRENT_SECTION === 'loginSecurity') ? 'active' : ''; ?>" data-action="toggleSectionLoginSecurity">
-                <div class="menu-link-icon"><span class="material-symbols-rounded">security</span></div>
-                <div class="menu-link-text"><span data-i18n="moduleSurface.loginSecurity"></span></div>
-            </div>
+                <div class="menu-link <?php echo ($CURRENT_SECTION === 'loginSecurity') ? 'active' : ''; ?>" data-action="toggleSectionLoginSecurity">
+                    <div class="menu-link-icon"><span class="material-symbols-rounded">security</span></div>
+                    <div class="menu-link-text"><span data-i18n="moduleSurface.loginSecurity"></span></div>
+                </div>
             <?php endif; ?>
             <div class="menu-link <?php echo ($CURRENT_SECTION === 'historyPrivacy') ? 'active' : ''; ?>" data-action="toggleSectionHistoryPrivacy">
                 <div class="menu-link-icon"><span class="material-symbols-rounded">history</span></div>
@@ -59,7 +59,7 @@ $is_logged_in = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
                 <div class="menu-link-icon"><span class="material-symbols-rounded">gavel</span></div>
                 <div class="menu-link-text"><span data-i18n="moduleSurface.termsConditions"></span></div>
             </div>
-             <div class="menu-link <?php echo ($CURRENT_SECTION === 'cookiePolicy') ? 'active' : ''; ?>" data-action="toggleSectionCookiePolicy">
+            <div class="menu-link <?php echo ($CURRENT_SECTION === 'cookiePolicy') ? 'active' : ''; ?>" data-action="toggleSectionCookiePolicy">
                 <div class="menu-link-icon"><span class="material-symbols-rounded">cookie</span></div>
                 <div class="menu-link-text"><span data-i18n="moduleSurface.cookiePolicy"></span></div>
             </div>
@@ -69,7 +69,7 @@ $is_logged_in = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
             </div>
         </div>
     </div>
-    
+
     <div class="menu-content <?php echo ($CURRENT_VIEW === 'admin') ? 'active' : 'disabled'; ?>" data-menu="admin">
         <div class="menu-list">
             <div class="menu-link" data-action="toggleMainView">

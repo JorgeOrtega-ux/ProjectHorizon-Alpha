@@ -2157,6 +2157,27 @@ function setupEventListeners() {
         contentContainer.innerHTML = loaderHTML;
     }
 
+    // ✅ **NUEVO: Array de secciones protegidas en el frontend**
+    const protected_sections = [
+        'settings-loginSecurity',
+        'settings-history',
+        'admin-manageUsers',
+        'admin-manageContent'
+    ];
+    const section_key = view + '-' + section;
+
+    // ✅ **NUEVO: Verificación de sesión en el cliente**
+    if (protected_sections.includes(section_key)) {
+        const sessionResponse = await api.checkSession();
+        if (!sessionResponse.ok || !sessionResponse.data.loggedin) {
+            // Si no está logueado, redirige a la página de login
+            navigateToUrl('auth', 'login');
+            handleStateChange('auth', 'login');
+            return;
+        }
+    }
+
+
     if (view === 'admin') {
         const sessionResponse = await api.checkSession();
         if (!sessionResponse.ok || !sessionResponse.data.loggedin || sessionResponse.data.user.role !== 'administrator') {
@@ -2178,7 +2199,10 @@ function setupEventListeners() {
         }
     } else {
         console.error("Failed to fetch section:", response.data);
-        if (contentContainer) {
+        if (response.status === 403) {
+             navigateToUrl('auth', 'login');
+            handleStateChange('auth', 'login');
+        } else if (contentContainer) {
             displayFetchError('.general-content-scrolleable', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
         }
         return;

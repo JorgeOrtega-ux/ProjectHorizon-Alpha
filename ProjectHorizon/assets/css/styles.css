@@ -1859,6 +1859,13 @@ h6 {
 
 .profile-btn {
     border-width: 2px;
+    border-radius: 50%; /* << NEW */
+    padding: 2px; /* << NEW */
+    background-clip: content-box; /* << NEW */
+}
+
+.profile-btn:hover {
+    background-color: var(--hover-bg); /* << NEW */
 }
 
 .profile-btn.profile-btn--user {

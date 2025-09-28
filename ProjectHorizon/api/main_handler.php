@@ -82,57 +82,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     // --- ENDPOINT PARA CARGA DINÁMICA DE SECCIONES HTML ---
-    if ($request_type === 'section') {
-        header('Content-Type: text/html');
-        // (El resto del código GET para secciones permanece igual...)
-        $view = isset($_GET['view']) ? $_GET['view'] : 'main';
-        $section = isset($_GET['section']) ? $_GET['section'] : 'home';
+   // --- ENDPOINT PARA CARGA DINÁMICA DE SECCIONES HTML ---
+if ($request_type === 'section') {
+    header('Content-Type: text/html');
+    
+    $view = isset($_GET['view']) ? $_GET['view'] : 'main';
+    $section = isset($_GET['section']) ? $_GET['section'] : 'home';
 
-        $allowed_sections = [
-            'main-home' => '../includes/sections/main/home.php',
-            'main-favorites' => '../includes/sections/main/favorites.php',
-            'main-trends' => '../includes/sections/main/trends.php',
-            'main-404' => '../includes/sections/main/404.php',
-            'main-galleryPhotos' => '../includes/sections/main/user-photos.php',
-            'main-photoView' => '../includes/sections/main/photo-view.php',
-            'main-accessCodePrompt' => '../includes/sections/main/access-code-prompt.php',
-            'main-userSpecificFavorites' => '../includes/sections/main/user-specific-favorites.php',
-            'main-adView' => '../includes/sections/main/ad-view.php',
-            'main-privateGalleryProxy' => '../includes/sections/main/private-gallery-proxy.php',
-            'settings-accessibility' => '../includes/sections/settings/accessibility.php',
-            'settings-loginSecurity' => '../includes/sections/settings/loginSecurity.php',
-            'settings-historyPrivacy' => '../includes/sections/settings/historyPrivacy.php',
-            'settings-history' => '../includes/sections/settings/history.php',
-            'settings-historySearches' => '../includes/sections/settings/historySearches.php',
-            'help-privacyPolicy' => '../includes/sections/help/privacy-policy.php',
-            'help-termsConditions' => '../includes/sections/help/terms-conditions.php',
-            'help-cookiePolicy' => '../includes/sections/help/cookie-policy.php',
-            'help-sendFeedback' => '../includes/sections/help/send-feedback.php',
-            'auth-login' => '../includes/sections/auth/login.php',
-            'auth-register' => '../includes/sections/auth/register.php',
-            'admin-manageUsers' => '../includes/sections/admin/manage-users.php',
-            'admin-manageContent' => '../includes/sections/admin/manage-content.php'
-        ];
+    // ✅ **NUEVO: Array de secciones que requieren inicio de sesión**
+    $protected_sections = [
+        'settings-loginSecurity',
+        'settings-history',
+        'admin-manageUsers',
+        'admin-manageContent'
+    ];
+    $section_key = $view . '-' . $section;
 
-        $section_key = $view . '-' . $section;
-
-        if (array_key_exists($section_key, $allowed_sections)) {
-            $file_path = $allowed_sections[$section_key];
-            
-            $CURRENT_VIEW = $view;
-            $CURRENT_SECTION = $section;
-
-            ob_start();
-            include $file_path;
-            $html_content = ob_get_clean();
-            
-            echo $html_content;
-        } else {
-            http_response_code(404);
-            include '../includes/sections/main/404.php';
-        }
+    // ✅ **NUEVO: Verificación de sesión para secciones protegidas**
+    if (in_array($section_key, $protected_sections) && (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true)) {
+        http_response_code(403); // Forbidden
+        // Opcionalmente, podrías mostrar una página de error específica
+        include '../includes/sections/main/404.php';
         exit;
     }
+
+    $allowed_sections = [
+        'main-home' => '../includes/sections/main/home.php',
+        'main-favorites' => '../includes/sections/main/favorites.php',
+        'main-trends' => '../includes/sections/main/trends.php',
+        'main-404' => '../includes/sections/main/404.php',
+        'main-galleryPhotos' => '../includes/sections/main/user-photos.php',
+        'main-photoView' => '../includes/sections/main/photo-view.php',
+        'main-accessCodePrompt' => '../includes/sections/main/access-code-prompt.php',
+        'main-userSpecificFavorites' => '../includes/sections/main/user-specific-favorites.php',
+        'main-adView' => '../includes/sections/main/ad-view.php',
+        'main-privateGalleryProxy' => '../includes/sections/main/private-gallery-proxy.php',
+        'settings-accessibility' => '../includes/sections/settings/accessibility.php',
+        'settings-loginSecurity' => '../includes/sections/settings/loginSecurity.php',
+        'settings-historyPrivacy' => '../includes/sections/settings/historyPrivacy.php',
+        'settings-history' => '../includes/sections/settings/history.php',
+        'settings-historySearches' => '../includes/sections/settings/historySearches.php',
+        'help-privacyPolicy' => '../includes/sections/help/privacy-policy.php',
+        'help-termsConditions' => '../includes/sections/help/terms-conditions.php',
+        'help-cookiePolicy' => '../includes/sections/help/cookie-policy.php',
+        'help-sendFeedback' => '../includes/sections/help/send-feedback.php',
+        'auth-login' => '../includes/sections/auth/login.php',
+        'auth-register' => '../includes/sections/auth/register.php',
+        'admin-manageUsers' => '../includes/sections/admin/manage-users.php',
+        'admin-manageContent' => '../includes/sections/admin/manage-content.php'
+    ];
+
+
+    if (array_key_exists($section_key, $allowed_sections)) {
+        $file_path = $allowed_sections[$section_key];
+        
+        $CURRENT_VIEW = $view;
+        $CURRENT_SECTION = $section;
+
+        ob_start();
+        include $file_path;
+        $html_content = ob_get_clean();
+        
+        echo $html_content;
+    } else {
+        http_response_code(404);
+        include '../includes/sections/main/404.php';
+    }
+    exit;
+}
 
     // --- LÓGICA PARA DATOS JSON ---
     header('Content-Type: application/json');
