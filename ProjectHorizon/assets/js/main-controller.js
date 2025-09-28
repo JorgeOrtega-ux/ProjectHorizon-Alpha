@@ -121,238 +121,229 @@ export function initMainController() {
 
     // --- FUNCIONES DE AUTENTICACIÓN ---
 
-  // --- FUNCIONES DE AUTENTICACIÓN ---
-
-async function fetchAndSetCsrfToken(formId) {
-    try {
-        const data = await api.getCsrfToken();
-        const form = document.getElementById(formId);
-        if (form) {
-            const tokenInput = form.querySelector('input[name="csrf_token"]');
-            if (tokenInput) {
-                tokenInput.value = data.csrf_token;
+    async function fetchAndSetCsrfToken(formId) {
+        const response = await api.getCsrfToken();
+        if (response.ok) {
+            const form = document.getElementById(formId);
+            if (form) {
+                const tokenInput = form.querySelector('input[name="csrf_token"]');
+                if (tokenInput) {
+                    tokenInput.value = response.data.csrf_token;
+                }
             }
+        } else {
+            console.error('Error fetching CSRF token:', response.data);
         }
-    } catch (error) {
-        console.error('Error fetching CSRF token:', error);
-    }
-}
-
-
-function getInitials(name) {
-    if (!name) return '';
-    const words = name.split(' ');
-    if (words.length > 1) {
-        return (words[0][0] + words[1][0]).toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-}
-
-function displayAuthErrors(containerId, listId, messages) {
-    const container = document.getElementById(containerId);
-    const list = document.getElementById(listId);
-    
-    if (!container || !list) return;
-
-    list.innerHTML = '';
-
-    if (!messages || messages.length === 0) {
-        container.style.display = 'none';
-        return;
     }
 
-    const errorMessages = Array.isArray(messages) ? messages : [messages];
+    function getInitials(name) {
+        if (!name) return '';
+        const words = name.split(' ');
+        if (words.length > 1) {
+            return (words[0][0] + words[1][0]).toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
+    }
 
-    errorMessages.forEach(msg => {
-        const li = document.createElement('li');
-        li.textContent = msg;
-        list.appendChild(li);
-    });
+    function displayAuthErrors(containerId, listId, messages) {
+        const container = document.getElementById(containerId);
+        const list = document.getElementById(listId);
+        
+        if (!container || !list) return;
 
-    container.style.display = 'block';
-}
+        list.innerHTML = '';
 
-function updateUserUI(userData) {
-    const loggedOutContainer = document.getElementById('auth-container-logged-out');
-    const loggedInContainer = document.getElementById('auth-container-logged-in');
-    const helpBtn = document.getElementById('help-btn');
-    const settingsBtn = document.getElementById('settings-btn');
-    const profileBtn = loggedInContainer ? loggedInContainer.querySelector('.profile-btn') : null;
-    const adminPanelLink = document.querySelector('[data-action="toggleAdminPanel"]');
+        if (!messages || messages.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
 
-    if (userData && profileBtn) {
-        loggedOutContainer.classList.add('disabled');
-        loggedInContainer.classList.remove('disabled');
-        helpBtn.classList.add('disabled');
-        settingsBtn.classList.add('disabled');
+        const errorMessages = Array.isArray(messages) ? messages : [messages];
 
-        const initialsSpan = profileBtn.querySelector('.profile-initials');
-        initialsSpan.textContent = getInitials(userData.username);
+        errorMessages.forEach(msg => {
+            const li = document.createElement('li');
+            li.textContent = msg;
+            list.appendChild(li);
+        });
 
-        profileBtn.classList.remove('profile-btn--user', 'profile-btn--moderator', 'profile-btn--administrator');
-        profileBtn.classList.add(`profile-btn--${userData.role || 'user'}`);
-        profileBtn.dataset.userRole = userData.role || 'user';
+        container.style.display = 'block';
+    }
 
-        if (adminPanelLink) {
-            if (userData.role === 'administrator') {
-                adminPanelLink.style.display = 'flex';
-            } else {
+    function updateUserUI(userData) {
+        const loggedOutContainer = document.getElementById('auth-container-logged-out');
+        const loggedInContainer = document.getElementById('auth-container-logged-in');
+        const helpBtn = document.getElementById('help-btn');
+        const settingsBtn = document.getElementById('settings-btn');
+        const profileBtn = loggedInContainer ? loggedInContainer.querySelector('.profile-btn') : null;
+        const adminPanelLink = document.querySelector('[data-action="toggleAdminPanel"]');
+
+        if (userData && profileBtn) {
+            loggedOutContainer.classList.add('disabled');
+            loggedInContainer.classList.remove('disabled');
+            helpBtn.classList.add('disabled');
+            settingsBtn.classList.add('disabled');
+
+            const initialsSpan = profileBtn.querySelector('.profile-initials');
+            initialsSpan.textContent = getInitials(userData.username);
+
+            profileBtn.classList.remove('profile-btn--user', 'profile-btn--moderator', 'profile-btn--administrator');
+            profileBtn.classList.add(`profile-btn--${userData.role || 'user'}`);
+            profileBtn.dataset.userRole = userData.role || 'user';
+
+            if (adminPanelLink) {
+                if (userData.role === 'administrator') {
+                    adminPanelLink.style.display = 'flex';
+                } else {
+                    adminPanelLink.style.display = 'none';
+                }
+            }
+
+        } else {
+            loggedOutContainer.classList.remove('disabled');
+            loggedInContainer.classList.add('disabled');
+            helpBtn.classList.remove('disabled');
+            settingsBtn.classList.remove('disabled');
+            if (profileBtn) {
+                profileBtn.classList.remove('profile-btn--user', 'profile-btn--moderator', 'profile-btn--administrator');
+            }
+            if (adminPanelLink) {
                 adminPanelLink.style.display = 'none';
             }
         }
-
-    } else {
-        loggedOutContainer.classList.remove('disabled');
-        loggedInContainer.classList.add('disabled');
-        helpBtn.classList.remove('disabled');
-        settingsBtn.classList.remove('disabled');
-        if (profileBtn) {
-            profileBtn.classList.remove('profile-btn--user', 'profile-btn--moderator', 'profile-btn--administrator');
-        }
-        if (adminPanelLink) {
-            adminPanelLink.style.display = 'none';
-        }
+        applyTranslations(document.querySelector('.header-right'));
     }
-    applyTranslations(document.querySelector('.header-right'));
-}
-async function checkSessionStatus() {
-    try {
-        const data = await api.checkSession();
-        if (data.loggedin) {
-            updateUserUI(data.user);
+
+    async function checkSessionStatus() {
+        const response = await api.checkSession();
+        if (response.ok && response.data.loggedin) {
+            updateUserUI(response.data.user);
         } else {
             updateUserUI(null);
-            if (data.status === 'suspended') {
+            if (response.data && response.data.status === 'suspended') {
                 showNotification(window.getTranslation('auth.errors.accountSuspended'), 'error');
-            } else if (data.status === 'deleted') {
+            } else if (response.data && response.data.status === 'deleted') {
                 showNotification(window.getTranslation('auth.errors.accountDeleted'), 'error');
             }
         }
-    } catch (error) {
-        console.error('Error checking session:', error);
-        updateUserUI(null);
-    }
-}
-
-async function handleLogin(form) {
-    const email = form.querySelector('#login-email').value.trim();
-    const password = form.querySelector('#login-password').value.trim();
-    const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-    const button = form.querySelector('[data-action="submit-login"]');
-
-    let errors = [];
-    if (!email) {
-        errors.push(window.getTranslation('auth.errors.emailRequired'));
-    }
-    if (!password) {
-        errors.push(window.getTranslation('auth.errors.passwordRequired'));
     }
 
-    if (errors.length > 0) {
-        displayAuthErrors('login-error-container', 'login-error-list', errors);
-        return;
-    }
+    async function handleLogin(form) {
+        const email = form.querySelector('#login-email').value.trim();
+        const password = form.querySelector('#login-password').value.trim();
+        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+        const button = form.querySelector('[data-action="submit-login"]');
 
-    displayAuthErrors('login-error-container', 'login-error-list', []);
-    button.classList.add('loading');
-
-    const formData = new FormData();
-    formData.append('action_type', 'login_user');
-    formData.append('email', email);
-    formData.append('password', password);
-    formData.append('csrf_token', csrfToken);
-
-    try {
-        const result = await api.loginUser(formData);
-        updateUserUI(result.user);
-        showNotification(window.getTranslation('auth.loginSuccess'), 'success');
-        navigateToUrl('main', 'home');
-        handleStateChange('main', 'home');
-    } catch (error) {
-        // ¡CAMBIO CLAVE! Ahora 'error' es el objeto Response directamente.
-        const errorResult = await error.json(); 
-        let errorMessage = errorResult.message;
-        
-        if (errorMessage === 'account_suspended') {
-            errorMessage = window.getTranslation('auth.errors.accountSuspended');
-        } else if (errorMessage === 'account_deleted') {
-            errorMessage = window.getTranslation('auth.errors.accountDeleted');
+        let errors = [];
+        if (!email) {
+            errors.push(window.getTranslation('auth.errors.emailRequired'));
+        }
+        if (!password) {
+            errors.push(window.getTranslation('auth.errors.passwordRequired'));
         }
 
-        displayAuthErrors('login-error-container', 'login-error-list', errorMessage);
-        fetchAndSetCsrfToken('login-form');
-    } finally {
+        if (errors.length > 0) {
+            displayAuthErrors('login-error-container', 'login-error-list', errors);
+            return;
+        }
+
+        displayAuthErrors('login-error-container', 'login-error-list', []);
+        button.classList.add('loading');
+
+        const formData = new FormData();
+        formData.append('action_type', 'login_user');
+        formData.append('email', email);
+        formData.append('password', password);
+        formData.append('csrf_token', csrfToken);
+
+        const response = await api.loginUser(formData);
         button.classList.remove('loading');
-    }
-}
 
-async function handleRegister(form) {
-    const username = form.querySelector('#register-username').value.trim();
-    const email = form.querySelector('#register-email').value.trim();
-    const password = form.querySelector('#register-password').value.trim();
-    const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-    const button = form.querySelector('[data-action="submit-register"]');
+        if (response.ok) {
+            const result = response.data;
+            updateUserUI(result.user);
+            showNotification(window.getTranslation('auth.loginSuccess'), 'success');
+            navigateToUrl('main', 'home');
+            handleStateChange('main', 'home');
+        } else {
+            const errorResult = response.data;
+            let errorMessage = errorResult.message;
+            
+            if (errorMessage === 'account_suspended') {
+                errorMessage = window.getTranslation('auth.errors.accountSuspended');
+            } else if (errorMessage === 'account_deleted') {
+                errorMessage = window.getTranslation('auth.errors.accountDeleted');
+            }
 
-    let errors = [];
-    if (!username) {
-        errors.push(window.getTranslation('auth.errors.usernameRequired'));
-    }
-    if (!email) {
-        errors.push(window.getTranslation('auth.errors.emailRequired'));
-    } else if (!/^\S+@\S+\.\S+$/.test(email)) {
-        errors.push(window.getTranslation('auth.errors.emailInvalid'));
-    }
-    if (!password) {
-        errors.push(window.getTranslation('auth.errors.passwordRequired'));
-    } else if (password.length < 6) {
-        errors.push(window.getTranslation('auth.errors.passwordTooShort'));
+            displayAuthErrors('login-error-container', 'login-error-list', errorMessage);
+            fetchAndSetCsrfToken('login-form');
+        }
     }
 
-    if (errors.length > 0) {
-        displayAuthErrors('register-error-container', 'register-error-list', errors);
-        return;
-    }
+    async function handleRegister(form) {
+        const username = form.querySelector('#register-username').value.trim();
+        const email = form.querySelector('#register-email').value.trim();
+        const password = form.querySelector('#register-password').value.trim();
+        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+        const button = form.querySelector('[data-action="submit-register"]');
 
-    displayAuthErrors('register-error-container', 'register-error-list', []);
-    button.classList.add('loading');
+        let errors = [];
+        if (!username) {
+            errors.push(window.getTranslation('auth.errors.usernameRequired'));
+        }
+        if (!email) {
+            errors.push(window.getTranslation('auth.errors.emailRequired'));
+        } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+            errors.push(window.getTranslation('auth.errors.emailInvalid'));
+        }
+        if (!password) {
+            errors.push(window.getTranslation('auth.errors.passwordRequired'));
+        } else if (password.length < 6) {
+            errors.push(window.getTranslation('auth.errors.passwordTooShort'));
+        }
 
-    const formData = new FormData();
-    formData.append('action_type', 'register_user');
-    formData.append('username', username);
-    formData.append('email', email);
-    formData.append('password', password);
-    formData.append('csrf_token', csrfToken);
+        if (errors.length > 0) {
+            displayAuthErrors('register-error-container', 'register-error-list', errors);
+            return;
+        }
 
-    try {
-        const result = await api.registerUser(formData);
-        updateUserUI(result.user);
-        showNotification(window.getTranslation('auth.registerSuccess'), 'success');
-        navigateToUrl('main', 'home');
-        handleStateChange('main', 'home');
-    } catch (error) {
-        const errorResult = await error.response.json();
-        displayAuthErrors('register-error-container', 'register-error-list', errorResult.message);
-        fetchAndSetCsrfToken('register-form');
-    } finally {
+        displayAuthErrors('register-error-container', 'register-error-list', []);
+        button.classList.add('loading');
+
+        const formData = new FormData();
+        formData.append('action_type', 'register_user');
+        formData.append('username', username);
+        formData.append('email', email);
+        formData.append('password', password);
+        formData.append('csrf_token', csrfToken);
+
+        const response = await api.registerUser(formData);
         button.classList.remove('loading');
-    }
-}
 
-async function handleLogout() {
-    try {
-        const result = await api.logoutUser();
-        if (result.success) {
+        if (response.ok) {
+            const result = response.data;
+            updateUserUI(result.user);
+            showNotification(window.getTranslation('auth.registerSuccess'), 'success');
+            navigateToUrl('main', 'home');
+            handleStateChange('main', 'home');
+        } else {
+            displayAuthErrors('register-error-container', 'register-error-list', response.data.message);
+            fetchAndSetCsrfToken('register-form');
+        }
+    }
+
+    async function handleLogout() {
+        const response = await api.logoutUser();
+        if (response.ok && response.data.success) {
             updateUserUI(null);
             showNotification(window.getTranslation('auth.logoutSuccess'));
-            if (currentAppView === 'settings' || currentAppView === 'help') {
+            if (currentAppView === 'settings' || currentAppView === 'help' || currentAppView === 'admin') {
                 navigateToUrl('main', 'home');
                 handleStateChange('main', 'home');
             }
+        } else {
+            console.error('Error logging out:', response.data);
         }
-    } catch (error) {
-        console.error('Error logging out:', error);
     }
-}
 
     function showCustomConfirm(title, message) {
         return new Promise((resolve) => {
@@ -397,7 +388,13 @@ async function handleLogout() {
         };
     
         const renderStep = async () => {
-            const { csrf_token } = await api.getCsrfToken();
+            const tokenResponse = await api.getCsrfToken();
+            if (!tokenResponse.ok) {
+                showNotification("No se pudo iniciar la acción. Inténtalo de nuevo.", "error");
+                return;
+            }
+            const csrf_token = tokenResponse.data.csrf_token;
+            
             if (currentStep === 'verify') {
                 titleEl.textContent = window.getTranslation('dialogs.updatePasswordTitle');
                 contentEl.innerHTML = `
@@ -452,17 +449,13 @@ async function handleLogout() {
             formData.append('password', password);
             formData.append('csrf_token', csrfToken);
     
-            try {
-                const result = await api.verifyPassword(formData);
-                if (result.success) {
-                    currentStep = 'update';
-                    renderStep();
-                } else {
-                     displayAuthErrors('password-error-container', 'password-error-list', result.message);
-                }
-            } catch (error) {
-                const errorResult = await error.response.json();
-                displayAuthErrors('password-error-container', 'password-error-list', errorResult.message);
+            const response = await api.verifyPassword(formData);
+
+            if (response.ok && response.data.success) {
+                currentStep = 'update';
+                renderStep();
+            } else {
+                 displayAuthErrors('password-error-container', 'password-error-list', response.data.message);
             }
         };
     
@@ -472,7 +465,7 @@ async function handleLogout() {
             const csrfToken = contentEl.querySelector('input[name="csrf_token"]').value;
     
             if (newPassword !== confirmPassword) {
-                showNotification(window.getTranslation('notifications.passwordMismatch'), 'error');
+                displayAuthErrors('password-error-container', 'password-error-list', window.getTranslation('notifications.passwordMismatch'));
                 return;
             }
     
@@ -481,17 +474,13 @@ async function handleLogout() {
             formData.append('new_password', newPassword);
             formData.append('csrf_token', csrfToken);
     
-            try {
-                const result = await api.updateUserPassword(formData);
-                if (result.success) {
-                    showNotification(window.getTranslation('notifications.passwordUpdated'), 'success');
-                    closeDialog();
-                } else {
-                    displayAuthErrors('password-error-container', 'password-error-list', result.message);
-                }
-            } catch (error) {
-                 const errorResult = await error.response.json();
-                displayAuthErrors('password-error-container', 'password-error-list', errorResult.message);
+            const response = await api.updateUserPassword(formData);
+            
+            if (response.ok && response.data.success) {
+                showNotification(window.getTranslation('notifications.passwordUpdated'), 'success');
+                closeDialog();
+            } else {
+                displayAuthErrors('password-error-container', 'password-error-list', response.data.message);
             }
         };
     
@@ -499,9 +488,6 @@ async function handleLogout() {
         overlay.classList.remove('disabled');
     }
 
-    // =================================================================
-    // == ✅ INICIO: NUEVA FUNCIÓN PARA ELIMINAR CUENTA ==
-    // =================================================================
     async function showDeleteAccountDialog() {
         const overlay = document.getElementById('delete-account-overlay');
         const titleEl = document.getElementById('delete-account-title');
@@ -515,7 +501,12 @@ async function handleLogout() {
             okBtn.onclick = null;
         };
 
-        const { csrf_token } = await api.getCsrfToken();
+        const tokenResponse = await api.getCsrfToken();
+         if (!tokenResponse.ok) {
+            showNotification("No se pudo iniciar la acción. Inténtalo de nuevo.", "error");
+            return;
+        }
+        const csrf_token = tokenResponse.data.csrf_token;
 
         titleEl.setAttribute('data-i18n', 'dialogs.deleteAccountTitle');
         contentEl.innerHTML = `
@@ -550,32 +541,28 @@ async function handleLogout() {
             formData.append('csrf_token', csrfToken);
             
             okBtn.classList.add('loading');
+            
+            const response = await api.deleteAccount(formData);
+            okBtn.classList.remove('loading');
 
-            try {
-                const result = await api.deleteAccount(formData);
-                if (result.success) {
-                    showNotification(window.getTranslation('notifications.accountDeleted'), 'success');
-                    updateUserUI(null);
-                    closeDialog();
-                    navigateToUrl('main', 'home');
-                    handleStateChange('main', 'home');
+            if (response.ok && response.data.success) {
+                showNotification(window.getTranslation('notifications.accountDeleted'), 'success');
+                updateUserUI(null);
+                closeDialog();
+                navigateToUrl('main', 'home');
+                handleStateChange('main', 'home');
+            } else {
+                displayAuthErrors('delete-error-container', 'delete-error-list', response.data.message);
+                const newTokenResponse = await api.getCsrfToken();
+                if (newTokenResponse.ok) {
+                    contentEl.querySelector('input[name="csrf_token"]').value = newTokenResponse.data.csrf_token;
                 }
-            } catch (error) {
-                const errorResult = await error.json();
-                displayAuthErrors('delete-error-container', 'delete-error-list', errorResult.message);
-                const newCsrf = await api.getCsrfToken();
-                contentEl.querySelector('input[name="csrf_token"]').value = newCsrf.csrf_token;
-            } finally {
-                 okBtn.classList.remove('loading');
             }
         };
 
         cancelBtn.onclick = closeDialog;
         overlay.classList.remove('disabled');
     }
-    // =================================================================
-    // == ✅ FIN: NUEVA FUNCIÓN PARA ELIMINAR CUENTA ==
-    // =================================================================
 
     function initSettingsController() {
         const settingsToggles = {
@@ -708,8 +695,8 @@ async function handleLogout() {
         updateFavoriteCardState(photoData.id);
 
         api.toggleFavoriteOnServer(photoData.id, photoData.gallery_uuid, isLiked)
-            .then(data => {
-                if (!data.success) {
+            .then(response => {
+                if (!response.ok) {
                     console.error('Error al actualizar el like.');
                 }
             });
@@ -757,7 +744,7 @@ async function handleLogout() {
         }
 
         if (currentFavoritesSortBy === 'oldest') {
-            favorites.sort((a, b) => (a.added_at || 0) - (a.added_at || 0));
+            favorites.sort((a, b) => (a.added_at || 0) - (b.added_at || 0));
         } else if (currentFavoritesSortBy === 'newest') {
             favorites.sort((a, b) => (b.added_at || 0) - (a.added_at || 0));
         }
@@ -943,7 +930,7 @@ async function handleLogout() {
             const badge = document.createElement('div');
             badge.className = 'privacy-badge';
 
-            if (gallery.privacy === 1) {
+            if (gallery.privacy == 1) {
                 badge.innerHTML = `<span class="material-symbols-rounded">lock</span> ${window.getTranslation('general.private')}`;
             } else {
                 badge.innerHTML = `<span class="material-symbols-rounded">public</span> ${window.getTranslation('general.public')}`;
@@ -980,7 +967,7 @@ async function handleLogout() {
             card.appendChild(overlay);
             container.appendChild(card);
 
-            if (gallery.privacy === 1) {
+            if (gallery.privacy == 1) {
                 const unlockedGalleries = JSON.parse(localStorage.getItem('unlockedGalleries') || '{}');
                 if (unlockedGalleries[gallery.uuid]) {
                     updateCardPrivacyStatus(gallery.uuid, unlockedGalleries[gallery.uuid]);
@@ -1023,7 +1010,7 @@ async function handleLogout() {
         }
     }
 
-    function fetchAndDisplayGalleries(sortBy = 'relevant', searchTerm = '', append = false) {
+    async function fetchAndDisplayGalleries(sortBy = 'relevant', searchTerm = '', append = false) {
         if (isLoadingGalleries) return;
         isLoadingGalleries = true;
 
@@ -1050,49 +1037,48 @@ async function handleLogout() {
             }
         }
 
-        api.getGalleries(sortBy, searchTerm, galleriesCurrentPage, BATCH_SIZE)
-            .then(data => {
+        const response = await api.getGalleries(sortBy, searchTerm, galleriesCurrentPage, BATCH_SIZE);
+        isLoadingGalleries = false;
+
+        if (response.ok) {
+            const data = response.data;
+            if (statusContainer) {
+                statusContainer.classList.add('disabled');
+                statusContainer.innerHTML = '';
+            }
+
+            if (gridContainer) gridContainer.classList.remove('disabled');
+
+            if (data.length > 0) {
+                displayGalleriesAsGrid(data, gridContainer, sortBy, append);
+            } else if (!append) {
                 if (statusContainer) {
-                    statusContainer.classList.add('disabled');
-                    statusContainer.innerHTML = '';
+                    statusContainer.classList.remove('disabled');
+                    statusContainer.innerHTML = `<div><h2>${window.getTranslation('general.noResultsTitle')}</h2><p>${window.getTranslation('general.noResultsMessage')}</p></div>`;
                 }
+                if (gridContainer) gridContainer.classList.add('disabled');
+            }
 
-                if (gridContainer) gridContainer.classList.remove('disabled');
-
-                if (data.length > 0) {
-                    displayGalleriesAsGrid(data, gridContainer, sortBy, append);
-                } else if (!append) {
-                    if (statusContainer) {
-                        statusContainer.classList.remove('disabled');
-                        statusContainer.innerHTML = `<div><h2>${window.getTranslation('general.noResultsTitle')}</h2><p>${window.getTranslation('general.noResultsMessage')}</p></div>`;
-                    }
-                    if (gridContainer) gridContainer.classList.add('disabled');
-                }
-
-                const loadMoreContainer = document.getElementById('users-load-more-container');
-                if (loadMoreContainer) {
-                    if (data.length < BATCH_SIZE) {
-                        loadMoreContainer.classList.add('disabled');
-                    } else {
-                        loadMoreContainer.classList.remove('disabled');
-                        galleriesCurrentPage++;
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error al obtener las galerías:', error);
-                if (!append) {
-                    displayFetchError('[data-section="home"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
+            const loadMoreContainer = document.getElementById('users-load-more-container');
+            if (loadMoreContainer) {
+                if (data.length < BATCH_SIZE) {
+                    loadMoreContainer.classList.add('disabled');
                 } else {
-                    showNotification(window.getTranslation('general.connectionErrorMessage'), 'error');
+                    loadMoreContainer.classList.remove('disabled');
+                    galleriesCurrentPage++;
                 }
-            })
-            .finally(() => {
-                isLoadingGalleries = false;
-            });
+            }
+        } else {
+            console.error('Error al obtener las galerías:', response.data);
+            if (!append) {
+                displayFetchError('[data-section="home"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
+            } else {
+                showNotification(window.getTranslation('general.connectionErrorMessage'), 'error');
+            }
+        }
     }
 
-    function fetchAndDisplayGalleryPhotos(uuid, galleryName, append = false) {
+    async function fetchAndDisplayGalleryPhotos(uuid, galleryName, append = false) {
         const section = document.querySelector('[data-section="galleryPhotos"]');
         if (!section) return;
 
@@ -1118,80 +1104,79 @@ async function handleLogout() {
         currentGalleryForPhotoView = uuid;
         currentGalleryNameForPhotoView = galleryName;
 
-        api.getGalleryPhotos(uuid, photosCurrentPage, BATCH_SIZE)
-            .then(photos => {
-                if (statusContainer) {
-                    statusContainer.classList.add('disabled');
-                    statusContainer.innerHTML = '';
-                }
-                if (grid) grid.classList.remove('disabled');
+        const response = await api.getGalleryPhotos(uuid, photosCurrentPage, BATCH_SIZE);
+        isLoadingPhotos = false;
 
-                currentGalleryPhotoList.push(...photos);
+        if(response.ok) {
+            const photos = response.data;
+            if (statusContainer) {
+                statusContainer.classList.add('disabled');
+                statusContainer.innerHTML = '';
+            }
+            if (grid) grid.classList.remove('disabled');
 
-                if (photos.length > 0) {
-                    photos.forEach(photo => {
-                        const card = document.createElement('div');
-                        card.className = 'card photo-card';
-                        card.dataset.photoUrl = photo.photo_url;
-                        card.dataset.photoId = photo.id;
-                        card.dataset.galleryUuid = photo.gallery_uuid;
+            currentGalleryPhotoList.push(...photos);
 
-                        const background = document.createElement('div');
-                        background.className = 'card-background';
-                        background.style.backgroundImage = `url('${photo.photo_url}')`;
-                        card.appendChild(background);
+            if (photos.length > 0) {
+                photos.forEach(photo => {
+                    const card = document.createElement('div');
+                    card.className = 'card photo-card';
+                    card.dataset.photoUrl = photo.photo_url;
+                    card.dataset.photoId = photo.id;
+                    card.dataset.galleryUuid = photo.gallery_uuid;
 
-                        const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${uuid}/photo/${photo.id}`;
+                    const background = document.createElement('div');
+                    background.className = 'card-background';
+                    background.style.backgroundImage = `url('${photo.photo_url}')`;
+                    card.appendChild(background);
 
-                        card.innerHTML += `
-                            <div class="card-actions-container">
-                                <div class="card-hover-overlay">
-                                    <div class="card-hover-icons">
-                                        <div class="icon-wrapper" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div>
-                                        <div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div>
-                                    </div>
-                                </div>
-                                <div class="module-content module-select photo-context-menu disabled body-title">
-                                    <div class="menu-content"><div class="menu-list">
-                                        <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.openInNewTab')}</span></div></a>
-                                        <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.copyLink')}</span></div></div>
-                                        <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.download')}</span></div></a>
-                                    </div></div>
+                    const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${uuid}/photo/${photo.id}`;
+
+                    card.innerHTML += `
+                        <div class="card-actions-container">
+                            <div class="card-hover-overlay">
+                                <div class="card-hover-icons">
+                                    <div class="icon-wrapper" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div>
+                                    <div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div>
                                 </div>
                             </div>
-                        `;
+                            <div class="module-content module-select photo-context-menu disabled body-title">
+                                <div class="menu-content"><div class="menu-list">
+                                    <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.openInNewTab')}</span></div></a>
+                                    <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.copyLink')}</span></div></div>
+                                    <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.download')}</span></div></a>
+                                </div></div>
+                            </div>
+                        </div>
+                    `;
 
-                        if (grid) grid.appendChild(card);
-                        updateFavoriteCardState(photo.id);
-                    });
-                } else if (!append && statusContainer) {
-                    statusContainer.classList.remove('disabled');
-                    statusContainer.innerHTML = `<div><h2>${window.getTranslation('userPhotos.emptyGalleryTitle')}</h2><p>${window.getTranslation('userPhotos.emptyGalleryMessage')}</p></div>`;
-                }
+                    if (grid) grid.appendChild(card);
+                    updateFavoriteCardState(photo.id);
+                });
+            } else if (!append && statusContainer) {
+                statusContainer.classList.remove('disabled');
+                statusContainer.innerHTML = `<div><h2>${window.getTranslation('userPhotos.emptyGalleryTitle')}</h2><p>${window.getTranslation('userPhotos.emptyGalleryMessage')}</p></div>`;
+            }
 
-                if (loadMoreContainer) {
-                    if (photos.length < BATCH_SIZE) {
-                        loadMoreContainer.classList.add('disabled');
-                    } else {
-                        loadMoreContainer.classList.remove('disabled');
-                        photosCurrentPage++;
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error al obtener las fotos:', error);
-                if (!append) {
-                    displayFetchError('[data-section="galleryPhotos"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
+            if (loadMoreContainer) {
+                if (photos.length < BATCH_SIZE) {
+                    loadMoreContainer.classList.add('disabled');
                 } else {
-                    showNotification(window.getTranslation('general.connectionErrorMessage'), 'error');
+                    loadMoreContainer.classList.remove('disabled');
+                    photosCurrentPage++;
                 }
-            })
-            .finally(() => {
-                isLoadingPhotos = false;
-            });
+            }
+        } else {
+            console.error('Error al obtener las fotos:', response.data);
+            if (!append) {
+                displayFetchError('[data-section="galleryPhotos"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
+            } else {
+                showNotification(window.getTranslation('general.connectionErrorMessage'), 'error');
+            }
+        }
     }
 
-    function fetchAndDisplayTrends(searchTerm = '') {
+    async function fetchAndDisplayTrends(searchTerm = '') {
         const section = document.querySelector('[data-section="trends"]');
         if (!section) return;
 
@@ -1215,78 +1200,78 @@ async function handleLogout() {
         if (usersSection) usersSection.style.display = 'none';
         if (photosSection) photosSection.style.display = 'none';
 
-        api.getTrends(searchTerm)
-            .then(([users, photos]) => {
+        try {
+            const [users, photos] = await api.getTrends(searchTerm);
+
+            if (statusContainer) {
+                statusContainer.classList.add('disabled');
+                statusContainer.innerHTML = '';
+            }
+
+            if (users.length > 0) {
+                if (usersSection) usersSection.style.display = 'block';
+                displayGalleriesAsGrid(users, usersGrid, 'relevant', false);
+            } else {
                 if (statusContainer) {
-                    statusContainer.classList.add('disabled');
-                    statusContainer.innerHTML = '';
+                    statusContainer.classList.remove('disabled');
+                    statusContainer.innerHTML = `<div><h2>${window.getTranslation('general.noResultsTitle')}</h2><p>${window.getTranslation('trends.noTrendingUsersMessage')}</p></div>`;
                 }
+            }
 
-                if (users.length > 0) {
-                    if (usersSection) usersSection.style.display = 'block';
-                    displayGalleriesAsGrid(users, usersGrid, 'relevant', false);
-                } else {
-                    if (statusContainer) {
-                        statusContainer.classList.remove('disabled');
-                        statusContainer.innerHTML = `<div><h2>${window.getTranslation('general.noResultsTitle')}</h2><p>${window.getTranslation('trends.noTrendingUsersMessage')}</p></div>`;
-                    }
-                }
+            if (searchTerm === '') {
+                if (photosSection) photosSection.style.display = 'block';
+                currentTrendingPhotosList = photos;
+                if (photos.length > 0) {
+                    photos.forEach(photo => {
+                        const card = document.createElement('div');
+                        card.className = 'card photo-card';
+                        card.dataset.photoUrl = photo.photo_url;
+                        card.dataset.photoId = photo.id;
+                        card.dataset.galleryUuid = photo.gallery_uuid;
 
-                if (searchTerm === '') {
-                    if (photosSection) photosSection.style.display = 'block';
-                    currentTrendingPhotosList = photos;
-                    if (photos.length > 0) {
-                        photos.forEach(photo => {
-                            const card = document.createElement('div');
-                            card.className = 'card photo-card';
-                            card.dataset.photoUrl = photo.photo_url;
-                            card.dataset.photoId = photo.id;
-                            card.dataset.galleryUuid = photo.gallery_uuid;
+                        const background = document.createElement('div');
+                        background.className = 'card-background';
+                        background.style.backgroundImage = `url('${photo.photo_url}')`;
+                        card.appendChild(background);
 
-                            const background = document.createElement('div');
-                            background.className = 'card-background';
-                            background.style.backgroundImage = `url('${photo.photo_url}')`;
-                            card.appendChild(background);
+                        const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
+                        const likesText = window.getTranslation('general.likesCount', { count: photo.likes });
+                        const interactionsText = window.getTranslation('general.interactionsCount', { count: photo.interactions });
 
-                            const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
-                            const likesText = window.getTranslation('general.likesCount', { count: photo.likes });
-                            const interactionsText = window.getTranslation('general.interactionsCount', { count: photo.interactions });
-
-                            card.innerHTML += `
-                                <div class="card-content-overlay">
-                                    <div class="card-icon" style="background-image: url('${photo.profile_picture_url || ''}')"></div>
-                                    <div class="card-text">
-                                        <span>${photo.gallery_name}</span>
-                                        <span style="font-size: 0.8rem; display: block;">${likesText} - ${interactionsText}</span>
+                        card.innerHTML += `
+                            <div class="card-content-overlay">
+                                <div class="card-icon" style="background-image: url('${photo.profile_picture_url || ''}')"></div>
+                                <div class="card-text">
+                                    <span>${photo.gallery_name}</span>
+                                    <span style="font-size: 0.8rem; display: block;">${likesText} - ${interactionsText}</span>
+                                </div>
+                            </div>
+                            <div class="card-actions-container">
+                                <div class="card-hover-overlay">
+                                    <div class="card-hover-icons">
+                                        <div class="icon-wrapper" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div>
+                                        <div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div>
                                     </div>
                                 </div>
-                                <div class="card-actions-container">
-                                    <div class="card-hover-overlay">
-                                        <div class="card-hover-icons">
-                                            <div class="icon-wrapper" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div>
-                                            <div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div>
-                                        </div>
-                                    </div>
-                                    <div class="module-content module-select photo-context-menu disabled body-title">
-                                        <div class="menu-content"><div class="menu-list">
-                                            <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.openInNewTab')}</span></div></a>
-                                            <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.copyLink')}</span></div></div>
-                                            <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.download')}</span></div></a>
-                                        </div></div>
-                                    </div>
-                                </div>`;
-                            if (photosGrid) photosGrid.appendChild(card);
-                            updateFavoriteCardState(photo.id);
-                        });
-                    } else {
-                        if (photosGrid) photosGrid.innerHTML = `<p>No hay fotos en tendencia en este momento.</p>`;
-                    }
+                                <div class="module-content module-select photo-context-menu disabled body-title">
+                                    <div class="menu-content"><div class="menu-list">
+                                        <a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.openInNewTab')}</span></div></a>
+                                        <div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.copyLink')}</span></div></div>
+                                        <a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.download')}</span></div></a>
+                                    </div></div>
+                                </div>
+                            </div>`;
+                        if (photosGrid) photosGrid.appendChild(card);
+                        updateFavoriteCardState(photo.id);
+                    });
+                } else {
+                    if (photosGrid) photosGrid.innerHTML = `<p>No hay fotos en tendencia en este momento.</p>`;
                 }
-            })
-            .catch(error => {
-                console.error('Error fetching trends:', error);
-                displayFetchError('[data-section="trends"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
-            });
+            }
+        } catch(error) {
+            console.error('Error fetching trends:', error);
+            displayFetchError('[data-section="trends"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
+        }
     }
 
     function rotatePhoto(direction) {
@@ -1297,7 +1282,7 @@ async function handleLogout() {
         }
     }
 
-    function renderPhotoView(uuid, photoId, photoList) {
+    async function renderPhotoView(uuid, photoId, photoList) {
         const photoViewerImage = document.getElementById('photo-viewer-image');
         const photoCounter = document.getElementById('photo-counter');
         const photoViewUserTitle = document.getElementById('photo-view-user-title');
@@ -1309,7 +1294,7 @@ async function handleLogout() {
             return;
         }
 
-        api.incrementPhotoInteraction(photoId);
+        await api.incrementPhotoInteraction(photoId);
         currentRotation = 0;
         photoViewerImage.style.transform = `rotate(0deg)`;
 
@@ -1319,24 +1304,25 @@ async function handleLogout() {
         if (photoIndex !== -1) {
             const photo = photoList[photoIndex];
 
-            const updateGalleryName = () => {
+            const updateGalleryName = async () => {
                 if (photo.gallery_name) {
                     currentGalleryNameForPhotoView = photo.gallery_name;
                 }
                 if (photoViewUserTitle && currentGalleryNameForPhotoView) {
                     photoViewUserTitle.textContent = currentGalleryNameForPhotoView;
                 } else {
-                    api.getGalleryDetails(uuid)
-                        .then(gallery => {
-                            if (gallery && gallery.name) {
-                                currentGalleryNameForPhotoView = gallery.name;
-                                if (photoViewUserTitle) photoViewUserTitle.textContent = gallery.name;
-                            }
-                        });
+                    const response = await api.getGalleryDetails(uuid);
+                    if (response.ok) {
+                        const gallery = response.data;
+                        if (gallery && gallery.name) {
+                            currentGalleryNameForPhotoView = gallery.name;
+                            if (photoViewUserTitle) photoViewUserTitle.textContent = gallery.name;
+                        }
+                    }
                 }
             };
 
-            updateGalleryName();
+            await updateGalleryName();
 
             currentPhotoData = {
                 id: photo.id,
@@ -1706,15 +1692,9 @@ function setupEventListeners() {
                 case 'update-password':
                     showUpdatePasswordDialog();
                     break;
-                // =================================================================
-                // == ✅ INICIO: CAMBIO CLAVE EN EL MANEJADOR DE EVENTOS ==
-                // =================================================================
                 case 'delete-account':
-                    showDeleteAccountDialog(); // Se llama a la nueva función correcta
+                    showDeleteAccountDialog();
                     break;
-                // =================================================================
-                // == ✅ FIN: CAMBIO CLAVE EN EL MANEJADOR DE EVENTOS ==
-                // =================================================================
                 case 'toggleModuleSurface':
                     const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
                     if (moduleSurface) moduleSurface.classList.toggle('disabled');
@@ -1934,6 +1914,18 @@ function setupEventListeners() {
                         downloadPhoto(currentPhotoData.photo_url);
                     }
                     break;
+                case 'toggle-password-visibility':
+                    const wrapper = actionTarget.closest('.password-wrapper');
+                    const input = wrapper.querySelector('.auth-input');
+                    const icon = actionTarget.querySelector('.material-symbols-rounded');
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.textContent = 'visibility_off';
+                    } else {
+                        input.type = 'password';
+                        icon.textContent = 'visibility';
+                    }
+                    break;
             }
         }
 
@@ -2024,7 +2016,7 @@ function setupEventListeners() {
             if (galleryElement && galleryElement.dataset.uuid) {
                 const uuid = galleryElement.dataset.uuid;
                 const name = galleryElement.dataset.name;
-                const isPrivate = galleryElement.dataset.privacy === '1';
+                const isPrivate = galleryElement.dataset.privacy == '1';
 
                 api.incrementGalleryInteraction(uuid);
 
@@ -2166,8 +2158,8 @@ function setupEventListeners() {
     }
 
     if (view === 'admin') {
-        const sessionData = await api.checkSession();
-        if (!sessionData.loggedin || sessionData.user.role !== 'administrator') {
+        const sessionResponse = await api.checkSession();
+        if (!sessionResponse.ok || !sessionResponse.data.loggedin || sessionResponse.data.user.role !== 'administrator') {
             handleStateChange('main', '404');
             return;
         }
@@ -2177,14 +2169,15 @@ function setupEventListeners() {
     currentAppView = view;
     currentAppSection = section;
 
-    try {
-        const html = await api.getSectionHTML(view, section);
+    const response = await api.getSectionHTML(view, section);
+
+    if (response.ok) {
         if (contentContainer) {
-            contentContainer.innerHTML = html;
+            contentContainer.innerHTML = response.data;
             window.applyTranslations(contentContainer);
         }
-    } catch (error) {
-        console.error("Failed to fetch section:", error);
+    } else {
+        console.error("Failed to fetch section:", response.data);
         if (contentContainer) {
             displayFetchError('.general-content-scrolleable', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
         }
@@ -2217,12 +2210,12 @@ function setupEventListeners() {
             break;
         case 'loginSecurity':
             {
-                const sessionData = await api.checkSession();
-                if (sessionData.loggedin && sessionData.user) {
+                const sessionResponse = await api.checkSession();
+                if (sessionResponse.ok && sessionResponse.data.loggedin && sessionResponse.data.user) {
                     const passwordLastUpdatedEl = document.getElementById('password-last-updated');
                     if (passwordLastUpdatedEl) {
-                        if (sessionData.user.password_last_updated_at) {
-                            const date = new Date(sessionData.user.password_last_updated_at);
+                        if (sessionResponse.data.user.password_last_updated_at) {
+                            const date = new Date(sessionResponse.data.user.password_last_updated_at);
                             const formattedDate = date.toLocaleDateString(undefined, {
                                 year: 'numeric',
                                 month: 'long',
@@ -2265,31 +2258,31 @@ function setupEventListeners() {
             break;
         case 'galleryPhotos':
             if (data && data.uuid) {
-                api.getGalleryDetails(data.uuid)
-                    .then(gallery => {
-                        if (gallery && gallery.name) {
-                            if (gallery.privacy === 1 && !isPrivateGalleryUnlocked(gallery.uuid)) {
-                                const privateUrl = generateUrl('main', 'privateGalleryProxy', { uuid: gallery.uuid });
-                                history.replaceState({ view: 'main', section: 'privateGalleryProxy', data: { uuid: gallery.uuid, galleryName: gallery.name } }, '', privateUrl);
-                                handleStateChange('main', 'privateGalleryProxy', { uuid: gallery.uuid, galleryName: gallery.name });
-                            } else {
-                                addToHistory('profiles', { 
-                                    id: gallery.uuid, 
-                                    name: gallery.name, 
-                                    privacy: gallery.privacy,
-                                    profile_picture_url: gallery.profile_picture_url,
-                                    background_photo_url: gallery.background_photo_url 
-                                });
-                                fetchAndDisplayGalleryPhotos(gallery.uuid, gallery.name);
-                            }
+                const response = await api.getGalleryDetails(data.uuid);
+                if (response.ok) {
+                    const gallery = response.data;
+                    if (gallery && gallery.name) {
+                        if (gallery.privacy == 1 && !isPrivateGalleryUnlocked(gallery.uuid)) {
+                            const privateUrl = generateUrl('main', 'privateGalleryProxy', { uuid: gallery.uuid });
+                            history.replaceState({ view: 'main', section: 'privateGalleryProxy', data: { uuid: gallery.uuid, galleryName: gallery.name } }, '', privateUrl);
+                            handleStateChange('main', 'privateGalleryProxy', { uuid: gallery.uuid, galleryName: gallery.name });
                         } else {
-                            handleStateChange('main', '404');
+                            addToHistory('profiles', { 
+                                id: gallery.uuid, 
+                                name: gallery.name, 
+                                privacy: gallery.privacy,
+                                profile_picture_url: gallery.profile_picture_url,
+                                background_photo_url: gallery.background_photo_url 
+                            });
+                            fetchAndDisplayGalleryPhotos(gallery.uuid, gallery.name);
                         }
-                    })
-                    .catch(error => {
-                        console.error("Failed to fetch gallery info:", error);
+                    } else {
                         handleStateChange('main', '404');
-                    });
+                    }
+                } else {
+                    console.error("Failed to fetch gallery info:", response.data);
+                    handleStateChange('main', '404');
+                }
             }
             break;
         
@@ -2311,10 +2304,13 @@ function setupEventListeners() {
                         photoListPromise = Promise.resolve(currentGalleryPhotoList);
                     } else {
                         photoListPromise = api.getGalleryPhotos(data.uuid, 1, 1000)
-                            .then(photos => {
-                                currentGalleryPhotoList = photos;
-                                currentGalleryForPhotoView = data.uuid;
-                                return photos;
+                            .then(response => {
+                                if (response.ok) {
+                                    currentGalleryPhotoList = response.data;
+                                    currentGalleryForPhotoView = data.uuid;
+                                    return response.data;
+                                }
+                                return [];
                             });
                     }
                 }
@@ -2415,9 +2411,12 @@ function setupEventListeners() {
                     sendBtn.disabled = true;
                     sendBtn.classList.add('loading');
 
-                    try {
-                        const result = await api.submitFeedback(formData);
-                        showNotification(result.message, 'success');
+                    const response = await api.submitFeedback(formData);
+                    sendBtn.disabled = false;
+                    sendBtn.classList.remove('loading');
+
+                    if(response.ok) {
+                        showNotification(response.data.message, 'success');
                         const form = document.querySelector('.feedback-form-container');
                         if (form) {
                             const inputs = form.querySelectorAll('input, textarea');
@@ -2428,13 +2427,8 @@ function setupEventListeners() {
                         previewContainer.innerHTML = '';
                         uploadedFiles = [];
                         updateUploadButtonState();
-
-                    } catch (error) {
-                        const errorResult = await error.response.json();
-                        showNotification(errorResult.message || 'Error al enviar el comentario.', 'error');
-                    } finally {
-                        sendBtn.disabled = false;
-                        sendBtn.classList.remove('loading');
+                    } else {
+                        showNotification(response.data.message || 'Error al enviar el comentario.', 'error');
                     }
                 });
             }
@@ -2443,12 +2437,13 @@ function setupEventListeners() {
         case 'accessCodePrompt':
             if (data && data.uuid) {
                 const titleElement = document.getElementById('access-code-title');
-                api.getGalleryDetails(data.uuid)
-                    .then(gallery => {
-                        if (gallery && gallery.name && titleElement) {
-                            titleElement.textContent = window.getTranslation('accessCodePrompt.galleryOf', { galleryName: gallery.name });
-                        }
-                    });
+                const response = await api.getGalleryDetails(data.uuid);
+                if (response.ok) {
+                    const gallery = response.data;
+                    if (gallery && gallery.name && titleElement) {
+                        titleElement.textContent = window.getTranslation('accessCodePrompt.galleryOf', { galleryName: gallery.name });
+                    }
+                }
             }
             break;
         case 'adView':
@@ -2580,7 +2575,7 @@ function setupEventListeners() {
 
     const path = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1);
 
-const routes = {
+    const routes = {
         '': { view: 'main', section: 'home' },
         'trends': { view: 'main', section: 'trends' },
         'favorites': { view: 'main', section: 'favorites' },

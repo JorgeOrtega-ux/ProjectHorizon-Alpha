@@ -3,21 +3,58 @@
 async function fetchData(url, options = {}) {
     try {
         const response = await fetch(url, options);
-        if (!response.ok) {
-            // ¡CAMBIO CLAVE! Lanzamos el objeto de respuesta completo en caso de error.
-            throw response;
-        }
+
+        // Intentamos obtener el cuerpo de la respuesta, que puede ser JSON o texto.
+        // Nuestro servidor envía un cuerpo JSON incluso en respuestas de error.
         const contentType = response.headers.get("content-type");
+        let data;
         if (contentType && contentType.indexOf("application/json") !== -1) {
-            return response.json();
+            try {
+                data = await response.json();
+            } catch (e) {
+                // El cuerpo puede estar vacío en algunas respuestas, lo cual es válido.
+                data = null;
+            }
         } else {
-            return response.text();
+            data = await response.text();
         }
+
+        // ¡ESTE ES EL CAMBIO CLAVE!
+        // En lugar de lanzar un error, devolvemos un objeto estructurado
+        // que el código que llama a esta función puede inspeccionar de forma segura.
+        if (!response.ok) {
+            return {
+                ok: false,
+                data: data, // El cuerpo del error, ya procesado (parseado).
+                status: response.status
+            };
+        }
+
+        // Si la respuesta es exitosa (ej. status 200), devolvemos la misma estructura.
+        return {
+            ok: true,
+            data: data, // El cuerpo del éxito, ya procesado.
+            status: response.status
+        };
+
     } catch (error) {
-        console.error('API Fetch Error:', error);
-        throw error;
+        // Este bloque `catch` ahora solo se activará para errores de red reales
+        // (ej. el servidor está caído, no hay conexión a internet), no para códigos HTTP como 401 o 500.
+        console.error('Error de Red o de Fetch API:', error);
+        return {
+            ok: false,
+            // Proporcionamos un mensaje de error genérico y estandarizado.
+            data: { message: "Error de conexión. Por favor, revisa tu red e inténtalo de nuevo." },
+            status: 0 // Usamos 0 para indicar un error de red, no de HTTP.
+        };
     }
 }
+
+// =================================================================
+// EL RESTO DE LAS FUNCIONES NO NECESITAN CAMBIOS
+// =================================================================
+// Todas las funciones exportadas usan `fetchData`, por lo que el nuevo
+// comportamiento se propaga automáticamente a través de ellas.
 
 export function getCsrfToken() {
     return fetchData(`${window.BASE_PATH}/api/main_handler.php?request_type=get_csrf_token`);
@@ -92,10 +129,18 @@ export function getTrends(searchTerm) {
     const photosUrl = `${window.BASE_PATH}/api/main_handler.php?request_type=trending_photos&limit=12`;
 
     const fetchUsers = fetchData(usersUrl);
-    const fetchPhotos = searchTerm === '' ? fetchData(photosUrl) : Promise.resolve([]);
+    const fetchPhotos = searchTerm === '' ? fetchData(photosUrl) : Promise.resolve({ ok: true, data: [] });
 
-    return Promise.all([fetchUsers, fetchPhotos]);
+    // Adaptamos Promise.all para que funcione con el nuevo formato de respuesta
+    return Promise.all([fetchUsers, fetchPhotos]).then(([usersResponse, photosResponse]) => {
+        if (!usersResponse.ok || !photosResponse.ok) {
+            // Si alguna de las peticiones falló, lanzamos un error para que sea capturado por el .catch en el controlador
+            throw new Error("Failed to fetch trends data.");
+        }
+        return [usersResponse.data, photosResponse.data];
+    });
 }
+
 
 export function incrementGalleryInteraction(uuid) {
     const formData = new FormData();
