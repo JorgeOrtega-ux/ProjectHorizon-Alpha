@@ -42,14 +42,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         header('Content-Type: application/json');
         if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true && isset($_SESSION['user_uuid'])) {
             require_once '../config/db.php';
-            // Se añade 'password_last_updated_at' y 'status' a la consulta
-            $stmt = $conn->prepare("SELECT role, password_last_updated_at, status FROM users WHERE uuid = ?");
+            $stmt = $conn->prepare("SELECT role, password_last_updated_at, status, created_at FROM users WHERE uuid = ?");
             $stmt->bind_param("s", $_SESSION['user_uuid']);
             $stmt->execute();
             $result = $stmt->get_result();
             $password_last_updated_at = null;
+            $created_at = null;
             if ($user = $result->fetch_assoc()) {
-                // Si el usuario no está activo, destruir la sesión
                 if ($user['status'] !== 'active') {
                     session_unset();
                     session_destroy();
@@ -59,8 +58,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     exit;
                 }
                 
-                $_SESSION['user_role'] = $user['role']; // Actualiza el rol en la sesión
+                $_SESSION['user_role'] = $user['role'];
                 $password_last_updated_at = $user['password_last_updated_at'];
+                $created_at = $user['created_at'];
             }
             $stmt->close();
             $conn->close();
@@ -72,7 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     'username' => $_SESSION['username'],
                     'email' => $_SESSION['email'],
                     'role' => $_SESSION['user_role'],
-                    'password_last_updated_at' => $password_last_updated_at // Se añade el nuevo campo a la respuesta
+                    'password_last_updated_at' => $password_last_updated_at,
+                    'created_at' => $created_at
                 ]
             ]);
         } else {

@@ -167,16 +167,16 @@
         "light": "Tema claro"
       }
     },
-  "loginSecurity": {
-        "title": "Inicio de sesión y seguridad",
-        "description": "Administra tu contraseña y la configuración de seguridad de tu cuenta.",
-        "passwordTitle": "Contraseña",
-        "passwordLastUpdated": "Última actualización de tu contraseña: {date}",
-        "passwordLastUpdatedNever": "Nunca has cambiado tu contraseña.",
-        "updateButton": "Actualizar",
-        "deleteAccountTitle": "Eliminar tu cuenta",
-        "deleteAccountDescription": "Si eliminas tu cuenta, ya no podrás acceder a tu contenido ni iniciar sesión en Project Horizon. Esta acción es permanente.",
-        "deleteAccountButton": "Eliminar cuenta"
+    "loginSecurity": {
+      "title": "Inicio de sesión y seguridad",
+      "description": "Administra tu contraseña y la configuración de seguridad de tu cuenta.",
+      "passwordTitle": "Contraseña",
+      "passwordLastUpdated": "Última actualización de tu contraseña: {date}",
+      "passwordLastUpdatedNever": "Nunca has cambiado tu contraseña.",
+      "updateButton": "Actualizar",
+      "deleteAccountTitle": "Eliminar tu cuenta",
+      "deleteAccountDescription": "Si eliminas tu cuenta creada el {date}, ya no podrás acceder a tu contenido ni iniciar sesión en Project Horizon. Esta acción es permanente.",
+      "deleteAccountButton": "Eliminar cuenta"
     },
     "historyPrivacy": {
       "title": "Historial y Privacidad",
@@ -258,28 +258,27 @@
   "dialogs": {
     "clearHistoryTitle": "¿Eliminar todo el historial?",
     "clearHistoryMessage": "<p>Esta acción eliminará permanentemente todo tu historial de la aplicación. No podrás deshacer esta acción.</p><a href=\"#\" data-action=\"view-history-help\">Más información</a>",
-        "updatePasswordTitle": "Actualizar contraseña",
+    "updatePasswordTitle": "Actualizar contraseña",
     "updatePasswordMessage": "Para continuar, ingresa tu contraseña actual.",
     "enterNewPasswordTitle": "Ingresa tu nueva contraseña",
     "enterNewPasswordMessage": "Elige una contraseña segura que no uses en otros sitios.",
     "confirmPasswordLabel": "Confirmar nueva contraseña",
     "deleteAccountTitle": "¿Estás seguro de que quieres eliminar tu cuenta?",
-    "deleteAccountMessage": "Esta acción es irreversible. Para confirmar, por favor ingresa tu contraseña actual."
-  
+    "deleteAccountMessage": "Si eliminas tu cuenta creada el {date}, ya no podrás acceder a tu contenido ni iniciar sesión en Project Horizon. Esta acción es permanente. Para confirmar, por favor ingresa tu contraseña actual."
   },
   "404": {
     "badge": "404",
     "title": "¡Vaya! Página no encontrada.",
     "message": "No pudimos encontrar la página que estás buscando. Puede que haya sido movida o que ya no exista."
   },
-    "admin": {
-        "manageUsers": {
-            "title": "Administrar usuarios",
-            "description": "Administra los usuarios de la aplicación."
-        },
-        "manageContent": {
-            "title": "Administrar contenido",
-            "description": "Administra el contenido de la aplicación."
-        }
+  "admin": {
+    "manageUsers": {
+      "title": "Administrar usuarios",
+      "description": "Administra los usuarios de la aplicación."
+    },
+    "manageContent": {
+      "title": "Administrar contenido",
+      "description": "Administra el contenido de la aplicación."
     }
+  }
 }
