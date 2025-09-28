@@ -1351,43 +1351,6 @@ h6 {
     display: none;
 }
 
-.custom-confirm-box {
-    background-color: var(--secondary-bg);
-    padding: 24px;
-    border-radius: 12px;
-    max-width: 525px;
-    width: 90%;
-    box-shadow: 0 4px 12px var(--shadow-color);
-}
-
-.custom-confirm-box #custom-confirm-message {
-    text-align: left;
-    margin: 8px 0 0 0;
-    color: var(--muted-text-color);
-    line-height: 1.5;
-}
-
-.custom-confirm-box #custom-confirm-message p {
-    margin-bottom: 16px;
-}
-
-.custom-confirm-box #custom-confirm-message a {
-    color: #0056b3;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.custom-confirm-box #custom-confirm-message a:hover {
-    text-decoration: underline;
-}
-
-.custom-confirm-buttons {
-    margin-top: 24px;
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-}
-
 .notification-container {
     position: fixed;
     bottom: 20px;
@@ -1786,15 +1749,18 @@ h6 {
     display: block;
 }
 
+/* ================================================= */
+/* =========== ESTILOS ORIGINALES DE PERFIL ========== */
+/* ================================================= */
 .profile-btn {
     border-width: 2px;
-    border-radius: 50%; /* << NEW */
-    padding: 2px; /* << NEW */
-    background-clip: content-box; /* << NEW */
+    border-radius: 50%;
+    padding: 2px;
+    background-clip: content-box;
 }
 
 .profile-btn:hover {
-    background-color: var(--hover-bg); /* << NEW */
+    background-color: var(--hover-bg);
 }
 
 .profile-btn.profile-btn--user {
@@ -1826,6 +1792,7 @@ h6 {
     border-color: #ff6a6a;
     background-color: #6a3a3a;
 }
+/* ================================================= */
 
 .content-section .item-icon {
     display: flex;
@@ -1942,4 +1909,112 @@ h6 {
     width: 50px;
     border: 1px solid var(--border-color);
     border-radius: 8px;
+}
+
+/* ================================================= */
+/* =========== NUEVOS ESTILOS PARA DIÁLOGOS ========== */
+/* ================================================= */
+
+/* Contenedor principal del diálogo (modal) */
+.custom-confirm-box {
+    background-color: var(--secondary-bg);
+    padding: 32px; /* Mayor espaciado interno */
+    border-radius: 16px; /* Bordes más redondeados */
+    max-width: 450px; /* Ancho ajustado */
+    width: 90%;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    text-align: center; /* Centrado de texto */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px; /* Espacio entre elementos */
+}
+
+/* Estilo para el ícono del diálogo */
+.dialog-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--primary-bg);
+    border: 1px solid var(--border-color);
+    margin-bottom: 8px; /* Espacio debajo del ícono */
+}
+
+.dialog-icon .material-symbols-rounded {
+    font-size: 28px;
+    color: var(--muted-text-color);
+}
+
+/* Estilo para el título del diálogo (h2) */
+.custom-confirm-box h2 {
+    font-size: 1.375rem; /* Tamaño de fuente más grande */
+    font-weight: 500;
+    margin: 0;
+}
+
+/* Estilo para el mensaje/descripción del diálogo */
+.custom-confirm-box #custom-confirm-message,
+.custom-confirm-box #update-password-content,
+.custom-confirm-box #delete-account-content {
+    color: var(--muted-text-color);
+    line-height: 1.6;
+    margin: 0;
+    width: 100%;
+}
+
+.custom-confirm-box p {
+    margin: 0 0 16px 0;
+}
+
+/* Contenedor de botones de acción */
+.custom-confirm-buttons {
+    margin-top: 16px;
+    display: flex;
+    justify-content: center; /* Botones centrados */
+    gap: 12px;
+    width: 100%;
+}
+
+/* Ajustes para inputs dentro de los diálogos */
+.custom-confirm-box .auth-input {
+    height: 45px;
+}
+.custom-confirm-box .auth-error-message-container {
+    margin-top: 8px;
+    text-align: left;
+}/* ================================================= */
+/* =========== ESTILO PARA CHIP DE USUARIO =========== */
+/* ================================================= */
+
+.dialog-user-chip {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--primary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 50px;
+    padding: 4px;
+    margin-bottom: 16px; /* Espacio antes del texto del diálogo */
+}
+
+.dialog-user-initial {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: var(--muted-text-color);
+    color: var(--secondary-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.dialog-user-email {
+    margin-left: 8px;
+    margin-right: 12px;
+    font-size: 0.875rem;
+    color: var(--text-color);
 }

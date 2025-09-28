@@ -381,6 +381,10 @@ export function initMainController() {
         });
     }
 
+ // assets/js/main-controller.js
+
+// ... (resto del código del controlador) ...
+
     async function showUpdatePasswordDialog() {
         const overlay = document.getElementById('update-password-overlay');
         const titleEl = document.getElementById('update-password-title');
@@ -390,10 +394,20 @@ export function initMainController() {
 
         let currentStep = 'verify';
 
+        // --- INICIO DE CAMBIO: Obtener datos del usuario ---
+        const sessionResponse = await api.checkSession();
+        if (!sessionResponse.ok || !sessionResponse.data.loggedin) {
+            return; // No mostrar el diálogo si no hay sesión
+        }
+        const user = sessionResponse.data.user;
+        const userInitial = getInitials(user.username);
+        // --- FIN DE CAMBIO ---
+
         const closeDialog = () => {
             overlay.classList.add('disabled');
             cancelBtn.onclick = null;
             okBtn.onclick = null;
+            overlay.querySelector('.dialog-icon')?.remove();
         };
 
         const renderStep = async () => {
@@ -403,10 +417,22 @@ export function initMainController() {
                 return;
             }
             const csrf_token = tokenResponse.data.csrf_token;
+            
+            titleEl.innerHTML = ''; 
 
             if (currentStep === 'verify') {
+                titleEl.insertAdjacentHTML('beforebegin', `
+                    <div class="dialog-icon">
+                        <span class="material-symbols-rounded">lock</span>
+                    </div>
+                `);
                 titleEl.textContent = window.getTranslation('dialogs.updatePasswordTitle');
+                // --- INICIO DE CAMBIO: Añadir el "chip" de usuario ---
                 contentEl.innerHTML = `
+                    <div class="dialog-user-chip">
+                        <div class="dialog-user-initial">${userInitial}</div>
+                        <span class="dialog-user-email">${user.email}</span>
+                    </div>
                     <p>${window.getTranslation('dialogs.updatePasswordMessage')}</p>
                     <input type="hidden" name="csrf_token" value="${csrf_token}">
                     <div class="form-field password-wrapper">
@@ -417,13 +443,24 @@ export function initMainController() {
                         <ul id="password-error-list"></ul>
                     </div>
                 `;
+                // --- FIN DE CAMBIO ---
                 okBtn.textContent = window.getTranslation('general.confirm');
                 cancelBtn.textContent = window.getTranslation('general.cancel');
                 okBtn.onclick = handleVerifyPassword;
                 cancelBtn.onclick = closeDialog;
             } else if (currentStep === 'update') {
+                titleEl.insertAdjacentHTML('beforebegin', `
+                    <div class="dialog-icon">
+                        <span class="material-symbols-rounded">password</span>
+                    </div>
+                `);
                 titleEl.textContent = window.getTranslation('dialogs.enterNewPasswordTitle');
+                // --- INICIO DE CAMBIO: Añadir el "chip" de usuario ---
                 contentEl.innerHTML = `
+                    <div class="dialog-user-chip">
+                        <div class="dialog-user-initial">${userInitial}</div>
+                        <span class="dialog-user-email">${user.email}</span>
+                    </div>
                     <p>${window.getTranslation('dialogs.enterNewPasswordMessage')}</p>
                     <input type="hidden" name="csrf_token" value="${csrf_token}">
                     <div class="form-field password-wrapper">
@@ -438,10 +475,12 @@ export function initMainController() {
                         <ul id="password-error-list"></ul>
                     </div>
                 `;
+                // --- FIN DE CAMBIO ---
                 okBtn.textContent = window.getTranslation('settings.loginSecurity.updateButton');
                 cancelBtn.textContent = window.getTranslation('general.back');
                 okBtn.onclick = handleUpdatePassword;
                 cancelBtn.onclick = () => {
+                    overlay.querySelector('.dialog-icon')?.remove(); 
                     currentStep = 'verify';
                     renderStep();
                 };
@@ -461,6 +500,7 @@ export function initMainController() {
             const response = await api.verifyPassword(formData);
 
             if (response.ok && response.data.success) {
+                overlay.querySelector('.dialog-icon')?.remove();
                 currentStep = 'update';
                 renderStep();
             } else {
@@ -493,6 +533,7 @@ export function initMainController() {
             }
         };
 
+        overlay.querySelector('.dialog-icon')?.remove();
         renderStep();
         overlay.classList.remove('disabled');
     }
@@ -508,13 +549,18 @@ export function initMainController() {
             overlay.classList.add('disabled');
             cancelBtn.onclick = null;
             okBtn.onclick = null;
+            overlay.querySelector('.dialog-icon')?.remove();
         };
 
         const sessionResponse = await api.checkSession();
         if (!sessionResponse.ok || !sessionResponse.data.loggedin) {
             return;
         }
-        const creationDate = sessionResponse.data.user.created_at;
+        // --- INICIO DE CAMBIO: Guardar datos del usuario ---
+        const user = sessionResponse.data.user;
+        const userInitial = getInitials(user.username);
+        const creationDate = user.created_at;
+        // --- FIN DE CAMBIO ---
         const formattedDate = new Date(creationDate).toLocaleDateString(undefined, {
             year: 'numeric',
             month: 'long',
@@ -527,10 +573,21 @@ export function initMainController() {
             return;
         }
         const csrf_token = tokenResponse.data.csrf_token;
-
+        
+        overlay.querySelector('.dialog-icon')?.remove();
+        titleEl.insertAdjacentHTML('beforebegin', `
+            <div class="dialog-icon">
+                <span class="material-symbols-rounded">warning</span>
+            </div>
+        `);
         titleEl.setAttribute('data-i18n', 'dialogs.deleteAccountTitle');
         const message = window.getTranslation('dialogs.deleteAccountMessage', { date: formattedDate });
+        // --- INICIO DE CAMBIO: Añadir el "chip" de usuario ---
         contentEl.innerHTML = `
+        <div class="dialog-user-chip">
+            <div class="dialog-user-initial">${userInitial}</div>
+            <span class="dialog-user-email">${user.email}</span>
+        </div>
         <p>${message}</p>
         <input type="hidden" name="csrf_token" value="${csrf_token}">
         <div class="form-field password-wrapper" style="margin-top: 16px;">
@@ -540,7 +597,8 @@ export function initMainController() {
         <div class="auth-error-message-container" id="delete-error-container" style="display: none; margin-top: 16px;">
             <ul id="delete-error-list"></ul>
         </div>
-    `;
+        `;
+        // --- FIN DE CAMBIO ---
 
         okBtn.setAttribute('data-i18n', 'settings.loginSecurity.deleteAccountButton');
         cancelBtn.setAttribute('data-i18n', 'general.cancel');
@@ -584,6 +642,8 @@ export function initMainController() {
         cancelBtn.onclick = closeDialog;
         overlay.classList.remove('disabled');
     }
+
+// ... (resto del código del controlador) ...
 
     function initSettingsController() {
         const settingsToggles = {
