@@ -269,7 +269,8 @@ async function handleLogin(form) {
         navigateToUrl('main', 'home');
         handleStateChange('main', 'home');
     } catch (error) {
-        const errorResult = await error.response.json();
+        // ¡CAMBIO CLAVE! Ahora 'error' es el objeto Response directamente.
+        const errorResult = await error.json(); 
         let errorMessage = errorResult.message;
         
         if (errorMessage === 'account_suspended') {

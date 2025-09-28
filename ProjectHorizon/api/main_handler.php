@@ -389,7 +389,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         exit;
     }
 
-    if ($action_type === 'login_user') {
+   if ($action_type === 'login_user') {
         if (!isset($_POST['csrf_token']) || !validate_csrf_token($_POST['csrf_token'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Error de validación CSRF.']);
@@ -410,18 +410,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $result = $stmt->get_result();
 
         if ($user = $result->fetch_assoc()) {
-            if ($user['status'] === 'suspended') {
-                http_response_code(403);
-                echo json_encode(['success' => false, 'message' => 'account_suspended']);
-                exit;
-            }
-            if ($user['status'] === 'deleted') {
-                http_response_code(403);
-                echo json_encode(['success' => false, 'message' => 'account_deleted']);
-                exit;
-            }
-
+            // --- LÓGICA CORREGIDA ---
+            // 1. PRIMERO, verificamos que la contraseña sea correcta.
             if (password_verify($password, $user['password_hash'])) {
+                
+                // 2. SI LA CONTRASEÑA ES CORRECTA, AHORA SÍ verificamos el estado de la cuenta.
+                if ($user['status'] === 'suspended') {
+                    http_response_code(403);
+                    echo json_encode(['success' => false, 'message' => 'account_suspended']);
+                    exit;
+                }
+                if ($user['status'] === 'deleted') {
+                    http_response_code(403);
+                    echo json_encode(['success' => false, 'message' => 'account_deleted']);
+                    exit;
+                }
+
+                // 3. Si la contraseña es correcta y el estado es 'active', iniciamos sesión.
                 $_SESSION['loggedin'] = true;
                 $_SESSION['user_uuid'] = $user['uuid'];
                 $_SESSION['username'] = $user['username'];
@@ -433,11 +438,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     'message' => 'Inicio de sesión exitoso.',
                     'user' => ['uuid' => $user['uuid'], 'username' => $user['username'], 'email' => $user['email'], 'role' => $user['role']]
                 ]);
+
             } else {
+                // Si la contraseña es incorrecta, enviamos un error genérico.
                 http_response_code(401);
                 echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas.']);
             }
         } else {
+            // Si el email no se encuentra, enviamos el MISMO error genérico para no revelar información.
             http_response_code(401);
             echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas.']);
         }

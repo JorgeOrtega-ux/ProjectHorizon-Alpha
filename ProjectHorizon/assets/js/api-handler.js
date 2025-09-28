@@ -4,7 +4,8 @@ async function fetchData(url, options = {}) {
     try {
         const response = await fetch(url, options);
         if (!response.ok) {
-            throw new Error(`Server error: ${response.statusText}`);
+            // ¡CAMBIO CLAVE! Lanzamos el objeto de respuesta completo en caso de error.
+            throw response;
         }
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.indexOf("application/json") !== -1) {
