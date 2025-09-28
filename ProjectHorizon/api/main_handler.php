@@ -42,13 +42,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         header('Content-Type: application/json');
         if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true && isset($_SESSION['user_uuid'])) {
             require_once '../config/db.php';
-            // Se añade 'password_last_updated_at' a la consulta
-            $stmt = $conn->prepare("SELECT role, password_last_updated_at FROM users WHERE uuid = ?");
+            // Se añade 'password_last_updated_at' y 'status' a la consulta
+            $stmt = $conn->prepare("SELECT role, password_last_updated_at, status FROM users WHERE uuid = ?");
             $stmt->bind_param("s", $_SESSION['user_uuid']);
             $stmt->execute();
             $result = $stmt->get_result();
             $password_last_updated_at = null;
             if ($user = $result->fetch_assoc()) {
+                // Si el usuario no está activo, destruir la sesión
+                if ($user['status'] !== 'active') {
+                    session_unset();
+                    session_destroy();
+                    echo json_encode(['loggedin' => false, 'status' => $user['status']]);
+                    $stmt->close();
+                    $conn->close();
+                    exit;
+                }
+                
                 $_SESSION['user_role'] = $user['role']; // Actualiza el rol en la sesión
                 $password_last_updated_at = $user['password_last_updated_at'];
             }
@@ -394,12 +404,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             exit;
         }
 
-        $stmt = $conn->prepare("SELECT uuid, username, email, password_hash, role FROM users WHERE email = ?");
+        $stmt = $conn->prepare("SELECT uuid, username, email, password_hash, role, status FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
 
         if ($user = $result->fetch_assoc()) {
+            if ($user['status'] === 'suspended') {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'account_suspended']);
+                exit;
+            }
+            if ($user['status'] === 'deleted') {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'account_deleted']);
+                exit;
+            }
+
             if (password_verify($password, $user['password_hash'])) {
                 $_SESSION['loggedin'] = true;
                 $_SESSION['user_uuid'] = $user['uuid'];

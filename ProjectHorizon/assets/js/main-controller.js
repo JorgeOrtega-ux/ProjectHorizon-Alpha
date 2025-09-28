@@ -121,223 +121,237 @@ export function initMainController() {
 
     // --- FUNCIONES DE AUTENTICACIÓN ---
 
-    async function fetchAndSetCsrfToken(formId) {
-        try {
-            const data = await api.getCsrfToken();
-            const form = document.getElementById(formId);
-            if (form) {
-                const tokenInput = form.querySelector('input[name="csrf_token"]');
-                if (tokenInput) {
-                    tokenInput.value = data.csrf_token;
-                }
+  // --- FUNCIONES DE AUTENTICACIÓN ---
+
+async function fetchAndSetCsrfToken(formId) {
+    try {
+        const data = await api.getCsrfToken();
+        const form = document.getElementById(formId);
+        if (form) {
+            const tokenInput = form.querySelector('input[name="csrf_token"]');
+            if (tokenInput) {
+                tokenInput.value = data.csrf_token;
             }
-        } catch (error) {
-            console.error('Error fetching CSRF token:', error);
         }
+    } catch (error) {
+        console.error('Error fetching CSRF token:', error);
     }
+}
 
 
-    function getInitials(name) {
-        if (!name) return '';
-        const words = name.split(' ');
-        if (words.length > 1) {
-            return (words[0][0] + words[1][0]).toUpperCase();
-        }
-        return name.substring(0, 2).toUpperCase();
+function getInitials(name) {
+    if (!name) return '';
+    const words = name.split(' ');
+    if (words.length > 1) {
+        return (words[0][0] + words[1][0]).toUpperCase();
     }
+    return name.substring(0, 2).toUpperCase();
+}
+
+function displayAuthErrors(containerId, listId, messages) {
+    const container = document.getElementById(containerId);
+    const list = document.getElementById(listId);
     
-    function displayAuthErrors(containerId, listId, messages) {
-        const container = document.getElementById(containerId);
-        const list = document.getElementById(listId);
-        
-        if (!container || !list) return;
+    if (!container || !list) return;
 
-        list.innerHTML = '';
+    list.innerHTML = '';
 
-        if (!messages || messages.length === 0) {
-            container.style.display = 'none';
-            return;
-        }
-
-        const errorMessages = Array.isArray(messages) ? messages : [messages];
-
-        errorMessages.forEach(msg => {
-            const li = document.createElement('li');
-            li.textContent = msg;
-            list.appendChild(li);
-        });
-
-        container.style.display = 'block';
+    if (!messages || messages.length === 0) {
+        container.style.display = 'none';
+        return;
     }
 
-    function updateUserUI(userData) {
-        const loggedOutContainer = document.getElementById('auth-container-logged-out');
-        const loggedInContainer = document.getElementById('auth-container-logged-in');
-        const helpBtn = document.getElementById('help-btn');
-        const settingsBtn = document.getElementById('settings-btn');
-        const profileBtn = loggedInContainer ? loggedInContainer.querySelector('.profile-btn') : null;
-        const adminPanelLink = document.querySelector('[data-action="toggleAdminPanel"]');
+    const errorMessages = Array.isArray(messages) ? messages : [messages];
 
-        if (userData && profileBtn) {
-            loggedOutContainer.classList.add('disabled');
-            loggedInContainer.classList.remove('disabled');
-            helpBtn.classList.add('disabled');
-            settingsBtn.classList.add('disabled');
+    errorMessages.forEach(msg => {
+        const li = document.createElement('li');
+        li.textContent = msg;
+        list.appendChild(li);
+    });
 
-            const initialsSpan = profileBtn.querySelector('.profile-initials');
-            initialsSpan.textContent = getInitials(userData.username);
+    container.style.display = 'block';
+}
 
-            profileBtn.classList.remove('profile-btn--user', 'profile-btn--moderator', 'profile-btn--administrator');
-            profileBtn.classList.add(`profile-btn--${userData.role || 'user'}`);
-            profileBtn.dataset.userRole = userData.role || 'user';
+function updateUserUI(userData) {
+    const loggedOutContainer = document.getElementById('auth-container-logged-out');
+    const loggedInContainer = document.getElementById('auth-container-logged-in');
+    const helpBtn = document.getElementById('help-btn');
+    const settingsBtn = document.getElementById('settings-btn');
+    const profileBtn = loggedInContainer ? loggedInContainer.querySelector('.profile-btn') : null;
+    const adminPanelLink = document.querySelector('[data-action="toggleAdminPanel"]');
 
-            if (adminPanelLink) {
-                if (userData.role === 'administrator') {
-                    adminPanelLink.style.display = 'flex';
-                } else {
-                    adminPanelLink.style.display = 'none';
-                }
-            }
+    if (userData && profileBtn) {
+        loggedOutContainer.classList.add('disabled');
+        loggedInContainer.classList.remove('disabled');
+        helpBtn.classList.add('disabled');
+        settingsBtn.classList.add('disabled');
 
-        } else {
-            loggedOutContainer.classList.remove('disabled');
-            loggedInContainer.classList.add('disabled');
-            helpBtn.classList.remove('disabled');
-            settingsBtn.classList.remove('disabled');
-            if (profileBtn) {
-                profileBtn.classList.remove('profile-btn--user', 'profile-btn--moderator', 'profile-btn--administrator');
-            }
-            if (adminPanelLink) {
+        const initialsSpan = profileBtn.querySelector('.profile-initials');
+        initialsSpan.textContent = getInitials(userData.username);
+
+        profileBtn.classList.remove('profile-btn--user', 'profile-btn--moderator', 'profile-btn--administrator');
+        profileBtn.classList.add(`profile-btn--${userData.role || 'user'}`);
+        profileBtn.dataset.userRole = userData.role || 'user';
+
+        if (adminPanelLink) {
+            if (userData.role === 'administrator') {
+                adminPanelLink.style.display = 'flex';
+            } else {
                 adminPanelLink.style.display = 'none';
             }
         }
-        applyTranslations(document.querySelector('.header-right'));
+
+    } else {
+        loggedOutContainer.classList.remove('disabled');
+        loggedInContainer.classList.add('disabled');
+        helpBtn.classList.remove('disabled');
+        settingsBtn.classList.remove('disabled');
+        if (profileBtn) {
+            profileBtn.classList.remove('profile-btn--user', 'profile-btn--moderator', 'profile-btn--administrator');
+        }
+        if (adminPanelLink) {
+            adminPanelLink.style.display = 'none';
+        }
     }
-    async function checkSessionStatus() {
-        try {
-            const data = await api.checkSession();
-            if (data.loggedin) {
-                updateUserUI(data.user);
-            } else {
-                updateUserUI(null);
-            }
-        } catch (error) {
-            console.error('Error checking session:', error);
+    applyTranslations(document.querySelector('.header-right'));
+}
+async function checkSessionStatus() {
+    try {
+        const data = await api.checkSession();
+        if (data.loggedin) {
+            updateUserUI(data.user);
+        } else {
             updateUserUI(null);
-        }
-    }
-
-    async function handleLogin(form) {
-        const email = form.querySelector('#login-email').value.trim();
-        const password = form.querySelector('#login-password').value.trim();
-        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-        const button = form.querySelector('[data-action="submit-login"]');
-
-        let errors = [];
-        if (!email) {
-            errors.push(window.getTranslation('auth.errors.emailRequired'));
-        }
-        if (!password) {
-            errors.push(window.getTranslation('auth.errors.passwordRequired'));
-        }
-
-        if (errors.length > 0) {
-            displayAuthErrors('login-error-container', 'login-error-list', errors);
-            return;
-        }
-
-        displayAuthErrors('login-error-container', 'login-error-list', []);
-        button.classList.add('loading');
-
-        const formData = new FormData();
-        formData.append('action_type', 'login_user');
-        formData.append('email', email);
-        formData.append('password', password);
-        formData.append('csrf_token', csrfToken);
-
-        try {
-            const result = await api.loginUser(formData);
-            updateUserUI(result.user);
-            showNotification(window.getTranslation('auth.loginSuccess'), 'success');
-            navigateToUrl('main', 'home');
-            handleStateChange('main', 'home');
-        } catch (error) {
-            const errorResult = await error.response.json();
-            displayAuthErrors('login-error-container', 'login-error-list', errorResult.message);
-            fetchAndSetCsrfToken('login-form');
-        } finally {
-            button.classList.remove('loading');
-        }
-    }
-
-    async function handleRegister(form) {
-        const username = form.querySelector('#register-username').value.trim();
-        const email = form.querySelector('#register-email').value.trim();
-        const password = form.querySelector('#register-password').value.trim();
-        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-        const button = form.querySelector('[data-action="submit-register"]');
-
-        let errors = [];
-        if (!username) {
-            errors.push(window.getTranslation('auth.errors.usernameRequired'));
-        }
-        if (!email) {
-            errors.push(window.getTranslation('auth.errors.emailRequired'));
-        } else if (!/^\S+@\S+\.\S+$/.test(email)) {
-            errors.push(window.getTranslation('auth.errors.emailInvalid'));
-        }
-        if (!password) {
-            errors.push(window.getTranslation('auth.errors.passwordRequired'));
-        } else if (password.length < 6) {
-            errors.push(window.getTranslation('auth.errors.passwordTooShort'));
-        }
-
-        if (errors.length > 0) {
-            displayAuthErrors('register-error-container', 'register-error-list', errors);
-            return;
-        }
-
-        displayAuthErrors('register-error-container', 'register-error-list', []);
-        button.classList.add('loading');
-
-        const formData = new FormData();
-        formData.append('action_type', 'register_user');
-        formData.append('username', username);
-        formData.append('email', email);
-        formData.append('password', password);
-        formData.append('csrf_token', csrfToken);
-
-        try {
-            const result = await api.registerUser(formData);
-            updateUserUI(result.user);
-            showNotification(window.getTranslation('auth.registerSuccess'), 'success');
-            navigateToUrl('main', 'home');
-            handleStateChange('main', 'home');
-        } catch (error) {
-            const errorResult = await error.response.json();
-            displayAuthErrors('register-error-container', 'register-error-list', errorResult.message);
-            fetchAndSetCsrfToken('register-form');
-        } finally {
-            button.classList.remove('loading');
-        }
-    }
-
-    async function handleLogout() {
-        try {
-            const result = await api.logoutUser();
-            if (result.success) {
-                updateUserUI(null);
-                showNotification(window.getTranslation('auth.logoutSuccess'));
-                if (currentAppView === 'settings' || currentAppView === 'help') {
-                    navigateToUrl('main', 'home');
-                    handleStateChange('main', 'home');
-                }
+            if (data.status === 'suspended') {
+                showNotification(window.getTranslation('auth.errors.accountSuspended'), 'error');
+            } else if (data.status === 'deleted') {
+                showNotification(window.getTranslation('auth.errors.accountDeleted'), 'error');
             }
-        } catch (error) {
-            console.error('Error logging out:', error);
         }
+    } catch (error) {
+        console.error('Error checking session:', error);
+        updateUserUI(null);
+    }
+}
+
+async function handleLogin(form) {
+    const email = form.querySelector('#login-email').value.trim();
+    const password = form.querySelector('#login-password').value.trim();
+    const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+    const button = form.querySelector('[data-action="submit-login"]');
+
+    let errors = [];
+    if (!email) {
+        errors.push(window.getTranslation('auth.errors.emailRequired'));
+    }
+    if (!password) {
+        errors.push(window.getTranslation('auth.errors.passwordRequired'));
     }
 
+    if (errors.length > 0) {
+        displayAuthErrors('login-error-container', 'login-error-list', errors);
+        return;
+    }
+
+    displayAuthErrors('login-error-container', 'login-error-list', []);
+    button.classList.add('loading');
+
+    const formData = new FormData();
+    formData.append('action_type', 'login_user');
+    formData.append('email', email);
+    formData.append('password', password);
+    formData.append('csrf_token', csrfToken);
+
+    try {
+        const result = await api.loginUser(formData);
+        updateUserUI(result.user);
+        showNotification(window.getTranslation('auth.loginSuccess'), 'success');
+        navigateToUrl('main', 'home');
+        handleStateChange('main', 'home');
+    } catch (error) {
+        const errorResult = await error.response.json();
+        let errorMessage = errorResult.message;
+        
+        if (errorMessage === 'account_suspended') {
+            errorMessage = window.getTranslation('auth.errors.accountSuspended');
+        } else if (errorMessage === 'account_deleted') {
+            errorMessage = window.getTranslation('auth.errors.accountDeleted');
+        }
+
+        displayAuthErrors('login-error-container', 'login-error-list', errorMessage);
+        fetchAndSetCsrfToken('login-form');
+    } finally {
+        button.classList.remove('loading');
+    }
+}
+
+async function handleRegister(form) {
+    const username = form.querySelector('#register-username').value.trim();
+    const email = form.querySelector('#register-email').value.trim();
+    const password = form.querySelector('#register-password').value.trim();
+    const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+    const button = form.querySelector('[data-action="submit-register"]');
+
+    let errors = [];
+    if (!username) {
+        errors.push(window.getTranslation('auth.errors.usernameRequired'));
+    }
+    if (!email) {
+        errors.push(window.getTranslation('auth.errors.emailRequired'));
+    } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+        errors.push(window.getTranslation('auth.errors.emailInvalid'));
+    }
+    if (!password) {
+        errors.push(window.getTranslation('auth.errors.passwordRequired'));
+    } else if (password.length < 6) {
+        errors.push(window.getTranslation('auth.errors.passwordTooShort'));
+    }
+
+    if (errors.length > 0) {
+        displayAuthErrors('register-error-container', 'register-error-list', errors);
+        return;
+    }
+
+    displayAuthErrors('register-error-container', 'register-error-list', []);
+    button.classList.add('loading');
+
+    const formData = new FormData();
+    formData.append('action_type', 'register_user');
+    formData.append('username', username);
+    formData.append('email', email);
+    formData.append('password', password);
+    formData.append('csrf_token', csrfToken);
+
+    try {
+        const result = await api.registerUser(formData);
+        updateUserUI(result.user);
+        showNotification(window.getTranslation('auth.registerSuccess'), 'success');
+        navigateToUrl('main', 'home');
+        handleStateChange('main', 'home');
+    } catch (error) {
+        const errorResult = await error.response.json();
+        displayAuthErrors('register-error-container', 'register-error-list', errorResult.message);
+        fetchAndSetCsrfToken('register-form');
+    } finally {
+        button.classList.remove('loading');
+    }
+}
+
+async function handleLogout() {
+    try {
+        const result = await api.logoutUser();
+        if (result.success) {
+            updateUserUI(null);
+            showNotification(window.getTranslation('auth.logoutSuccess'));
+            if (currentAppView === 'settings' || currentAppView === 'help') {
+                navigateToUrl('main', 'home');
+                handleStateChange('main', 'home');
+            }
+        }
+    } catch (error) {
+        console.error('Error logging out:', error);
+    }
+}
 
     function showCustomConfirm(title, message) {
         return new Promise((resolve) => {

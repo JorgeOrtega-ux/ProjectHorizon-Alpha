@@ -137,7 +137,9 @@
       "emailRequired": "El correo electrónico es obligatorio.",
       "emailInvalid": "El formato del correo electrónico no es válido.",
       "passwordRequired": "La contraseña es obligatoria.",
-      "passwordTooShort": "La contraseña debe tener al menos 6 caracteres."
+      "passwordTooShort": "La contraseña debe tener al menos 6 caracteres.",
+      "accountSuspended": "Tu cuenta ha sido suspendida.",
+      "accountDeleted": "Esta cuenta ha sido eliminada."
     }
   },
   "settings": {
