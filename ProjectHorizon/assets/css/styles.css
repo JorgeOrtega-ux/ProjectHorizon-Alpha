@@ -1184,7 +1184,7 @@ h1, h2, h3, h4, h5, h6 {
     text-align: center;
     color: var(--tooltip-text-color);
     background-color: var(--tooltip-bg);
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid var(--tooltip-bg);
     box-sizing: border-box;
 }
@@ -1228,7 +1228,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .tooltip[data-popper-placement^="bottom"]::before {
-    top: -6px;
+    top: -5px;
     left: 50%;
     width: 10px;
     height: 10px;
@@ -1239,7 +1239,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .tooltip[data-popper-placement^="top"]::before {
-    bottom: -6px;
+    bottom: -5px;
     left: 50%;
     width: 10px;
     height: 10px;
@@ -1251,7 +1251,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .tooltip[data-popper-placement^="right"]::before {
     top: 50%;
-    left: -6px;
+    left: -5px;
     width: 10px;
     height: 10px;
     border-top: none;
@@ -1262,7 +1262,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .tooltip[data-popper-placement^="left"]::before {
     top: 50%;
-    right: -6px;
+    right: -5px;
     width: 10px;
     height: 10px;
     border-left: none;
