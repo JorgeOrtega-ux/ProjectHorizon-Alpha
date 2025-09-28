@@ -28,23 +28,51 @@
         transition: background-color 0.2s ease; /* Transición suave */
     }
 
-    /* --- ESTILO HOVER AÑADIDO --- */
     .password-toggle-btn:hover {
         background-color: #f5f5fa; /* Color de fondo al pasar el cursor */
         color: var(--text-color);
     }
 
-    /* Para el tema oscuro, usamos la variable correspondiente */
     .dark-theme .password-toggle-btn:hover {
         background-color: var(--hover-bg);
     }
 
-    .auth-error-message {
+    /* --- NUEVOS ESTILOS PARA EL CONTENEDOR DE ERRORES --- */
+    .auth-error-message-container {
+        border: 2px solid var(--danger-color);
+        border-radius: 8px;
+        padding: 12px 16px;
+        background-color: rgba(229, 57, 53, 0.05);
+        display: none; /* Oculto por defecto */
+    }
+
+    .auth-error-message-container ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .auth-error-message-container li {
         color: var(--danger-color);
         font-size: 0.875rem;
-        margin-top: -8px;
-        margin-bottom: 8px;
-        min-height: 20px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        text-align: left;
+    }
+
+    .auth-error-message-container li::before {
+        content: '';
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: var(--danger-color);
+        margin-right: 8px;
+        flex-shrink: 0;
     }
 </style>
 
@@ -64,7 +92,9 @@
                     <span class="material-symbols-rounded">visibility</span>
                 </button>
             </div>
-            <div class="auth-error-message" id="login-error-message"></div>
+            <div class="auth-error-message-container" id="login-error-container">
+                <ul id="login-error-list"></ul>
+            </div>
             <button class="load-more-btn" data-action="submit-login" data-i18n="auth.loginButton"></button>
         </div>
         <p class="auth-switch-prompt"><a href="#" data-action="toggleSectionRegister" data-i18n="auth.registerPrompt"></a></p>

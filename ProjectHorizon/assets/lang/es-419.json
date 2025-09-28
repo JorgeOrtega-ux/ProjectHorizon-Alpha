@@ -130,7 +130,14 @@
     "loginPrompt": "¿Ya tienes una cuenta? Inicia sesión",
     "loginSuccess": "Inicio de sesión exitoso.",
     "registerSuccess": "¡Cuenta creada con éxito! Bienvenido.",
-    "logoutSuccess": "Has cerrado sesión."
+    "logoutSuccess": "Has cerrado sesión.",
+    "errors": {
+      "usernameRequired": "El nombre de usuario es obligatorio.",
+      "emailRequired": "El correo electrónico es obligatorio.",
+      "emailInvalid": "El formato del correo electrónico no es válido.",
+      "passwordRequired": "La contraseña es obligatoria.",
+      "passwordTooShort": "La contraseña debe tener al menos 6 caracteres."
+    }
   },
   "settings": {
     "accessibility": {

@@ -128,6 +128,30 @@ export function initMainController() {
         }
         return name.substring(0, 2).toUpperCase();
     }
+    
+    function displayAuthErrors(containerId, listId, messages) {
+        const container = document.getElementById(containerId);
+        const list = document.getElementById(listId);
+        
+        if (!container || !list) return;
+
+        list.innerHTML = '';
+
+        if (!messages || messages.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+
+        const errorMessages = Array.isArray(messages) ? messages : [messages];
+
+        errorMessages.forEach(msg => {
+            const li = document.createElement('li');
+            li.textContent = msg;
+            list.appendChild(li);
+        });
+
+        container.style.display = 'block';
+    }
 
     function updateUserUI(userData) {
         const loggedOutContainer = document.getElementById('auth-container-logged-out');
@@ -146,7 +170,6 @@ export function initMainController() {
             const initialsSpan = profileBtn.querySelector('.profile-initials');
             initialsSpan.textContent = getInitials(userData.username);
 
-            // Lógica de roles
             profileBtn.classList.remove('profile-btn--user', 'profile-btn--moderator', 'profile-btn--administrator');
             profileBtn.classList.add(`profile-btn--${userData.role || 'user'}`);
             profileBtn.dataset.userRole = userData.role || 'user';
@@ -189,12 +212,24 @@ export function initMainController() {
     }
 
     async function handleLogin(form) {
-        const email = form.querySelector('#login-email').value;
-        const password = form.querySelector('#login-password').value;
-        const errorMessageEl = form.querySelector('#login-error-message');
+        const email = form.querySelector('#login-email').value.trim();
+        const password = form.querySelector('#login-password').value.trim();
         const button = form.querySelector('[data-action="submit-login"]');
 
-        errorMessageEl.textContent = '';
+        let errors = [];
+        if (!email) {
+            errors.push(window.getTranslation('auth.errors.emailRequired'));
+        }
+        if (!password) {
+            errors.push(window.getTranslation('auth.errors.passwordRequired'));
+        }
+
+        if (errors.length > 0) {
+            displayAuthErrors('login-error-container', 'login-error-list', errors);
+            return;
+        }
+
+        displayAuthErrors('login-error-container', 'login-error-list', []);
         button.classList.add('loading');
 
         const formData = new FormData();
@@ -214,23 +249,42 @@ export function initMainController() {
                 navigateToUrl('main', 'home');
                 handleStateChange('main', 'home');
             } else {
-                errorMessageEl.textContent = result.message;
+                displayAuthErrors('login-error-container', 'login-error-list', result.message);
             }
         } catch (error) {
-            errorMessageEl.textContent = 'Error de conexión.';
+            displayAuthErrors('login-error-container', 'login-error-list', 'Error de conexión.');
         } finally {
             button.classList.remove('loading');
         }
     }
 
     async function handleRegister(form) {
-        const username = form.querySelector('#register-username').value;
-        const email = form.querySelector('#register-email').value;
-        const password = form.querySelector('#register-password').value;
-        const errorMessageEl = form.querySelector('#register-error-message');
+        const username = form.querySelector('#register-username').value.trim();
+        const email = form.querySelector('#register-email').value.trim();
+        const password = form.querySelector('#register-password').value.trim();
         const button = form.querySelector('[data-action="submit-register"]');
 
-        errorMessageEl.textContent = '';
+        let errors = [];
+        if (!username) {
+            errors.push(window.getTranslation('auth.errors.usernameRequired'));
+        }
+        if (!email) {
+            errors.push(window.getTranslation('auth.errors.emailRequired'));
+        } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+            errors.push(window.getTranslation('auth.errors.emailInvalid'));
+        }
+        if (!password) {
+            errors.push(window.getTranslation('auth.errors.passwordRequired'));
+        } else if (password.length < 6) {
+            errors.push(window.getTranslation('auth.errors.passwordTooShort'));
+        }
+
+        if (errors.length > 0) {
+            displayAuthErrors('register-error-container', 'register-error-list', errors);
+            return;
+        }
+
+        displayAuthErrors('register-error-container', 'register-error-list', []);
         button.classList.add('loading');
 
         const formData = new FormData();
@@ -252,10 +306,10 @@ export function initMainController() {
                 navigateToUrl('main', 'home');
                 handleStateChange('main', 'home');
             } else {
-                errorMessageEl.textContent = result.message;
+                displayAuthErrors('register-error-container', 'register-error-list', result.message);
             }
         } catch (error) {
-            errorMessageEl.textContent = 'Error de conexión.';
+            displayAuthErrors('register-error-container', 'register-error-list', 'Error de conexión.');
         } finally {
             button.classList.remove('loading');
         }
@@ -1163,7 +1217,6 @@ export function initMainController() {
         }
     }
 
-    // ✅ **FUNCIÓN CORREGIDA Y MEJORADA**
     function updateSelectActiveState(selectId, value) {
         const selectContainers = document.querySelectorAll(`#${selectId}, #${selectId}-mobile`);
 
@@ -1187,7 +1240,6 @@ export function initMainController() {
                 activeText = activeLink.querySelector('.menu-link-text span').textContent;
                 triggerTextEl.textContent = activeText;
             } else {
-                // Si no hay valor seleccionado, mostramos el placeholder
                 const placeholderKey = triggerTextEl.dataset.i18n;
                 if (placeholderKey) {
                     triggerTextEl.textContent = window.getTranslation(placeholderKey);
@@ -1933,8 +1985,6 @@ export function initMainController() {
         }
     }
 
-    // ✅ **FUNCIÓN handleStateChange COMPLETA Y ACTUALIZADA**
-    // ✅ **FUNCIÓN handleStateChange COMPLETA Y ACTUALIZADA**
    async function handleStateChange(view, section, data) {
     const contentContainer = document.querySelector('.general-content-scrolleable');
     if (contentContainer) {
@@ -2111,7 +2161,6 @@ export function initMainController() {
                 });
             };
 
-            // ✅ **INICIALIZACIÓN CORREGIDA: Sin selección por defecto**
             updateSelectActiveState('feedback-issue-type-select', null); 
             if(otherTitleGroup) {
                 otherTitleGroup.classList.add('disabled');
@@ -2358,7 +2407,6 @@ const routes = {
         'help/send-feedback': { view: 'help', section: 'sendFeedback' },
         'login': { view: 'auth', section: 'login' },
         'register': { view: 'auth', section: 'register' },
-        // --- AÑADIR ESTAS DOS LÍNEAS ---
         'admin/users': { view: 'admin', section: 'manageUsers' },
         'admin/content': { view: 'admin', section: 'manageContent' }
     };
