@@ -473,7 +473,7 @@ h6 {
     flex-shrink: 0;
 }
 
-.settings-page-container>.content-section:last-of-type {
+.settings-page-container > .content-section:last-of-type {
     margin-bottom: 0;
 }
 
@@ -548,7 +548,7 @@ h6 {
     color: var(--toggle-handle-active-color);
 }
 
-.data-group-section .data-item+.data-item {
+.data-group-section .data-item + .data-item {
     border-top: 1px solid var(--border-color);
 }
 
@@ -1720,15 +1720,15 @@ h6 {
     padding: 0 4px;
 }
 
-.auth-input:focus+.auth-label,
-.auth-input:not(:placeholder-shown)+.auth-label {
+.auth-input:focus + .auth-label,
+.auth-input:not(:placeholder-shown) + .auth-label {
     top: 0;
     font-size: 0.75rem;
     color: var(--focus-border-color);
 }
 
-.dark-theme .auth-input:focus+.auth-label,
-.dark-theme .auth-input:not(:placeholder-shown)+.auth-label {
+.dark-theme .auth-input:focus + .auth-label,
+.dark-theme .auth-input:not(:placeholder-shown) + .auth-label {
     color: var(--text-color);
 }
 
@@ -1912,4 +1912,34 @@ h6 {
     .dark-theme .module-surface .menu-content {
         border: none;
     }
+}
+
+/* ================================================= */
+/* =========== AJUSTES SOLICITADOS ================= */
+/* ================================================= */
+
+/* --- 1. Estilo para el botón "Eliminar cuenta" en la página de configuración --- */
+[data-section="loginSecurity"] .content-section-stacked .load-more-btn.btn-danger {
+    background-color: transparent;
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+}
+
+[data-section="loginSecurity"] .content-section-stacked .load-more-btn.btn-danger:hover {
+    background-color: var(--danger-color);
+    color: var(--danger-text-color);
+}
+
+
+/* --- 2. Estilo para el contenedor del ícono (candado) --- */
+.content-section .item-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-right: 24px;
+    height: 50px;
+    width: 50px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
 }

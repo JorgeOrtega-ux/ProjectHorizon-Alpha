@@ -2249,6 +2249,7 @@ export function initMainController() {
                 const sessionResponse = await api.checkSession();
                 if (sessionResponse.ok && sessionResponse.data.loggedin && sessionResponse.data.user) {
                     const passwordLastUpdatedEl = document.getElementById('password-last-updated');
+                    
                     if (passwordLastUpdatedEl) {
                         if (sessionResponse.data.user.password_last_updated_at) {
                             const date = new Date(sessionResponse.data.user.password_last_updated_at);
@@ -2265,7 +2266,7 @@ export function initMainController() {
                         }
                     }
 
-                    const deleteAccountDescriptionEl = document.querySelector('[data-i18n="settings.loginSecurity.deleteAccountDescription"]');
+const deleteAccountDescriptionEl = document.getElementById('delete-account-description');
                     if (deleteAccountDescriptionEl && sessionResponse.data.user.created_at) {
                         const creationDate = new Date(sessionResponse.data.user.created_at);
                         const formattedCreationDate = creationDate.toLocaleDateString(undefined, {
