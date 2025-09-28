@@ -247,11 +247,19 @@
     "downloadError": "Error al descargar la imagen.",
     "historyCleared": "Historial eliminado correctamente.",
     "historyEmpty": "Tu historial ya está vacío.",
-    "selectIssueType": "Por favor, selecciona un tipo de comentario."
+    "selectIssueType": "Por favor, selecciona un tipo de comentario.",
+    "passwordMismatch": "Las contraseñas no coinciden.",
+    "passwordUpdated": "Contraseña actualizada correctamente."
   },
   "dialogs": {
     "clearHistoryTitle": "¿Eliminar todo el historial?",
-    "clearHistoryMessage": "<p>Esta acción eliminará permanentemente todo tu historial de la aplicación. No podrás deshacer esta acción.</p><a href=\"#\" data-action=\"view-history-help\">Más información</a>"
+    "clearHistoryMessage": "<p>Esta acción eliminará permanentemente todo tu historial de la aplicación. No podrás deshacer esta acción.</p><a href=\"#\" data-action=\"view-history-help\">Más información</a>",
+        "updatePasswordTitle": "Actualizar contraseña",
+    "updatePasswordMessage": "Para continuar, ingresa tu contraseña actual.",
+    "enterNewPasswordTitle": "Ingresa tu nueva contraseña",
+    "enterNewPasswordMessage": "Elige una contraseña segura que no uses en otros sitios.",
+    "confirmPasswordLabel": "Confirmar nueva contraseña"
+  
   },
   "404": {
     "badge": "404",

@@ -1,4 +1,3 @@
-
 <?php require_once 'config/router.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -53,6 +52,17 @@
             <div class="custom-confirm-buttons">
                 <button id="custom-confirm-cancel" class="load-more-btn" data-i18n="general.cancel"></button>
                 <button id="custom-confirm-ok" class="load-more-btn btn-danger" data-i18n="general.confirm"></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="update-password-overlay" class="custom-confirm-overlay disabled">
+        <div class="custom-confirm-box">
+            <h2 id="update-password-title"></h2>
+            <div id="update-password-content"></div>
+            <div class="custom-confirm-buttons">
+                <button id="update-password-cancel" class="load-more-btn"></button>
+                <button id="update-password-ok" class="load-more-btn"></button>
             </div>
         </div>
     </div>

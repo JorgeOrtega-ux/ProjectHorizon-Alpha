@@ -1887,4 +1887,14 @@ h1, h2, h3, h4, h5, h6 {
 .content-section .item-icon .material-symbols-rounded {
     font-size: 28px;
     color: var(--muted-text-color);
+}/* ====================================== */
+/* ====== ESTILOS UPDATE PASSWORD ========= */
+/* ====================================== */
+
+#update-password-content .form-field {
+    margin-bottom: 16px;
+}
+
+#update-password-content .auth-error-message-container {
+    margin-top: 16px;
 }

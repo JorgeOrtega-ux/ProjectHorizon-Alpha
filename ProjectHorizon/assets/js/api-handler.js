@@ -49,6 +49,20 @@ export function logoutUser() {
     });
 }
 
+export function verifyPassword(formData) {
+    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+export function updateUserPassword(formData) {
+    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
 export function getGalleries(sortBy, searchTerm, page, limit) {
     const encodedSearchTerm = encodeURIComponent(searchTerm);
     const url = `${window.BASE_PATH}/api/main_handler.php?request_type=galleries&sort=${sortBy}&search=${encodedSearchTerm}&page=${page}&limit=${limit}`;

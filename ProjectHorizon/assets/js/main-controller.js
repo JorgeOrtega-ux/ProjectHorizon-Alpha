@@ -365,6 +365,124 @@ export function initMainController() {
             okBtn.onclick = () => close(true);
         });
     }
+    
+    async function showUpdatePasswordDialog() {
+        const overlay = document.getElementById('update-password-overlay');
+        const titleEl = document.getElementById('update-password-title');
+        const contentEl = document.getElementById('update-password-content');
+        const cancelBtn = document.getElementById('update-password-cancel');
+        const okBtn = document.getElementById('update-password-ok');
+    
+        let currentStep = 'verify';
+    
+        const closeDialog = () => {
+            overlay.classList.add('disabled');
+            cancelBtn.onclick = null;
+            okBtn.onclick = null;
+        };
+    
+        const renderStep = async () => {
+            const { csrf_token } = await api.getCsrfToken();
+            if (currentStep === 'verify') {
+                titleEl.textContent = window.getTranslation('dialogs.updatePasswordTitle');
+                contentEl.innerHTML = `
+                    <p>${window.getTranslation('dialogs.updatePasswordMessage')}</p>
+                    <input type="hidden" name="csrf_token" value="${csrf_token}">
+                    <div class="form-field password-wrapper">
+                        <input type="password" id="current-password" class="auth-input" placeholder=" " autocomplete="current-password">
+                        <label for="current-password" class="auth-label" data-i18n="auth.passwordPlaceholder"></label>
+                    </div>
+                    <div class="auth-error-message-container" id="password-error-container" style="display: none;">
+                        <ul id="password-error-list"></ul>
+                    </div>
+                `;
+                okBtn.textContent = window.getTranslation('general.confirm');
+                cancelBtn.textContent = window.getTranslation('general.cancel');
+                okBtn.onclick = handleVerifyPassword;
+                cancelBtn.onclick = closeDialog;
+            } else if (currentStep === 'update') {
+                titleEl.textContent = window.getTranslation('dialogs.enterNewPasswordTitle');
+                contentEl.innerHTML = `
+                    <p>${window.getTranslation('dialogs.enterNewPasswordMessage')}</p>
+                    <input type="hidden" name="csrf_token" value="${csrf_token}">
+                    <div class="form-field password-wrapper">
+                        <input type="password" id="new-password" class="auth-input" placeholder=" " autocomplete="new-password">
+                        <label for="new-password" class="auth-label" data-i18n="auth.passwordPlaceholder"></label>
+                    </div>
+                    <div class="form-field password-wrapper">
+                        <input type="password" id="confirm-password" class="auth-input" placeholder=" ">
+                        <label for="confirm-password" class="auth-label" data-i18n="dialogs.confirmPasswordLabel"></label>
+                    </div>
+                     <div class="auth-error-message-container" id="password-error-container" style="display: none;">
+                        <ul id="password-error-list"></ul>
+                    </div>
+                `;
+                okBtn.textContent = window.getTranslation('settings.loginSecurity.updateButton');
+                cancelBtn.textContent = window.getTranslation('general.back');
+                okBtn.onclick = handleUpdatePassword;
+                cancelBtn.onclick = () => {
+                    currentStep = 'verify';
+                    renderStep();
+                };
+            }
+            applyTranslations(overlay);
+        };
+    
+        const handleVerifyPassword = async () => {
+            const password = document.getElementById('current-password').value;
+            const csrfToken = contentEl.querySelector('input[name="csrf_token"]').value;
+            
+            const formData = new FormData();
+            formData.append('action_type', 'verify_password');
+            formData.append('password', password);
+            formData.append('csrf_token', csrfToken);
+    
+            try {
+                const result = await api.verifyPassword(formData);
+                if (result.success) {
+                    currentStep = 'update';
+                    renderStep();
+                } else {
+                     displayAuthErrors('password-error-container', 'password-error-list', result.message);
+                }
+            } catch (error) {
+                const errorResult = await error.response.json();
+                displayAuthErrors('password-error-container', 'password-error-list', errorResult.message);
+            }
+        };
+    
+        const handleUpdatePassword = async () => {
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const csrfToken = contentEl.querySelector('input[name="csrf_token"]').value;
+    
+            if (newPassword !== confirmPassword) {
+                showNotification(window.getTranslation('notifications.passwordMismatch'), 'error');
+                return;
+            }
+    
+            const formData = new FormData();
+            formData.append('action_type', 'update_password');
+            formData.append('new_password', newPassword);
+            formData.append('csrf_token', csrfToken);
+    
+            try {
+                const result = await api.updateUserPassword(formData);
+                if (result.success) {
+                    showNotification(window.getTranslation('notifications.passwordUpdated'), 'success');
+                    closeDialog();
+                } else {
+                    displayAuthErrors('password-error-container', 'password-error-list', result.message);
+                }
+            } catch (error) {
+                 const errorResult = await error.response.json();
+                displayAuthErrors('password-error-container', 'password-error-list', errorResult.message);
+            }
+        };
+    
+        renderStep();
+        overlay.classList.remove('disabled');
+    }
 
     function initSettingsController() {
         const settingsToggles = {
@@ -1491,6 +1609,9 @@ export function initMainController() {
                         break;
                     case 'logout':
                         handleLogout();
+                        break;
+                    case 'update-password':
+                        showUpdatePasswordDialog();
                         break;
                     case 'toggleModuleSurface':
                         const moduleSurface = document.querySelector('[data-module="moduleSurface"]');

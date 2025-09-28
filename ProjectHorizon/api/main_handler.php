@@ -553,6 +553,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         exit;
     }
+    if ($action_type === 'verify_password') {
+        if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'No autorizado.']);
+            exit;
+        }
+
+        if (!isset($_POST['csrf_token']) || !validate_csrf_token($_POST['csrf_token'])) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Error de validación CSRF.']);
+            exit;
+        }
+
+        $password = $_POST['password'] ?? '';
+        $user_uuid = $_SESSION['user_uuid'];
+
+        $stmt = $conn->prepare("SELECT password_hash FROM users WHERE uuid = ?");
+        $stmt->bind_param("s", $user_uuid);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($user = $result->fetch_assoc()) {
+            if (password_verify($password, $user['password_hash'])) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'La contraseña actual es incorrecta.']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Usuario no encontrado.']);
+        }
+        $stmt->close();
+        exit;
+    }
+
+    if ($action_type === 'update_password') {
+        if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'No autorizado.']);
+            exit;
+        }
+
+        if (!isset($_POST['csrf_token']) || !validate_csrf_token($_POST['csrf_token'])) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Error de validación CSRF.']);
+            exit;
+        }
+
+        $new_password = $_POST['new_password'] ?? '';
+        $user_uuid = $_SESSION['user_uuid'];
+
+        if (strlen($new_password) < 6) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'La nueva contraseña debe tener al menos 6 caracteres.']);
+            exit;
+        }
+
+        $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
+
+        $stmt = $conn->prepare("UPDATE users SET password_hash = ? WHERE uuid = ?");
+        $stmt->bind_param("ss", $password_hash, $user_uuid);
+
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true, 'message' => 'Contraseña actualizada correctamente.']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error al actualizar la contraseña.']);
+        }
+        $stmt->close();
+        exit;
+    }
 
     if ($action_type === 'increment_interaction') {
         $uuid = isset($_POST['uuid']) ? $_POST['uuid'] : '';
