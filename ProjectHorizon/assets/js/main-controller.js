@@ -134,21 +134,30 @@ export function initMainController() {
         const loggedInContainer = document.getElementById('auth-container-logged-in');
         const helpBtn = document.getElementById('help-btn');
         const settingsBtn = document.getElementById('settings-btn');
-        
-        if (userData) {
+        const profileBtn = loggedInContainer ? loggedInContainer.querySelector('.profile-btn') : null;
+    
+        if (userData && profileBtn) {
             loggedOutContainer.classList.add('disabled');
             loggedInContainer.classList.remove('disabled');
             helpBtn.classList.add('disabled');
             settingsBtn.classList.add('disabled');
-            
-            const initialsSpan = loggedInContainer.querySelector('.profile-initials');
+    
+            const initialsSpan = profileBtn.querySelector('.profile-initials');
             initialsSpan.textContent = getInitials(userData.username);
-
+    
+            // Lógica de roles
+            profileBtn.classList.remove('profile-btn--user', 'profile-btn--moderator', 'profile-btn--administrator');
+            profileBtn.classList.add(`profile-btn--${userData.role || 'user'}`);
+            profileBtn.dataset.userRole = userData.role || 'user';
+    
         } else {
             loggedOutContainer.classList.remove('disabled');
             loggedInContainer.classList.add('disabled');
             helpBtn.classList.remove('disabled');
             settingsBtn.classList.remove('disabled');
+            if (profileBtn) {
+                profileBtn.classList.remove('profile-btn--user', 'profile-btn--moderator', 'profile-btn--administrator');
+            }
         }
         applyTranslations(document.querySelector('.header-right'));
     }

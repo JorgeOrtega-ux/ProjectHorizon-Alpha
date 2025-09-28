@@ -1839,17 +1839,37 @@ h1, h2, h3, h4, h5, h6 {
 .load-more-btn.loading .button-spinner {
     display: block;
 }
-.profile-btn-user {
-    border: 2px solid #808080;
+
+.profile-btn {
+    border-width: 2px;
+}
+
+.profile-btn.profile-btn--user {
+    border-color: #808080;
     background-color: #f0f0f0;
 }
 
-.profile-btn-moderator {
-    border: 2px solid #0000ff;
+.profile-btn.profile-btn--moderator {
+    border-color: #0000ff;
     background-color: #e0e0ff;
 }
 
-.profile-btn-administrator {
-    border: 2px solid #ff0000;
+.profile-btn.profile-btn--administrator {
+    border-color: #ff0000;
     background-color: #ffe0e0;
+}
+
+.dark-theme .profile-btn.profile-btn--user {
+    border-color: #808080;
+    background-color: #4a4a4a;
+}
+
+.dark-theme .profile-btn.profile-btn--moderator {
+    border-color: #6a6aff;
+    background-color: #3a3a6a;
+}
+
+.dark-theme .profile-btn.profile-btn--administrator {
+    border-color: #ff6a6a;
+    background-color: #6a3a3a;
 }

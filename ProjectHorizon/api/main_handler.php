@@ -20,7 +20,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     // --- ENDPOINT PARA VERIFICAR EL ESTADO DE LA SESIÓN ---
     if ($request_type === 'check_session') {
         header('Content-Type: application/json');
-        if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
+        if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true && isset($_SESSION['user_uuid'])) {
+            require_once '../config/db.php';
+            $stmt = $conn->prepare("SELECT role FROM users WHERE uuid = ?");
+            $stmt->bind_param("s", $_SESSION['user_uuid']);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            if ($user = $result->fetch_assoc()) {
+                $_SESSION['user_role'] = $user['role']; // Actualiza el rol en la sesión
+            }
+            $stmt->close();
+            $conn->close();
+
             echo json_encode([
                 'loggedin' => true,
                 'user' => [
