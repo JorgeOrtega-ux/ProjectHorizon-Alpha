@@ -15,6 +15,9 @@
                     <span class="material-symbols-rounded">visibility</span>
                 </button>
             </div>
+            <div class="form-link-container">
+                <a href="#" class="form-link" data-action="toggleSectionForgotPassword" data-i18n="auth.forgotPasswordPrompt"></a>
+            </div>
             <div class="auth-error-message-container" id="login-error-container">
                 <ul id="login-error-list"></ul>
             </div>

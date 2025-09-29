@@ -107,7 +107,7 @@ if ($request_type === 'section') {
         exit;
     }
 
-    $allowed_sections = [
+$allowed_sections = [
         'main-home' => '../includes/sections/main/home.php',
         'main-favorites' => '../includes/sections/main/favorites.php',
         'main-trends' => '../includes/sections/main/trends.php',
@@ -129,6 +129,7 @@ if ($request_type === 'section') {
         'help-sendFeedback' => '../includes/sections/help/send-feedback.php',
         'auth-login' => '../includes/sections/auth/login.php',
         'auth-register' => '../includes/sections/auth/register.php',
+        'auth-forgotPassword' => '../includes/sections/auth/forgot-password.php', // <-- AÑADIR ESTA LÍNEA
         'admin-manageUsers' => '../includes/sections/admin/manage-users.php',
         'admin-manageContent' => '../includes/sections/admin/manage-content.php'
     ];

@@ -14,6 +14,7 @@ class Router {
         'help/send-feedback' => ['view' => 'help', 'section' => 'sendFeedback'],
         'login' => ['view' => 'auth', 'section' => 'login'],
         'register' => ['view' => 'auth', 'section' => 'register'],
+        'forgot-password' => ['view' => 'auth', 'section' => 'forgotPassword'], // <-- AÑADIR ESTA LÍNEA
         'admin/users' => ['view' => 'admin', 'section' => 'manageUsers'],
         'admin/content' => ['view' => 'admin', 'section' => 'manageContent']
     ];

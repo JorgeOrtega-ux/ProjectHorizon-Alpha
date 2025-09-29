@@ -1804,11 +1804,12 @@ export function initMainController() {
                     case 'toggleSectionRegister':
                     case 'toggleSectionManageUsers':
                     case 'toggleSectionManageContent':
+                    case 'toggleSectionForgotPassword':
                         const sectionName = action.substring("toggleSection".length);
                         const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
                         const parentMenu = actionTarget.closest('[data-menu]');
                         let targetView = parentMenu ? parentMenu.dataset.menu : currentAppView;
-                        if (action === 'toggleSectionLogin' || action === 'toggleSectionRegister') {
+                        if (action === 'toggleSectionLogin' || action === 'toggleSectionRegister' || action === 'toggleSectionForgotPassword') {
                             targetView = 'auth';
                         }
                         if (currentAppView === targetView && currentAppSection === targetSection) return;
@@ -2691,6 +2692,7 @@ export function initMainController() {
         'help/send-feedback': { view: 'help', section: 'sendFeedback' },
         'login': { view: 'auth', section: 'login' },
         'register': { view: 'auth', section: 'register' },
+        'forgot-password': { view: 'auth', section: 'forgotPassword' }, // <-- **LA LÍNEA CORREGIDA**
         'admin/users': { view: 'admin', section: 'manageUsers' },
         'admin/content': { view: 'admin', section: 'manageContent' }
     };
