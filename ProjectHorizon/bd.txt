@@ -358,3 +358,17 @@ INSERT INTO `gallery_profile_pictures` (`gallery_uuid`, `profile_picture_url`) V
 ('e3f4a5b6-c7d8-9012-3456-bcdef0123456', 'https://images.unsplash.com/photo-1555448248-2571daf6344b?auto=format&fit=crop&w=200&q=60'),
 ('f4a5b6c7-d8e9-0123-4567-cdef01234567', 'https://images.unsplash.com/photo-1569954432138-3b3207233261?auto=format&fit=crop&w=200&q=60'),
 ('a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1505671715339-6de38c2a3e29?auto=format&fit=crop&w=200&q=60');
+
+
+
+
+-- ---------------------------------------------------------- Estructura de la tabla `security_logs`-- --------------------------------------------------------CREATE TABLE `security_logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_identifier` varchar(255) NOT NULL,
+  `action_type` enum('login_fail','reset_fail','reset_request') NOT NULL,
+  `ip_address` varchar(45) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `user_identifier` (`user_identifier`),
+  KEY `created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

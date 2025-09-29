@@ -14,7 +14,95 @@ function validate_csrf_token($token) {
     return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
 }
 
+// --- NUEVA FUNCIÓN DE SEGURIDAD ---
+// --- FUNCIÓN DE SEGURIDAD CORREGIDA ---
+function handle_security_event($conn, $identifier, $action, &$custom_message = '') {
+    $ip_address = $_SERVER['REMOTE_ADDR'];
 
+    // Lógica de registro (sin cambios)
+    if ($action === 'log_attempt') {
+        $stmt = $conn->prepare("INSERT INTO security_logs (user_identifier, action_type, ip_address) VALUES (?, 'login_fail', ?)");
+        $stmt->bind_param("ss", $identifier, $ip_address);
+        $stmt->execute();
+        $stmt->close();
+        return;
+    }
+    
+    if ($action === 'log_reset_fail') {
+        $stmt = $conn->prepare("INSERT INTO security_logs (user_identifier, action_type, ip_address) VALUES (?, 'reset_fail', ?)");
+        $stmt->bind_param("ss", $identifier, $ip_address);
+        $stmt->execute();
+        $stmt->close();
+        return;
+    }
+
+    // Lógica de limpieza (sin cambios)
+    if ($action === 'clear_all') {
+        $stmt = $conn->prepare("DELETE FROM security_logs WHERE user_identifier = ?");
+        $stmt->bind_param("s", $identifier);
+        $stmt->execute();
+        $stmt->close();
+        return;
+    }
+
+    // --- INICIO DE LA CORRECCIÓN ---
+    // Lógica de comprobación de bloqueo
+    if ($action === 'check_lock') {
+        // Obtenemos el número de intentos y la hora del ÚLTIMO intento
+        $stmt = $conn->prepare("SELECT COUNT(*) as attempt_count, MAX(created_at) as last_attempt_time FROM security_logs WHERE user_identifier = ? AND action_type IN ('login_fail', 'reset_fail') AND created_at > (NOW() - INTERVAL 15 MINUTE)");
+        $stmt->bind_param("s", $identifier);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        // Si hay 5 o más intentos...
+        if ($result['attempt_count'] >= 5) {
+            $last_attempt_timestamp = strtotime($result['last_attempt_time']);
+            $lockout_duration = 5 * 60; // 5 minutos en segundos
+            $time_since_last_attempt = time() - $last_attempt_timestamp;
+
+            // Si aún no han pasado 5 minutos desde el último intento, el usuario está bloqueado.
+            if ($time_since_last_attempt < $lockout_duration) {
+                $remaining_time = $lockout_duration - $time_since_last_attempt;
+                $minutes_left = ceil($remaining_time / 60);
+                // Usamos una expresión regular simple para reemplazar el número en el mensaje base.
+                $custom_message = preg_replace('/\{minutes\}/', $minutes_left, "Has excedido el número de intentos. Por favor, inténtalo de nuevo en {minutes} minutos.");
+                return true; // Bloqueado
+            }
+        }
+        return false; // No bloqueado
+    }
+    // --- FIN DE LA CORRECCIÓN ---
+    
+     if ($action === 'check_reset_request') {
+        $stmt = $conn->prepare("SELECT MAX(created_at) as last_request_time FROM security_logs WHERE user_identifier = ? AND action_type = 'reset_request'");
+        $stmt->bind_param("s", $identifier);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if ($result && $result['last_request_time']) {
+            $last_request_timestamp = strtotime($result['last_request_time']);
+            $cooldown = 5 * 60; // 5 minutos
+            $time_since_last_request = time() - $last_request_timestamp;
+            
+            if ($time_since_last_request < $cooldown) {
+                $minutes_left = ceil(($cooldown - $time_since_last_request) / 60);
+                 // Usamos una expresión regular simple para reemplazar el número en el mensaje base.
+                $custom_message = preg_replace('/\{minutes\}/', $minutes_left, "Has solicitado un código de recuperación recientemente. Por favor, espera {minutes} minutos antes de volver a intentarlo.");
+                return true; // En cooldown
+            }
+        }
+        
+        // Registrar el nuevo intento
+        $stmt_log = $conn->prepare("INSERT INTO security_logs (user_identifier, action_type, ip_address) VALUES (?, 'reset_request', ?)");
+        $stmt_log->bind_param("ss", $identifier, $ip_address);
+        $stmt_log->execute();
+        $stmt_log->close();
+
+        return false; // No en cooldown
+    }
+}
 // --- FUNCIÓN PARA GENERAR UUID v4 ---
 function generate_uuid_v4() {
     return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
@@ -415,64 +503,69 @@ $allowed_sections = [
             echo json_encode(['success' => false, 'message' => 'Error de validación CSRF.']);
             exit;
         }
+    
         $email = trim($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
-
+    
         if (empty($email) || empty($password)) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Correo y contraseña son obligatorios.']);
             exit;
         }
-
+    
+        // Comprobar si el usuario está bloqueado
+        $lock_message = '';
+        if (handle_security_event($conn, $email, 'check_lock', $lock_message)) {
+            http_response_code(429);
+            echo json_encode(['success' => false, 'message' => $lock_message]);
+            exit;
+        }
+    
         $stmt = $conn->prepare("SELECT uuid, username, email, password_hash, role, status FROM users WHERE email = ?");
-
-        // --- ✅ INICIO DE LA CORRECCIÓN ---
-        // Añade esta verificación para manejar el error de forma segura
         if ($stmt === false) {
             http_response_code(500);
-            // Este mensaje ahora se mostrará en la interfaz de inicio de sesión
-            echo json_encode(['success' => false, 'message' => 'Error del servidor: No se pudo preparar la consulta. Verifique que la tabla de usuarios exista.']);
-            // Opcional: loguea el error real de MySQL para ti
+            echo json_encode(['success' => false, 'message' => 'Error del servidor: No se pudo preparar la consulta.']);
             error_log("MySQLi prepare() failed: " . $conn->error);
             exit;
         }
-        // --- ✅ FIN DE LA CORRECCIÓN ---
-
+    
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
-
+    
         if ($user = $result->fetch_assoc()) {
             if (password_verify($password, $user['password_hash'])) {
-                
-                if ($user['status'] === 'suspended') {
+                if ($user['status'] !== 'active') {
                     http_response_code(403);
-                    echo json_encode(['success' => false, 'message' => 'account_suspended']);
+                    $message_key = 'account_' . $user['status'];
+                    echo json_encode(['success' => false, 'message' => $message_key]);
                     exit;
                 }
-                if ($user['status'] === 'deleted') {
-                    http_response_code(403);
-                    echo json_encode(['success' => false, 'message' => 'account_deleted']);
-                    exit;
-                }
-
+    
+                // Limpiar registros de seguridad en caso de éxito
+                handle_security_event($conn, $email, 'clear_all');
+    
                 $_SESSION['loggedin'] = true;
                 $_SESSION['user_uuid'] = $user['uuid'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['email'] = $user['email'];
                 $_SESSION['user_role'] = $user['role'];
-
+    
                 echo json_encode([
                     'success' => true,
                     'message' => 'Inicio de sesión exitoso.',
                     'user' => ['uuid' => $user['uuid'], 'username' => $user['username'], 'email' => $user['email'], 'role' => $user['role']]
                 ]);
-
+    
             } else {
+                // Registrar intento fallido
+                handle_security_event($conn, $email, 'log_attempt');
                 http_response_code(401);
                 echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas.']);
             }
         } else {
+            // Registrar intento fallido para un correo que no existe
+            handle_security_event($conn, $email, 'log_attempt');
             http_response_code(401);
             echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas.']);
         }
@@ -737,6 +830,14 @@ $allowed_sections = [
             exit;
         }
     
+        // Comprobar si hay demasiadas solicitudes de reseteo
+        $cooldown_message = '';
+        if (handle_security_event($conn, $email, 'check_reset_request', $cooldown_message)) {
+            http_response_code(429);
+            echo json_encode(['success' => false, 'message' => $cooldown_message]);
+            exit;
+        }
+    
         $stmt = $conn->prepare("SELECT id FROM users WHERE email = ? AND status = 'active'");
         $stmt->bind_param("s", $email);
         $stmt->execute();
@@ -750,6 +851,9 @@ $allowed_sections = [
             $stmt_insert->execute();
             $stmt_insert->close();
     
+            // Aquí iría la lógica para enviar el correo con el código.
+            // Por ahora, solo confirmamos que se ha "enviado".
+            
             echo json_encode(['success' => true, 'message' => 'Se ha enviado un código de recuperación a tu correo.']);
     
         } else {
@@ -782,6 +886,14 @@ if ($action_type === 'reset_password') {
             exit;
         }
     
+        // Comprobar si el usuario está bloqueado por intentos de reseteo fallidos
+        $lock_message = '';
+        if (handle_security_event($conn, $email, 'check_lock', $lock_message)) {
+            http_response_code(429);
+            echo json_encode(['success' => false, 'message' => $lock_message]);
+            exit;
+        }
+    
         $stmt_check = $conn->prepare("SELECT id FROM password_resets WHERE email = ? AND code = ? AND created_at > (NOW() - INTERVAL 15 MINUTE)");
         $stmt_check->bind_param("ss", $email, $code);
         $stmt_check->execute();
@@ -793,6 +905,10 @@ if ($action_type === 'reset_password') {
             $stmt_update->bind_param("ss", $password_hash, $email);
             
             if ($stmt_update->execute()) {
+                // Limpiar registros de seguridad en caso de éxito
+                handle_security_event($conn, $email, 'clear_all');
+                
+                // Borrar el código de la tabla de reseteos
                 $stmt_delete = $conn->prepare("DELETE FROM password_resets WHERE email = ?");
                 $stmt_delete->bind_param("s", $email);
                 $stmt_delete->execute();
@@ -805,6 +921,8 @@ if ($action_type === 'reset_password') {
             }
             $stmt_update->close();
         } else {
+            // Registrar intento de reseteo fallido
+            handle_security_event($conn, $email, 'log_reset_fail');
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'El código es inválido o ha expirado (15 minutos).']);
         }

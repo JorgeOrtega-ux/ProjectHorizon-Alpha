@@ -236,57 +236,60 @@ export function initMainController() {
         }
     }
 
-    async function handleLogin(form) {
-        const email = form.querySelector('#login-email').value.trim();
-        const password = form.querySelector('#login-password').value.trim();
-        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-        const button = form.querySelector('[data-action="submit-login"]');
+ async function handleLogin(form) {
+    const email = form.querySelector('#login-email').value.trim();
+    const password = form.querySelector('#login-password').value.trim();
+    const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+    const button = form.querySelector('[data-action="submit-login"]');
 
-        let errors = [];
-        if (!email) {
-            errors.push(window.getTranslation('auth.errors.emailRequired'));
-        }
-        if (!password) {
-            errors.push(window.getTranslation('auth.errors.passwordRequired'));
-        }
-
-        if (errors.length > 0) {
-            displayAuthErrors('login-error-container', 'login-error-list', errors);
-            return;
-        }
-
-        displayAuthErrors('login-error-container', 'login-error-list', []);
-        button.classList.add('loading');
-
-        const formData = new FormData();
-        formData.append('action_type', 'login_user');
-        formData.append('email', email);
-        formData.append('password', password);
-        formData.append('csrf_token', csrfToken);
-
-        const response = await api.loginUser(formData);
-        button.classList.remove('loading');
-
-        if (response.ok) {
-            const result = response.data;
-            updateUserUI(result.user);
-            showNotification(window.getTranslation('auth.loginSuccess'), 'success');
-            navigateToUrl('main', 'home');
-            handleStateChange('main', 'home');
-        } else {
-            const errorResult = response.data;
-            let errorMessage = errorResult.message;
-
-            if (errorMessage === 'account_suspended') {
-                errorMessage = window.getTranslation('auth.errors.accountSuspended');
-            } else if (errorMessage === 'account_deleted') {
-                errorMessage = window.getTranslation('auth.errors.accountDeleted');
-            }
-
-            displayAuthErrors('login-error-container', 'login-error-list', errorMessage);
-            fetchAndSetCsrfToken('login-form');
-        }
+    let errors = [];
+    if (!email) {
+        errors.push(window.getTranslation('auth.errors.emailRequired'));
     }
+    if (!password) {
+        errors.push(window.getTranslation('auth.errors.passwordRequired'));
+    }
+
+    if (errors.length > 0) {
+        displayAuthErrors('login-error-container', 'login-error-list', errors);
+        return;
+    }
+
+    displayAuthErrors('login-error-container', 'login-error-list', []);
+    button.classList.add('loading');
+
+    const formData = new FormData();
+    formData.append('action_type', 'login_user');
+    formData.append('email', email);
+    formData.append('password', password);
+    formData.append('csrf_token', csrfToken);
+
+    const response = await api.loginUser(formData);
+    button.classList.remove('loading');
+
+    if (response.ok) {
+        const result = response.data;
+        updateUserUI(result.user);
+        showNotification(window.getTranslation('auth.loginSuccess'), 'success');
+        navigateToUrl('main', 'home');
+        handleStateChange('main', 'home');
+    } else {
+        const errorResult = response.data;
+        let errorMessage = errorResult.message;
+        
+        if (response.status === 429) {
+            const minutes = errorMessage.match(/\d+/)[0];
+            errorMessage = window.getTranslation('auth.errors.tooManyRequests', { minutes: minutes });
+        } else if (errorMessage === 'account_suspended') {
+            errorMessage = window.getTranslation('auth.errors.accountSuspended');
+        } else if (errorMessage === 'account_deleted') {
+            errorMessage = window.getTranslation('auth.errors.accountDeleted');
+        }
+
+        displayAuthErrors('login-error-container', 'login-error-list', errorMessage);
+        fetchAndSetCsrfToken('login-form');
+    }
+}
 
     async function handleRegister(form) {
         const username = form.querySelector('#register-username').value.trim();
@@ -341,76 +344,82 @@ export function initMainController() {
     }
 
     async function handleForgotPassword(form) {
-        const email = form.querySelector('#forgot-email').value.trim();
-        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-        const button = form.querySelector('[data-action="submit-forgot-password"]');
+    const email = form.querySelector('#forgot-email').value.trim();
+    const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+    const button = form.querySelector('[data-action="submit-forgot-password"]');
 
-        if (!email) {
-            displayAuthErrors('forgot-error-container', 'forgot-error-list', [window.getTranslation('auth.errors.emailRequired')]);
-            return;
-        }
-
-        displayAuthErrors('forgot-error-container', 'forgot-error-list', []);
-        button.classList.add('loading');
-
-        const formData = new FormData();
-        formData.append('action_type', 'forgot_password');
-        formData.append('email', email);
-        formData.append('csrf_token', csrfToken);
-
-        const response = await api.forgotPassword(formData);
-        button.classList.remove('loading');
-
-        if (response.ok) {
-            showNotification(response.data.message, 'success');
-            // NAVEGAMOS A LA NUEVA VISTA DE RESTABLECIMIENTO
-            navigateToUrl('auth', 'resetPassword', { email: email });
-            handleStateChange('auth', 'resetPassword', { email: email });
-        } else {
-            // CORRECCIÓN PARA EL ERROR TypeError
-            const errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
-            displayAuthErrors('forgot-error-container', 'forgot-error-list', errorMessage);
-            fetchAndSetCsrfToken('forgot-password-form');
-        }
+    if (!email) {
+        displayAuthErrors('forgot-error-container', 'forgot-error-list', [window.getTranslation('auth.errors.emailRequired')]);
+        return;
     }
 
-    // AÑADIR TODA ESTA NUEVA FUNCIÓN
+    displayAuthErrors('forgot-error-container', 'forgot-error-list', []);
+    button.classList.add('loading');
+
+    const formData = new FormData();
+    formData.append('action_type', 'forgot_password');
+    formData.append('email', email);
+    formData.append('csrf_token', csrfToken);
+
+    const response = await api.forgotPassword(formData);
+    button.classList.remove('loading');
+
+    if (response.ok) {
+        showNotification(response.data.message, 'success');
+        navigateToUrl('auth', 'resetPassword', { email: email });
+        handleStateChange('auth', 'resetPassword', { email: email });
+    } else {
+        let errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
+        if (response.status === 429) {
+            const minutes = errorMessage.match(/\d+/)[0];
+            errorMessage = window.getTranslation('auth.errors.tooManyCodeRequests', { minutes: minutes });
+        }
+        displayAuthErrors('forgot-error-container', 'forgot-error-list', errorMessage);
+        fetchAndSetCsrfToken('forgot-password-form');
+    }
+}
+
+
     async function handleResetPassword(form) {
-        const email = form.querySelector('#reset-email').value.trim();
-        const code = form.querySelector('#reset-code').value.trim();
-        const newPassword = form.querySelector('#reset-password').value;
-        const confirmPassword = form.querySelector('#reset-confirm-password').value;
-        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-        const button = form.querySelector('[data-action="submit-reset-password"]');
+    const email = form.querySelector('#reset-email').value.trim();
+    const code = form.querySelector('#reset-code').value.trim();
+    const newPassword = form.querySelector('#reset-password').value;
+    const confirmPassword = form.querySelector('#reset-confirm-password').value;
+    const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+    const button = form.querySelector('[data-action="submit-reset-password"]');
 
-        if (newPassword !== confirmPassword) {
-            displayAuthErrors('reset-error-container', 'reset-error-list', [window.getTranslation('notifications.passwordMismatch')]);
-            return;
-        }
-
-        displayAuthErrors('reset-error-container', 'reset-error-list', []);
-        button.classList.add('loading');
-
-        const formData = new FormData();
-        formData.append('action_type', 'reset_password');
-        formData.append('email', email);
-        formData.append('code', code);
-        formData.append('new_password', newPassword);
-        formData.append('csrf_token', csrfToken);
-
-        const response = await api.resetPassword(formData);
-        button.classList.remove('loading');
-
-        if (response.ok) {
-            showNotification(response.data.message, 'success');
-            navigateToUrl('auth', 'login');
-            handleStateChange('auth', 'login');
-        } else {
-            const errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
-            displayAuthErrors('reset-error-container', 'reset-error-list', errorMessage);
-            fetchAndSetCsrfToken('reset-password-form');
-        }
+    if (newPassword !== confirmPassword) {
+        displayAuthErrors('reset-error-container', 'reset-error-list', [window.getTranslation('notifications.passwordMismatch')]);
+        return;
     }
+
+    displayAuthErrors('reset-error-container', 'reset-error-list', []);
+    button.classList.add('loading');
+
+    const formData = new FormData();
+    formData.append('action_type', 'reset_password');
+    formData.append('email', email);
+    formData.append('code', code);
+    formData.append('new_password', newPassword);
+    formData.append('csrf_token', csrfToken);
+
+    const response = await api.resetPassword(formData);
+    button.classList.remove('loading');
+
+    if (response.ok) {
+        showNotification(response.data.message, 'success');
+        navigateToUrl('auth', 'login');
+        handleStateChange('auth', 'login');
+    } else {
+        let errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
+        if (response.status === 429) {
+             const minutes = errorMessage.match(/\d+/)[0];
+            errorMessage = window.getTranslation('auth.errors.tooManyRequests', { minutes: minutes });
+        }
+        displayAuthErrors('reset-error-container', 'reset-error-list', errorMessage);
+        fetchAndSetCsrfToken('reset-password-form');
+    }
+}
     async function handleLogout() {
         const response = await api.logoutUser();
         if (response.ok && response.data.success) {

@@ -144,7 +144,9 @@
       "passwordRequired": "La contraseña es obligatoria.",
       "passwordTooShort": "La contraseña debe tener al menos 6 caracteres.",
       "accountSuspended": "Tu cuenta ha sido suspendida.",
-      "accountDeleted": "Esta cuenta ha sido eliminada."
+      "accountDeleted": "Esta cuenta ha sido eliminada.",
+      "tooManyRequests": "Has excedido el número de intentos. Por favor, inténtalo de nuevo en {minutes} minutos.",
+      "tooManyCodeRequests": "Has solicitado un código de recuperación recientemente. Por favor, espera {minutes} minutos antes de volver a intentarlo."
     }
   },
   "settings": {
