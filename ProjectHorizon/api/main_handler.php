@@ -496,12 +496,12 @@ $allowed_sections = [
             exit;
         }
     
-        // Comprobar si el usuario está bloqueado
+        // ✅ **CORRECCIÓN**: Comprobar si el usuario está bloqueado y detener la ejecución
         $lock_message = '';
         if (handle_security_event($conn, $email, 'check_lock', $lock_message)) {
             http_response_code(429);
             echo json_encode(['success' => false, 'message' => $lock_message]);
-            exit;
+            exit; // <-- AÑADIDO
         }
     
         $stmt = $conn->prepare("SELECT uuid, username, email, password_hash, role, status FROM users WHERE email = ?");
@@ -856,11 +856,12 @@ $allowed_sections = [
             exit;
         }
     
+        // ✅ **CORRECCIÓN**: Comprobar si el usuario está bloqueado y detener la ejecución
         $lock_message = '';
         if (handle_security_event($conn, $email, 'check_lock', $lock_message)) {
             http_response_code(429);
             echo json_encode(['success' => false, 'message' => $lock_message]);
-            exit;
+            exit; // <-- AÑADIDO
         }
     
         $stmt_check = $conn->prepare("SELECT id FROM password_resets WHERE email = ? AND code = ? AND created_at > (NOW() - INTERVAL 15 MINUTE)");
