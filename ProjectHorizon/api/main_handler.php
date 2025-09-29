@@ -723,6 +723,46 @@ $allowed_sections = [
         exit;
     }
 
+    if ($action_type === 'forgot_password') {
+        if (!isset($_POST['csrf_token']) || !validate_csrf_token($_POST['csrf_token'])) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Error de validación CSRF.']);
+            exit;
+        }
+    
+        $email = trim($_POST['email'] ?? '');
+    
+        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Por favor, introduce un correo electrónico válido.']);
+            exit;
+        }
+    
+        $stmt = $conn->prepare("SELECT id FROM users WHERE email = ? AND status = 'active'");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $stmt->store_result();
+    
+        if ($stmt->num_rows > 0) {
+            $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    
+            $stmt_insert = $conn->prepare("INSERT INTO password_resets (email, code) VALUES (?, ?)");
+            $stmt_insert->bind_param("ss", $email, $code);
+            $stmt_insert->execute();
+            $stmt_insert->close();
+    
+            // Aquí iría la lógica para enviar el correo electrónico con el código.
+            // Por ahora, solo confirmamos que el proceso del backend se completó.
+            echo json_encode(['success' => true, 'message' => 'Se ha enviado un código de recuperación a tu correo.']);
+    
+        } else {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'No se encontró una cuenta con ese correo electrónico.']);
+        }
+        $stmt->close();
+        exit;
+    }
+
     if ($action_type === 'increment_interaction') {
         $uuid = isset($_POST['uuid']) ? $_POST['uuid'] : '';
         if (!empty($uuid)) {

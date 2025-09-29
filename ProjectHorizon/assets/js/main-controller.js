@@ -340,6 +340,36 @@ export function initMainController() {
         }
     }
 
+    async function handleForgotPassword(form) {
+        const email = form.querySelector('#forgot-email').value.trim();
+        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+        const button = form.querySelector('[data-action="submit-forgot-password"]');
+
+        if (!email) {
+            displayAuthErrors('forgot-error-container', 'forgot-error-list', [window.getTranslation('auth.errors.emailRequired')]);
+            return;
+        }
+
+        displayAuthErrors('forgot-error-container', 'forgot-error-list', []);
+        button.classList.add('loading');
+
+        const formData = new FormData();
+        formData.append('action_type', 'forgot_password');
+        formData.append('email', email);
+        formData.append('csrf_token', csrfToken);
+
+        const response = await api.forgotPassword(formData);
+        button.classList.remove('loading');
+
+        if (response.ok) {
+            showNotification(response.data.message, 'success');
+            // Aquí podrías redirigir a una página para introducir el código
+        } else {
+            displayAuthErrors('forgot-error-container', 'forgot-error-list', response.data.message);
+            fetchAndSetCsrfToken('forgot-password-form');
+        }
+    }
+
     async function handleLogout() {
         const response = await api.logoutUser();
         if (response.ok && response.data.success) {
@@ -1751,6 +1781,10 @@ export function initMainController() {
                         const registerForm = document.getElementById('register-form');
                         if (registerForm) handleRegister(registerForm);
                         break;
+                    case 'submit-forgot-password':
+                        const forgotPasswordForm = document.getElementById('forgot-password-form');
+                        if (forgotPasswordForm) handleForgotPassword(forgotPasswordForm);
+                        break;
                     case 'logout':
                         handleLogout();
                         break;
@@ -2340,6 +2374,9 @@ export function initMainController() {
                 break;
             case 'register':
                 fetchAndSetCsrfToken('register-form');
+                break;
+            case 'forgotPassword':
+                fetchAndSetCsrfToken('forgot-password-form');
                 break;
             case 'history':
                 historyProfilesShown = HISTORY_PROFILES_BATCH;

@@ -78,6 +78,13 @@ export function registerUser(formData) {
     });
 }
 
+export function forgotPassword(formData) {
+    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
 export function logoutUser() {
     const formData = new FormData();
     formData.append('action_type', 'logout_user');

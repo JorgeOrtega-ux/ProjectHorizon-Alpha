@@ -3,6 +3,7 @@
         <h2 data-i18n="auth.forgotPasswordTitle"></h2>
         <p data-i18n="auth.forgotPasswordSubtitle"></p>
         <div class="auth-form" id="forgot-password-form">
+            <input type="hidden" name="csrf_token" value="">
             <div class="form-field">
                 <input type="email" id="forgot-email" class="auth-input" placeholder=" " autocomplete="email">
                 <label for="forgot-email" class="auth-label" data-i18n="auth.emailPlaceholder"></label>

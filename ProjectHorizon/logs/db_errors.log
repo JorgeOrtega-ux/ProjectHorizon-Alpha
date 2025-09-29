@@ -130,3 +130,7 @@
 [28-Sep-2025 04:38:32 Europe/Berlin] Error de conexión a la base de datos: No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
 [28-Sep-2025 04:38:37 Europe/Berlin] Error de conexión a la base de datos: No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
 [28-Sep-2025 04:38:45 Europe/Berlin] Error de conexión a la base de datos: No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión
+[29-Sep-2025 02:59:20 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:742
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 742
