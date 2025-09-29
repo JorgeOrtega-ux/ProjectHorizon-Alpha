@@ -2521,7 +2521,7 @@ export function initMainController() {
                     }
 
                 } else if (step === 'new-password') {
-                    passwordGroup.style.display = 'block';
+                    passwordGroup.style.display = 'flex';
                     const emailInput = form.querySelector('#reset-email');
                     if(data && data.email) emailInput.value = data.email;
                     const codeInput = form.querySelector('#reset-code');
