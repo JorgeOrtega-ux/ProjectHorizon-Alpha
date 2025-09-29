@@ -4,6 +4,7 @@ const urlMap = {
     'main-trends': 'trends',
     'auth-login': 'login',
     'auth-register': 'register',
+     'auth-forgotPassword': 'forgot-password', // <-- AÑADIR ESTA LÍNEA
     'settings-accessibility': 'settings/accessibility',
     'settings-loginSecurity': 'settings/login-security',
     'settings-historyPrivacy': 'settings/history-privacy',
