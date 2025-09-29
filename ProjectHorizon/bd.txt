@@ -361,8 +361,10 @@ INSERT INTO `gallery_profile_pictures` (`gallery_uuid`, `profile_picture_url`) V
 
 
 
-
--- ---------------------------------------------------------- Estructura de la tabla `security_logs`-- --------------------------------------------------------CREATE TABLE `security_logs` (
+-- ----------------------------------------------------------
+-- Estructura de la tabla `security_logs`
+-- --------------------------------------------------------
+CREATE TABLE `security_logs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_identifier` varchar(255) NOT NULL,
   `action_type` enum('login_fail','reset_fail','reset_request') NOT NULL,
