@@ -363,13 +363,54 @@ export function initMainController() {
 
         if (response.ok) {
             showNotification(response.data.message, 'success');
-            // Aquí podrías redirigir a una página para introducir el código
+            // NAVEGAMOS A LA NUEVA VISTA DE RESTABLECIMIENTO
+            navigateToUrl('auth', 'resetPassword', { email: email });
+            handleStateChange('auth', 'resetPassword', { email: email });
         } else {
-            displayAuthErrors('forgot-error-container', 'forgot-error-list', response.data.message);
+            // CORRECCIÓN PARA EL ERROR TypeError
+            const errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
+            displayAuthErrors('forgot-error-container', 'forgot-error-list', errorMessage);
             fetchAndSetCsrfToken('forgot-password-form');
         }
     }
 
+    // AÑADIR TODA ESTA NUEVA FUNCIÓN
+    async function handleResetPassword(form) {
+        const email = form.querySelector('#reset-email').value.trim();
+        const code = form.querySelector('#reset-code').value.trim();
+        const newPassword = form.querySelector('#reset-password').value;
+        const confirmPassword = form.querySelector('#reset-confirm-password').value;
+        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+        const button = form.querySelector('[data-action="submit-reset-password"]');
+
+        if (newPassword !== confirmPassword) {
+            displayAuthErrors('reset-error-container', 'reset-error-list', [window.getTranslation('notifications.passwordMismatch')]);
+            return;
+        }
+
+        displayAuthErrors('reset-error-container', 'reset-error-list', []);
+        button.classList.add('loading');
+
+        const formData = new FormData();
+        formData.append('action_type', 'reset_password');
+        formData.append('email', email);
+        formData.append('code', code);
+        formData.append('new_password', newPassword);
+        formData.append('csrf_token', csrfToken);
+
+        const response = await api.resetPassword(formData);
+        button.classList.remove('loading');
+
+        if (response.ok) {
+            showNotification(response.data.message, 'success');
+            navigateToUrl('auth', 'login');
+            handleStateChange('auth', 'login');
+        } else {
+            const errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
+            displayAuthErrors('reset-error-container', 'reset-error-list', errorMessage);
+            fetchAndSetCsrfToken('reset-password-form');
+        }
+    }
     async function handleLogout() {
         const response = await api.logoutUser();
         if (response.ok && response.data.success) {
@@ -417,23 +458,23 @@ export function initMainController() {
         const contentEl = document.getElementById('update-password-content');
         const cancelBtn = document.getElementById('update-password-cancel');
         const okBtn = document.getElementById('update-password-ok');
-    
+
         let currentStep = 'verify';
-    
+
         const sessionResponse = await api.checkSession();
         if (!sessionResponse.ok || !sessionResponse.data.loggedin) {
             return;
         }
         const user = sessionResponse.data.user;
         const userInitial = getInitials(user.username);
-    
+
         const closeDialog = () => {
             overlay.classList.add('disabled');
             cancelBtn.onclick = null;
             okBtn.onclick = null;
             overlay.querySelector('.dialog-icon')?.remove();
         };
-    
+
         const renderStep = async () => {
             const tokenResponse = await api.getCsrfToken();
             if (!tokenResponse.ok) {
@@ -441,9 +482,9 @@ export function initMainController() {
                 return;
             }
             const csrf_token = tokenResponse.data.csrf_token;
-            
-            titleEl.innerHTML = ''; 
-    
+
+            titleEl.innerHTML = '';
+
             if (currentStep === 'verify') {
                 titleEl.insertAdjacentHTML('beforebegin', `
                     <div class="dialog-icon">
@@ -500,25 +541,25 @@ export function initMainController() {
                 cancelBtn.textContent = window.getTranslation('general.back');
                 okBtn.onclick = handleUpdatePassword;
                 cancelBtn.onclick = () => {
-                    overlay.querySelector('.dialog-icon')?.remove(); 
+                    overlay.querySelector('.dialog-icon')?.remove();
                     currentStep = 'verify';
                     renderStep();
                 };
             }
             applyTranslations(overlay);
         };
-    
+
         const handleVerifyPassword = async () => {
             const password = document.getElementById('current-password').value;
             const csrfToken = contentEl.querySelector('input[name="csrf_token"]').value;
-    
+
             const formData = new FormData();
             formData.append('action_type', 'verify_password');
             formData.append('password', password);
             formData.append('csrf_token', csrfToken);
-    
+
             const response = await api.verifyPassword(formData);
-    
+
             if (response.ok && response.data.success) {
                 overlay.querySelector('.dialog-icon')?.remove();
                 currentStep = 'update';
@@ -527,24 +568,24 @@ export function initMainController() {
                 displayAuthErrors('password-error-container', 'password-error-list', response.data.message);
             }
         };
-    
+
         const handleUpdatePassword = async () => {
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
             const csrfToken = contentEl.querySelector('input[name="csrf_token"]').value;
-    
+
             if (newPassword !== confirmPassword) {
                 displayAuthErrors('password-error-container', 'password-error-list', window.getTranslation('notifications.passwordMismatch'));
                 return;
             }
-    
+
             const formData = new FormData();
             formData.append('action_type', 'update_password');
             formData.append('new_password', newPassword);
             formData.append('csrf_token', csrfToken);
-    
+
             const response = await api.updateUserPassword(formData);
-    
+
             if (response.ok && response.data.success) {
                 showNotification(window.getTranslation('notifications.passwordUpdated'), 'success');
                 closeDialog();
@@ -552,26 +593,26 @@ export function initMainController() {
                 displayAuthErrors('password-error-container', 'password-error-list', response.data.message);
             }
         };
-    
+
         overlay.querySelector('.dialog-icon')?.remove();
         renderStep();
         overlay.classList.remove('disabled');
     }
-    
+
     async function showDeleteAccountDialog() {
         const overlay = document.getElementById('delete-account-overlay');
         const titleEl = document.getElementById('delete-account-title');
         const contentEl = document.getElementById('delete-account-content');
         const cancelBtn = document.getElementById('delete-account-cancel');
         const okBtn = document.getElementById('delete-account-ok');
-    
+
         const closeDialog = () => {
             overlay.classList.add('disabled');
             cancelBtn.onclick = null;
             okBtn.onclick = null;
             overlay.querySelector('.dialog-icon')?.remove();
         };
-    
+
         const sessionResponse = await api.checkSession();
         if (!sessionResponse.ok || !sessionResponse.data.loggedin) {
             return;
@@ -584,14 +625,14 @@ export function initMainController() {
             month: 'long',
             day: 'numeric'
         });
-    
+
         const tokenResponse = await api.getCsrfToken();
         if (!tokenResponse.ok) {
             showNotification("No se pudo iniciar la acción. Inténtalo de nuevo.", "error");
             return;
         }
         const csrf_token = tokenResponse.data.csrf_token;
-        
+
         overlay.querySelector('.dialog-icon')?.remove();
         titleEl.insertAdjacentHTML('beforebegin', `
             <div class="dialog-icon">
@@ -615,31 +656,31 @@ export function initMainController() {
             <ul id="delete-error-list"></ul>
         </div>
         `;
-    
+
         okBtn.setAttribute('data-i18n', 'settings.loginSecurity.deleteAccountButton');
         cancelBtn.setAttribute('data-i18n', 'general.cancel');
-    
+
         applyTranslations(overlay);
-    
+
         okBtn.onclick = async () => {
             const password = document.getElementById('delete-confirm-password').value;
             const csrfToken = contentEl.querySelector('input[name="csrf_token"]').value;
-    
+
             if (!password) {
                 displayAuthErrors('delete-error-container', 'delete-error-list', window.getTranslation('auth.errors.passwordRequired'));
                 return;
             }
-    
+
             const formData = new FormData();
             formData.append('action_type', 'delete_account');
             formData.append('password', password);
             formData.append('csrf_token', csrfToken);
-    
+
             okBtn.classList.add('loading');
-    
+
             const response = await api.deleteAccount(formData);
             okBtn.classList.remove('loading');
-    
+
             if (response.ok && response.data.success) {
                 showNotification(window.getTranslation('notifications.accountDeleted'), 'success');
                 updateUserUI(null);
@@ -654,7 +695,7 @@ export function initMainController() {
                 }
             }
         };
-    
+
         cancelBtn.onclick = closeDialog;
         overlay.classList.remove('disabled');
     }
@@ -1791,6 +1832,11 @@ export function initMainController() {
                     case 'update-password':
                         showUpdatePasswordDialog();
                         break;
+                    case 'submit-reset-password':
+                        const resetPasswordForm = document.getElementById('reset-password-form');
+                        if (resetPasswordForm) handleResetPassword(resetPasswordForm);
+                        break;
+                    case 'logout':
                     case 'delete-account':
                         showDeleteAccountDialog();
                         break;
@@ -2378,6 +2424,15 @@ export function initMainController() {
             case 'forgotPassword':
                 fetchAndSetCsrfToken('forgot-password-form');
                 break;
+            case 'resetPassword':
+                fetchAndSetCsrfToken('reset-password-form');
+                if (data && data.email) {
+                    const emailInput = document.getElementById('reset-email');
+                    if (emailInput) {
+                        emailInput.value = data.email;
+                    }
+                }
+                break;
             case 'history':
                 historyProfilesShown = HISTORY_PROFILES_BATCH;
                 historyPhotosShown = HISTORY_PHOTOS_BATCH;
@@ -2730,6 +2785,7 @@ export function initMainController() {
         'login': { view: 'auth', section: 'login' },
         'register': { view: 'auth', section: 'register' },
         'forgot-password': { view: 'auth', section: 'forgotPassword' }, // <-- **LA LÍNEA CORREGIDA**
+        'reset-password': { view: 'auth', section: 'resetPassword' },
         'admin/users': { view: 'admin', section: 'manageUsers' },
         'admin/content': { view: 'admin', section: 'manageContent' }
     };

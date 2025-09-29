@@ -138,3 +138,7 @@ Stack trace:
 Stack trace:
 #0 {main}
   thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 742
+[29-Sep-2025 03:13:16 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:744
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 744

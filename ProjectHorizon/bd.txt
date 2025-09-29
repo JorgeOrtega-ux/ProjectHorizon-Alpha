@@ -28,6 +28,7 @@ USE project_horizon;
 -- Estructura de la tabla `users` (CORREGIDA Y ACTUALIZADA)
 --
 -- --------------------------------------------------------
+-- ... (código anterior)
 CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `uuid` varchar(36) NOT NULL,
@@ -37,11 +38,13 @@ CREATE TABLE `users` (
   `role` ENUM('user','moderator','administrator') NOT NULL DEFAULT 'user',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `password_last_updated_at` timestamp NULL DEFAULT NULL,
+  `status` ENUM('active','suspended','deleted') NOT NULL DEFAULT 'active',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid` (`uuid`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- ... (resto del archivo)
 -- (El resto del archivo permanece igual...)
 -- --------------------------------------------------------
 --

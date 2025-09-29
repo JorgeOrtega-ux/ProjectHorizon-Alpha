@@ -85,6 +85,14 @@ export function forgotPassword(formData) {
     });
 }
 
+// AÑADIR ESTA NUEVA FUNCIÓN
+export function resetPassword(formData) {
+    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
 export function logoutUser() {
     const formData = new FormData();
     formData.append('action_type', 'logout_user');

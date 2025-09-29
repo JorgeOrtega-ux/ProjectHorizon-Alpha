@@ -126,6 +126,8 @@ $allowed_sections = [
         'help-privacyPolicy' => '../includes/sections/help/privacy-policy.php',
         'help-termsConditions' => '../includes/sections/help/terms-conditions.php',
         'help-cookiePolicy' => '../includes/sections/help/cookie-policy.php',
+                'auth-resetPassword' => '../includes/sections/auth/reset-password.php', // <-- AÑADIR ESTA LÍNEA
+
         'help-sendFeedback' => '../includes/sections/help/send-feedback.php',
         'auth-login' => '../includes/sections/auth/login.php',
         'auth-register' => '../includes/sections/auth/register.php',
@@ -762,7 +764,59 @@ $allowed_sections = [
         $stmt->close();
         exit;
     }
-
+if ($action_type === 'reset_password') {
+        if (!isset($_POST['csrf_token']) || !validate_csrf_token($_POST['csrf_token'])) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Error de validación CSRF.']);
+            exit;
+        }
+    
+        $email = trim($_POST['email'] ?? '');
+        $code = trim($_POST['code'] ?? '');
+        $new_password = $_POST['new_password'] ?? '';
+    
+        if (empty($email) || empty($code) || empty($new_password)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios.']);
+            exit;
+        }
+    
+        if (strlen($new_password) < 6) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'La nueva contraseña debe tener al menos 6 caracteres.']);
+            exit;
+        }
+    
+        $stmt_check = $conn->prepare("SELECT id FROM password_resets WHERE email = ? AND code = ? AND created_at > (NOW() - INTERVAL 15 MINUTE)");
+        $stmt_check->bind_param("ss", $email, $code);
+        $stmt_check->execute();
+        $stmt_check->store_result();
+    
+        if ($stmt_check->num_rows > 0) {
+            $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
+            $stmt_update = $conn->prepare("UPDATE users SET password_hash = ?, password_last_updated_at = NOW() WHERE email = ?");
+            $stmt_update->bind_param("ss", $password_hash, $email);
+            
+            if ($stmt_update->execute()) {
+                // Borra el código para que no se pueda reutilizar
+                $stmt_delete = $conn->prepare("DELETE FROM password_resets WHERE email = ?");
+                $stmt_delete->bind_param("s", $email);
+                $stmt_delete->execute();
+                $stmt_delete->close();
+    
+                echo json_encode(['success' => true, 'message' => 'Contraseña actualizada correctamente.']);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error al actualizar la contraseña.']);
+            }
+            $stmt_update->close();
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'El código es inválido o ha expirado (15 minutos).']);
+        }
+        $stmt_check->close();
+        exit;
+    }
     if ($action_type === 'increment_interaction') {
         $uuid = isset($_POST['uuid']) ? $_POST['uuid'] : '';
         if (!empty($uuid)) {

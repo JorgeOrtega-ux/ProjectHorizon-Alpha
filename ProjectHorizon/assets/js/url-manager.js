@@ -12,6 +12,7 @@ const urlMap = {
     'help-privacyPolicy': 'help/privacy-policy',
     'help-termsConditions': 'help/terms-conditions',
     'help-cookiePolicy': 'help/cookie-policy',
+    'auth-resetPassword': 'reset-password', // <-- AÑADIR ESTA LÍNEA
     'help-sendFeedback': 'help/send-feedback',
     'main-galleryPhotos': 'gallery/{uuid}',
     'main-privateGalleryProxy': 'gallery/private/{uuid}',
