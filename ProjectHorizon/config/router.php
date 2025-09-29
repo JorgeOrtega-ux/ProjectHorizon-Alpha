@@ -13,9 +13,10 @@ class Router {
         'help/cookie-policy' => ['view' => 'help', 'section' => 'cookiePolicy'],
         'help/send-feedback' => ['view' => 'help', 'section' => 'sendFeedback'],
         'login' => ['view' => 'auth', 'section' => 'login'],
- 'register' => ['view' => 'auth', 'section' => 'register'],
-        'forgot-password' => ['view' => 'auth', 'section' => 'forgotPassword'],
-        'reset-password' => ['view' => 'auth', 'section' => 'resetPassword'], // <-- AÑADIR ESTA LÍNEA
+        'register' => ['view' => 'auth', 'section' => 'register'],
+        'forgot-password' => ['view' => 'auth', 'section' => 'forgotPassword', 'data' => ['step' => 'enter-email']],
+        'forgot-password/enter-code' => ['view' => 'auth', 'section' => 'forgotPassword', 'data' => ['step' => 'enter-code']],
+        'forgot-password/new-password' => ['view' => 'auth', 'section' => 'forgotPassword', 'data' => ['step' => 'new-password']],
         'admin/users' => ['view' => 'admin', 'section' => 'manageUsers'],
         'admin/content' => ['view' => 'admin', 'section' => 'manageContent']
     ];
@@ -67,4 +68,6 @@ if ($routeConfig === null) {
 
 $CURRENT_VIEW = $routeConfig['view'];
 $CURRENT_SECTION = $routeConfig['section'];
+// También pasamos los datos (como el 'step') si existen en la configuración de la ruta
+$ROUTE_DATA = isset($routeConfig['data']) ? json_encode($routeConfig['data']) : 'null';
 ?>

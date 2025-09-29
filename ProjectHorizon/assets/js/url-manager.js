@@ -1,10 +1,13 @@
+// assets/js/url-manager.js
 const urlMap = {
     'main-home': '',
     'main-favorites': 'favorites',
     'main-trends': 'trends',
     'auth-login': 'login',
     'auth-register': 'register',
-     'auth-forgotPassword': 'forgot-password', // <-- AÑADIR ESTA LÍNEA
+    'auth-forgotPassword': 'forgot-password',
+    'auth-forgotPassword-enter-code': 'forgot-password/enter-code',
+    'auth-forgotPassword-new-password': 'forgot-password/new-password',
     'settings-accessibility': 'settings/accessibility',
     'settings-loginSecurity': 'settings/login-security',
     'settings-historyPrivacy': 'settings/history-privacy',
@@ -12,7 +15,6 @@ const urlMap = {
     'help-privacyPolicy': 'help/privacy-policy',
     'help-termsConditions': 'help/terms-conditions',
     'help-cookiePolicy': 'help/cookie-policy',
-    'auth-resetPassword': 'reset-password', // <-- AÑADIR ESTA LÍNEA
     'help-sendFeedback': 'help/send-feedback',
     'main-galleryPhotos': 'gallery/{uuid}',
     'main-privateGalleryProxy': 'gallery/private/{uuid}',
@@ -26,12 +28,18 @@ const urlMap = {
 let BASE_PATH = '';
 
 export function generateUrl(view, section, data = null) {
-    const urlKey = `${view}-${section}`;
+    let urlKey = `${view}-${section}`;
+    if (data && data.step) {
+        urlKey += `-${data.step}`;
+    }
+    
     let pathSegment = urlMap[urlKey] || '';
 
     if (data) {
         for (const key in data) {
-            pathSegment = pathSegment.replace(`{${key}}`, data[key]);
+            if (key !== 'step') { // No reemplazamos 'step' en la URL
+                pathSegment = pathSegment.replace(`{${key}}`, data[key]);
+            }
         }
     }
 
@@ -43,7 +51,17 @@ export function generateUrl(view, section, data = null) {
         return finalUrl + '/';
     }
 
-    return finalUrl;
+    // Añade los parámetros que no están en la URL como query string
+    const queryParams = new URLSearchParams();
+    if(data) {
+        for(const key in data){
+            if(!pathSegment.includes(`{${key}}`) && key !== 'step'){
+                queryParams.append(key, data[key]);
+            }
+        }
+    }
+    const queryString = queryParams.toString();
+    return queryString ? `${finalUrl}?${queryString}` : finalUrl;
 }
 
 export function navigateToUrl(view, section, data = null) {

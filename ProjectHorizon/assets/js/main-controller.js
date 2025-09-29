@@ -344,82 +344,84 @@ export function initMainController() {
     }
 
     async function handleForgotPassword(form) {
-    const email = form.querySelector('#forgot-email').value.trim();
-    const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-    const button = form.querySelector('[data-action="submit-forgot-password"]');
+        const email = form.querySelector('#forgot-email').value.trim();
+        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+        const button = form.querySelector('[data-action="submit-forgot-password"]');
 
-    if (!email) {
-        displayAuthErrors('forgot-error-container', 'forgot-error-list', [window.getTranslation('auth.errors.emailRequired')]);
-        return;
-    }
-
-    displayAuthErrors('forgot-error-container', 'forgot-error-list', []);
-    button.classList.add('loading');
-
-    const formData = new FormData();
-    formData.append('action_type', 'forgot_password');
-    formData.append('email', email);
-    formData.append('csrf_token', csrfToken);
-
-    const response = await api.forgotPassword(formData);
-    button.classList.remove('loading');
-
-    if (response.ok) {
-        showNotification(response.data.message, 'success');
-        navigateToUrl('auth', 'resetPassword', { email: email });
-        handleStateChange('auth', 'resetPassword', { email: email });
-    } else {
-        let errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
-        if (response.status === 429) {
-            const minutes = errorMessage.match(/\d+/)[0];
-            errorMessage = window.getTranslation('auth.errors.tooManyCodeRequests', { minutes: minutes });
+        if (!email) {
+            displayAuthErrors('forgot-error-container', 'forgot-error-list', [window.getTranslation('auth.errors.emailRequired')]);
+            return;
         }
-        displayAuthErrors('forgot-error-container', 'forgot-error-list', errorMessage);
-        fetchAndSetCsrfToken('forgot-password-form');
+
+        displayAuthErrors('forgot-error-container', 'forgot-error-list', []);
+        button.classList.add('loading');
+
+        const formData = new FormData();
+        formData.append('action_type', 'forgot_password');
+        formData.append('email', email);
+        formData.append('csrf_token', csrfToken);
+
+        const response = await api.forgotPassword(formData);
+        button.classList.remove('loading');
+
+        if (response.ok) {
+            showNotification(response.data.message, 'success');
+            // Transición al siguiente paso en la misma página
+            navigateToUrl('auth', 'forgotPassword', { step: 'enter-code', email: email });
+            handleStateChange('auth', 'forgotPassword', { step: 'enter-code', email: email });
+        } else {
+            let errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
+            if (response.status === 429) {
+                const minutes = errorMessage.match(/\d+/)[0];
+                errorMessage = window.getTranslation('auth.errors.tooManyCodeRequests', { minutes: minutes });
+            }
+            displayAuthErrors('forgot-error-container', 'forgot-error-list', errorMessage);
+            fetchAndSetCsrfToken('forgot-password-form');
+        }
     }
-}
 
 
     async function handleResetPassword(form) {
-    const email = form.querySelector('#reset-email').value.trim();
-    const code = form.querySelector('#reset-code').value.trim();
-    const newPassword = form.querySelector('#reset-password').value;
-    const confirmPassword = form.querySelector('#reset-confirm-password').value;
-    const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-    const button = form.querySelector('[data-action="submit-reset-password"]');
+        const email = form.querySelector('#reset-email').value.trim();
+        const code = form.querySelector('#reset-code').value.trim();
+        const newPassword = form.querySelector('#reset-password').value;
+        const confirmPassword = form.querySelector('#reset-confirm-password').value;
+        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+        const button = form.querySelector('[data-action="submit-forgot-password"]'); // <-- **AQUÍ ESTÁ LA CORRECCIÓN**
 
-    if (newPassword !== confirmPassword) {
-        displayAuthErrors('reset-error-container', 'reset-error-list', [window.getTranslation('notifications.passwordMismatch')]);
-        return;
-    }
-
-    displayAuthErrors('reset-error-container', 'reset-error-list', []);
-    button.classList.add('loading');
-
-    const formData = new FormData();
-    formData.append('action_type', 'reset_password');
-    formData.append('email', email);
-    formData.append('code', code);
-    formData.append('new_password', newPassword);
-    formData.append('csrf_token', csrfToken);
-
-    const response = await api.resetPassword(formData);
-    button.classList.remove('loading');
-
-    if (response.ok) {
-        showNotification(response.data.message, 'success');
-        navigateToUrl('auth', 'login');
-        handleStateChange('auth', 'login');
-    } else {
-        let errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
-        if (response.status === 429) {
-             const minutes = errorMessage.match(/\d+/)[0];
-            errorMessage = window.getTranslation('auth.errors.tooManyRequests', { minutes: minutes });
+        if (newPassword !== confirmPassword) {
+            displayAuthErrors('forgot-error-container', 'forgot-error-list', [window.getTranslation('notifications.passwordMismatch')]); // Usamos el mismo contenedor de error
+            return;
         }
-        displayAuthErrors('reset-error-container', 'reset-error-list', errorMessage);
-        fetchAndSetCsrfToken('reset-password-form');
+
+        displayAuthErrors('forgot-error-container', 'forgot-error-list', []);
+        button.classList.add('loading');
+
+        const formData = new FormData();
+        formData.append('action_type', 'reset_password');
+        formData.append('email', email);
+        formData.append('code', code);
+        formData.append('new_password', newPassword);
+        formData.append('csrf_token', csrfToken);
+
+        const response = await api.resetPassword(formData);
+        button.classList.remove('loading');
+
+        if (response.ok) {
+            showNotification(response.data.message, 'success');
+            navigateToUrl('auth', 'login');
+            handleStateChange('auth', 'login');
+        } else {
+            let errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
+            if (response.status === 429) {
+                const minutes = errorMessage.match(/\d+/)[0];
+                errorMessage = window.getTranslation('auth.errors.tooManyRequests', { minutes: minutes });
+            }
+            displayAuthErrors('forgot-error-container', 'forgot-error-list', errorMessage);
+            fetchAndSetCsrfToken('forgot-password-form');
+        }
     }
-}
+
     async function handleLogout() {
         const response = await api.logoutUser();
         if (response.ok && response.data.success) {
@@ -889,7 +891,7 @@ export function initMainController() {
         }
 
         if (currentFavoritesSortBy === 'oldest') {
-            favorites.sort((a, b) => (a.added_at || 0) - (b.added_at || 0));
+            favorites.sort((a, b) => (a.added_at || 0) - (a.added_at || 0));
         } else if (currentFavoritesSortBy === 'newest') {
             favorites.sort((a, b) => (b.added_at || 0) - (a.added_at || 0));
         }
@@ -1833,7 +1835,14 @@ export function initMainController() {
                         break;
                     case 'submit-forgot-password':
                         const forgotPasswordForm = document.getElementById('forgot-password-form');
-                        if (forgotPasswordForm) handleForgotPassword(forgotPasswordForm);
+                        if (forgotPasswordForm) {
+                            const currentStep = forgotPasswordForm.dataset.step || 'enter-email';
+                            if (currentStep === 'enter-email') {
+                                handleForgotPassword(forgotPasswordForm);
+                            } else {
+                                handleResetPassword(forgotPasswordForm);
+                            }
+                        }
                         break;
                     case 'logout':
                         handleLogout();
@@ -1841,11 +1850,6 @@ export function initMainController() {
                     case 'update-password':
                         showUpdatePasswordDialog();
                         break;
-                    case 'submit-reset-password':
-                        const resetPasswordForm = document.getElementById('reset-password-form');
-                        if (resetPasswordForm) handleResetPassword(resetPasswordForm);
-                        break;
-                    case 'logout':
                     case 'delete-account':
                         showDeleteAccountDialog();
                         break;
@@ -2312,7 +2316,6 @@ export function initMainController() {
             contentContainer.innerHTML = loaderHTML;
         }
 
-        // ✅ **NUEVO: Array de secciones protegidas en el frontend**
         const protected_sections = [
             'settings-loginSecurity',
             'settings-history',
@@ -2321,11 +2324,9 @@ export function initMainController() {
         ];
         const section_key = view + '-' + section;
 
-        // ✅ **NUEVO: Verificación de sesión en el cliente**
         if (protected_sections.includes(section_key)) {
             const sessionResponse = await api.checkSession();
             if (!sessionResponse.ok || !sessionResponse.data.loggedin) {
-                // Si no está logueado, redirige a la página de login
                 navigateToUrl('auth', 'login');
                 handleStateChange('auth', 'login');
                 return;
@@ -2431,16 +2432,46 @@ export function initMainController() {
                 fetchAndSetCsrfToken('register-form');
                 break;
             case 'forgotPassword':
-                fetchAndSetCsrfToken('forgot-password-form');
-                break;
-            case 'resetPassword':
-                fetchAndSetCsrfToken('reset-password-form');
-                if (data && data.email) {
-                    const emailInput = document.getElementById('reset-email');
-                    if (emailInput) {
-                        emailInput.value = data.email;
-                    }
+                const form = document.getElementById('forgot-password-form');
+                const step = data?.step || 'enter-email';
+                form.dataset.step = step;
+
+                const emailGroup = form.querySelector('#email-group');
+                const codeGroup = form.querySelector('#code-group');
+                const passwordGroup = form.querySelector('#password-group');
+                const button = form.querySelector('[data-action="submit-forgot-password"]');
+                const title = document.querySelector('.auth-container h2');
+                const subtitle = document.querySelector('.auth-container p:not(.auth-switch-prompt)');
+
+                emailGroup.style.display = 'none';
+                codeGroup.style.display = 'none';
+                passwordGroup.style.display = 'none';
+
+                if (step === 'enter-email') {
+                    emailGroup.style.display = 'block';
+                    title.setAttribute('data-i18n', 'auth.forgotPasswordTitle');
+                    subtitle.setAttribute('data-i18n', 'auth.forgotPasswordSubtitle');
+                    button.setAttribute('data-i18n', 'auth.forgotPasswordButton');
+                } else if (step === 'enter-code') {
+                    codeGroup.style.display = 'block';
+                    const emailInput = form.querySelector('#reset-email');
+                    if(data.email) emailInput.value = data.email;
+                    title.setAttribute('data-i18n', 'auth.enterCodeTitle');
+                    subtitle.setAttribute('data-i18n', 'auth.enterCodeSubtitle');
+                    button.setAttribute('data-i18n', 'auth.verifyCodeButton');
+                } else if (step === 'new-password') {
+                    passwordGroup.style.display = 'block';
+                    const emailInput = form.querySelector('#reset-email');
+                    if(data.email) emailInput.value = data.email;
+                    const codeInput = form.querySelector('#reset-code');
+                    if(data.code) codeInput.value = data.code;
+                    title.setAttribute('data-i18n', 'auth.resetPasswordTitle');
+                    subtitle.setAttribute('data-i18n', 'auth.resetPasswordSubtitle');
+                    button.setAttribute('data-i18n', 'auth.resetPasswordButton');
                 }
+                
+                applyTranslations(form.parentElement);
+                fetchAndSetCsrfToken('forgot-password-form');
                 break;
             case 'history':
                 historyProfilesShown = HISTORY_PROFILES_BATCH;
@@ -2793,13 +2824,14 @@ export function initMainController() {
         'help/send-feedback': { view: 'help', section: 'sendFeedback' },
         'login': { view: 'auth', section: 'login' },
         'register': { view: 'auth', section: 'register' },
-        'forgot-password': { view: 'auth', section: 'forgotPassword' }, // <-- **LA LÍNEA CORREGIDA**
-        'reset-password': { view: 'auth', section: 'resetPassword' },
+        'forgot-password': { view: 'auth', section: 'forgotPassword', data: { step: 'enter-email' } },
+        'forgot-password/enter-code': { view: 'auth', section: 'forgotPassword', data: { step: 'enter-code' } },
+        'forgot-password/new-password': { view: 'auth', section: 'forgotPassword', data: { step: 'new-password' } },
         'admin/users': { view: 'admin', section: 'manageUsers' },
         'admin/content': { view: 'admin', section: 'manageContent' }
     };
     let initialRoute = routes[path] || null;
-    let initialStateData = null;
+    let initialStateData = initialRoute ? initialRoute.data : null;
 
     const privateGalleryMatch = path.match(/^gallery\/private\/([a-f0-9-]{36})$/);
     const galleryMatch = path.match(/^gallery\/([a-f0-9-]{36})$/);
