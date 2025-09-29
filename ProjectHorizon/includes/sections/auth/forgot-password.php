@@ -17,7 +17,7 @@
             <div id="code-group" style="display: none;">
                  <input type="hidden" id="reset-email" value="">
                 <div class="form-field">
-                    <input type="text" id="reset-code" class="auth-input" placeholder=" " autocomplete="one-time-code" maxlength="6">
+                    <input type="text" id="reset-code" class="auth-input" placeholder=" " autocomplete="one-time-code" maxlength="7">
                     <label for="reset-code" class="auth-label" data-i18n="auth.codePlaceholder"></label>
                 </div>
             </div>

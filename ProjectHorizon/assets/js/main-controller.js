@@ -2349,6 +2349,8 @@ export function initMainController() {
         }
     }
 
+ // assets/js/main-controller.js
+
     async function handleStateChange(view, section, pushState = true, data) {
         const contentContainer = document.querySelector('.general-content-scrolleable');
         if (contentContainer) {
@@ -2499,6 +2501,25 @@ export function initMainController() {
                     title.setAttribute('data-i18n', 'auth.enterCodeTitle');
                     subtitle.setAttribute('data-i18n', 'auth.enterCodeSubtitle');
                     buttonText.setAttribute('data-i18n', 'auth.verifyCodeButton');
+                    
+                    const codeInput = form.querySelector('#reset-code');
+                    if (codeInput) {
+                        codeInput.addEventListener('input', (e) => {
+                            let input = e.target;
+                            let sanitizedValue = input.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+                            
+                            if (sanitizedValue.length > 6) {
+                                sanitizedValue = sanitizedValue.substring(0, 6);
+                            }
+
+                            if (sanitizedValue.length > 3) {
+                                input.value = sanitizedValue.substring(0, 3) + '-' + sanitizedValue.substring(3);
+                            } else {
+                                input.value = sanitizedValue;
+                            }
+                        });
+                    }
+
                 } else if (step === 'new-password') {
                     passwordGroup.style.display = 'block';
                     const emailInput = form.querySelector('#reset-email');

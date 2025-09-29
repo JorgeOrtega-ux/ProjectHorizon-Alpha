@@ -840,7 +840,6 @@ $allowed_sections = [
         exit;
     }
 
-    // ✅ **NUEVA ACCIÓN PARA VERIFICAR EL CÓDIGO**
     if ($action_type === 'verify_reset_code') {
         if (!isset($_POST['csrf_token']) || !validate_csrf_token($_POST['csrf_token'])) {
             http_response_code(403);
@@ -849,7 +848,7 @@ $allowed_sections = [
         }
     
         $email = trim($_POST['email'] ?? '');
-        $code = trim($_POST['code'] ?? '');
+        $code = str_replace('-', '', trim($_POST['code'] ?? '')); // Eliminar guion
     
         if (empty($email) || empty($code)) {
             http_response_code(400);
@@ -881,7 +880,7 @@ $allowed_sections = [
         exit;
     }
 
-if ($action_type === 'reset_password') {
+    if ($action_type === 'reset_password') {
         if (!isset($_POST['csrf_token']) || !validate_csrf_token($_POST['csrf_token'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Error de validación CSRF.']);
@@ -889,7 +888,7 @@ if ($action_type === 'reset_password') {
         }
     
         $email = trim($_POST['email'] ?? '');
-        $code = trim($_POST['code'] ?? '');
+        $code = str_replace('-', '', trim($_POST['code'] ?? '')); // Eliminar guion
         $new_password = $_POST['new_password'] ?? '';
     
         if (empty($email) || empty($code) || empty($new_password)) {
@@ -936,6 +935,7 @@ if ($action_type === 'reset_password') {
         $stmt_check->close();
         exit;
     }
+
     if ($action_type === 'increment_interaction') {
         $uuid = isset($_POST['uuid']) ? $_POST['uuid'] : '';
         if (!empty($uuid)) {
