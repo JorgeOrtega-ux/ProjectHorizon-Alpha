@@ -366,9 +366,8 @@ export function initMainController() {
 
         if (response.ok) {
             showNotification(response.data.message, 'success');
-            // Transición al siguiente paso en la misma página
             navigateToUrl('auth', 'forgotPassword', { step: 'enter-code', email: email });
-            handleStateChange('auth', 'forgotPassword', { step: 'enter-code', email: email });
+            handleStateChange('auth', 'forgotPassword', true, { step: 'enter-code', email: email });
         } else {
             let errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
             if (response.status === 429) {
@@ -379,18 +378,55 @@ export function initMainController() {
             fetchAndSetCsrfToken('forgot-password-form');
         }
     }
+    
+    async function handleVerifyResetCode(form) {
+        const email = form.querySelector('#reset-email').value.trim();
+        const code = form.querySelector('#reset-code').value.trim();
+        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+        const button = form.querySelector('[data-action="submit-forgot-password"]');
+    
+        if (!code) {
+            displayAuthErrors('forgot-error-container', 'forgot-error-list', [window.getTranslation('auth.errors.codeRequired')]);
+            return;
+        }
+    
+        displayAuthErrors('forgot-error-container', 'forgot-error-list', []);
+        button.classList.add('loading');
+    
+        const formData = new FormData();
+        formData.append('action_type', 'verify_reset_code');
+        formData.append('email', email);
+        formData.append('code', code);
+        formData.append('csrf_token', csrfToken);
+    
+        // Suponiendo que tienes una función `verifyResetCode` en tu api-handler.js
+        const response = await api.verifyResetCode(formData);
+        button.classList.remove('loading');
+    
+        if (response.ok) {
+            navigateToUrl('auth', 'forgotPassword', { step: 'new-password', email: email, code: code });
+            handleStateChange('auth', 'forgotPassword', true, { step: 'new-password', email: email, code: code });
+        } else {
+            displayAuthErrors('forgot-error-container', 'forgot-error-list', response.data.message);
+            fetchAndSetCsrfToken('forgot-password-form');
+        }
+    }
 
-
-    async function handleResetPassword(form) {
+    async function handleUpdatePasswordFromReset(form) {
         const email = form.querySelector('#reset-email').value.trim();
         const code = form.querySelector('#reset-code').value.trim();
         const newPassword = form.querySelector('#reset-password').value;
         const confirmPassword = form.querySelector('#reset-confirm-password').value;
         const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-        const button = form.querySelector('[data-action="submit-forgot-password"]'); // <-- **AQUÍ ESTÁ LA CORRECCIÓN**
+        const button = form.querySelector('[data-action="submit-forgot-password"]');
 
-        if (newPassword !== confirmPassword) {
-            displayAuthErrors('forgot-error-container', 'forgot-error-list', [window.getTranslation('notifications.passwordMismatch')]); // Usamos el mismo contenedor de error
+        let errors = [];
+        if (!newPassword) errors.push(window.getTranslation('auth.errors.passwordRequired'));
+        if (newPassword.length < 6) errors.push(window.getTranslation('auth.errors.passwordTooShort'));
+        if (newPassword !== confirmPassword) errors.push(window.getTranslation('notifications.passwordMismatch'));
+
+        if (errors.length > 0) {
+            displayAuthErrors('forgot-error-container', 'forgot-error-list', errors);
             return;
         }
 
@@ -413,7 +449,7 @@ export function initMainController() {
             handleStateChange('auth', 'login');
         } else {
             let errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
-            if (response.status === 429) {
+             if (response.status === 429) {
                 const minutes = errorMessage.match(/\d+/)[0];
                 errorMessage = window.getTranslation('auth.errors.tooManyRequests', { minutes: minutes });
             }
@@ -421,6 +457,7 @@ export function initMainController() {
             fetchAndSetCsrfToken('forgot-password-form');
         }
     }
+
 
     async function handleLogout() {
         const response = await api.logoutUser();
@@ -1127,7 +1164,7 @@ export function initMainController() {
         adContext = 'unlock';
         adStep = 1; // Reiniciar el contador de anuncios
         galleryAfterAd = { view: 'main', section: 'galleryPhotos', data: { uuid, galleryName: name } };
-        await handleStateChange('main', 'accessCodePrompt', { uuid });
+        await handleStateChange('main', 'accessCodePrompt', true, { uuid });
     }
 
     function isPrivateGalleryUnlocked(uuid) {
@@ -1839,8 +1876,10 @@ export function initMainController() {
                             const currentStep = forgotPasswordForm.dataset.step || 'enter-email';
                             if (currentStep === 'enter-email') {
                                 handleForgotPassword(forgotPasswordForm);
-                            } else {
-                                handleResetPassword(forgotPasswordForm);
+                            } else if (currentStep === 'enter-code') {
+                                handleVerifyResetCode(forgotPasswordForm);
+                            } else if (currentStep === 'new-password') {
+                                handleUpdatePasswordFromReset(forgotPasswordForm);
                             }
                         }
                         break;
@@ -2310,7 +2349,7 @@ export function initMainController() {
         }
     }
 
-    async function handleStateChange(view, section, data) {
+    async function handleStateChange(view, section, pushState = true, data) {
         const contentContainer = document.querySelector('.general-content-scrolleable');
         if (contentContainer) {
             contentContainer.innerHTML = loaderHTML;
@@ -2440,6 +2479,7 @@ export function initMainController() {
                 const codeGroup = form.querySelector('#code-group');
                 const passwordGroup = form.querySelector('#password-group');
                 const button = form.querySelector('[data-action="submit-forgot-password"]');
+                const buttonText = button.querySelector('.button-text');
                 const title = document.querySelector('.auth-container h2');
                 const subtitle = document.querySelector('.auth-container p:not(.auth-switch-prompt)');
 
@@ -2451,23 +2491,23 @@ export function initMainController() {
                     emailGroup.style.display = 'block';
                     title.setAttribute('data-i18n', 'auth.forgotPasswordTitle');
                     subtitle.setAttribute('data-i18n', 'auth.forgotPasswordSubtitle');
-                    button.setAttribute('data-i18n', 'auth.forgotPasswordButton');
+                    buttonText.setAttribute('data-i18n', 'auth.forgotPasswordButton');
                 } else if (step === 'enter-code') {
                     codeGroup.style.display = 'block';
                     const emailInput = form.querySelector('#reset-email');
-                    if(data.email) emailInput.value = data.email;
+                    if(data && data.email) emailInput.value = data.email;
                     title.setAttribute('data-i18n', 'auth.enterCodeTitle');
                     subtitle.setAttribute('data-i18n', 'auth.enterCodeSubtitle');
-                    button.setAttribute('data-i18n', 'auth.verifyCodeButton');
+                    buttonText.setAttribute('data-i18n', 'auth.verifyCodeButton');
                 } else if (step === 'new-password') {
                     passwordGroup.style.display = 'block';
                     const emailInput = form.querySelector('#reset-email');
-                    if(data.email) emailInput.value = data.email;
+                    if(data && data.email) emailInput.value = data.email;
                     const codeInput = form.querySelector('#reset-code');
-                    if(data.code) codeInput.value = data.code;
-                    title.setAttribute('data-i18n', 'auth.resetPasswordTitle');
-                    subtitle.setAttribute('data-i18n', 'auth.resetPasswordSubtitle');
-                    button.setAttribute('data-i18n', 'auth.resetPasswordButton');
+                    if(data && data.code) codeInput.value = data.code;
+                    title.setAttribute('data-i18n', 'auth.newPasswordTitle');
+                    subtitle.setAttribute('data-i18n', 'auth.newPasswordSubtitle');
+                    buttonText.setAttribute('data-i18n', 'auth.resetPasswordButton');
                 }
                 
                 applyTranslations(form.parentElement);
@@ -2486,7 +2526,7 @@ export function initMainController() {
                 if (data && data.uuid) {
                     if (isPrivateGalleryUnlocked(data.uuid)) {
                         navigateToUrl('main', 'galleryPhotos', { uuid: data.uuid });
-                        handleStateChange('main', 'galleryPhotos', { uuid: data.uuid, galleryName: data.galleryName });
+                        handleStateChange('main', 'galleryPhotos', true, { uuid: data.uuid, galleryName: data.galleryName });
                     } else {
                         promptToWatchAd(data.uuid, data.galleryName);
                     }
@@ -2501,7 +2541,7 @@ export function initMainController() {
                             if (gallery.privacy == 1 && !isPrivateGalleryUnlocked(gallery.uuid)) {
                                 const privateUrl = generateUrl('main', 'privateGalleryProxy', { uuid: gallery.uuid });
                                 history.replaceState({ view: 'main', section: 'privateGalleryProxy', data: { uuid: gallery.uuid, galleryName: gallery.name } }, '', privateUrl);
-                                handleStateChange('main', 'privateGalleryProxy', { uuid: gallery.uuid, galleryName: gallery.name });
+                                handleStateChange('main', 'privateGalleryProxy', false, { uuid: gallery.uuid, galleryName: gallery.name });
                             } else {
                                 addToHistory('profiles', {
                                     id: gallery.uuid,
@@ -2805,7 +2845,7 @@ export function initMainController() {
     startUnlockCountdownTimer();
 
     setupPopStateHandler((view, section, pushState, data) => {
-        handleStateChange(view, section, data);
+        handleStateChange(view, section, pushState, data);
     });
 
     const path = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1);
@@ -2857,7 +2897,7 @@ export function initMainController() {
     }
 
     setInitialHistoryState(initialRoute.view, initialRoute.section, initialStateData);
-    handleStateChange(initialRoute.view, initialRoute.section, initialStateData);
+    handleStateChange(initialRoute.view, initialRoute.section, true, initialStateData);
 
     if (initialRoute.section !== 'photoView') {
         lastVisitedView = initialRoute.section;

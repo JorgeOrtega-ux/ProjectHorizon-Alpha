@@ -4,8 +4,8 @@
         <p data-i18n="auth.forgotPasswordSubtitle"></p>
         <div class="auth-form" id="forgot-password-form" data-step="enter-email">
             <input type="hidden" name="csrf_token" value="">
-            <input type="hidden" id="reset-email" value="">
-
+            
+            
             <div id="email-group">
                 <div class="form-field">
                     <input type="email" id="forgot-email" class="auth-input" placeholder=" " autocomplete="email">
@@ -13,13 +13,16 @@
                 </div>
             </div>
 
+            
             <div id="code-group" style="display: none;">
+                 <input type="hidden" id="reset-email" value="">
                 <div class="form-field">
-                    <input type="text" id="reset-code" class="auth-input" placeholder=" " autocomplete="one-time-code">
+                    <input type="text" id="reset-code" class="auth-input" placeholder=" " autocomplete="one-time-code" maxlength="6">
                     <label for="reset-code" class="auth-label" data-i18n="auth.codePlaceholder"></label>
                 </div>
             </div>
 
+            
             <div id="password-group" style="display: none;">
                 <div class="form-field password-wrapper">
                     <input type="password" id="reset-password" class="auth-input" placeholder=" " autocomplete="new-password">
