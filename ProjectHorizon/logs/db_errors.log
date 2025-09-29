@@ -1,0 +1,9 @@
+[29-Sep-2025 03:28:03 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:429
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 429
+[29-Sep-2025 03:28:24 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:429
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 429
+[29-Sep-2025 03:33:20 Europe/Berlin] MySQLi prepare() failed: Unknown column 'status' in 'field list'
