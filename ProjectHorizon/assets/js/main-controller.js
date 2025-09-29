@@ -264,16 +264,19 @@ export function initMainController() {
     formData.append('password', password);
     formData.append('csrf_token', csrfToken);
 
+    console.log('Attempting login for email:', email); // LOG AÑADIDO
     const response = await api.loginUser(formData);
     button.classList.remove('loading');
 
     if (response.ok) {
+        console.log('Login successful:', response.data); // LOG AÑADIDO
         const result = response.data;
         updateUserUI(result.user);
         showNotification(window.getTranslation('auth.loginSuccess'), 'success');
         navigateToUrl('main', 'home');
         handleStateChange('main', 'home');
     } else {
+        console.error('Login failed:', response); // LOG AÑADIDO
         const errorResult = response.data;
         let errorMessage = errorResult.message;
         
@@ -361,14 +364,17 @@ export function initMainController() {
         formData.append('email', email);
         formData.append('csrf_token', csrfToken);
 
+        console.log('Requesting password reset for email:', email); // LOG AÑADIDO
         const response = await api.forgotPassword(formData);
         button.classList.remove('loading');
 
         if (response.ok) {
+            console.log('Password reset code sent:', response.data); // LOG AÑADIDO
             showNotification(response.data.message, 'success');
             navigateToUrl('auth', 'forgotPassword', { step: 'enter-code', email: email });
             handleStateChange('auth', 'forgotPassword', true, { step: 'enter-code', email: email });
         } else {
+            console.error('Password reset request failed:', response); // LOG AÑADIDO
             let errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
             if (response.status === 429) {
                 const minutes = errorMessage.match(/\d+/)[0];
@@ -399,14 +405,16 @@ export function initMainController() {
         formData.append('code', code);
         formData.append('csrf_token', csrfToken);
     
-        // Suponiendo que tienes una función `verifyResetCode` en tu api-handler.js
+        console.log(`Verifying code "${code}" for email "${email}"`); // LOG AÑADIDO
         const response = await api.verifyResetCode(formData);
         button.classList.remove('loading');
     
         if (response.ok) {
+            console.log('Code verification successful:', response.data); // LOG AÑADIDO
             navigateToUrl('auth', 'forgotPassword', { step: 'new-password', email: email, code: code });
             handleStateChange('auth', 'forgotPassword', true, { step: 'new-password', email: email, code: code });
         } else {
+            console.error('Code verification failed:', response); // LOG AÑADIDO
             displayAuthErrors('forgot-error-container', 'forgot-error-list', response.data.message);
             fetchAndSetCsrfToken('forgot-password-form');
         }

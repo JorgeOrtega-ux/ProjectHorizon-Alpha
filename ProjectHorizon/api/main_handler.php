@@ -480,7 +480,7 @@ $allowed_sections = [
         exit;
     }
 
-   if ($action_type === 'login_user') {
+    if ($action_type === 'login_user') {
         if (!isset($_POST['csrf_token']) || !validate_csrf_token($_POST['csrf_token'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Error de validación CSRF.']);
@@ -495,29 +495,16 @@ $allowed_sections = [
             echo json_encode(['success' => false, 'message' => 'Correo y contraseña son obligatorios.']);
             exit;
         }
-    
-        // ✅ **CORRECCIÓN**: Comprobar si el usuario está bloqueado y detener la ejecución
-        $lock_message = '';
-        if (handle_security_event($conn, $email, 'check_lock', $lock_message)) {
-            http_response_code(429);
-            echo json_encode(['success' => false, 'message' => $lock_message]);
-            exit; // <-- AÑADIDO
-        }
-    
+        
+        // ✅ LÓGICA CORREGIDA: Primero se intenta el login, y si falla, se revisa el bloqueo.
         $stmt = $conn->prepare("SELECT uuid, username, email, password_hash, role, status FROM users WHERE email = ?");
-        if ($stmt === false) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Error del servidor: No se pudo preparar la consulta.']);
-            error_log("MySQLi prepare() failed: " . $conn->error);
-            exit;
-        }
-    
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
     
         if ($user = $result->fetch_assoc()) {
             if (password_verify($password, $user['password_hash'])) {
+                // Éxito en el login
                 if ($user['status'] !== 'active') {
                     http_response_code(403);
                     $message_key = 'account_' . $user['status'];
@@ -525,7 +512,7 @@ $allowed_sections = [
                     exit;
                 }
     
-                handle_security_event($conn, $email, 'clear_all');
+                handle_security_event($conn, $email, 'clear_all'); // Limpiar intentos fallidos
     
                 $_SESSION['loggedin'] = true;
                 $_SESSION['user_uuid'] = $user['uuid'];
@@ -540,12 +527,22 @@ $allowed_sections = [
                 ]);
     
             } else {
-                handle_security_event($conn, $email, 'log_attempt');
-                http_response_code(401);
-                echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas.']);
+                // Fallo de contraseña
+                handle_security_event($conn, $email, 'log_attempt'); // Registrar el intento fallido
+                $lock_message = '';
+                if (handle_security_event($conn, $email, 'check_lock', $lock_message)) {
+                    // Si este intento causó un bloqueo, mostrar el mensaje de bloqueo
+                    http_response_code(429);
+                    echo json_encode(['success' => false, 'message' => $lock_message]);
+                } else {
+                    // Si no, mostrar el mensaje de credenciales incorrectas
+                    http_response_code(401);
+                    echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas.']);
+                }
             }
         } else {
-            handle_security_event($conn, $email, 'log_attempt');
+            // Fallo (usuario no encontrado)
+            handle_security_event($conn, $email, 'log_attempt'); // Registrar el intento para evitar enumeración de usuarios
             http_response_code(401);
             echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas.']);
         }
@@ -848,34 +845,37 @@ $allowed_sections = [
         }
     
         $email = trim($_POST['email'] ?? '');
-        $code = str_replace('-', '', trim($_POST['code'] ?? '')); // Eliminar guion
+        $code = str_replace('-', '', trim($_POST['code'] ?? ''));
     
         if (empty($email) || empty($code)) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'El correo y el código son obligatorios.']);
             exit;
         }
-    
-        // ✅ **CORRECCIÓN**: Comprobar si el usuario está bloqueado y detener la ejecución
-        $lock_message = '';
-        if (handle_security_event($conn, $email, 'check_lock', $lock_message)) {
-            http_response_code(429);
-            echo json_encode(['success' => false, 'message' => $lock_message]);
-            exit; // <-- AÑADIDO
-        }
-    
+        
+        // ✅ LÓGICA CORREGIDA: Primero se intenta verificar el código, y si falla, se revisa el bloqueo.
         $stmt_check = $conn->prepare("SELECT id FROM password_resets WHERE email = ? AND code = ? AND created_at > (NOW() - INTERVAL 15 MINUTE)");
         $stmt_check->bind_param("ss", $email, $code);
         $stmt_check->execute();
         $stmt_check->store_result();
     
         if ($stmt_check->num_rows > 0) {
-            handle_security_event($conn, $email, 'clear_all');
+            // Éxito en la verificación
+            handle_security_event($conn, $email, 'clear_all'); // Limpiar intentos fallidos
             echo json_encode(['success' => true, 'message' => 'Código verificado correctamente.']);
         } else {
-            handle_security_event($conn, $email, 'log_reset_fail');
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'El código es inválido o ha expirado.']);
+            // Fallo en la verificación
+            handle_security_event($conn, $email, 'log_reset_fail'); // Registrar el intento fallido
+            $lock_message = '';
+            if (handle_security_event($conn, $email, 'check_lock', $lock_message)) {
+                // Si este intento causó un bloqueo, mostrar el mensaje de bloqueo
+                http_response_code(429);
+                echo json_encode(['success' => false, 'message' => $lock_message]);
+            } else {
+                // Si no, mostrar el mensaje de código inválido
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El código es inválido o ha expirado.']);
+            }
         }
         $stmt_check->close();
         exit;
