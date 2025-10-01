@@ -32,12 +32,13 @@ export function generateUrl(view, section, data = null) {
     if (data && data.step) {
         urlKey += `-${data.step}`;
     }
-    
-    let pathSegment = urlMap[urlKey] || '';
+
+    const originalPathSegment = urlMap[urlKey] || ''; // Se guarda la plantilla original
+    let pathSegment = originalPathSegment; // Se trabaja con una copia
 
     if (data) {
         for (const key in data) {
-            if (key !== 'step') { // No reemplazamos 'step' en la URL
+            if (key !== 'step') {
                 pathSegment = pathSegment.replace(`{${key}}`, data[key]);
             }
         }
@@ -55,7 +56,8 @@ export function generateUrl(view, section, data = null) {
     const queryParams = new URLSearchParams();
     if(data) {
         for(const key in data){
-            if(!pathSegment.includes(`{${key}}`) && key !== 'step'){
+            // Se usa la plantilla original para la comprobación
+            if(!originalPathSegment.includes(`{${key}}`) && key !== 'step'){
                 queryParams.append(key, data[key]);
             }
         }

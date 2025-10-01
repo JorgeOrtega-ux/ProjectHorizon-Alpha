@@ -2214,7 +2214,7 @@ export function initMainController() {
                 if (userCardFavorite) {
                     const uuid = userCardFavorite.dataset.uuid;
                     navigateToUrl('main', 'userSpecificFavorites', { uuid: uuid });
-                    handleStateChange('main', 'userSpecificFavorites', { uuid: uuid });
+                    handleStateChange('main', 'userSpecificFavorites', true, { uuid: uuid });
                     return;
                 }
 
@@ -2228,7 +2228,7 @@ export function initMainController() {
 
                     if (isPrivate) {
                         navigateToUrl('main', 'privateGalleryProxy', { uuid: uuid });
-                        handleStateChange('main', 'privateGalleryProxy', { uuid: uuid, galleryName: name });
+                        handleStateChange('main', 'privateGalleryProxy', true, { uuid: uuid, galleryName: name });
                     } else {
                         if (!adCooldownActive && Math.random() < 0.10) {
                             adContext = 'navigation';
@@ -2236,8 +2236,10 @@ export function initMainController() {
                             handleStateChange('main', 'adView');
                             adCooldownActive = true;
                         } else {
-                            navigateToUrl('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
-                            handleStateChange('main', 'galleryPhotos', { uuid: uuid, galleryName: name });
+                            navigateToUrl('main', 'galleryPhotos', { uuid: uuid });
+                            // --- BUG FIX ---
+                            // Se pasan los argumentos en el orden correcto a handleStateChange.
+                            handleStateChange('main', 'galleryPhotos', true, { uuid: uuid, galleryName: name });
                             adCooldownActive = false;
                         }
                     }
@@ -2257,7 +2259,7 @@ export function initMainController() {
                         adCooldownActive = true;
                     } else {
                         navigateToUrl('main', 'photoView', { uuid: galleryUuid, photoId: photoId });
-                        handleStateChange('main', 'photoView', { uuid: galleryUuid, photoId: photoId });
+                        handleStateChange('main', 'photoView', true, { uuid: galleryUuid, photoId: photoId });
                         adCooldownActive = false;
                     }
                     return;
@@ -2796,7 +2798,7 @@ export function initMainController() {
                                 localStorage.setItem('unlockedGalleries', JSON.stringify(unlockedGalleries));
 
                                 navigateToUrl(destination.view, destination.section, destination.data);
-                                handleStateChange(destination.view, destination.section, destination.data);
+                                handleStateChange(destination.view, destination.section, true, destination.data);
                                 galleryAfterAd = null;
                             }
                             adContext = 'navigation';
@@ -2812,7 +2814,7 @@ export function initMainController() {
                         const destination = galleryAfterAd || photoAfterAd;
                         if (destination) {
                             navigateToUrl(destination.view, destination.section, destination.data);
-                            handleStateChange(destination.view, destination.section, destination.data);
+                            handleStateChange(destination.view, destination.section, true, destination.data);
                             photoAfterAd = null;
                             galleryAfterAd = null;
                         } else {
