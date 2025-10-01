@@ -39,77 +39,13 @@ async function fetchData(url, options = {}) {
     }
 }
 
+// --- General & Content Requests (main_handler.php) ---
 export function getCsrfToken() {
     return fetchData(`${window.BASE_PATH}/api/main_handler.php?request_type=get_csrf_token`);
 }
 
 export function checkSession() {
     return fetchData(`${window.BASE_PATH}/api/main_handler.php?request_type=check_session`);
-}
-
-export function loginUser(formData) {
-    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
-        method: 'POST',
-        body: formData
-    });
-}
-
-export function registerUser(formData) {
-    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
-        method: 'POST',
-        body: formData
-    });
-}
-
-export function forgotPassword(formData) {
-    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
-        method: 'POST',
-        body: formData
-    });
-}
-
-export function verifyResetCode(formData) {
-    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
-        method: 'POST',
-        body: formData
-    });
-}
-
-export function resetPassword(formData) {
-    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
-        method: 'POST',
-        body: formData
-    });
-}
-
-export function logoutUser() {
-    const formData = new FormData();
-    formData.append('action_type', 'logout_user');
-    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
-        method: 'POST',
-        body: formData
-    });
-}
-
-export function verifyPassword(formData) {
-    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
-        method: 'POST',
-        body: formData
-    });
-}
-
-export function updateUserPassword(formData) {
-    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
-        method: 'POST',
-        body: formData
-    });
-}
-
-export function deleteAccount(formData) {
-    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
-        method: 'POST',
-        body: formData
-    });
 }
 
 export function getGalleries(sortBy, searchTerm, page, limit) {
@@ -143,7 +79,6 @@ export function getTrends(searchTerm) {
     });
 }
 
-
 export function incrementGalleryInteraction(uuid) {
     const formData = new FormData();
     formData.append('action_type', 'increment_interaction');
@@ -176,4 +111,71 @@ export function submitFeedback(formData) {
 
 export function getSectionHTML(view, section) {
     return fetchData(`${window.BASE_PATH}/api/main_handler.php?request_type=section&view=${view}&section=${section}`);
+}
+
+
+// --- Authentication Requests (auth_handler.php) ---
+export function loginUser(formData) {
+    return fetchData(`${window.BASE_PATH}/api/auth_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+export function registerUser(formData) {
+    return fetchData(`${window.BASE_PATH}/api/auth_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+export function forgotPassword(formData) {
+    return fetchData(`${window.BASE_PATH}/api/auth_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+export function verifyResetCode(formData) {
+    return fetchData(`${window.BASE_PATH}/api/auth_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+export function resetPassword(formData) {
+    return fetchData(`${window.BASE_PATH}/api/auth_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+export function logoutUser() {
+    const formData = new FormData();
+    formData.append('action_type', 'logout_user');
+    return fetchData(`${window.BASE_PATH}/api/auth_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+export function verifyPassword(formData) {
+    return fetchData(`${window.BASE_PATH}/api/auth_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+export function updateUserPassword(formData) {
+    return fetchData(`${window.BASE_PATH}/api/auth_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+export function deleteAccount(formData) {
+    return fetchData(`${window.BASE_PATH}/api/auth_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
 }
