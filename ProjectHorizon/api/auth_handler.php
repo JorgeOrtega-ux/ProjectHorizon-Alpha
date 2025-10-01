@@ -1,0 +1,380 @@
+<?php
+// api/auth_handler.php
+
+// Iniciar la sesión al principio para gestionar la información del usuario
+session_start();
+
+// Incluir la conexión a la base de datos y las funciones de utilidad
+require_once '../config/db.php';
+require_once 'utils.php'; // Se moverán aquí las funciones comunes
+
+// --- MANEJO DE SOLICITUDES POST PARA AUTENTICACIÓN ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json');
+
+    $action_type = isset($_POST['action_type']) ? $_POST['action_type'] : '';
+
+    // Validar el token CSRF para todas las acciones POST
+    if (!isset($_POST['csrf_token']) || !validate_csrf_token($_POST['csrf_token'])) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Error de validación CSRF.']);
+        exit;
+    }
+
+    switch ($action_type) {
+        case 'register_user':
+            $username = trim($_POST['username'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+            $password = $_POST['password'] ?? '';
+
+            if (empty($username) || empty($email) || empty($password)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios.']);
+                exit;
+            }
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El formato del correo electrónico no es válido.']);
+                exit;
+            }
+            if (strlen($password) < 6) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres.']);
+                exit;
+            }
+
+            $stmt_check = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
+            $stmt_check->bind_param("ss", $username, $email);
+            $stmt_check->execute();
+            $stmt_check->store_result();
+            if ($stmt_check->num_rows > 0) {
+                http_response_code(409);
+                echo json_encode(['success' => false, 'message' => 'El nombre de usuario o el correo electrónico ya existen.']);
+                $stmt_check->close();
+                exit;
+            }
+            $stmt_check->close();
+
+            $uuid = generate_uuid_v4();
+            $password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+            $stmt_insert = $conn->prepare("INSERT INTO users (uuid, username, email, password_hash) VALUES (?, ?, ?, ?)");
+            $stmt_insert->bind_param("ssss", $uuid, $username, $email, $password_hash);
+
+            if ($stmt_insert->execute()) {
+                $_SESSION['loggedin'] = true;
+                $_SESSION['user_uuid'] = $uuid;
+                $_SESSION['username'] = $username;
+                $_SESSION['email'] = $email;
+                $_SESSION['user_role'] = 'user';
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Registro exitoso.',
+                    'user' => ['uuid' => $uuid, 'username' => $username, 'email' => $email, 'role' => 'user']
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error en el servidor al registrar el usuario.']);
+            }
+            $stmt_insert->close();
+            break;
+
+        case 'login_user':
+            $email = trim($_POST['email'] ?? '');
+            $password = $_POST['password'] ?? '';
+        
+            if (empty($email) || empty($password)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Correo y contraseña son obligatorios.']);
+                exit;
+            }
+            
+            $lock_message = '';
+            if (handle_security_event($conn, $email, 'check_lock', $lock_message)) {
+                http_response_code(429);
+                echo json_encode(['success' => false, 'message' => $lock_message]);
+                exit;
+            }
+
+            $stmt = $conn->prepare("SELECT uuid, username, email, password_hash, role, status FROM users WHERE email = ?");
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
+        
+            if ($user = $result->fetch_assoc()) {
+                if (password_verify($password, $user['password_hash'])) {
+                    if ($user['status'] !== 'active') {
+                        http_response_code(403);
+                        $message_key = 'account_' . $user['status'];
+                        echo json_encode(['success' => false, 'message' => $message_key]);
+                        exit;
+                    }
+        
+                    handle_security_event($conn, $email, 'clear_all');
+        
+                    $_SESSION['loggedin'] = true;
+                    $_SESSION['user_uuid'] = $user['uuid'];
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['email'] = $user['email'];
+                    $_SESSION['user_role'] = $user['role'];
+        
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Inicio de sesión exitoso.',
+                        'user' => ['uuid' => $user['uuid'], 'username' => $user['username'], 'email' => $user['email'], 'role' => $user['role']]
+                    ]);
+                } else {
+                    handle_security_event($conn, $email, 'log_attempt');
+                    if (handle_security_event($conn, $email, 'check_lock', $lock_message)) {
+                        http_response_code(429);
+                        echo json_encode(['success' => false, 'message' => $lock_message]);
+                    } else {
+                        http_response_code(401);
+                        echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas.']);
+                    }
+                }
+            } else {
+                handle_security_event($conn, $email, 'log_attempt');
+                if (handle_security_event($conn, $email, 'check_lock', $lock_message)) {
+                    http_response_code(429);
+                    echo json_encode(['success' => false, 'message' => $lock_message]);
+                } else {
+                    http_response_code(401);
+                    echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas.']);
+                }
+            }
+            $stmt->close();
+            break;
+
+        case 'logout_user':
+            session_unset();
+            session_destroy();
+            echo json_encode(['success' => true, 'message' => 'Sesión cerrada correctamente.']);
+            break;
+
+        case 'verify_password':
+            if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'message' => 'No autorizado.']);
+                exit;
+            }
+            $password = $_POST['password'] ?? '';
+            $user_uuid = $_SESSION['user_uuid'];
+    
+            $stmt = $conn->prepare("SELECT password_hash FROM users WHERE uuid = ?");
+            $stmt->bind_param("s", $user_uuid);
+            $stmt->execute();
+            $result = $stmt->get_result();
+    
+            if ($user = $result->fetch_assoc()) {
+                if (password_verify($password, $user['password_hash'])) {
+                    echo json_encode(['success' => true]);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'La contraseña actual es incorrecta.']);
+                }
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Usuario no encontrado.']);
+            }
+            $stmt->close();
+            break;
+
+        case 'update_password':
+            if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'message' => 'No autorizado.']);
+                exit;
+            }
+            $new_password = $_POST['new_password'] ?? '';
+            $user_uuid = $_SESSION['user_uuid'];
+    
+            if (strlen($new_password) < 6) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'La nueva contraseña debe tener al menos 6 caracteres.']);
+                exit;
+            }
+    
+            $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
+    
+            $stmt = $conn->prepare("UPDATE users SET password_hash = ?, password_last_updated_at = NOW() WHERE uuid = ?");
+            $stmt->bind_param("ss", $password_hash, $user_uuid);
+    
+            if ($stmt->execute()) {
+                echo json_encode(['success' => true, 'message' => 'Contraseña actualizada correctamente.']);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error al actualizar la contraseña.']);
+            }
+            $stmt->close();
+            break;
+
+        case 'delete_account':
+            if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'message' => 'No autorizado.']);
+                exit;
+            }
+            $password = $_POST['password'] ?? '';
+            $user_uuid = $_SESSION['user_uuid'];
+        
+            $stmt = $conn->prepare("SELECT password_hash FROM users WHERE uuid = ?");
+            $stmt->bind_param("s", $user_uuid);
+            $stmt->execute();
+            $result = $stmt->get_result();
+        
+            if ($user = $result->fetch_assoc()) {
+                if (password_verify($password, $user['password_hash'])) {
+                    $stmt_delete = $conn->prepare("UPDATE users SET status = 'deleted' WHERE uuid = ?");
+                    $stmt_delete->bind_param("s", $user_uuid);
+                    if ($stmt_delete->execute()) {
+                        session_unset();
+                        session_destroy();
+                        echo json_encode(['success' => true, 'message' => 'Cuenta eliminada.']);
+                    } else {
+                        http_response_code(500);
+                        echo json_encode(['success' => false, 'message' => 'Error al eliminar la cuenta.']);
+                    }
+                    $stmt_delete->close();
+                } else {
+                    http_response_code(401);
+                    echo json_encode(['success' => false, 'message' => 'La contraseña es incorrecta.']);
+                }
+            } else {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Usuario no encontrado.']);
+            }
+            $stmt->close();
+            break;
+
+        case 'forgot_password':
+            $email = trim($_POST['email'] ?? '');
+            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Por favor, introduce un correo electrónico válido.']);
+                exit;
+            }
+        
+            $cooldown_message = '';
+            if (handle_security_event($conn, $email, 'check_reset_request', $cooldown_message)) {
+                http_response_code(429);
+                echo json_encode(['success' => false, 'message' => $cooldown_message]);
+                exit;
+            }
+        
+            $stmt = $conn->prepare("SELECT id FROM users WHERE email = ? AND status = 'active'");
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $stmt->store_result();
+        
+            if ($stmt->num_rows > 0) {
+                $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                $stmt_insert = $conn->prepare("INSERT INTO password_resets (email, code) VALUES (?, ?)");
+                $stmt_insert->bind_param("ss", $email, $code);
+                $stmt_insert->execute();
+                $stmt_insert->close();
+                echo json_encode(['success' => true, 'message' => 'Se ha enviado un código de recuperación a tu correo.']);
+            } else {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'No se encontró una cuenta con ese correo electrónico.']);
+            }
+            $stmt->close();
+            break;
+
+        case 'verify_reset_code':
+            $email = trim($_POST['email'] ?? '');
+            $code = str_replace('-', '', trim($_POST['code'] ?? ''));
+        
+            if (empty($email) || empty($code)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El correo y el código son obligatorios.']);
+                exit;
+            }
+            
+            if (handle_security_event($conn, $email, 'check_lock', $lock_message)) {
+                http_response_code(429);
+                echo json_encode(['success' => false, 'message' => $lock_message]);
+                exit;
+            }
+    
+            $stmt_check = $conn->prepare("SELECT id FROM password_resets WHERE email = ? AND code = ? AND created_at > (NOW() - INTERVAL 15 MINUTE)");
+            $stmt_check->bind_param("ss", $email, $code);
+            $stmt_check->execute();
+            $stmt_check->store_result();
+        
+            if ($stmt_check->num_rows > 0) {
+                handle_security_event($conn, $email, 'clear_all');
+                echo json_encode(['success' => true, 'message' => 'Código verificado correctamente.']);
+            } else {
+                handle_security_event($conn, $email, 'log_reset_fail');
+                if (handle_security_event($conn, $email, 'check_lock', $lock_message)) {
+                    http_response_code(429);
+                    echo json_encode(['success' => false, 'message' => $lock_message]);
+                } else {
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'message' => 'El código es inválido o ha expirado.']);
+                }
+            }
+            $stmt_check->close();
+            break;
+
+        case 'reset_password':
+            $email = trim($_POST['email'] ?? '');
+            $code = str_replace('-', '', trim($_POST['code'] ?? ''));
+            $new_password = $_POST['new_password'] ?? '';
+        
+            if (empty($email) || empty($code) || empty($new_password)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios.']);
+                exit;
+            }
+        
+            if (strlen($new_password) < 6) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'La nueva contraseña debe tener al menos 6 caracteres.']);
+                exit;
+            }
+        
+            $stmt_check = $conn->prepare("SELECT id FROM password_resets WHERE email = ? AND code = ? AND created_at > (NOW() - INTERVAL 15 MINUTE)");
+            $stmt_check->bind_param("ss", $email, $code);
+            $stmt_check->execute();
+            $stmt_check->store_result();
+        
+            if ($stmt_check->num_rows > 0) {
+                $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
+                $stmt_update = $conn->prepare("UPDATE users SET password_hash = ?, password_last_updated_at = NOW() WHERE email = ?");
+                $stmt_update->bind_param("ss", $password_hash, $email);
+                
+                if ($stmt_update->execute()) {
+                    handle_security_event($conn, $email, 'clear_all');
+                    $stmt_delete = $conn->prepare("DELETE FROM password_resets WHERE email = ?");
+                    $stmt_delete->bind_param("s", $email);
+                    $stmt_delete->execute();
+                    $stmt_delete->close();
+                    echo json_encode(['success' => true, 'message' => 'Contraseña actualizada correctamente.']);
+                } else {
+                    http_response_code(500);
+                    echo json_encode(['success' => false, 'message' => 'Error al actualizar la contraseña.']);
+                }
+                $stmt_update->close();
+            } else {
+                handle_security_event($conn, $email, 'log_reset_fail');
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El código es inválido o ha expirado (15 minutos).']);
+            }
+            $stmt_check->close();
+            break;
+
+        default:
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Acción no válida.']);
+            break;
+    }
+} else {
+    http_response_code(405);
+    echo json_encode(['error' => 'Método de solicitud no soportado.']);
+}
+
+if (isset($conn) && $conn) {
+    $conn->close();
+}
+?>
