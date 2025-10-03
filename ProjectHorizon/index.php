@@ -77,6 +77,18 @@
             </div>
         </div>
     </div>
+
+    <div id="change-role-overlay" class="custom-confirm-overlay disabled">
+        <div class="custom-confirm-box">
+            <h2 id="change-role-title"></h2>
+            <div id="change-role-content"></div>
+            <div class="custom-confirm-buttons">
+                <button id="change-role-cancel" class="load-more-btn"></button>
+                <button id="change-role-ok" class="load-more-btn"></button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/@popperjs/core@2"></script>
     <script type="module" src="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'); ?>/assets/js/app-init.js"></script>
 </body>

@@ -523,6 +523,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['success' => false, 'message' => 'Error al actualizar el usuario.']);
         }
         $stmt->close();
+    } elseif ($action_type === 'verify_admin_password') {
+        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
+            exit;
+        }
+        
+        require_once '../config/admin_credentials.php';
+        $password = $_POST['password'] ?? '';
+        
+        if (defined('ADMIN_ACTION_PASSWORD') && $password === ADMIN_ACTION_PASSWORD) {
+            echo json_encode(['success' => true]);
+        } else {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'La contraseña es incorrecta.']);
+        }
     } else {
         http_response_code(400);
         echo json_encode(['error' => 'Invalid POST action type']);

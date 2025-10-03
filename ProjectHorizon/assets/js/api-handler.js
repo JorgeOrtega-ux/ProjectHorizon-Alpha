@@ -207,3 +207,14 @@ export function changeUserStatus(uuid, status) {
         body: formData
     });
 }
+
+// N U E V A   F U N C I Ó N
+export function verifyAdminPassword(password) {
+    const formData = new FormData();
+    formData.append('action_type', 'verify_admin_password');
+    formData.append('password', password);
+    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}

@@ -759,6 +759,68 @@ export function initMainController() {
         overlay.classList.remove('disabled');
     }
 
+    // N U E V A   F U N C I Ó N
+    async function showChangeRoleDialog(userUuid, newRole, userName) {
+        const overlay = document.getElementById('change-role-overlay');
+        const titleEl = document.getElementById('change-role-title');
+        const contentEl = document.getElementById('change-role-content');
+        const cancelBtn = document.getElementById('change-role-cancel');
+        const okBtn = document.getElementById('change-role-ok');
+
+        const closeDialog = () => {
+            overlay.classList.add('disabled');
+            cancelBtn.onclick = null;
+            okBtn.onclick = null;
+        };
+
+        titleEl.textContent = `Confirmar cambio de rol`;
+        contentEl.innerHTML = `
+            <p>Para cambiar el rol de <strong>${userName}</strong> a <strong>${newRole}</strong>, por favor ingresa tu contraseña de administrador.</p>
+            <div class="form-field password-wrapper" style="margin-top: 16px;">
+                <input type="password" id="admin-confirm-password" class="auth-input" placeholder=" " autocomplete="current-password">
+                <label for="admin-confirm-password" class="auth-label">Contraseña de Administrador</label>
+            </div>
+            <div class="auth-error-message-container" id="change-role-error-container">
+                <ul id="change-role-error-list"></ul>
+            </div>
+        `;
+        okBtn.textContent = 'Confirmar';
+        cancelBtn.textContent = 'Cancelar';
+        
+        applyTranslations(overlay);
+
+        okBtn.onclick = async () => {
+            const password = document.getElementById('admin-confirm-password').value;
+            if (!password) {
+                displayAuthErrors('change-role-error-container', 'change-role-error-list', 'La contraseña es obligatoria.');
+                return;
+            }
+
+            displayAuthErrors('change-role-error-container', 'change-role-error-list', []);
+            okBtn.classList.add('loading');
+
+            const passResponse = await api.verifyAdminPassword(password);
+
+            if (passResponse.ok && passResponse.data.success) {
+                const roleResponse = await api.changeUserRole(userUuid, newRole);
+                if (roleResponse.ok) {
+                    showNotification('Rol de usuario actualizado con éxito.', 'success');
+                    fetchAndDisplayUsers(document.querySelector('#admin-user-search').value.trim());
+                    closeDialog();
+                } else {
+                    displayAuthErrors('change-role-error-container', 'change-role-error-list', roleResponse.data.message || 'Error al cambiar el rol.');
+                }
+            } else {
+                displayAuthErrors('change-role-error-container', 'change-role-error-list', passResponse.data.message || 'Error de verificación.');
+            }
+            okBtn.classList.remove('loading');
+        };
+
+        cancelBtn.onclick = closeDialog;
+        overlay.classList.remove('disabled');
+    }
+
+
     function initSettingsController() {
         const settingsToggles = {
             'open-links-in-new-tab': {
@@ -1881,19 +1943,11 @@ export function initMainController() {
                                 <span class="material-symbols-rounded">more_vert</span>
                             </button>
                             <div class="module-content module-select disabled" id="user-actions-menu-${user.uuid}">
-                                <div class="menu-content">
+                                <div class="menu-content" data-menu-type="main-actions">
                                     <div class="menu-list">
-                                        <div class="menu-link" data-action="change-role" data-uuid="${user.uuid}" data-role="user">
-                                            <div class="menu-link-icon"><span class="material-symbols-rounded">person</span></div>
-                                            <div class="menu-link-text"><span>Hacer Usuario</span></div>
-                                        </div>
-                                        <div class="menu-link" data-action="change-role" data-uuid="${user.uuid}" data-role="moderator">
-                                            <div class="menu-link-icon"><span class="material-symbols-rounded">shield_person</span></div>
-                                            <div class="menu-link-text"><span>Hacer Moderador</span></div>
-                                        </div>
-                                        <div class="menu-link" data-action="change-role" data-uuid="${user.uuid}" data-role="administrator">
-                                            <div class="menu-link-icon"><span class="material-symbols-rounded">admin_panel_settings</span></div>
-                                            <div class="menu-link-text"><span>Hacer Administrador</span></div>
+                                        <div class="menu-link" data-action="show-role-menu">
+                                            <div class="menu-link-icon"><span class="material-symbols-rounded">manage_accounts</span></div>
+                                            <div class="menu-link-text"><span>Gestionar rol</span></div>
                                         </div>
                                         <div class="menu-link" data-action="change-status" data-uuid="${user.uuid}" data-status="suspended">
                                             <div class="menu-link-icon"><span class="material-symbols-rounded">pause</span></div>
@@ -1902,6 +1956,26 @@ export function initMainController() {
                                         <div class="menu-link" data-action="change-status" data-uuid="${user.uuid}" data-status="deleted">
                                             <div class="menu-link-icon"><span class="material-symbols-rounded">delete</span></div>
                                             <div class="menu-link-text"><span>Eliminar</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="menu-content" data-menu-type="role-actions" style="display: none;">
+                                    <div class="menu-list">
+                                        <div class="menu-link" data-action="hide-role-menu">
+                                            <div class="menu-link-icon"><span class="material-symbols-rounded">arrow_back</span></div>
+                                            <div class="menu-link-text"><span>Volver</span></div>
+                                        </div>
+                                        <div class="menu-link" data-action="change-role" data-uuid="${user.uuid}" data-role="user" data-username="${user.username}">
+                                            <div class="menu-link-icon"><span class="material-symbols-rounded">person</span></div>
+                                            <div class="menu-link-text"><span>Hacer Usuario</span></div>
+                                        </div>
+                                        <div class="menu-link" data-action="change-role" data-uuid="${user.uuid}" data-role="moderator" data-username="${user.username}">
+                                            <div class="menu-link-icon"><span class="material-symbols-rounded">shield_person</span></div>
+                                            <div class="menu-link-text"><span>Hacer Moderador</span></div>
+                                        </div>
+                                        <div class="menu-link" data-action="change-role" data-uuid="${user.uuid}" data-role="administrator" data-username="${user.username}">
+                                            <div class="menu-link-icon"><span class="material-symbols-rounded">admin_panel_settings</span></div>
+                                            <div class="menu-link-text"><span>Hacer Administrador</span></div>
                                         </div>
                                     </div>
                                 </div>
@@ -2259,17 +2333,27 @@ export function initMainController() {
                         menu.classList.toggle('disabled');
                         break;
                     }
+                    case 'show-role-menu': {
+                        const menuContainer = actionTarget.closest('.module-select');
+                        menuContainer.querySelector('[data-menu-type="main-actions"]').style.display = 'none';
+                        menuContainer.querySelector('[data-menu-type="role-actions"]').style.display = 'block';
+                        break;
+                    }
+                    case 'hide-role-menu': {
+                        const menuContainer = actionTarget.closest('.module-select');
+                        menuContainer.querySelector('[data-menu-type="main-actions"]').style.display = 'block';
+                        menuContainer.querySelector('[data-menu-type="role-actions"]').style.display = 'none';
+                        break;
+                    }
                     case 'change-role': {
                         const userUuid = actionTarget.dataset.uuid;
                         const newRole = actionTarget.dataset.role;
-                        api.changeUserRole(userUuid, newRole).then(response => {
-                            if (response.ok) {
-                                showNotification('Rol de usuario actualizado', 'success');
-                                fetchAndDisplayUsers(document.querySelector('#admin-user-search').value.trim());
-                            } else {
-                                showNotification('Error al cambiar el rol', 'error');
-                            }
-                        });
+                        const userName = actionTarget.dataset.username;
+                        showChangeRoleDialog(userUuid, newRole, userName);
+                        const menuContainer = actionTarget.closest('.module-select');
+                        if (menuContainer) {
+                           menuContainer.classList.add('disabled');
+                        }
                         break;
                     }
                     case 'change-status': {
