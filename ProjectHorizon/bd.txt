@@ -1,12 +1,10 @@
 -- Borra la base de datos si ya existe para empezar desde cero
 DROP DATABASE IF EXISTS project_horizon;
-
 -- Crea la base de datos
 CREATE DATABASE project_horizon;
 
 -- Selecciona la base de datos para usarla
 USE project_horizon;
-
 -- --------------------------------------------------------
 -- Estructura de la tabla `users`
 -- --------------------------------------------------------
@@ -25,7 +23,6 @@ CREATE TABLE `users` (
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- --------------------------------------------------------
 -- Estructura de la tabla `galleries`
 -- --------------------------------------------------------
@@ -36,7 +33,6 @@ CREATE TABLE `galleries` (
     `privacy` BOOLEAN DEFAULT FALSE,
     `access_code` VARCHAR(10) NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- --------------------------------------------------------
 -- Estructura de la tabla `galleries_metadata`
 -- --------------------------------------------------------
@@ -49,7 +45,6 @@ CREATE TABLE `galleries_metadata` (
     `last_edited` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (`gallery_uuid`) REFERENCES `galleries`(`uuid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- --------------------------------------------------------
 -- Estructura de la tabla `gallery_photos`
 -- --------------------------------------------------------
@@ -57,10 +52,10 @@ CREATE TABLE `gallery_photos` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `gallery_uuid` varchar(36) NOT NULL,
   `photo_url` varchar(255) NOT NULL,
+  `display_order` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`gallery_uuid`) REFERENCES `galleries`(`uuid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- --------------------------------------------------------
 -- Estructura de la tabla `gallery_photos_metadata`
 -- --------------------------------------------------------
@@ -73,7 +68,6 @@ CREATE TABLE `gallery_photos_metadata` (
   PRIMARY KEY (`id`),
   FOREIGN KEY (`photo_id`) REFERENCES `gallery_photos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- --------------------------------------------------------
 -- Estructura de la tabla `gallery_profile_pictures`
 -- --------------------------------------------------------
@@ -85,7 +79,6 @@ CREATE TABLE `gallery_profile_pictures` (
   UNIQUE KEY `gallery_uuid` (`gallery_uuid`),
   FOREIGN KEY (`gallery_uuid`) REFERENCES `galleries`(`uuid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- --------------------------------------------------------
 -- Estructura de la tabla `feedback`
 -- --------------------------------------------------------
@@ -99,7 +92,6 @@ CREATE TABLE `feedback` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid` (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- --------------------------------------------------------
 -- Estructura de la tabla `feedback_attachments`
 -- --------------------------------------------------------
@@ -110,7 +102,6 @@ CREATE TABLE `feedback_attachments` (
   PRIMARY KEY (`id`),
   FOREIGN KEY (`feedback_uuid`) REFERENCES `feedback` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- --------------------------------------------------------
 -- Estructura de la tabla `password_resets`
 -- --------------------------------------------------------
@@ -121,7 +112,6 @@ CREATE TABLE `password_resets` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- --------------------------------------------------------
 -- Volcado de datos para la tabla `galleries`
 -- --------------------------------------------------------
@@ -146,12 +136,12 @@ INSERT INTO `galleries` (`uuid`, `name`, `privacy`, `access_code`) VALUES
 ('f8a9b0c1-d2e3-4567-8901-67890abcdef0', 'Julieta Álvarez', 0, NULL),
 ('a9b0c1d2-e3f4-5678-9012-7890abcdef01', 'Lucas Moreno', 0, NULL),
 ('b0c1d2e3-f4a5-6789-0123-890abcdef012', 'Martina Muñoz', 1, '2022-2024'),
-('c1d2e3f4-a5b6-7890-1234-90abcdef0123', 'Emiliano Silva', 0, NULL),
+('c1d2e3f4-a5b6-7890-1234-90abcdef0123', 'Emiliano Silva', 0, 
+NULL),
 ('d2e3f4a5-b6c7-8901-2345-abcdef012345', 'Elena Rojas', 0, NULL),
 ('e3f4a5b6-c7d8-9012-3456-bcdef0123456', 'Thiago Sosa', 1, '1980-2000'),
 ('f4a5b6c7-d8e9-0123-4567-cdef01234567', 'Abril Acosta', 0, NULL),
 ('a5b6c7d8-e9f0-1234-5678-def0123456789', 'Felipe Ortiz', 0, NULL);
-
 -- --------------------------------------------------------
 -- Volcado de datos para la tabla `galleries_metadata`
 -- --------------------------------------------------------
@@ -181,12 +171,10 @@ INSERT INTO `galleries_metadata` (`gallery_uuid`, `total_likes`, `total_saves`, 
 ('e3f4a5b6-c7d8-9012-3456-bcdef0123456', 30, 3, 33),
 ('f4a5b6c7-d8e9-0123-4567-cdef01234567', 170, 42, 212),
 ('a5b6c7d8-e9f0-1234-5678-def0123456789', 240, 75, 315);
-
 -- --------------------------------------------------------
 -- Actualiza las fechas de `last_edited` con valores aleatorios
 -- --------------------------------------------------------
 UPDATE galleries_metadata SET last_edited = NOW() - INTERVAL FLOOR(RAND() * 365) DAY - INTERVAL FLOOR(RAND() * 24) HOUR - INTERVAL FLOOR(RAND() * 60) MINUTE;
-
 -- --------------------------------------------------------
 -- Volcado de datos para la tabla `gallery_photos`
 -- --------------------------------------------------------
@@ -276,7 +264,8 @@ INSERT INTO `gallery_photos` (`gallery_uuid`, `photo_url`) VALUES
 ('e7f8a9b0-c1d2-3456-7890-567890abcdef', 'https://images.unsplash.com/photo-1506443432602-ac2fcd6f5439?auto=format&fit=crop&w=800&q=60'),
 ('e7f8a9b0-c1d2-3456-7890-567890abcdef', 'https://images.unsplash.com/photo-1528722828814-77b9b83aafb2?auto=format&fit=crop&w=800&q=60'),
 ('e7f8a9b0-c1d2-3456-7890-567890abcdef', 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=800&q=60'),
-('f8a9b0c1-d2e3-4567-8901-67890abcdef0', 'https://images.unsplash.com/photo-1524492412937-b28074a5371b?auto=format&fit=crop&w=800&q=60'),
+('f8a9b0c1-d2e3-4567-8901-67890abcdef0', 
+'https://images.unsplash.com/photo-1524492412937-b28074a5371b?auto=format&fit=crop&w=800&q=60'),
 ('f8a9b0c1-d2e3-4567-8901-67890abcdef0', 'https://images.unsplash.com/photo-1483794344563-d27a8d18014e?auto=format&fit=crop&w=800&q=60'),
 ('f8a9b0c1-d2e3-4567-8901-67890abcdef0', 'https://images.unsplash.com/photo-1555448248-2571daf6344b?auto=format&fit=crop&w=800&q=60'),
 ('f8a9b0c1-d2e3-4567-8901-67890abcdef0', 'https://images.unsplash.com/photo-1569954432138-3b3207233261?auto=format&fit=crop&w=800&q=60'),
@@ -316,7 +305,6 @@ INSERT INTO `gallery_photos` (`gallery_uuid`, `photo_url`) VALUES
 ('a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1504196658025-a1f5f3a25e1a?auto=format&fit=crop&w=800&q=60'),
 ('a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1464349153735-7db50ed83c84?auto=format&fit=crop&w=800&q=60'),
 ('a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1527487265873-35079a2a94a6?auto=format&fit=crop&w=800&q=60');
-
 -- --------------------------------------------------------
 -- Volcado de datos para la tabla `gallery_photos_metadata`
 -- --------------------------------------------------------
@@ -328,7 +316,6 @@ SELECT
     FLOOR(RAND() * 1000) AS interactions
 FROM
     `gallery_photos`;
-
 -- --------------------------------------------------------
 -- Volcado de datos para la tabla `gallery_profile_pictures`
 -- --------------------------------------------------------
@@ -358,9 +345,6 @@ INSERT INTO `gallery_profile_pictures` (`gallery_uuid`, `profile_picture_url`) V
 ('e3f4a5b6-c7d8-9012-3456-bcdef0123456', 'https://images.unsplash.com/photo-1555448248-2571daf6344b?auto=format&fit=crop&w=200&q=60'),
 ('f4a5b6c7-d8e9-0123-4567-cdef01234567', 'https://images.unsplash.com/photo-1569954432138-3b3207233261?auto=format&fit=crop&w=200&q=60'),
 ('a5b6c7d8-e9f0-1234-5678-def0123456789', 'https://images.unsplash.com/photo-1505671715339-6de38c2a3e29?auto=format&fit=crop&w=200&q=60');
-
-
-
 -- ----------------------------------------------------------
 -- Estructura de la tabla `security_logs`
 -- --------------------------------------------------------

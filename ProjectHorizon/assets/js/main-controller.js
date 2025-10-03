@@ -3294,87 +3294,85 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
         applyTranslations(document.body);
     }
     
-    function renderEditGalleryForm(gallery) {
-        const container = document.getElementById('edit-gallery-form-container');
-        const titleEl = document.getElementById('edit-gallery-title');
+ function renderEditGalleryForm(gallery) {
+    const container = document.getElementById('edit-gallery-form-container');
+    const titleEl = document.getElementById('edit-gallery-title');
 
-        if (!container || !titleEl) return;
+    if (!container || !titleEl) return;
 
-        titleEl.textContent = window.getTranslation('admin.editGallery.title', { galleryName: gallery.name });
+    titleEl.textContent = window.getTranslation('admin.editGallery.title', { galleryName: gallery.name });
 
-        let photosHTML = '';
-        gallery.photos.forEach(photo => {
-            photosHTML += `
-                <div class="photo-item-edit" data-id="${photo.id}">
-                    <img src="${photo.photo_url}" alt="Miniatura">
-                    <button class="delete-photo-btn" data-action="delete-gallery-photo" data-photo-id="${photo.id}">
-                        <span class="material-symbols-rounded">close</span>
-                    </button>
-                </div>
-            `;
-        });
-
-        container.innerHTML = `
-            <div class="edit-section">
-                <h4 data-i18n="admin.editGallery.detailsTitle"></h4>
-                <div class="form-group">
-                    <label class="form-label" for="gallery-name-edit" data-i18n="admin.editGallery.nameLabel"></label>
-                    <input type="text" id="gallery-name-edit" class="feedback-input" value="${gallery.name}" maxlength="100">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" data-i18n="admin.editGallery.privacyLabel"></label>
-                    <div class="toggle-switch ${gallery.privacy == 1 ? 'active' : ''}" id="gallery-privacy-edit" data-action="toggle-privacy-switch">
-                        <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="edit-section">
-                <h4 data-i18n="admin.editGallery.profilePictureTitle"></h4>
-                <div class="profile-picture-edit-container">
-                    <div class="profile-picture-preview" style="background-image: url('${gallery.profile_picture_url || ''}')"></div>
-                    <input type="file" id="profile-picture-upload" accept="image/*" style="display: none;">
-                    <button class="load-more-btn" onclick="document.getElementById('profile-picture-upload').click();" data-i18n="admin.editGallery.changeButton"></button>
-                </div>
-            </div>
-
-            <div class="edit-section">
-                <h4 data-i18n="admin.editGallery.photosTitle"></h4>
-                <div class="photo-grid-edit" id="gallery-photos-grid-edit">
-                    ${photosHTML}
-                </div>
-            </div>
-            
-            <div class="edit-section">
-                <h4 data-i18n="admin.editGallery.addPhotosTitle"></h4>
-                <div class="upload-new-photos-container">
-                    <input type="file" id="new-photos-upload" multiple accept="image/*" style="display:none;">
-                    <label for="new-photos-upload" data-i18n="admin.editGallery.uploadLabel"></label>
-                </div>
+    let photosHTML = '';
+    gallery.photos.forEach(photo => {
+        photosHTML += `
+            <div class="photo-item-edit" data-id="${photo.id}">
+                <img src="${photo.photo_url}" alt="Miniatura">
+                <button class="delete-photo-btn" data-action="delete-gallery-photo" data-photo-id="${photo.id}">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
             </div>
         `;
+    });
 
-        applyTranslations(container);
-        
-        const photoGrid = document.getElementById('gallery-photos-grid-edit');
-        if (photoGrid) {
-            new Sortable(photoGrid, {
-                animation: 150,
-                ghostClass: 'sortable-ghost',
-                onEnd: async (evt) => {
-                    const photoOrder = Array.from(evt.to.children).map(item => item.dataset.id);
-                    const response = await api.updatePhotoOrder(photoOrder);
-                    if (response.ok) {
-                        showNotification(response.data.message, 'success');
-                    } else {
-                        showNotification(response.data.message || 'Error al guardar el orden.', 'error');
-                        // Revertir el orden visualmente si falla la API
-                        // (Opcional, pero recomendado para una mejor UX)
-                    }
+    container.innerHTML = `
+        <div class="edit-section">
+            <h4 data-i18n="admin.editGallery.detailsTitle"></h4>
+            <div class="form-group">
+                <label class="form-label" for="gallery-name-edit" data-i18n="admin.editGallery.nameLabel"></label>
+                <input type="text" id="gallery-name-edit" class="feedback-input" value="${gallery.name}" maxlength="100">
+            </div>
+            <div class="form-group">
+                <label class="form-label" data-i18n="admin.editGallery.privacyLabel"></label>
+                <div class="toggle-switch ${gallery.privacy == 1 ? 'active' : ''}" id="gallery-privacy-edit" data-action="toggle-privacy-switch">
+                    <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="edit-section">
+            <h4 data-i18n="admin.editGallery.profilePictureTitle"></h4>
+            <div class="profile-picture-edit-container">
+                <div class="profile-picture-preview" style="background-image: url('${gallery.profile_picture_url || ''}')"></div>
+                <input type="file" id="profile-picture-upload" accept="image/*" style="display: none;">
+                <button class="load-more-btn" onclick="document.getElementById('profile-picture-upload').click();" data-i18n="admin.editGallery.changeButton"></button>
+            </div>
+        </div>
+
+        <div class="edit-section">
+            <div class="edit-section-header">
+                <h4 data-i18n="admin.editGallery.photosTitle"></h4>
+                <div class="upload-new-photos-container">
+                    <input type="file" id="new-photos-upload" multiple accept="image/*" style="display:none;">
+                    <button class="load-more-btn" onclick="document.getElementById('new-photos-upload').click();" data-i18n="admin.editGallery.addPhotosButton"></button>
+                </div>
+            </div>
+            <div class="photo-grid-edit" id="gallery-photos-grid-edit">
+                ${photosHTML}
+            </div>
+        </div>
+    `;
+
+    applyTranslations(container);
+    
+    const photoGrid = document.getElementById('gallery-photos-grid-edit');
+    if (photoGrid) {
+        new Sortable(photoGrid, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: async (evt) => {
+                const photoOrder = Array.from(evt.to.children).map(item => item.dataset.id);
+                const response = await api.updatePhotoOrder(photoOrder);
+                if (response.ok) {
+                    showNotification(response.data.message, 'success');
+                } else {
+                    showNotification(response.data.message || 'Error al guardar el orden.', 'error');
+                    // Revertir el orden visualmente si falla la API
+                    // (Opcional, pero recomendado para una mejor UX)
                 }
-            });
-        }
+            }
+        });
     }
+}
 
     // --- INICIALIZACIÓN ---
     setupEventListeners();
