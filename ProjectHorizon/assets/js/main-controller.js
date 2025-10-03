@@ -97,9 +97,12 @@ export function initMainController() {
 
     let galleriesCurrentPage = 1;
     let photosCurrentPage = 1;
+    let adminUsersCurrentPage = 1;
     let isLoadingGalleries = false;
     let isLoadingPhotos = false;
+    let isLoadingAdminUsers = false;
     const BATCH_SIZE = 20;
+    const ADMIN_USERS_BATCH_SIZE = 25;
 
     const HISTORY_PROFILES_BATCH = 20;
     const HISTORY_PHOTOS_BATCH = 20;
@@ -1822,6 +1825,87 @@ export function initMainController() {
         }
         applyTranslations(mainContainer);
     }
+    async function fetchAndDisplayUsers(searchTerm = '', append = false) {
+    if (isLoadingAdminUsers) return;
+    isLoadingAdminUsers = true;
+
+    const section = document.querySelector('[data-section="manageUsers"]');
+    if (!section) {
+        isLoadingAdminUsers = false;
+        return;
+    }
+
+    const tableBody = section.querySelector('#users-table tbody');
+    const statusContainer = section.querySelector('.status-message-container');
+    const loadMoreContainer = section.querySelector('#users-admin-load-more-container');
+
+    if (!append) {
+        adminUsersCurrentPage = 1;
+        if (tableBody) tableBody.innerHTML = '';
+        if (statusContainer) {
+            statusContainer.classList.remove('disabled');
+            statusContainer.innerHTML = loaderHTML;
+        }
+    }
+
+    const response = await api.getUsers(searchTerm, adminUsersCurrentPage, ADMIN_USERS_BATCH_SIZE);
+    isLoadingAdminUsers = false;
+
+    if (statusContainer) {
+        statusContainer.classList.add('disabled');
+        statusContainer.innerHTML = '';
+    }
+
+    if (response.ok) {
+        const users = response.data;
+        if (users.length > 0) {
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                const createdDate = new Date(user.created_at).toLocaleDateString();
+                row.innerHTML = `
+                    <td>
+                        <div class="user-info">
+                            <div class="user-initials-avatar">${getInitials(user.username)}</div>
+                            <div class="user-details">
+                                <div class="username">${user.username}</div>
+                                <div class="email">${user.email}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${user.role}</td>
+                    <td><span class="status-badge status-${user.status}">${user.status}</span></td>
+                    <td>${createdDate}</td>
+                    <td>
+                        <div class="item-actions">
+                            <button class="header-button" data-i18n-tooltip="admin.manageUsers.table.actions.edit"><span class="material-symbols-rounded">edit</span></button>
+                            <button class="header-button" data-i18n-tooltip="admin.manageUsers.table.actions.delete"><span class="material-symbols-rounded">delete</span></button>
+                        </div>
+                    </td>
+                `;
+                if (tableBody) tableBody.appendChild(row);
+            });
+        } else if (!append) {
+            if (statusContainer) {
+                statusContainer.classList.remove('disabled');
+                statusContainer.innerHTML = `<div><h2>${window.getTranslation('general.noResultsTitle')}</h2><p>${window.getTranslation('general.noResultsMessage')}</p></div>`;
+            }
+        }
+
+        if (loadMoreContainer) {
+            if (users.length < ADMIN_USERS_BATCH_SIZE) {
+                loadMoreContainer.classList.add('disabled');
+            } else {
+                loadMoreContainer.classList.remove('disabled');
+                adminUsersCurrentPage++;
+            }
+        }
+    } else {
+        console.error('Error fetching users:', response.data);
+        if (!append && statusContainer) {
+            displayFetchError('[data-section="manageUsers"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
+        }
+    }
+}
 
     function setupEventListeners() {
         document.addEventListener('click', function (event) {
@@ -1964,6 +2048,10 @@ export function initMainController() {
                         if (currentGalleryForPhotoView && currentGalleryNameForPhotoView) {
                             fetchAndDisplayGalleryPhotos(currentGalleryForPhotoView, currentGalleryNameForPhotoView, true);
                         }
+                        break;
+                    case 'load-more-admin-users':
+                        const adminSearch = document.querySelector('#admin-user-search');
+                        fetchAndDisplayUsers(adminSearch ? adminSearch.value.trim() : '', true);
                         break;
                     case 'load-more-history-profiles':
                         historyProfilesShown += HISTORY_PROFILES_BATCH;
@@ -2286,6 +2374,8 @@ export function initMainController() {
                     fetchAndDisplayTrends(searchTerm);
                 } else if (section === 'favorites') {
                     displayFavoritePhotos();
+                } else if (section === 'manageUsers') {
+                    fetchAndDisplayUsers(searchTerm);
                 }
             }
 
@@ -2433,6 +2523,9 @@ export function initMainController() {
                 break;
             case 'trends':
                 fetchAndDisplayTrends();
+                break;
+            case 'manageUsers':
+                fetchAndDisplayUsers();
                 break;
             case 'accessibility':
                 updateThemeSelectorUI(localStorage.getItem('theme') || 'system');

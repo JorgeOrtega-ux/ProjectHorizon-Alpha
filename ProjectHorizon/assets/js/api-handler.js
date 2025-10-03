@@ -179,3 +179,9 @@ export function deleteAccount(formData) {
         body: formData
     });
 }
+// --- Admin Requests ---
+export function getUsers(searchTerm, page, limit) {
+    const encodedSearchTerm = encodeURIComponent(searchTerm);
+    const url = `${window.BASE_PATH}/api/main_handler.php?request_type=users&search=${encodedSearchTerm}&page=${page}&limit=${limit}`;
+    return fetchData(url);
+}

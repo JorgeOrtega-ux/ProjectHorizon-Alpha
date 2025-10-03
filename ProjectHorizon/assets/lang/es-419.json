@@ -117,7 +117,7 @@
     "unlockMessage": "Para ver el contenido de esta galería privada, necesitas ver un par de anuncios. Esto desbloqueará el acceso durante 60 minutos.",
     "unlockButton": "Ver anuncios para desbloquear"
   },
-"auth": {
+  "auth": {
     "loginTitle": "Iniciar Sesión",
     "loginSubtitle": "Bienvenido de nuevo. Accede a tu cuenta.",
     "emailPlaceholder": "Correo electrónico",
@@ -291,7 +291,19 @@
   "admin": {
     "manageUsers": {
       "title": "Administrar usuarios",
-      "description": "Administra los usuarios de la aplicación."
+      "description": "Administra los usuarios de la aplicación.",
+      "searchPlaceholder": "Buscar por nombre de usuario o correo...",
+      "table": {
+        "user": "Usuario",
+        "role": "Rol",
+        "status": "Estado",
+        "created": "Fecha de Creación",
+        "actionsTitle": "Acciones",
+        "actions": {
+          "edit": "Editar usuario",
+          "delete": "Eliminar usuario"
+        }
+      }
     },
     "manageContent": {
       "title": "Administrar contenido",

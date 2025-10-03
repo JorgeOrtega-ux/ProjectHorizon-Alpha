@@ -283,6 +283,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $photos = $result->fetch_all(MYSQLI_ASSOC);
         $stmt->close();
         echo json_encode($photos);
+    } elseif ($request_type === 'users') {
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 25;
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $offset = ($page - 1) * $limit;
+        $search_term = $_GET['search'] ?? '';
+
+        $where_clause = "";
+        $params = [];
+        $types = "";
+
+        if (!empty($search_term)) {
+            $where_clause = "WHERE username LIKE ? OR email LIKE ?";
+            $types .= "ss";
+            $params[] = "%" . $search_term . "%";
+            $params[] = "%" . $search_term . "%";
+        }
+
+        $sql = "SELECT uuid, username, email, role, status, created_at FROM users $where_clause ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        
+        $types .= "ii";
+        $params[] = $limit;
+        $params[] = $offset;
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $users = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        echo json_encode($users);
+
     } else {
         http_response_code(400);
         echo json_encode(['error' => 'Invalid GET request type']);
