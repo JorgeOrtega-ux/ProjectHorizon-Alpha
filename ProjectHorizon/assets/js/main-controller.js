@@ -1218,8 +1218,21 @@ export function initMainController() {
     }
 
     async function promptToWatchAd(uuid, name) {
+        const sessionResponse = await api.checkSession();
+        if (sessionResponse.ok && sessionResponse.data.loggedin) {
+            const userRole = sessionResponse.data.user.role;
+            if (userRole === 'moderator' || userRole === 'administrator') {
+                const unlockedGalleries = JSON.parse(localStorage.getItem('unlockedGalleries') || '{}');
+                unlockedGalleries[uuid] = new Date().getTime();
+                localStorage.setItem('unlockedGalleries', JSON.stringify(unlockedGalleries));
+                navigateToUrl('main', 'galleryPhotos', { uuid });
+                handleStateChange('main', 'galleryPhotos', true, { uuid, galleryName: name });
+                return;
+            }
+        }
+
         adContext = 'unlock';
-        adStep = 1; 
+        adStep = 1;
         galleryAfterAd = { view: 'main', section: 'galleryPhotos', data: { uuid, galleryName: name } };
         await handleStateChange('main', 'accessCodePrompt', true, { uuid });
     }
