@@ -2475,6 +2475,68 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
                         });
                         break;
                     }
+                    case 'save-gallery-changes': {
+                        const pathParts = window.location.pathname.split('/');
+                        const uuid = pathParts[pathParts.length - 1];
+
+                        const name = document.getElementById('gallery-name-edit').value.trim();
+                        const privacyToggle = document.getElementById('gallery-privacy-edit');
+                        const privacy = privacyToggle ? privacyToggle.classList.contains('active') : false;
+
+                        const formData = new FormData();
+                        formData.append('action_type', 'update_gallery_details');
+                        formData.append('uuid', uuid);
+                        formData.append('name', name);
+                        formData.append('privacy', privacy);
+
+                        api.updateGalleryDetails(formData).then(response => {
+                            if (response.ok) {
+                                showNotification(response.data.message, 'success');
+                            } else {
+                                showNotification(response.data.message || 'Error al guardar los detalles.', 'error');
+                            }
+                        });
+
+                        const profilePicInput = document.getElementById('profile-picture-upload');
+                        if (profilePicInput.files.length > 0) {
+                            const profilePicFormData = new FormData();
+                            profilePicFormData.append('action_type', 'update_profile_picture');
+                            profilePicFormData.append('uuid', uuid);
+                            profilePicFormData.append('profile_picture', profilePicInput.files[0]);
+                            api.updateProfilePicture(profilePicFormData).then(response => {
+                                if (response.ok) {
+                                    document.querySelector('.profile-picture-preview').style.backgroundImage = `url('${response.data.profile_picture_url}')`;
+                                }
+                            });
+                        }
+                        
+                        const newPhotosInput = document.getElementById('new-photos-upload');
+                        if (newPhotosInput.files.length > 0) {
+                            const newPhotosFormData = new FormData();
+                            newPhotosFormData.append('action_type', 'upload_gallery_photos');
+                            newPhotosFormData.append('uuid', uuid);
+                            for (const file of newPhotosInput.files) {
+                                newPhotosFormData.append('photos[]', file);
+                            }
+                            api.uploadGalleryPhotos(newPhotosFormData).then(response => {
+                                if (response.ok) {
+                                    const grid = document.getElementById('gallery-photos-grid-edit');
+                                    response.data.photos.forEach(photo => {
+                                        const newPhotoHTML = `
+                                            <div class="photo-item-edit">
+                                                <img src="${photo.photo_url}" alt="Miniatura">
+                                                <button class="delete-photo-btn" data-action="delete-gallery-photo" data-photo-id="${photo.id}">
+                                                    <span class="material-symbols-rounded">close</span>
+                                                </button>
+                                            </div>`;
+                                        grid.insertAdjacentHTML('afterbegin', newPhotoHTML);
+                                    });
+                                    newPhotosInput.value = ''; // Limpiar input
+                                }
+                            });
+                        }
+                        break;
+                    }
                 }
             }
 

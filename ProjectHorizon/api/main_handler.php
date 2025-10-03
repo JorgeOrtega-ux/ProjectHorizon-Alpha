@@ -628,10 +628,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt->close();
 
     } elseif ($action_type === 'update_profile_picture') {
-        // Lógica para actualizar foto de perfil
+        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
+            exit;
+        }
+        $uuid = $_POST['uuid'] ?? '';
+        if (empty($uuid) || !isset($_FILES['profile_picture'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Faltan datos.']);
+            exit;
+        }
+
+        // Lógica de subida de archivos...
+        $upload_dir = '../uploads/profile_pictures/';
+        if (!file_exists($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+        $file = $_FILES['profile_picture'];
+        $new_file_name = uniqid('', true) . '.' . pathinfo($file['name'], PATHINFO_EXTENSION);
+        if (move_uploaded_file($file['tmp_name'], $upload_dir . $new_file_name)) {
+            $profile_picture_url = 'uploads/profile_pictures/' . $new_file_name;
+            
+            // Actualizar en la base de datos
+            $stmt = $conn->prepare("INSERT INTO gallery_profile_pictures (gallery_uuid, profile_picture_url) VALUES (?, ?) ON DUPLICATE KEY UPDATE profile_picture_url = ?");
+            $stmt->bind_param("sss", $uuid, $profile_picture_url, $profile_picture_url);
+            if ($stmt->execute()) {
+                echo json_encode(['success' => true, 'message' => 'Foto de perfil actualizada.', 'profile_picture_url' => $profile_picture_url]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Error al guardar en la base de datos.']);
+            }
+            $stmt->close();
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error al subir el archivo.']);
+        }
         
     } elseif ($action_type === 'upload_gallery_photos') {
-        // Lógica para subir nuevas fotos
+        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
+            exit;
+        }
+        $uuid = $_POST['uuid'] ?? '';
+        if (empty($uuid) || !isset($_FILES['photos'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Faltan datos.']);
+            exit;
+        }
+    
+        $upload_dir = '../uploads/gallery_photos/';
+        if (!file_exists($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+    
+        $files = $_FILES['photos'];
+        $uploaded_photos = [];
+        foreach ($files['name'] as $i => $name) {
+            $new_file_name = uniqid('', true) . '.' . pathinfo($name, PATHINFO_EXTENSION);
+            if (move_uploaded_file($files['tmp_name'][$i], $upload_dir . $new_file_name)) {
+                $photo_url = 'uploads/gallery_photos/' . $new_file_name;
+                
+                $stmt = $conn->prepare("INSERT INTO gallery_photos (gallery_uuid, photo_url) VALUES (?, ?)");
+                $stmt->bind_param("ss", $uuid, $photo_url);
+                $stmt->execute();
+                $photo_id = $conn->insert_id;
+                $stmt->close();
+                
+                // También es necesario insertar en `gallery_photos_metadata`
+                $stmt_meta = $conn->prepare("INSERT INTO gallery_photos_metadata (photo_id) VALUES (?)");
+                $stmt_meta->bind_param("i", $photo_id);
+                $stmt_meta->execute();
+                $stmt_meta->close();
+
+                $uploaded_photos[] = ['id' => $photo_id, 'photo_url' => $photo_url];
+            }
+        }
+    
+        if (count($uploaded_photos) > 0) {
+            echo json_encode(['success' => true, 'message' => 'Fotos subidas correctamente.', 'photos' => $uploaded_photos]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'No se pudieron subir las fotos.']);
+        }
         
     } elseif ($action_type === 'delete_gallery_photo') {
         if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {

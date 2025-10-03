@@ -22,6 +22,7 @@ const urlMap = {
     'main-userSpecificFavorites': 'favorites/{uuid}',
     'admin-manageUsers': 'admin/users',
     'admin-manageContent': 'admin/content',
+    'admin-editGallery': 'admin/edit-gallery/{uuid}',
     'main-404': '404'
 };
 
