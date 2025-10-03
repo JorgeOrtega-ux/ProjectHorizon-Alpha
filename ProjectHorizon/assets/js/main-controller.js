@@ -2473,9 +2473,6 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
                         });
                         break;
                     }
-                    case 'toggle-privacy-switch':
-                        actionTarget.classList.toggle('active');
-                        break;
                     case 'save-gallery-changes':
                         {
                             const pathParts = window.location.pathname.split('/');
@@ -3300,17 +3297,16 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
         applyTranslations(document.body);
     }
     
- function renderEditGalleryForm(gallery) {
+function renderEditGalleryForm(gallery) {
     window.pendingGalleryFiles = [];
     const container = document.getElementById('edit-gallery-form-container');
     const titleEl = document.getElementById('edit-gallery-title');
+    const pathParts = window.location.pathname.split('/');
+    const uuid = pathParts[pathParts.length - 1];
 
     if (!container || !titleEl) return;
 
-    // 1. Se establece el título correctamente usando la traducción y el nombre real.
     titleEl.textContent = window.getTranslation('admin.editGallery.title', { galleryName: gallery.name });
-    
-    // 2. ✅ **CORRECCIÓN CLAVE: Se elimina el atributo para que no se vuelva a traducir.**
     titleEl.removeAttribute('data-i18n');
 
     let photosHTML = '';
@@ -3327,25 +3323,36 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
 
     container.innerHTML = `
         <div class="edit-section">
-            <h4 data-i18n="admin.editGallery.detailsTitle"></h4>
-            <div class="form-group">
-                <label class="form-label" for="gallery-name-edit" data-i18n="admin.editGallery.nameLabel"></label>
-                <input type="text" id="gallery-name-edit" class="feedback-input" value="${gallery.name}" maxlength="100">
-            </div>
-            <div class="form-group">
-                <label class="form-label" data-i18n="admin.editGallery.privacyLabel"></label>
-                <div class="toggle-switch ${gallery.privacy == 1 ? 'active' : ''}" id="gallery-privacy-edit" data-action="toggle-privacy-switch">
-                    <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
+            <div class="profile-picture-edit-container">
+                <div class="profile-info-wrapper">
+                    <div class="profile-picture-preview" style="background-image: url('${gallery.profile_picture_url || ''}')"></div>
+                    <div class="profile-text-wrapper">
+                        <div class="profile-main-text">${gallery.name}</div>
+                        <div class="profile-sub-text" data-i18n="admin.editGallery.profilePictureTitle"></div>
+                    </div>
                 </div>
+                <input type="file" id="profile-picture-upload" accept="image/*" style="display: none;">
+                <button class="load-more-btn" onclick="document.getElementById('profile-picture-upload').click();" data-i18n="admin.editGallery.changeButton"></button>
             </div>
         </div>
 
         <div class="edit-section">
-            <h4 data-i18n="admin.editGallery.profilePictureTitle"></h4>
-            <div class="profile-picture-edit-container">
-                <div class="profile-picture-preview" style="background-image: url('${gallery.profile_picture_url || ''}')"></div>
-                <input type="file" id="profile-picture-upload" accept="image/*" style="display: none;">
-                <button class="load-more-btn" onclick="document.getElementById('profile-picture-upload').click();" data-i18n="admin.editGallery.changeButton"></button>
+            <div id="name-view-mode" class="form-group-inline">
+                <div class="form-group-text">
+                    <label class="form-label" data-i18n="admin.editGallery.nameLabel"></label>
+                    <span id="gallery-name-display">${gallery.name}</span>
+                </div>
+                <button type="button" class="load-more-btn" id="edit-name-btn" data-i18n="general.edit"></button>
+            </div>
+            <div id="name-edit-mode" class="form-group-inline" style="display: none;">
+                <label class="form-label standalone" data-i18n="admin.editGallery.nameLabel"></label>
+                <div class="input-with-buttons">
+                    <input type="text" id="gallery-name-edit" class="feedback-input" value="${gallery.name}" maxlength="100">
+                    <div class="form-group-buttons">
+                        <button type="button" class="load-more-btn" id="cancel-name-btn" data-i18n="general.cancel"></button>
+                        <button type="button" class="load-more-btn btn-primary" id="save-name-btn" data-i18n="general.save"></button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -3361,9 +3368,93 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
                 ${photosHTML}
             </div>
         </div>
+        
+        <div class="edit-section">
+            <div class="data-item">
+                 <div class="view-container active">
+                    <div class="item-details">
+                        <h4 data-i18n="admin.editGallery.privacyLabel"></h4>
+                        <p data-i18n="admin.editGallery.privacyDescription"></p>
+                    </div>
+                    <div class="item-actions">
+                        <div class="toggle-switch btn-primary ${gallery.privacy == 1 ? 'active' : ''}" id="gallery-privacy-edit">
+                            <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     `;
 
     applyTranslations(container);
+
+    const nameViewMode = container.querySelector('#name-view-mode');
+    const nameEditMode = container.querySelector('#name-edit-mode');
+    const nameDisplay = container.querySelector('#gallery-name-display');
+    const nameInput = container.querySelector('#gallery-name-edit');
+    const profileNameText = container.querySelector('.profile-main-text');
+
+    const editBtn = container.querySelector('#edit-name-btn');
+    const cancelBtn = container.querySelector('#cancel-name-btn');
+    const saveBtn = container.querySelector('#save-name-btn');
+    const privacyToggle = container.querySelector('#gallery-privacy-edit');
+
+    if (editBtn) {
+        editBtn.addEventListener('click', () => {
+            nameViewMode.style.display = 'none';
+            nameEditMode.style.display = 'block';
+            nameInput.focus();
+        });
+    }
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            nameInput.value = nameDisplay.textContent;
+            nameEditMode.style.display = 'none';
+            nameViewMode.style.display = 'flex';
+        });
+    }
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            const newName = nameInput.value.trim();
+            if (newName) {
+                const formData = new FormData();
+                formData.append('action_type', 'update_gallery_details');
+                formData.append('uuid', uuid);
+                formData.append('name', newName);
+                formData.append('privacy', privacyToggle.classList.contains('active'));
+
+                api.updateGalleryDetails(formData).then(response => {
+                    if (response.ok) {
+                        showNotification(response.data.message, 'success');
+                        nameDisplay.textContent = newName;
+                        if(profileNameText) profileNameText.textContent = newName;
+                        titleEl.textContent = window.getTranslation('admin.editGallery.title', { galleryName: newName });
+                    } else {
+                        showNotification(response.data.message || 'Error al guardar el nombre.', 'error');
+                        nameInput.value = nameDisplay.textContent; // Revert input on error
+                    }
+                });
+            }
+            nameEditMode.style.display = 'none';
+            nameViewMode.style.display = 'flex';
+        });
+    }
+
+    if (privacyToggle) {
+        privacyToggle.addEventListener('click', () => {
+            privacyToggle.classList.toggle('active');
+            const isPrivate = privacyToggle.classList.contains('active');
+            
+            api.changeGalleryPrivacy(uuid, isPrivate).then(response => {
+                if (response.ok) {
+                    showNotification(response.data.message, 'success');
+                } else {
+                    showNotification(response.data.message || 'Error al cambiar la privacidad.', 'error');
+                    privacyToggle.classList.toggle('active'); // Revert on error
+                }
+            });
+        });
+    }
     
     const photoGrid = document.getElementById('gallery-photos-grid-edit');
     if (photoGrid) {
@@ -3395,6 +3486,7 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
         newPhotosInput.value = '';
     });
 }
+
 
     // --- INICIALIZACIÓN ---
     setupEventListeners();

@@ -2394,3 +2394,147 @@ h6 {
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
+
+/* ================================================= */
+/* =========== ESTILOS EDITAR GALERÍA (ADMIN) ======== */
+/* ================================================= */
+
+.profile-picture-edit-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Empuja el botón a la derecha */
+    width: 100%;
+}
+
+.profile-info-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 16px; /* Espacio entre el avatar y los textos */
+}
+
+.profile-text-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-main-text {
+    font-weight: 500;
+    font-size: 1.1rem; /* Tamaño de fuente para el texto principal */
+    color: var(--text-color);
+}
+
+.profile-sub-text {
+    font-size: 0.875rem; /* Tamaño de fuente para el texto secundario */
+    color: var(--muted-text-color);
+}
+
+/* Ajuste al tamaño del avatar en esta sección específica */
+.profile-picture-edit-container .profile-picture-preview {
+    width: 60px;
+    height: 60px;
+}
+
+/* ================================================= */
+/* ==== ESTILOS EDITAR NOMBRE GALERÍA (ADMIN) ====== */
+/* ================================================= */
+
+.form-group-inline {
+    width: 100%;
+}
+
+#name-view-mode {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.form-group-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group-text .form-label {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--text-color);
+}
+
+.form-group-text #gallery-name-display {
+    font-size: 1rem;
+    color: var(--muted-text-color);
+    margin-top: 4px;
+}
+
+#name-edit-mode .form-label.standalone {
+    display: block;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--text-color);
+    margin-bottom: 8px;
+}
+
+.input-with-buttons {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.input-with-buttons .feedback-input {
+    flex-grow: 1;
+}
+
+.form-group-buttons {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.load-more-btn.btn-primary {
+    background-color: #673ab7; /* Color morado */
+    border-color: #673ab7;
+    color: #ffffff;
+}
+
+.load-more-btn.btn-primary:hover {
+    background-color: #5e35b1;
+    border-color: #5e35b1;
+}
+
+.dark-theme .load-more-btn.btn-primary {
+    background-color: #7e57c2;
+    border-color: #7e57c2;
+}
+
+.dark-theme .load-more-btn.btn-primary:hover {
+    background-color: #9575cd;
+    border-color: #9575cd;
+}
+
+.form-divider {
+    border: none;
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 24px 0;
+}
+
+/* ================================================= */
+/* =========== ESTILOS PARA TOGGLE PRIMARIO ========== */
+/* ================================================= */
+
+.toggle-switch.btn-primary.active {
+    background-color: #673ab7;
+}
+
+.dark-theme .toggle-switch.btn-primary.active {
+    background-color: #7e57c2;
+}
+
+/* Forzar el manejador a ser blanco en ambos temas cuando está activo */
+.toggle-switch.btn-primary.active .toggle-handle {
+    background-color: #fff;
+}
+
+/* Forzar el icono de check a color primario en ambos temas cuando está activo */
+.toggle-switch.btn-primary.active .toggle-handle .material-symbols-rounded {
+    color: #673ab7;
+}

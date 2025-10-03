@@ -25,7 +25,9 @@
     "viewed": "Visto: {date}",
     "searchedIn": "en {section}",
     "likesCount": "{count} Me gusta",
-    "interactionsCount": "{count} Vistas"
+    "interactionsCount": "{count} Vistas",
+    "save": "Guardar",
+    "edit": "Editar"
   },
   "header": {
     "mainMenuTooltip": "Menú principal",
@@ -323,6 +325,7 @@
       "detailsTitle": "Detalles de la Galería",
       "nameLabel": "Nombre",
       "privacyLabel": "Galería Privada",
+      "privacyDescription": "Si está activado, solo los usuarios con el código de acceso podrán ver esta galería.",
       "profilePictureTitle": "Foto de Perfil",
       "changeButton": "Cambiar",
       "photosTitle": "Fotos en la Galería",
