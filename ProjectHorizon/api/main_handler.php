@@ -81,7 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'settings-loginSecurity',
             'settings-history',
             'admin-manageUsers',
-            'admin-manageContent'
+            'admin-manageContent',
+            'admin-editGallery'
         ];
         $section_key = $view . '-' . $section;
     
@@ -115,7 +116,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'auth-register' => '../includes/sections/auth/register.php',
             'auth-forgotPassword' => '../includes/sections/auth/forgot-password.php',
             'admin-manageUsers' => '../includes/sections/admin/manage-users.php',
-            'admin-manageContent' => '../includes/sections/admin/manage-content.php'
+            'admin-manageContent' => '../includes/sections/admin/manage-content.php',
+            'admin-editGallery' => '../includes/sections/admin/edit-gallery.php'
         ];
     
         if (array_key_exists($section_key, $allowed_sections)) {
@@ -314,6 +316,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt->close();
         echo json_encode($users);
 
+    } elseif ($request_type === 'gallery_for_edit') {
+        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+            http_response_code(403);
+            echo json_encode(['error' => 'Acción no autorizada.']);
+            exit;
+        }
+        $uuid = $_GET['uuid'] ?? '';
+        if (empty($uuid)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Falta el UUID de la galería.']);
+            exit;
+        }
+
+        $stmt_gallery = $conn->prepare("SELECT g.uuid, g.name, g.privacy, gpp.profile_picture_url FROM galleries g LEFT JOIN gallery_profile_pictures gpp ON g.uuid = gpp.gallery_uuid WHERE g.uuid = ?");
+        $stmt_gallery->bind_param("s", $uuid);
+        $stmt_gallery->execute();
+        $gallery_result = $stmt_gallery->get_result();
+        $gallery = $gallery_result->fetch_assoc();
+        $stmt_gallery->close();
+
+        $stmt_photos = $conn->prepare("SELECT id, photo_url FROM gallery_photos WHERE gallery_uuid = ? ORDER BY id DESC");
+        $stmt_photos->bind_param("s", $uuid);
+        $stmt_photos->execute();
+        $photos_result = $stmt_photos->get_result();
+        $photos = $photos_result->fetch_all(MYSQLI_ASSOC);
+        $stmt_photos->close();
+
+        if ($gallery) {
+            $gallery['photos'] = $photos;
+            echo json_encode($gallery);
+        } else {
+            http_response_code(404);
+            echo json_encode(['error' => 'Galería no encontrada.']);
+        }
     } else {
         http_response_code(400);
         echo json_encode(['error' => 'Invalid GET request type']);
@@ -539,6 +575,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             http_response_code(401);
             echo json_encode(['success' => false, 'message' => 'La contraseña es incorrecta.']);
         }
+    } elseif ($action_type === 'change_gallery_privacy') {
+        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
+            exit;
+        }
+    
+        $gallery_uuid = $_POST['uuid'] ?? '';
+        $is_private = filter_var($_POST['is_private'], FILTER_VALIDATE_BOOLEAN);
+    
+        if (empty($gallery_uuid)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Falta el UUID de la galería.']);
+            exit;
+        }
+    
+        $stmt = $conn->prepare("UPDATE galleries SET privacy = ? WHERE uuid = ?");
+        $stmt->bind_param("is", $is_private, $gallery_uuid);
+    
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true, 'message' => 'Privacidad de la galería actualizada.']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error al actualizar la galería.']);
+        }
+        $stmt->close();
+    } elseif ($action_type === 'update_gallery_details') {
+        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
+            exit;
+        }
+        $uuid = $_POST['uuid'] ?? '';
+        $name = trim($_POST['name'] ?? '');
+        $privacy = isset($_POST['privacy']) ? (int)filter_var($_POST['privacy'], FILTER_VALIDATE_BOOLEAN) : 0;
+
+        if (empty($uuid) || empty($name)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Faltan datos requeridos.']);
+            exit;
+        }
+
+        $stmt = $conn->prepare("UPDATE galleries SET name = ?, privacy = ? WHERE uuid = ?");
+        $stmt->bind_param("sis", $name, $privacy, $uuid);
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true, 'message' => 'Galería actualizada con éxito.']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error al actualizar la galería.']);
+        }
+        $stmt->close();
+
+    } elseif ($action_type === 'update_profile_picture') {
+        // Lógica para actualizar foto de perfil
+        
+    } elseif ($action_type === 'upload_gallery_photos') {
+        // Lógica para subir nuevas fotos
+        
+    } elseif ($action_type === 'delete_gallery_photo') {
+        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
+            exit;
+        }
+        $photo_id = $_POST['photo_id'] ?? 0;
+        if (empty($photo_id)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'ID de foto no válido.']);
+            exit;
+        }
+
+        $stmt = $conn->prepare("DELETE FROM gallery_photos WHERE id = ?");
+        $stmt->bind_param("i", $photo_id);
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true, 'message' => 'Foto eliminada.']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error al eliminar la foto.']);
+        }
+        $stmt->close();
     } else {
         http_response_code(400);
         echo json_encode(['error' => 'Invalid POST action type']);

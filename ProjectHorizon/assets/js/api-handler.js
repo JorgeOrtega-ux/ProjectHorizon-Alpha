@@ -208,11 +208,56 @@ export function changeUserStatus(uuid, status) {
     });
 }
 
-// N U E V A   F U N C I Ó N
 export function verifyAdminPassword(password) {
     const formData = new FormData();
     formData.append('action_type', 'verify_admin_password');
     formData.append('password', password);
+    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+export function changeGalleryPrivacy(uuid, isPrivate) {
+    const formData = new FormData();
+    formData.append('action_type', 'change_gallery_privacy');
+    formData.append('uuid', uuid);
+    formData.append('is_private', isPrivate);
+    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+export function getGalleryForEdit(uuid) {
+    return fetchData(`${window.BASE_PATH}/api/main_handler.php?request_type=gallery_for_edit&uuid=${uuid}`);
+}
+
+export function updateGalleryDetails(formData) {
+    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+export function updateProfilePicture(formData) {
+    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+export function uploadGalleryPhotos(formData) {
+    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+export function deleteGalleryPhoto(photoId) {
+    const formData = new FormData();
+    formData.append('action_type', 'delete_gallery_photo');
+    formData.append('photo_id', photoId);
     return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
         method: 'POST',
         body: formData

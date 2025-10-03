@@ -37,6 +37,10 @@ class Router {
         if (preg_match('/^gallery\/[a-f0-9-]{36}$/', $path)) {
             return ['view' => 'main', 'section' => 'galleryPhotos'];
         }
+        
+        if (preg_match('/^admin\/edit-gallery\/[a-f0-9-]{36}$/', $path)) {
+            return ['view' => 'admin', 'section' => 'editGallery'];
+        }
 
         if (preg_match('/^favorites\/[a-f0-9-]{36}$/', $path)) {
             return ['view' => 'main', 'section' => 'userSpecificFavorites'];

@@ -2222,3 +2222,163 @@ h6 {
 #users-table .item-actions {
     position: relative;
 }
+
+/* ====================================== */
+/* ====== ADMIN CONTENT LIST STYLES ===== */
+/* ====================================== */
+.admin-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-list-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--secondary-bg);
+    transition: background-color 0.2s ease;
+}
+
+.admin-list-item:hover {
+    background-color: var(--hover-bg);
+}
+
+.admin-list-item-thumbnail {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background-color: var(--primary-bg);
+    margin-right: 12px;
+    flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
+}
+
+.admin-list-item-details {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-list-item-title {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.admin-list-item-meta {
+    font-size: 0.8rem;
+    color: var(--muted-text-color);
+}
+
+.admin-list-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}/* (El resto del archivo permanece igual, añade esto al final) */
+
+/* ====================================== */
+/* ====== ADMIN EDIT GALLERY STYLES ===== */
+/* ====================================== */
+
+.edit-gallery-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 16px 0;
+}
+
+.edit-section {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.edit-section h4 {
+    margin-bottom: 16px;
+}
+
+.photo-grid-edit {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+    gap: 8px;
+}
+
+.photo-item-edit {
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%; /* Aspect ratio 1:1 */
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.photo-item-edit img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.delete-photo-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.photo-item-edit:hover .delete-photo-btn {
+    opacity: 1;
+}
+
+.delete-photo-btn .material-symbols-rounded {
+    font-size: 14px;
+}
+
+.profile-picture-edit-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.profile-picture-preview {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background-color: var(--primary-bg);
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+    border: 1px solid var(--border-color);
+}
+
+.upload-new-photos-container label {
+    display: block;
+    width: 100%;
+    padding: 24px;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.upload-new-photos-container label:hover {
+    border-color: var(--focus-border-color);
+    background-color: var(--hover-bg);
+}

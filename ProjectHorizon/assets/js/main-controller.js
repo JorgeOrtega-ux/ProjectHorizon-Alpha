@@ -98,11 +98,14 @@ export function initMainController() {
     let galleriesCurrentPage = 1;
     let photosCurrentPage = 1;
     let adminUsersCurrentPage = 1;
+    let adminGalleriesCurrentPage = 1;
     let isLoadingGalleries = false;
     let isLoadingPhotos = false;
     let isLoadingAdminUsers = false;
+    let isLoadingAdminGalleries = false;
     const BATCH_SIZE = 20;
     const ADMIN_USERS_BATCH_SIZE = 25;
+    const ADMIN_GALLERIES_BATCH_SIZE = 25;
 
     const HISTORY_PROFILES_BATCH = 20;
     const HISTORY_PHOTOS_BATCH = 20;
@@ -180,7 +183,6 @@ export function initMainController() {
         const profileBtn = loggedInContainer ? loggedInContainer.querySelector('.profile-btn') : null;
         const adminPanelLink = document.querySelector('[data-action="toggleAdminPanel"]');
 
-        // ✅ **CAMBIO CLAVE**: Seleccionamos todos los elementos que requieren autenticación.
         const authRequiredLinks = document.querySelectorAll('.auth-required');
 
         if (userData && profileBtn) {
@@ -189,7 +191,6 @@ export function initMainController() {
             helpBtn.classList.add('disabled');
             settingsBtn.classList.add('disabled');
 
-            // ✅ **CAMBIO CLAVE**: Mostramos los enlaces para usuarios autenticados.
             authRequiredLinks.forEach(link => link.classList.remove('disabled'));
 
             const initialsSpan = profileBtn.querySelector('.profile-initials');
@@ -213,7 +214,6 @@ export function initMainController() {
             helpBtn.classList.remove('disabled');
             settingsBtn.classList.remove('disabled');
 
-            // ✅ **CAMBIO CLAVE**: Ocultamos los enlaces para usuarios no autenticados.
             authRequiredLinks.forEach(link => link.classList.add('disabled'));
 
             if (profileBtn) {
@@ -267,19 +267,16 @@ export function initMainController() {
     formData.append('password', password);
     formData.append('csrf_token', csrfToken);
 
-    console.log('Attempting login for email:', email); // LOG AÑADIDO
     const response = await api.loginUser(formData);
     button.classList.remove('loading');
 
     if (response.ok) {
-        console.log('Login successful:', response.data); // LOG AÑADIDO
         const result = response.data;
         updateUserUI(result.user);
         showNotification(window.getTranslation('auth.loginSuccess'), 'success');
         navigateToUrl('main', 'home');
         handleStateChange('main', 'home');
     } else {
-        console.error('Login failed:', response); // LOG AÑADIDO
         const errorResult = response.data;
         let errorMessage = errorResult.message;
         
@@ -367,17 +364,14 @@ export function initMainController() {
         formData.append('email', email);
         formData.append('csrf_token', csrfToken);
 
-        console.log('Requesting password reset for email:', email); // LOG AÑADIDO
         const response = await api.forgotPassword(formData);
         button.classList.remove('loading');
 
         if (response.ok) {
-            console.log('Password reset code sent:', response.data); // LOG AÑADIDO
             showNotification(response.data.message, 'success');
             navigateToUrl('auth', 'forgotPassword', { step: 'enter-code', email: email });
             handleStateChange('auth', 'forgotPassword', true, { step: 'enter-code', email: email });
         } else {
-            console.error('Password reset request failed:', response); // LOG AÑADIDO
             let errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
             if (response.status === 429) {
                 const minutes = errorMessage.match(/\d+/)[0];
@@ -408,16 +402,13 @@ export function initMainController() {
         formData.append('code', code);
         formData.append('csrf_token', csrfToken);
     
-        console.log(`Verifying code "${code}" for email "${email}"`); // LOG AÑADIDO
         const response = await api.verifyResetCode(formData);
         button.classList.remove('loading');
     
         if (response.ok) {
-            console.log('Code verification successful:', response.data); // LOG AÑADIDO
             navigateToUrl('auth', 'forgotPassword', { step: 'new-password', email: email, code: code });
             handleStateChange('auth', 'forgotPassword', true, { step: 'new-password', email: email, code: code });
         } else {
-            console.error('Code verification failed:', response); // LOG AÑADIDO
             displayAuthErrors('forgot-error-container', 'forgot-error-list', response.data.message);
             fetchAndSetCsrfToken('forgot-password-form');
         }
@@ -759,7 +750,6 @@ export function initMainController() {
         overlay.classList.remove('disabled');
     }
 
-    // N U E V A   F U N C I Ó N
     async function showChangeRoleDialog(userUuid, newRole, userName) {
         const overlay = document.getElementById('change-role-overlay');
         const titleEl = document.getElementById('change-role-title');
@@ -857,12 +847,6 @@ export function initMainController() {
                 });
             }
         }
-
-        console.log("Accessibility Settings Initialized:");
-        console.log(`- Theme: ${localStorage.getItem('theme') || 'system'}`);
-        console.log(`- Language: ${localStorage.getItem('language') || 'es-419'}`);
-        console.log(`- Open links in new tab: ${localStorage.getItem(settingsToggles['open-links-in-new-tab'].key)}`);
-        console.log(`- Longer notification duration: ${localStorage.getItem(settingsToggles['longer-message-duration'].key)}`);
     }
 
     function initHistoryPrivacySettings() {
@@ -1235,7 +1219,7 @@ export function initMainController() {
 
     async function promptToWatchAd(uuid, name) {
         adContext = 'unlock';
-        adStep = 1; // Reiniciar el contador de anuncios
+        adStep = 1; 
         galleryAfterAd = { view: 'main', section: 'galleryPhotos', data: { uuid, galleryName: name } };
         await handleStateChange('main', 'accessCodePrompt', true, { uuid });
     }
@@ -2007,6 +1991,86 @@ export function initMainController() {
         }
     }
 }
+async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
+    if (isLoadingAdminGalleries) return;
+    isLoadingAdminGalleries = true;
+
+    const section = document.querySelector('[data-section="manageContent"]');
+    if (!section) {
+        isLoadingAdminGalleries = false;
+        return;
+    }
+
+    const listContainer = section.querySelector('#admin-galleries-list');
+    const statusContainer = section.querySelector('.status-message-container');
+    const loadMoreContainer = section.querySelector('#galleries-admin-load-more-container');
+
+    if (!append) {
+        adminGalleriesCurrentPage = 1;
+        if (listContainer) listContainer.innerHTML = '';
+        if (statusContainer) {
+            statusContainer.classList.remove('disabled');
+            statusContainer.innerHTML = loaderHTML;
+        }
+    }
+
+    const response = await api.getGalleries('alpha-asc', searchTerm, adminGalleriesCurrentPage, ADMIN_GALLERIES_BATCH_SIZE);
+    isLoadingAdminGalleries = false;
+
+    if (statusContainer) {
+        statusContainer.classList.add('disabled');
+        statusContainer.innerHTML = '';
+    }
+
+    if (response.ok) {
+        const galleries = response.data;
+        if (galleries.length > 0) {
+            galleries.forEach(gallery => {
+                const item = document.createElement('div');
+                item.className = 'admin-list-item';
+                item.innerHTML = `
+                    <div class="admin-list-item-thumbnail" style="background-image: url('${gallery.profile_picture_url || ''}')"></div>
+                    <div class="admin-list-item-details">
+                        <div class="admin-list-item-title">${gallery.name}</div>
+                        <div class="admin-list-item-meta">UUID: ${gallery.uuid}</div>
+                    </div>
+                    <div class="admin-list-item-actions">
+                         <button class="header-button" data-action="edit-gallery" data-uuid="${gallery.uuid}" data-i18n-tooltip="admin.manageContent.editTooltip">
+                            <span class="material-symbols-rounded">edit</span>
+                        </button>
+                        <button class="header-button" data-action="view-gallery-photos-admin" data-uuid="${gallery.uuid}" data-name="${gallery.name}" data-i18n-tooltip="admin.manageContent.viewPhotosTooltip">
+                            <span class="material-symbols-rounded">image</span>
+                        </button>
+                        <div class="toggle-switch ${gallery.privacy == 1 ? 'active' : ''}" data-action="toggle-gallery-privacy-admin" data-uuid="${gallery.uuid}" data-i18n-tooltip="admin.manageContent.privacyTooltip">
+                            <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
+                        </div>
+                    </div>
+                `;
+                if (listContainer) listContainer.appendChild(item);
+            });
+        } else if (!append) {
+            if (statusContainer) {
+                statusContainer.classList.remove('disabled');
+                statusContainer.innerHTML = `<div><h2>${window.getTranslation('general.noResultsTitle')}</h2><p>${window.getTranslation('general.noResultsMessage')}</p></div>`;
+            }
+        }
+
+        if (loadMoreContainer) {
+            if (galleries.length < ADMIN_GALLERIES_BATCH_SIZE) {
+                loadMoreContainer.classList.add('disabled');
+            } else {
+                loadMoreContainer.classList.remove('disabled');
+                adminGalleriesCurrentPage++;
+            }
+        }
+    } else {
+        console.error('Error fetching galleries for admin:', response.data);
+        if (!append && statusContainer) {
+            displayFetchError('[data-section="manageContent"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
+        }
+    }
+}
+
 
     function setupEventListeners() {
         document.addEventListener('click', function (event) {
@@ -2159,6 +2223,10 @@ export function initMainController() {
                     case 'load-more-admin-users':
                         const adminSearch = document.querySelector('#admin-user-search');
                         fetchAndDisplayUsers(adminSearch ? adminSearch.value.trim() : '', true);
+                        break;
+                    case 'load-more-admin-galleries':
+                        const adminGallerySearch = document.querySelector('#admin-gallery-search');
+                        fetchAndDisplayGalleriesAdmin(adminGallerySearch ? adminGallerySearch.value.trim() : '', true);
                         break;
                     case 'load-more-history-profiles':
                         historyProfilesShown += HISTORY_PROFILES_BATCH;
@@ -2369,6 +2437,44 @@ export function initMainController() {
                         });
                         break;
                     }
+                    case 'view-gallery-photos-admin': {
+                        const uuid = actionTarget.dataset.uuid;
+                        const name = actionTarget.dataset.name;
+                        navigateToUrl('main', 'galleryPhotos', { uuid });
+                        handleStateChange('main', 'galleryPhotos', true, { uuid, galleryName: name });
+                        break;
+                    }
+                    case 'toggle-gallery-privacy-admin': {
+                        const uuid = actionTarget.dataset.uuid;
+                        const isPrivate = !actionTarget.classList.contains('active');
+                        api.changeGalleryPrivacy(uuid, isPrivate).then(response => {
+                            if (response.ok) {
+                                actionTarget.classList.toggle('active');
+                                showNotification(response.data.message, 'success');
+                            } else {
+                                showNotification(response.data.message || 'Error al cambiar la privacidad', 'error');
+                            }
+                        });
+                        break;
+                    }
+                    case 'edit-gallery': {
+                        const uuid = actionTarget.dataset.uuid;
+                        navigateToUrl('admin', 'editGallery', { uuid });
+                        handleStateChange('admin', 'editGallery', true, { uuid });
+                        break;
+                    }
+                     case 'delete-gallery-photo': {
+                        const photoId = actionTarget.dataset.photoId;
+                        api.deleteGalleryPhoto(photoId).then(response => {
+                            if (response.ok) {
+                                showNotification(response.data.message, 'success');
+                                actionTarget.closest('.photo-item-edit').remove();
+                            } else {
+                                showNotification(response.data.message || 'Error al eliminar la foto', 'error');
+                            }
+                        });
+                        break;
+                    }
                 }
             }
 
@@ -2474,8 +2580,6 @@ export function initMainController() {
                             adCooldownActive = true;
                         } else {
                             navigateToUrl('main', 'galleryPhotos', { uuid: uuid });
-                            // --- BUG FIX ---
-                            // Se pasan los argumentos en el orden correcto a handleStateChange.
                             handleStateChange('main', 'galleryPhotos', true, { uuid: uuid, galleryName: name });
                             adCooldownActive = false;
                         }
@@ -2525,6 +2629,8 @@ export function initMainController() {
                     displayFavoritePhotos();
                 } else if (section === 'manageUsers') {
                     fetchAndDisplayUsers(searchTerm);
+                } else if (section === 'manageContent') {
+                    fetchAndDisplayGalleriesAdmin(searchTerm);
                 }
             }
 
@@ -2598,8 +2704,6 @@ export function initMainController() {
         }
     }
 
- // assets/js/main-controller.js
-
     async function handleStateChange(view, section, pushState = true, data) {
         const contentContainer = document.querySelector('.general-content-scrolleable');
         if (contentContainer) {
@@ -2610,7 +2714,8 @@ export function initMainController() {
             'settings-loginSecurity',
             'settings-history',
             'admin-manageUsers',
-            'admin-manageContent'
+            'admin-manageContent',
+            'admin-editGallery'
         ];
         const section_key = view + '-' + section;
 
@@ -2675,6 +2780,19 @@ export function initMainController() {
                 break;
             case 'manageUsers':
                 fetchAndDisplayUsers();
+                break;
+            case 'manageContent':
+                fetchAndDisplayGalleriesAdmin();
+                break;
+            case 'editGallery':
+                if (data && data.uuid) {
+                    const response = await api.getGalleryForEdit(data.uuid);
+                    if (response.ok) {
+                        renderEditGalleryForm(response.data);
+                    } else {
+                        handleStateChange('main', '404');
+                    }
+                }
                 break;
             case 'accessibility':
                 updateThemeSelectorUI(localStorage.getItem('theme') || 'system');
@@ -3112,6 +3230,70 @@ export function initMainController() {
         initTooltips();
         applyTranslations(document.body);
     }
+    
+    function renderEditGalleryForm(gallery) {
+        const container = document.getElementById('edit-gallery-form-container');
+        const titleEl = document.getElementById('edit-gallery-title');
+
+        if (!container || !titleEl) return;
+
+        titleEl.textContent = window.getTranslation('admin.editGallery.title', { galleryName: gallery.name });
+
+        let photosHTML = '';
+        gallery.photos.forEach(photo => {
+            photosHTML += `
+                <div class="photo-item-edit">
+                    <img src="${photo.photo_url}" alt="Miniatura">
+                    <button class="delete-photo-btn" data-action="delete-gallery-photo" data-photo-id="${photo.id}">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+            `;
+        });
+
+        container.innerHTML = `
+            <div class="edit-section">
+                <h4 data-i18n="admin.editGallery.detailsTitle"></h4>
+                <div class="form-group">
+                    <label class="form-label" for="gallery-name-edit" data-i18n="admin.editGallery.nameLabel"></label>
+                    <input type="text" id="gallery-name-edit" class="feedback-input" value="${gallery.name}" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" data-i18n="admin.editGallery.privacyLabel"></label>
+                    <div class="toggle-switch ${gallery.privacy == 1 ? 'active' : ''}" id="gallery-privacy-edit">
+                        <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="edit-section">
+                <h4 data-i18n="admin.editGallery.profilePictureTitle"></h4>
+                <div class="profile-picture-edit-container">
+                    <div class="profile-picture-preview" style="background-image: url('${gallery.profile_picture_url || ''}')"></div>
+                    <input type="file" id="profile-picture-upload" accept="image/*" style="display: none;">
+                    <button class="load-more-btn" onclick="document.getElementById('profile-picture-upload').click();" data-i18n="admin.editGallery.changeButton"></button>
+                </div>
+            </div>
+
+            <div class="edit-section">
+                <h4 data-i18n="admin.editGallery.photosTitle"></h4>
+                <div class="photo-grid-edit" id="gallery-photos-grid-edit">
+                    ${photosHTML}
+                </div>
+            </div>
+            
+            <div class="edit-section">
+                <h4 data-i18n="admin.editGallery.addPhotosTitle"></h4>
+                <div class="upload-new-photos-container">
+                    <input type="file" id="new-photos-upload" multiple accept="image/*" style="display:none;">
+                    <label for="new-photos-upload" data-i18n="admin.editGallery.uploadLabel"></label>
+                </div>
+            </div>
+        `;
+
+        applyTranslations(container);
+    }
+
     // --- INICIALIZACIÓN ---
     setupEventListeners();
     checkSessionStatus();
@@ -3150,16 +3332,20 @@ export function initMainController() {
     const galleryMatch = path.match(/^gallery\/([a-f0-9-]{36})$/);
     const photoMatch = path.match(/^gallery\/([a-f0-9-]{36})\/photo\/(\d+)$/);
     const userFavoritesMatch = path.match(/^favorites\/([a-f0-9-]{36})$/);
+    const editGalleryMatch = path.match(/^admin\/edit-gallery\/([a-f0-9-]{36})$/);
 
     if (privateGalleryMatch) {
         initialRoute = { view: 'main', section: 'privateGalleryProxy' };
         initialStateData = { uuid: privateGalleryMatch[1] };
-    } else if (galleryMatch) {
-        initialRoute = { view: 'main', section: 'galleryPhotos' };
-        initialStateData = { uuid: galleryMatch[1] };
     } else if (photoMatch) {
         initialRoute = { view: 'main', section: 'photoView' };
         initialStateData = { uuid: photoMatch[1], photoId: photoMatch[2] };
+    } else if (editGalleryMatch) {
+        initialRoute = { view: 'admin', section: 'editGallery' };
+        initialStateData = { uuid: editGalleryMatch[1] };
+    } else if (galleryMatch) {
+        initialRoute = { view: 'main', section: 'galleryPhotos' };
+        initialStateData = { uuid: galleryMatch[1] };
     } else if (userFavoritesMatch) {
         initialRoute = { view: 'main', section: 'userSpecificFavorites' };
         initialStateData = { uuid: userFavoritesMatch[1] };
