@@ -2382,3 +2382,25 @@ h6 {
     border-color: var(--focus-border-color);
     background-color: var(--hover-bg);
 }
+
+/* ================================================= */
+/* =========== ESTILOS PARA FOTOS PENDIENTES =========== */
+/* ================================================= */
+
+.photo-item-edit.pending-upload {
+    border: 2px dashed var(--focus-border-color);
+}
+
+.photo-item-edit.pending-upload::after {
+    content: 'Pendiente';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 0.6rem;
+    text-align: center;
+    padding: 2px 0;
+    font-weight: 500;
+}

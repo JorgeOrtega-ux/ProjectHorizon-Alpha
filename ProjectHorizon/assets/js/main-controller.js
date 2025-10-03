@@ -2476,68 +2476,74 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
                     case 'toggle-privacy-switch':
                         actionTarget.classList.toggle('active');
                         break;
-                    case 'save-gallery-changes': {
-                        const pathParts = window.location.pathname.split('/');
-                        const uuid = pathParts[pathParts.length - 1];
+                    case 'save-gallery-changes':
+                        {
+                            const pathParts = window.location.pathname.split('/');
+                            const uuid = pathParts[pathParts.length - 1];
 
-                        const name = document.getElementById('gallery-name-edit').value.trim();
-                        const privacyToggle = document.getElementById('gallery-privacy-edit');
-                        const privacy = privacyToggle ? privacyToggle.classList.contains('active') : false;
+                            const name = document.getElementById('gallery-name-edit').value.trim();
+                            const privacyToggle = document.getElementById('gallery-privacy-edit');
+                            const privacy = privacyToggle ? privacyToggle.classList.contains('active') : false;
 
-                        const formData = new FormData();
-                        formData.append('action_type', 'update_gallery_details');
-                        formData.append('uuid', uuid);
-                        formData.append('name', name);
-                        formData.append('privacy', privacy);
+                            const detailsFormData = new FormData();
+                            detailsFormData.append('action_type', 'update_gallery_details');
+                            detailsFormData.append('uuid', uuid);
+                            detailsFormData.append('name', name);
+                            detailsFormData.append('privacy', privacy);
 
-                        api.updateGalleryDetails(formData).then(response => {
-                            if (response.ok) {
-                                showNotification(response.data.message, 'success');
-                            } else {
-                                showNotification(response.data.message || 'Error al guardar los detalles.', 'error');
-                            }
-                        });
-
-                        const profilePicInput = document.getElementById('profile-picture-upload');
-                        if (profilePicInput.files.length > 0) {
-                            const profilePicFormData = new FormData();
-                            profilePicFormData.append('action_type', 'update_profile_picture');
-                            profilePicFormData.append('uuid', uuid);
-                            profilePicFormData.append('profile_picture', profilePicInput.files[0]);
-                            api.updateProfilePicture(profilePicFormData).then(response => {
+                            api.updateGalleryDetails(detailsFormData).then(response => {
                                 if (response.ok) {
-                                    document.querySelector('.profile-picture-preview').style.backgroundImage = `url('${response.data.profile_picture_url}')`;
+                                    showNotification(response.data.message, 'success');
+                                } else {
+                                    showNotification(response.data.message || 'Error al guardar los detalles.', 'error');
                                 }
                             });
-                        }
-                        
-                        const newPhotosInput = document.getElementById('new-photos-upload');
-                        if (newPhotosInput.files.length > 0) {
-                            const newPhotosFormData = new FormData();
-                            newPhotosFormData.append('action_type', 'upload_gallery_photos');
-                            newPhotosFormData.append('uuid', uuid);
-                            for (const file of newPhotosInput.files) {
-                                newPhotosFormData.append('photos[]', file);
+
+                            const profilePicInput = document.getElementById('profile-picture-upload');
+                            if (profilePicInput.files.length > 0) {
+                                const profilePicFormData = new FormData();
+                                profilePicFormData.append('action_type', 'update_profile_picture');
+                                profilePicFormData.append('uuid', uuid);
+                                profilePicFormData.append('profile_picture', profilePicInput.files[0]);
+                                api.updateProfilePicture(profilePicFormData).then(response => {
+                                    if (response.ok) {
+                                        document.querySelector('.profile-picture-preview').style.backgroundImage = `url('${response.data.profile_picture_url}')`;
+                                        profilePicInput.value = '';
+                                    }
+                                });
                             }
-                            api.uploadGalleryPhotos(newPhotosFormData).then(response => {
-                                if (response.ok) {
-                                    const grid = document.getElementById('gallery-photos-grid-edit');
-                                    response.data.photos.forEach(photo => {
-                                        const newPhotoHTML = `
-                                            <div class="photo-item-edit">
-                                                <img src="${photo.photo_url}" alt="Miniatura">
-                                                <button class="delete-photo-btn" data-action="delete-gallery-photo" data-photo-id="${photo.id}">
-                                                    <span class="material-symbols-rounded">close</span>
-                                                </button>
-                                            </div>`;
-                                        grid.insertAdjacentHTML('afterbegin', newPhotoHTML);
-                                    });
-                                    newPhotosInput.value = ''; // Limpiar input
+                            
+                            const pendingFiles = window.pendingGalleryFiles || [];
+                            if (pendingFiles.length > 0) {
+                                const newPhotosFormData = new FormData();
+                                newPhotosFormData.append('action_type', 'upload_gallery_photos');
+                                newPhotosFormData.append('uuid', uuid);
+                                for (const file of pendingFiles) {
+                                    newPhotosFormData.append('photos[]', file);
                                 }
-                            });
+                                api.uploadGalleryPhotos(newPhotosFormData).then(response => {
+                                    if (response.ok) {
+                                        document.querySelectorAll('.photo-item-edit.pending-upload').forEach(item => {
+                                            item.classList.remove('pending-upload');
+                                        });
+                                        window.pendingGalleryFiles = [];
+                                    }
+                                });
+                            }
+
+                            const photoGrid = document.getElementById('gallery-photos-grid-edit');
+                            const photoOrder = Array.from(photoGrid.children).map(item => item.dataset.id).filter(id => id);
+                            if (photoOrder.length > 0) {
+                                api.updatePhotoOrder(photoOrder).then(response => {
+                                    if (response.ok) {
+                                        showNotification(response.data.message, 'success');
+                                    } else {
+                                        showNotification(response.data.message || 'Error al guardar el orden.', 'error');
+                                    }
+                                });
+                            }
                         }
                         break;
-                    }
                 }
             }
 
@@ -3295,12 +3301,17 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
     }
     
  function renderEditGalleryForm(gallery) {
+    window.pendingGalleryFiles = [];
     const container = document.getElementById('edit-gallery-form-container');
     const titleEl = document.getElementById('edit-gallery-title');
 
     if (!container || !titleEl) return;
 
+    // 1. Se establece el título correctamente usando la traducción y el nombre real.
     titleEl.textContent = window.getTranslation('admin.editGallery.title', { galleryName: gallery.name });
+    
+    // 2. ✅ **CORRECCIÓN CLAVE: Se elimina el atributo para que no se vuelva a traducir.**
+    titleEl.removeAttribute('data-i18n');
 
     let photosHTML = '';
     gallery.photos.forEach(photo => {
@@ -3359,19 +3370,30 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
         new Sortable(photoGrid, {
             animation: 150,
             ghostClass: 'sortable-ghost',
-            onEnd: async (evt) => {
-                const photoOrder = Array.from(evt.to.children).map(item => item.dataset.id);
-                const response = await api.updatePhotoOrder(photoOrder);
-                if (response.ok) {
-                    showNotification(response.data.message, 'success');
-                } else {
-                    showNotification(response.data.message || 'Error al guardar el orden.', 'error');
-                    // Revertir el orden visualmente si falla la API
-                    // (Opcional, pero recomendado para una mejor UX)
-                }
-            }
         });
     }
+
+    const newPhotosInput = document.getElementById('new-photos-upload');
+    newPhotosInput.addEventListener('change', (event) => {
+        const files = event.target.files;
+        for (const file of files) {
+            window.pendingGalleryFiles.push(file);
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const newPhotoHTML = `
+                    <div class="photo-item-edit pending-upload" data-id="">
+                        <img src="${e.target.result}" alt="Nueva foto">
+                        <button class="delete-photo-btn" data-action="delete-gallery-photo" data-photo-id="">
+                            <span class="material-symbols-rounded">close</span>
+                        </button>
+                    </div>`;
+                photoGrid.insertAdjacentHTML('beforeend', newPhotoHTML);
+            };
+            reader.readAsDataURL(file);
+        }
+        newPhotosInput.value = '';
+    });
 }
 
     // --- INICIALIZACIÓN ---
