@@ -231,7 +231,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 FROM gallery_photos p
                 JOIN galleries g ON p.gallery_uuid = g.uuid
                 LEFT JOIN gallery_profile_pictures gpp ON p.gallery_uuid = gpp.gallery_uuid
-                WHERE p.gallery_uuid = ? ORDER BY p.id DESC LIMIT ? OFFSET ?";
+                WHERE p.gallery_uuid = ? ORDER BY p.display_order ASC, p.id DESC LIMIT ? OFFSET ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("sii", $gallery_uuid, $limit, $offset);
         $stmt->execute();
@@ -336,7 +336,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $gallery = $gallery_result->fetch_assoc();
         $stmt_gallery->close();
 
-        $stmt_photos = $conn->prepare("SELECT id, photo_url FROM gallery_photos WHERE gallery_uuid = ? ORDER BY id DESC");
+        $stmt_photos = $conn->prepare("SELECT id, photo_url FROM gallery_photos WHERE gallery_uuid = ? ORDER BY display_order ASC, id DESC");
         $stmt_photos->bind_param("s", $uuid);
         $stmt_photos->execute();
         $photos_result = $stmt_photos->get_result();
@@ -732,6 +732,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['success' => false, 'message' => 'Error al eliminar la foto.']);
         }
         $stmt->close();
+    } elseif ($action_type === 'update_photo_order') {
+        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
+            exit;
+        }
+        $photo_order = json_decode($_POST['photo_order'] ?? '[]');
+
+        if (empty($photo_order)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'No se proporcionó un orden de fotos.']);
+            exit;
+        }
+        
+        $conn->begin_transaction();
+        try {
+            $stmt = $conn->prepare("UPDATE gallery_photos SET display_order = ? WHERE id = ?");
+            foreach ($photo_order as $index => $photo_id) {
+                $order = $index + 1;
+                $stmt->bind_param("ii", $order, $photo_id);
+                $stmt->execute();
+            }
+            $stmt->close();
+            $conn->commit();
+            echo json_encode(['success' => true, 'message' => 'Orden de las fotos actualizado.']);
+        } catch (mysqli_sql_exception $exception) {
+            $conn->rollback();
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error al actualizar el orden de las fotos.']);
+        }
     } else {
         http_response_code(400);
         echo json_encode(['error' => 'Invalid POST action type']);

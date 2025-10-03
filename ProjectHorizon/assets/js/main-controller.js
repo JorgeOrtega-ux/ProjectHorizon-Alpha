@@ -3305,7 +3305,7 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
         let photosHTML = '';
         gallery.photos.forEach(photo => {
             photosHTML += `
-                <div class="photo-item-edit">
+                <div class="photo-item-edit" data-id="${photo.id}">
                     <img src="${photo.photo_url}" alt="Miniatura">
                     <button class="delete-photo-btn" data-action="delete-gallery-photo" data-photo-id="${photo.id}">
                         <span class="material-symbols-rounded">close</span>
@@ -3355,6 +3355,25 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
         `;
 
         applyTranslations(container);
+        
+        const photoGrid = document.getElementById('gallery-photos-grid-edit');
+        if (photoGrid) {
+            new Sortable(photoGrid, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                onEnd: async (evt) => {
+                    const photoOrder = Array.from(evt.to.children).map(item => item.dataset.id);
+                    const response = await api.updatePhotoOrder(photoOrder);
+                    if (response.ok) {
+                        showNotification(response.data.message, 'success');
+                    } else {
+                        showNotification(response.data.message || 'Error al guardar el orden.', 'error');
+                        // Revertir el orden visualmente si falla la API
+                        // (Opcional, pero recomendado para una mejor UX)
+                    }
+                }
+            });
+        }
     }
 
     // --- INICIALIZACIÓN ---

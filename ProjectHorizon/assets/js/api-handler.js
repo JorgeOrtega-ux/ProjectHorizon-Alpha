@@ -263,3 +263,13 @@ export function deleteGalleryPhoto(photoId) {
         body: formData
     });
 }
+
+export function updatePhotoOrder(photoOrder) {
+    const formData = new FormData();
+    formData.append('action_type', 'update_photo_order');
+    formData.append('photo_order', JSON.stringify(photoOrder));
+    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
