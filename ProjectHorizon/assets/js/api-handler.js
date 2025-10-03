@@ -185,3 +185,25 @@ export function getUsers(searchTerm, page, limit) {
     const url = `${window.BASE_PATH}/api/main_handler.php?request_type=users&search=${encodedSearchTerm}&page=${page}&limit=${limit}`;
     return fetchData(url);
 }
+
+export function changeUserRole(uuid, role) {
+    const formData = new FormData();
+    formData.append('action_type', 'change_user_role');
+    formData.append('uuid', uuid);
+    formData.append('role', role);
+    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+export function changeUserStatus(uuid, status) {
+    const formData = new FormData();
+    formData.append('action_type', 'change_user_status');
+    formData.append('uuid', uuid);
+    formData.append('status', status);
+    return fetchData(`${window.BASE_PATH}/api/main_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}

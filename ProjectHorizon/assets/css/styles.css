@@ -2209,3 +2209,16 @@ h6 {
     background-color: #451c1c;
     color: #ef5350;
 }
+
+/* ====================================== */
+/* ====== USER ACTIONS MENU STYLES ====== */
+/* ====================================== */
+.item-actions .module-select {
+    right: 0;
+    left: auto;
+    width: 220px;
+}
+
+#users-table .item-actions {
+    position: relative;
+}

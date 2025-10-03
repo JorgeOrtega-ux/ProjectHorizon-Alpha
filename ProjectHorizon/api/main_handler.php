@@ -479,6 +479,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Faltan datos de la foto o galería.']);
         }
+    } elseif ($action_type === 'change_user_role' || $action_type === 'change_user_status') {
+        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
+            exit;
+        }
+
+        $user_uuid = $_POST['uuid'] ?? '';
+        
+        if (empty($user_uuid)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Falta el UUID del usuario.']);
+            exit;
+        }
+        
+        if ($action_type === 'change_user_role') {
+            $new_role = $_POST['role'] ?? '';
+            $allowed_roles = ['user', 'moderator', 'administrator'];
+            if (!in_array($new_role, $allowed_roles)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Rol no válido.']);
+                exit;
+            }
+            $stmt = $conn->prepare("UPDATE users SET role = ? WHERE uuid = ?");
+            $stmt->bind_param("ss", $new_role, $user_uuid);
+        } else { // change_user_status
+            $new_status = $_POST['status'] ?? '';
+            $allowed_statuses = ['active', 'suspended', 'deleted'];
+            if (!in_array($new_status, $allowed_statuses)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Estado no válido.']);
+                exit;
+            }
+            $stmt = $conn->prepare("UPDATE users SET status = ? WHERE uuid = ?");
+            $stmt->bind_param("ss", $new_status, $user_uuid);
+        }
+        
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true, 'message' => 'Usuario actualizado correctamente.']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error al actualizar el usuario.']);
+        }
+        $stmt->close();
     } else {
         http_response_code(400);
         echo json_encode(['error' => 'Invalid POST action type']);

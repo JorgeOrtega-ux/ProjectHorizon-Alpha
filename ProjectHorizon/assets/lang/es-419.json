@@ -301,7 +301,10 @@
         "actionsTitle": "Acciones",
         "actions": {
           "edit": "Editar usuario",
-          "delete": "Eliminar usuario"
+          "delete": "Eliminar usuario",
+          "changeRole": "Cambiar rol",
+          "suspend": "Suspender usuario",
+          "ban": "Banear usuario"
         }
       }
     },

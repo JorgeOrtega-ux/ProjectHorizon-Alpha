@@ -1877,8 +1877,35 @@ export function initMainController() {
                     <td>${createdDate}</td>
                     <td>
                         <div class="item-actions">
-                            <button class="header-button" data-i18n-tooltip="admin.manageUsers.table.actions.edit"><span class="material-symbols-rounded">edit</span></button>
-                            <button class="header-button" data-i18n-tooltip="admin.manageUsers.table.actions.delete"><span class="material-symbols-rounded">delete</span></button>
+                            <button class="header-button" data-action="toggle-user-actions" data-i18n-tooltip="admin.manageUsers.table.actionsTitle">
+                                <span class="material-symbols-rounded">more_vert</span>
+                            </button>
+                            <div class="module-content module-select disabled" id="user-actions-menu-${user.uuid}">
+                                <div class="menu-content">
+                                    <div class="menu-list">
+                                        <div class="menu-link" data-action="change-role" data-uuid="${user.uuid}" data-role="user">
+                                            <div class="menu-link-icon"><span class="material-symbols-rounded">person</span></div>
+                                            <div class="menu-link-text"><span>Hacer Usuario</span></div>
+                                        </div>
+                                        <div class="menu-link" data-action="change-role" data-uuid="${user.uuid}" data-role="moderator">
+                                            <div class="menu-link-icon"><span class="material-symbols-rounded">shield_person</span></div>
+                                            <div class="menu-link-text"><span>Hacer Moderador</span></div>
+                                        </div>
+                                        <div class="menu-link" data-action="change-role" data-uuid="${user.uuid}" data-role="administrator">
+                                            <div class="menu-link-icon"><span class="material-symbols-rounded">admin_panel_settings</span></div>
+                                            <div class="menu-link-text"><span>Hacer Administrador</span></div>
+                                        </div>
+                                        <div class="menu-link" data-action="change-status" data-uuid="${user.uuid}" data-status="suspended">
+                                            <div class="menu-link-icon"><span class="material-symbols-rounded">pause</span></div>
+                                            <div class="menu-link-text"><span>Suspender</span></div>
+                                        </div>
+                                        <div class="menu-link" data-action="change-status" data-uuid="${user.uuid}" data-status="deleted">
+                                            <div class="menu-link-icon"><span class="material-symbols-rounded">delete</span></div>
+                                            <div class="menu-link-text"><span>Eliminar</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </td>
                 `;
@@ -1925,6 +1952,12 @@ export function initMainController() {
                     menu.classList.add('disabled');
                 });
                 document.querySelectorAll('.active-trigger').forEach(trigger => trigger.classList.remove('active-trigger'));
+            }
+            
+            if (!event.target.closest('.item-actions')) {
+                document.querySelectorAll('.module-select[id^="user-actions-menu-"]').forEach(menu => {
+                    menu.classList.add('disabled');
+                });
             }
 
             if (!event.target.closest('.card-actions-container')) {
@@ -2220,6 +2253,38 @@ export function initMainController() {
                             icon.textContent = 'visibility';
                         }
                         break;
+                    case 'toggle-user-actions': {
+                        const row = actionTarget.closest('tr');
+                        const menu = row.querySelector('.module-select');
+                        menu.classList.toggle('disabled');
+                        break;
+                    }
+                    case 'change-role': {
+                        const userUuid = actionTarget.dataset.uuid;
+                        const newRole = actionTarget.dataset.role;
+                        api.changeUserRole(userUuid, newRole).then(response => {
+                            if (response.ok) {
+                                showNotification('Rol de usuario actualizado', 'success');
+                                fetchAndDisplayUsers(document.querySelector('#admin-user-search').value.trim());
+                            } else {
+                                showNotification('Error al cambiar el rol', 'error');
+                            }
+                        });
+                        break;
+                    }
+                    case 'change-status': {
+                        const userUuid = actionTarget.dataset.uuid;
+                        const newStatus = actionTarget.dataset.status;
+                        api.changeUserStatus(userUuid, newStatus).then(response => {
+                            if (response.ok) {
+                                showNotification('Estado de usuario actualizado', 'success');
+                                fetchAndDisplayUsers(document.querySelector('#admin-user-search').value.trim());
+                            } else {
+                                showNotification('Error al cambiar el estado', 'error');
+                            }
+                        });
+                        break;
+                    }
                 }
             }
 
