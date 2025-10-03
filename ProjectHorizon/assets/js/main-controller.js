@@ -2041,9 +2041,6 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
                         <button class="header-button" data-action="view-gallery-photos-admin" data-uuid="${gallery.uuid}" data-name="${gallery.name}" data-i18n-tooltip="admin.manageContent.viewPhotosTooltip">
                             <span class="material-symbols-rounded">image</span>
                         </button>
-                        <div class="toggle-switch ${gallery.privacy == 1 ? 'active' : ''}" data-action="toggle-gallery-privacy-admin" data-uuid="${gallery.uuid}" data-i18n-tooltip="admin.manageContent.privacyTooltip">
-                            <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
-                        </div>
                     </div>
                 `;
                 if (listContainer) listContainer.appendChild(item);
@@ -2444,19 +2441,6 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
                         handleStateChange('main', 'galleryPhotos', true, { uuid, galleryName: name });
                         break;
                     }
-                    case 'toggle-gallery-privacy-admin': {
-                        const uuid = actionTarget.dataset.uuid;
-                        const isPrivate = !actionTarget.classList.contains('active');
-                        api.changeGalleryPrivacy(uuid, isPrivate).then(response => {
-                            if (response.ok) {
-                                actionTarget.classList.toggle('active');
-                                showNotification(response.data.message, 'success');
-                            } else {
-                                showNotification(response.data.message || 'Error al cambiar la privacidad', 'error');
-                            }
-                        });
-                        break;
-                    }
                     case 'edit-gallery': {
                         const uuid = actionTarget.dataset.uuid;
                         navigateToUrl('admin', 'editGallery', { uuid });
@@ -2475,6 +2459,9 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
                         });
                         break;
                     }
+                    case 'toggle-privacy-switch':
+                        actionTarget.classList.toggle('active');
+                        break;
                     case 'save-gallery-changes': {
                         const pathParts = window.location.pathname.split('/');
                         const uuid = pathParts[pathParts.length - 1];
@@ -3322,7 +3309,7 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
                 </div>
                 <div class="form-group">
                     <label class="form-label" data-i18n="admin.editGallery.privacyLabel"></label>
-                    <div class="toggle-switch ${gallery.privacy == 1 ? 'active' : ''}" id="gallery-privacy-edit">
+                    <div class="toggle-switch ${gallery.privacy == 1 ? 'active' : ''}" id="gallery-privacy-edit" data-action="toggle-privacy-switch">
                         <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
                     </div>
                 </div>

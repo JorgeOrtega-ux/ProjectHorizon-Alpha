@@ -310,7 +310,24 @@
     },
     "manageContent": {
       "title": "Administrar contenido",
-      "description": "Administra el contenido de la aplicación."
+      "description": "Administra el contenido de la aplicación.",
+      "searchPlaceholder": "Buscar por nombre de galería...",
+      "editTooltip": "Editar galería",
+      "viewPhotosTooltip": "Ver fotos",
+      "privacyTooltip": "Cambiar privacidad"
+    },
+    "editGallery": {
+      "title": "Editando \"{galleryName}\"",
+      "backButtonTooltip": "Volver a la gestión de contenido",
+      "saveButton": "Guardar Cambios",
+      "detailsTitle": "Detalles de la Galería",
+      "nameLabel": "Nombre",
+      "privacyLabel": "Galería Privada",
+      "profilePictureTitle": "Foto de Perfil",
+      "changeButton": "Cambiar",
+      "photosTitle": "Fotos en la Galería",
+      "addPhotosTitle": "Añadir Nuevas Fotos",
+      "uploadLabel": "Haz clic o arrastra las imágenes aquí para subirlas"
     }
   }
 }
