@@ -2250,24 +2250,25 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
                         historySearchesShown += HISTORY_SEARCHES_BATCH;
                         displayHistory();
                         break;
-                    case 'returnToUserPhotos':
-                        if (lastVisitedView === 'history') {
-                            navigateToUrl('settings', 'history');
-                            handleStateChange('settings', 'history');
-                        } else if (lastVisitedView === 'favorites') {
-                            navigateToUrl('main', 'favorites');
-                            handleStateChange('main', 'favorites');
-                        } else if (lastVisitedView === 'userSpecificFavorites' && lastVisitedData && lastVisitedData.uuid) {
-                            navigateToUrl('main', 'userSpecificFavorites', { uuid: lastVisitedData.uuid });
-                            handleStateChange('main', 'userSpecificFavorites', { uuid: lastVisitedData.uuid });
-                        } else if (currentGalleryForPhotoView) {
-                            navigateToUrl('main', 'galleryPhotos', { uuid: currentGalleryForPhotoView });
-                            handleStateChange('main', 'galleryPhotos', { uuid: currentGalleryForPhotoView });
-                        } else {
-                            navigateToUrl('main', 'home');
-                            handleStateChange('main', 'home');
-                        }
-                        break;
+                  case 'returnToUserPhotos':
+    if (lastVisitedView === 'history') {
+        navigateToUrl('settings', 'history');
+        handleStateChange('settings', 'history');
+    } else if (lastVisitedView === 'favorites') {
+        navigateToUrl('main', 'favorites');
+        handleStateChange('main', 'favorites');
+    } else if (lastVisitedView === 'userSpecificFavorites' && lastVisitedData && lastVisitedData.uuid) {
+        navigateToUrl('main', 'userSpecificFavorites', { uuid: lastVisitedData.uuid });
+        handleStateChange('main', 'userSpecificFavorites', true, { uuid: lastVisitedData.uuid });
+    } else if (currentGalleryForPhotoView) {
+        navigateToUrl('main', 'galleryPhotos', { uuid: currentGalleryForPhotoView });
+        // ✅ LÍNEA CORREGIDA: Se pasan los argumentos en el orden correcto.
+        handleStateChange('main', 'galleryPhotos', true, { uuid: currentGalleryForPhotoView });
+    } else {
+        navigateToUrl('main', 'home');
+        handleStateChange('main', 'home');
+    }
+    break;
                     case 'returnToHome':
                         navigateToUrl('main', 'home');
                         handleStateChange('main', 'home');
