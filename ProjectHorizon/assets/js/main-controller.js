@@ -557,106 +557,114 @@ export function initMainController() {
         }
     }
 
-    function showCustomConfirm(title, message) {
-        return new Promise((resolve) => {
-            const overlay = document.getElementById('custom-confirm-overlay');
-            const titleEl = document.getElementById('custom-confirm-title');
-            const messageEl = document.getElementById('custom-confirm-message');
-            const cancelBtn = document.getElementById('custom-confirm-cancel');
-            const okBtn = document.getElementById('custom-confirm-ok');
+    // --- FUNCIONES DE DIÁLOGO DINÁMICO ---
+    
+    function showDialog(options) {
+        const overlay = document.createElement('div');
+        overlay.id = 'dialog-overlay';
+        overlay.className = 'custom-confirm-overlay';
 
-            titleEl.textContent = title;
-            messageEl.innerHTML = message;
+        const dialogBox = document.createElement('div');
+        dialogBox.className = 'custom-confirm-box';
 
-            applyTranslations(overlay);
+        let buttonsHTML = '<div class="custom-confirm-buttons">';
+        options.buttons.forEach((btn, index) => {
+            buttonsHTML += `<button id="dialog-btn-${index}" class="load-more-btn ${btn.className || ''}"><span class="button-text">${btn.text}</span><div class="button-spinner"></div></button>`;
+        });
+        buttonsHTML += '</div>';
+    
+        dialogBox.innerHTML = `
+            ${options.iconHTML || ''}
+            <h2 id="dialog-title">${options.title}</h2>
+            <div id="dialog-content">${options.contentHTML}</div>
+            ${buttonsHTML}
+        `;
+        
+        overlay.appendChild(dialogBox);
+        document.body.appendChild(overlay);
 
-            overlay.classList.remove('disabled');
-
-            const close = (value) => {
-                overlay.classList.add('disabled');
-                cancelBtn.onclick = null;
-                okBtn.onclick = null;
-                resolve(value);
+        const closeDialog = () => {
+            overlay.classList.add('hiding');
+            const removeOverlay = () => {
+                if (overlay.parentNode) {
+                    overlay.parentNode.removeChild(overlay);
+                }
+                overlay.removeEventListener('animationend', removeOverlay);
             };
+            overlay.addEventListener('animationend', removeOverlay);
+            // Fallback
+            setTimeout(removeOverlay, 500); 
+        };
+    
+        options.buttons.forEach((btn, index) => {
+            const buttonElement = document.getElementById(`dialog-btn-${index}`);
+            buttonElement.addEventListener('click', () => {
+                btn.onClick({
+                    close: closeDialog,
+                    startLoading: () => buttonElement.classList.add('loading'),
+                    stopLoading: () => buttonElement.classList.remove('loading'),
+                    getDialogElement: () => dialogBox
+                });
+            });
+        });
+        
+        applyTranslations(dialogBox);
+    
+        setTimeout(() => overlay.classList.add('visible'), 10);
+    
+        if (options.onOpen) {
+            options.onOpen(dialogBox);
+        }
+    }
 
-            cancelBtn.onclick = () => close(false);
-            okBtn.onclick = () => close(true);
+    async function showCustomConfirm(title, message) {
+        return new Promise((resolve) => {
+            showDialog({
+                title: title,
+                contentHTML: `<p>${message}</p>`,
+                buttons: [
+                    {
+                        text: window.getTranslation('general.cancel'),
+                        onClick: ({ close }) => {
+                            close();
+                            resolve(false);
+                        }
+                    },
+                    {
+                        text: window.getTranslation('general.confirm'),
+                        className: 'btn-danger',
+                        onClick: ({ close }) => {
+                            close();
+                            resolve(true);
+                        }
+                    }
+                ]
+            });
         });
     }
 
     async function showUpdatePasswordDialog() {
-        const overlay = document.getElementById('update-password-overlay');
-        const titleEl = document.getElementById('update-password-title');
-        const contentEl = document.getElementById('update-password-content');
-        const cancelBtn = document.getElementById('update-password-cancel');
-        const okBtn = document.getElementById('update-password-ok');
-
-        let currentStep = 'verify';
-
         const sessionResponse = await api.checkSession();
-        if (!sessionResponse.ok || !sessionResponse.data.loggedin) {
-            return;
-        }
+        if (!sessionResponse.ok || !sessionResponse.data.loggedin) return;
+        
         const user = sessionResponse.data.user;
         const userInitial = getInitials(user.username);
-
-        const closeDialog = () => {
-            overlay.classList.add('disabled');
-            cancelBtn.onclick = null;
-            okBtn.onclick = null;
-            overlay.querySelector('.dialog-icon')?.remove();
-        };
-
-        const renderStep = async () => {
+    
+        const renderUpdateStep = async (closeVerificationDialog) => {
+            closeVerificationDialog(); // Cierra el diálogo anterior
             const tokenResponse = await api.getCsrfToken();
-            if (!tokenResponse.ok) {
-                showNotification("No se pudo iniciar la acción. Inténtalo de nuevo.", "error");
-                return;
-            }
-            const csrf_token = tokenResponse.data.csrf_token;
-
-            titleEl.innerHTML = '';
-
-            if (currentStep === 'verify') {
-                titleEl.insertAdjacentHTML('beforebegin', `
-                    <div class="dialog-icon">
-                        <span class="material-symbols-rounded">lock</span>
-                    </div>
-                `);
-                titleEl.textContent = window.getTranslation('dialogs.updatePasswordTitle');
-                contentEl.innerHTML = `
-                    <div class="dialog-user-chip">
-                        <div class="dialog-user-initial">${userInitial}</div>
-                        <span class="dialog-user-email">${user.email}</span>
-                    </div>
-                    <p>${window.getTranslation('dialogs.updatePasswordMessage')}</p>
-                    <input type="hidden" name="csrf_token" value="${csrf_token}">
-                    <div class="form-field password-wrapper">
-                        <input type="password" id="current-password" class="auth-input" placeholder=" " autocomplete="current-password">
-                        <label for="current-password" class="auth-label" data-i18n="auth.passwordPlaceholder"></label>
-                    </div>
-                    <div class="auth-error-message-container" id="password-error-container">
-                        <ul id="password-error-list"></ul>
-                    </div>
-                `;
-                okBtn.textContent = window.getTranslation('general.confirm');
-                cancelBtn.textContent = window.getTranslation('general.cancel');
-                okBtn.onclick = handleVerifyPassword;
-                cancelBtn.onclick = closeDialog;
-            } else if (currentStep === 'update') {
-                titleEl.insertAdjacentHTML('beforebegin', `
-                    <div class="dialog-icon">
-                        <span class="material-symbols-rounded">password</span>
-                    </div>
-                `);
-                titleEl.textContent = window.getTranslation('dialogs.enterNewPasswordTitle');
-                contentEl.innerHTML = `
+            if (!tokenResponse.ok) return;
+            
+            showDialog({
+                iconHTML: `<div class="dialog-icon"><span class="material-symbols-rounded">password</span></div>`,
+                title: window.getTranslation('dialogs.enterNewPasswordTitle'),
+                contentHTML: `
                     <div class="dialog-user-chip">
                         <div class="dialog-user-initial">${userInitial}</div>
                         <span class="dialog-user-email">${user.email}</span>
                     </div>
                     <p>${window.getTranslation('dialogs.enterNewPasswordMessage')}</p>
-                    <input type="hidden" name="csrf_token" value="${csrf_token}">
+                    <input type="hidden" name="csrf_token" value="${tokenResponse.data.csrf_token}">
                     <div class="form-field password-wrapper">
                         <input type="password" id="new-password" class="auth-input" placeholder=" " autocomplete="new-password">
                         <label for="new-password" class="auth-label" data-i18n="auth.passwordPlaceholder"></label>
@@ -668,299 +676,266 @@ export function initMainController() {
                      <div class="auth-error-message-container" id="password-error-container">
                         <ul id="password-error-list"></ul>
                     </div>
-                `;
-                okBtn.textContent = window.getTranslation('settings.loginSecurity.updateButton');
-                cancelBtn.textContent = window.getTranslation('general.back');
-                okBtn.onclick = handleUpdatePassword;
-                cancelBtn.onclick = () => {
-                    overlay.querySelector('.dialog-icon')?.remove();
-                    currentStep = 'verify';
-                    renderStep();
-                };
-            }
-            applyTranslations(overlay);
+                `,
+                buttons: [
+                    { text: window.getTranslation('general.back'), onClick: ({close}) => { close(); showUpdatePasswordDialog(); } },
+                    { 
+                        text: window.getTranslation('settings.loginSecurity.updateButton'),
+                        className: 'btn-primary',
+                        onClick: async ({ close, startLoading, stopLoading, getDialogElement }) => {
+                            const newPassword = getDialogElement().querySelector('#new-password').value;
+                            const confirmPassword = getDialogElement().querySelector('#confirm-password').value;
+                            const csrfToken = getDialogElement().querySelector('input[name="csrf_token"]').value;
+
+                            if (newPassword !== confirmPassword) {
+                                displayAuthErrors('password-error-container', 'password-error-list', window.getTranslation('notifications.passwordMismatch'));
+                                return;
+                            }
+
+                            const formData = new FormData();
+                            formData.append('action_type', 'update_password');
+                            formData.append('new_password', newPassword);
+                            formData.append('csrf_token', csrfToken);
+                            
+                            startLoading();
+                            const response = await api.updateUserPassword(formData);
+                            stopLoading();
+
+                            if (response.ok) {
+                                showNotification(window.getTranslation('notifications.passwordUpdated'), 'success');
+                                close();
+                            } else {
+                                displayAuthErrors('password-error-container', 'password-error-list', response.data.message);
+                            }
+                        }
+                    }
+                ]
+            });
         };
 
-        const handleVerifyPassword = async () => {
-            const password = document.getElementById('current-password').value;
-            const csrfToken = contentEl.querySelector('input[name="csrf_token"]').value;
+        const tokenResponse = await api.getCsrfToken();
+        if (!tokenResponse.ok) return;
 
-            const formData = new FormData();
-            formData.append('action_type', 'verify_password');
-            formData.append('password', password);
-            formData.append('csrf_token', csrfToken);
+        showDialog({
+            iconHTML: `<div class="dialog-icon"><span class="material-symbols-rounded">lock</span></div>`,
+            title: window.getTranslation('dialogs.updatePasswordTitle'),
+            contentHTML: `
+                <div class="dialog-user-chip">
+                    <div class="dialog-user-initial">${userInitial}</div>
+                    <span class="dialog-user-email">${user.email}</span>
+                </div>
+                <p>${window.getTranslation('dialogs.updatePasswordMessage')}</p>
+                <input type="hidden" name="csrf_token" value="${tokenResponse.data.csrf_token}">
+                <div class="form-field password-wrapper">
+                    <input type="password" id="current-password" class="auth-input" placeholder=" " autocomplete="current-password">
+                    <label for="current-password" class="auth-label" data-i18n="auth.passwordPlaceholder"></label>
+                </div>
+                <div class="auth-error-message-container" id="password-error-container">
+                    <ul id="password-error-list"></ul>
+                </div>
+            `,
+            buttons: [
+                { text: window.getTranslation('general.cancel'), onClick: ({ close }) => close() },
+                { 
+                    text: window.getTranslation('general.next'),
+                    className: 'btn-primary',
+                    onClick: async ({ close, startLoading, stopLoading, getDialogElement }) => {
+                        const password = getDialogElement().querySelector('#current-password').value;
+                        const csrfToken = getDialogElement().querySelector('input[name="csrf_token"]').value;
+                        
+                        const formData = new FormData();
+                        formData.append('action_type', 'verify_password');
+                        formData.append('password', password);
+                        formData.append('csrf_token', csrfToken);
 
-            const response = await api.verifyPassword(formData);
+                        startLoading();
+                        const response = await api.verifyPassword(formData);
+                        stopLoading();
 
-            if (response.ok && response.data.success) {
-                overlay.querySelector('.dialog-icon')?.remove();
-                currentStep = 'update';
-                renderStep();
-            } else {
-                displayAuthErrors('password-error-container', 'password-error-list', response.data.message);
-            }
-        };
-
-        const handleUpdatePassword = async () => {
-            const newPassword = document.getElementById('new-password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
-            const csrfToken = contentEl.querySelector('input[name="csrf_token"]').value;
-
-            if (newPassword !== confirmPassword) {
-                displayAuthErrors('password-error-container', 'password-error-list', window.getTranslation('notifications.passwordMismatch'));
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('action_type', 'update_password');
-            formData.append('new_password', newPassword);
-            formData.append('csrf_token', csrfToken);
-
-            const response = await api.updateUserPassword(formData);
-
-            if (response.ok && response.data.success) {
-                showNotification(window.getTranslation('notifications.passwordUpdated'), 'success');
-                closeDialog();
-            } else {
-                displayAuthErrors('password-error-container', 'password-error-list', response.data.message);
-            }
-        };
-
-        overlay.querySelector('.dialog-icon')?.remove();
-        renderStep();
-        overlay.classList.remove('disabled');
+                        if (response.ok) {
+                            renderUpdateStep(close);
+                        } else {
+                            displayAuthErrors('password-error-container', 'password-error-list', response.data.message);
+                        }
+                    }
+                }
+            ]
+        });
     }
 
     async function showDeleteAccountDialog() {
-        const overlay = document.getElementById('delete-account-overlay');
-        const titleEl = document.getElementById('delete-account-title');
-        const contentEl = document.getElementById('delete-account-content');
-        const cancelBtn = document.getElementById('delete-account-cancel');
-        const okBtn = document.getElementById('delete-account-ok');
-
-        const closeDialog = () => {
-            overlay.classList.add('disabled');
-            cancelBtn.onclick = null;
-            okBtn.onclick = null;
-            overlay.querySelector('.dialog-icon')?.remove();
-        };
-
         const sessionResponse = await api.checkSession();
-        if (!sessionResponse.ok || !sessionResponse.data.loggedin) {
-            return;
-        }
+        if (!sessionResponse.ok || !sessionResponse.data.loggedin) return;
+        
         const user = sessionResponse.data.user;
         const userInitial = getInitials(user.username);
-        const creationDate = user.created_at;
-        const formattedDate = new Date(creationDate).toLocaleDateString(undefined, {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-
-        const tokenResponse = await api.getCsrfToken();
-        if (!tokenResponse.ok) {
-            showNotification("No se pudo iniciar la acción. Inténtalo de nuevo.", "error");
-            return;
-        }
-        const csrf_token = tokenResponse.data.csrf_token;
-
-        overlay.querySelector('.dialog-icon')?.remove();
-        titleEl.insertAdjacentHTML('beforebegin', `
-            <div class="dialog-icon">
-                <span class="material-symbols-rounded">warning</span>
-            </div>
-        `);
-        titleEl.setAttribute('data-i18n', 'dialogs.deleteAccountTitle');
+        const formattedDate = new Date(user.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
         const message = window.getTranslation('dialogs.deleteAccountMessage', { date: formattedDate });
-        contentEl.innerHTML = `
-        <div class="dialog-user-chip">
-            <div class="dialog-user-initial">${userInitial}</div>
-            <span class="dialog-user-email">${user.email}</span>
-        </div>
-        <p>${message}</p>
-        <input type="hidden" name="csrf_token" value="${csrf_token}">
-        <div class="form-field password-wrapper" style="margin-top: 16px;">
-            <input type="password" id="delete-confirm-password" class="auth-input" placeholder=" " autocomplete="current-password">
-            <label for="delete-confirm-password" class="auth-label" data-i18n="auth.passwordPlaceholder"></label>
-        </div>
-        <div class="auth-error-message-container" id="delete-error-container">
-            <ul id="delete-error-list"></ul>
-        </div>
-        `;
+        
+        const tokenResponse = await api.getCsrfToken();
+        if (!tokenResponse.ok) return;
 
-        okBtn.setAttribute('data-i18n', 'settings.loginSecurity.deleteAccountButton');
-        cancelBtn.setAttribute('data-i18n', 'general.cancel');
+        showDialog({
+            iconHTML: `<div class="dialog-icon"><span class="material-symbols-rounded">warning</span></div>`,
+            title: window.getTranslation('dialogs.deleteAccountTitle'),
+            contentHTML: `
+                <div class="dialog-user-chip">
+                    <div class="dialog-user-initial">${userInitial}</div>
+                    <span class="dialog-user-email">${user.email}</span>
+                </div>
+                <p>${message}</p>
+                <input type="hidden" name="csrf_token" value="${tokenResponse.data.csrf_token}">
+                <div class="form-field password-wrapper" style="margin-top: 16px;">
+                    <input type="password" id="delete-confirm-password" class="auth-input" placeholder=" " autocomplete="current-password">
+                    <label for="delete-confirm-password" class="auth-label" data-i18n="auth.passwordPlaceholder"></label>
+                </div>
+                <div class="auth-error-message-container" id="delete-error-container">
+                    <ul id="delete-error-list"></ul>
+                </div>
+            `,
+            buttons: [
+                { text: window.getTranslation('general.cancel'), onClick: ({ close }) => close() },
+                {
+                    text: window.getTranslation('settings.loginSecurity.deleteAccountButton'),
+                    className: 'btn-danger',
+                    onClick: async ({ close, startLoading, stopLoading, getDialogElement }) => {
+                        const password = getDialogElement().querySelector('#delete-confirm-password').value;
+                        const csrfToken = getDialogElement().querySelector('input[name="csrf_token"]').value;
 
-        applyTranslations(overlay);
+                        if (!password) {
+                            displayAuthErrors('delete-error-container', 'delete-error-list', window.getTranslation('auth.errors.passwordRequired'));
+                            return;
+                        }
 
-        okBtn.onclick = async () => {
-            const password = document.getElementById('delete-confirm-password').value;
-            const csrfToken = contentEl.querySelector('input[name="csrf_token"]').value;
+                        const formData = new FormData();
+                        formData.append('action_type', 'delete_account');
+                        formData.append('password', password);
+                        formData.append('csrf_token', csrfToken);
+                        
+                        startLoading();
+                        const response = await api.deleteAccount(formData);
+                        stopLoading();
 
-            if (!password) {
-                displayAuthErrors('delete-error-container', 'delete-error-list', window.getTranslation('auth.errors.passwordRequired'));
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('action_type', 'delete_account');
-            formData.append('password', password);
-            formData.append('csrf_token', csrfToken);
-
-            okBtn.classList.add('loading');
-
-            const response = await api.deleteAccount(formData);
-            okBtn.classList.remove('loading');
-
-            if (response.ok && response.data.success) {
-                showNotification(window.getTranslation('notifications.accountDeleted'), 'success');
-                updateUserUI(null);
-                closeDialog();
-                navigateToUrl('main', 'home');
-                handleStateChange('main', 'home');
-            } else {
-                displayAuthErrors('delete-error-container', 'delete-error-list', response.data.message);
-                const newTokenResponse = await api.getCsrfToken();
-                if (newTokenResponse.ok) {
-                    contentEl.querySelector('input[name="csrf_token"]').value = newTokenResponse.data.csrf_token;
+                        if (response.ok) {
+                            showNotification(window.getTranslation('notifications.accountDeleted'), 'success');
+                            updateUserUI(null);
+                            close();
+                            navigateToUrl('main', 'home');
+                            handleStateChange('main', 'home');
+                        } else {
+                            displayAuthErrors('delete-error-container', 'delete-error-list', response.data.message);
+                            const newTokenResponse = await api.getCsrfToken();
+                            if (newTokenResponse.ok) {
+                                getDialogElement().querySelector('input[name="csrf_token"]').value = newTokenResponse.data.csrf_token;
+                            }
+                        }
+                    }
                 }
-            }
-        };
-
-        cancelBtn.onclick = closeDialog;
-        overlay.classList.remove('disabled');
+            ]
+        });
     }
 
     async function showVerifyPasswordForEmailChangeDialog() {
-        const overlay = document.getElementById('verify-password-overlay');
-        const titleEl = document.getElementById('verify-password-title');
-        const contentEl = document.getElementById('verify-password-content');
-        const cancelBtn = document.getElementById('verify-password-cancel');
-        const okBtn = document.getElementById('verify-password-ok');
-
-        const closeDialog = () => {
-            overlay.classList.add('disabled');
-            cancelBtn.onclick = null;
-            okBtn.onclick = null;
-        };
-
         const tokenResponse = await api.getCsrfToken();
-        if (!tokenResponse.ok) {
-            showNotification("No se pudo iniciar la acción. Inténtalo de nuevo.", "error");
-            return;
-        }
-        const csrf_token = tokenResponse.data.csrf_token;
+        if (!tokenResponse.ok) return;
 
-        titleEl.textContent = "Verifica tu identidad";
-        contentEl.innerHTML = `
-        <p>Para proteger tu cuenta, por favor, ingresa tu contraseña para continuar.</p>
-        <input type="hidden" name="csrf_token" value="${csrf_token}">
-        <div class="form-field password-wrapper" style="margin-top: 16px;">
-            <input type="password" id="verify-email-change-password" class="auth-input" placeholder=" " autocomplete="current-password">
-            <label for="verify-email-change-password" class="auth-label">Contraseña</label>
-        </div>
-        <div class="auth-error-message-container" id="verify-email-change-error-container">
-            <ul id="verify-email-change-error-list"></ul>
-        </div>
-    `;
+        showDialog({
+            title: "Verifica tu identidad",
+            contentHTML: `
+                <p>Para proteger tu cuenta, por favor, ingresa tu contraseña para continuar.</p>
+                <input type="hidden" name="csrf_token" value="${tokenResponse.data.csrf_token}">
+                <div class="form-field password-wrapper" style="margin-top: 16px;">
+                    <input type="password" id="verify-email-change-password" class="auth-input" placeholder=" " autocomplete="current-password">
+                    <label for="verify-email-change-password" class="auth-label">Contraseña</label>
+                </div>
+                <div class="auth-error-message-container" id="verify-email-change-error-container">
+                    <ul id="verify-email-change-error-list"></ul>
+                </div>
+            `,
+            buttons: [
+                { text: "Cancelar", onClick: ({ close }) => close() },
+                {
+                    text: "Confirmar",
+                    className: 'btn-primary',
+                    onClick: async ({ close, startLoading, stopLoading, getDialogElement }) => {
+                        const password = getDialogElement().querySelector('#verify-email-change-password').value;
+                        const csrfToken = getDialogElement().querySelector('input[name="csrf_token"]').value;
+                        
+                        if (!password) {
+                            displayAuthErrors('verify-email-change-error-container', 'verify-email-change-error-list', 'La contraseña es obligatoria.');
+                            return;
+                        }
 
-        okBtn.textContent = "Confirmar";
-        cancelBtn.textContent = "Cancelar";
+                        const formData = new FormData();
+                        formData.append('action_type', 'verify_password');
+                        formData.append('password', password);
+                        formData.append('csrf_token', csrfToken);
 
-        applyTranslations(overlay);
+                        startLoading();
+                        const response = await api.verifyPassword(formData);
+                        stopLoading();
 
-        okBtn.onclick = async () => {
-            const password = document.getElementById('verify-email-change-password').value;
-            const csrfToken = contentEl.querySelector('input[name="csrf_token"]').value;
-
-            if (!password) {
-                displayAuthErrors('verify-email-change-error-container', 'verify-email-change-error-list', 'La contraseña es obligatoria.');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('action_type', 'verify_password');
-            formData.append('password', password);
-            formData.append('csrf_token', csrfToken);
-
-            okBtn.classList.add('loading');
-            const response = await api.verifyPassword(formData);
-            okBtn.classList.remove('loading');
-
-            if (response.ok && response.data.success) {
-                closeDialog();
-                document.getElementById('email-view-mode').style.display = 'none';
-                document.getElementById('email-edit-mode').style.display = 'block';
-            } else {
-                displayAuthErrors('verify-email-change-error-container', 'verify-email-change-error-list', response.data.message || 'La contraseña es incorrecta.');
-            }
-        };
-
-        cancelBtn.onclick = closeDialog;
-        overlay.classList.remove('disabled');
+                        if (response.ok) {
+                            close();
+                            document.getElementById('email-view-mode').style.display = 'none';
+                            document.getElementById('email-edit-mode').style.display = 'block';
+                        } else {
+                            displayAuthErrors('verify-email-change-error-container', 'verify-email-change-error-list', response.data.message || 'La contraseña es incorrecta.');
+                        }
+                    }
+                }
+            ]
+        });
     }
 
     async function showChangeRoleDialog(userUuid, newRole, userName) {
-        const overlay = document.getElementById('change-role-overlay');
-        const titleEl = document.getElementById('change-role-title');
-        const contentEl = document.getElementById('change-role-content');
-        const cancelBtn = document.getElementById('change-role-cancel');
-        const okBtn = document.getElementById('change-role-ok');
+        showDialog({
+            title: `Confirmar cambio de rol`,
+            contentHTML: `
+                <p>Para cambiar el rol de <strong>${userName}</strong> a <strong>${newRole}</strong>, por favor ingresa tu contraseña de administrador.</p>
+                <div class="form-field password-wrapper" style="margin-top: 16px;">
+                    <input type="password" id="admin-confirm-password" class="auth-input" placeholder=" " autocomplete="current-password">
+                    <label for="admin-confirm-password" class="auth-label">Contraseña de Administrador</label>
+                </div>
+                <div class="auth-error-message-container" id="change-role-error-container">
+                    <ul id="change-role-error-list"></ul>
+                </div>
+            `,
+            buttons: [
+                { text: 'Cancelar', onClick: ({ close }) => close() },
+                {
+                    text: 'Confirmar',
+                    className: 'btn-primary',
+                    onClick: async ({ close, startLoading, stopLoading, getDialogElement }) => {
+                        const password = getDialogElement().querySelector('#admin-confirm-password').value;
+                        if (!password) {
+                            displayAuthErrors('change-role-error-container', 'change-role-error-list', 'La contraseña es obligatoria.');
+                            return;
+                        }
 
-        const closeDialog = () => {
-            overlay.classList.add('disabled');
-            cancelBtn.onclick = null;
-            okBtn.onclick = null;
-        };
-
-        titleEl.textContent = `Confirmar cambio de rol`;
-        contentEl.innerHTML = `
-            <p>Para cambiar el rol de <strong>${userName}</strong> a <strong>${newRole}</strong>, por favor ingresa tu contraseña de administrador.</p>
-            <div class="form-field password-wrapper" style="margin-top: 16px;">
-                <input type="password" id="admin-confirm-password" class="auth-input" placeholder=" " autocomplete="current-password">
-                <label for="admin-confirm-password" class="auth-label">Contraseña de Administrador</label>
-            </div>
-            <div class="auth-error-message-container" id="change-role-error-container">
-                <ul id="change-role-error-list"></ul>
-            </div>
-        `;
-        okBtn.textContent = 'Confirmar';
-        cancelBtn.textContent = 'Cancelar';
-
-        applyTranslations(overlay);
-
-        okBtn.onclick = async () => {
-            const password = document.getElementById('admin-confirm-password').value;
-            if (!password) {
-                displayAuthErrors('change-role-error-container', 'change-role-error-list', 'La contraseña es obligatoria.');
-                return;
-            }
-
-            displayAuthErrors('change-role-error-container', 'change-role-error-list', []);
-            okBtn.classList.add('loading');
-
-            const passResponse = await api.verifyAdminPassword(password);
-
-            if (passResponse.ok && passResponse.data.success) {
-                const roleResponse = await api.changeUserRole(userUuid, newRole);
-                if (roleResponse.ok) {
-                    showNotification('Rol de usuario actualizado con éxito.', 'success');
-                    fetchAndDisplayUsers(document.querySelector('#admin-user-search').value.trim());
-                    closeDialog();
-                } else {
-                    displayAuthErrors('change-role-error-container', 'change-role-error-list', roleResponse.data.message || 'Error al cambiar el rol.');
+                        displayAuthErrors('change-role-error-container', 'change-role-error-list', []);
+                        startLoading();
+                        
+                        const passResponse = await api.verifyAdminPassword(password);
+                        if (passResponse.ok) {
+                            const roleResponse = await api.changeUserRole(userUuid, newRole);
+                            if (roleResponse.ok) {
+                                showNotification('Rol de usuario actualizado con éxito.', 'success');
+                                fetchAndDisplayUsers(document.querySelector('#admin-user-search').value.trim());
+                                close();
+                            } else {
+                                displayAuthErrors('change-role-error-container', 'change-role-error-list', roleResponse.data.message || 'Error al cambiar el rol.');
+                            }
+                        } else {
+                            displayAuthErrors('change-role-error-container', 'change-role-error-list', passResponse.data.message || 'Error de verificación.');
+                        }
+                        
+                        stopLoading();
+                    }
                 }
-            } else {
-                displayAuthErrors('change-role-error-container', 'change-role-error-list', passResponse.data.message || 'Error de verificación.');
-            }
-            okBtn.classList.remove('loading');
-        };
-
-        cancelBtn.onclick = closeDialog;
-        overlay.classList.remove('disabled');
+            ]
+        });
     }
-
 
     function initSettingsController() {
         const settingsToggles = {
@@ -2381,9 +2356,9 @@ export function initMainController() {
                     case 'toggleSectionCookiePolicy':
                     case 'toggleSectionSendFeedback':
                     case 'toggleSectionLogin':
+                    case 'toggleSectionForgotPassword':
                     case 'toggleSectionManageUsers':
                     case 'toggleSectionManageContent':
-                    case 'toggleSectionForgotPassword':
                         const sectionName = action.substring("toggleSection".length);
                         const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
                         const parentMenu = actionTarget.closest('[data-menu]');

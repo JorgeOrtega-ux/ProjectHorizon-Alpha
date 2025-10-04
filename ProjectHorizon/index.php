@@ -30,7 +30,6 @@
     <link rel="stylesheet" type="text/css" href="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'); ?>/assets/css/styles.css">
 </head>
 
-
 <body>
     <div class="page-wrapper">
         <div class="main-content">
@@ -42,59 +41,6 @@
                     <?php include 'includes/modules/module-surface.php'; ?>
                     <div class="general-content-scrolleable overflow-y"></div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="custom-confirm-overlay" class="custom-confirm-overlay disabled">
-        <div class="custom-confirm-box">
-            <h2 id="custom-confirm-title" data-i18n="dialogs.clearHistoryTitle"></h2>
-            <div id="custom-confirm-message"></div>
-            <div class="custom-confirm-buttons">
-                <button id="custom-confirm-cancel" class="load-more-btn" data-i18n="general.cancel"></button>
-                <button id="custom-confirm-ok" class="load-more-btn btn-danger" data-i18n="general.confirm"></button>
-            </div>
-        </div>
-    </div>
-
-    <div id="update-password-overlay" class="custom-confirm-overlay disabled">
-        <div class="custom-confirm-box">
-            <h2 id="update-password-title"></h2>
-            <div id="update-password-content"></div>
-            <div class="custom-confirm-buttons">
-                <button id="update-password-cancel" class="load-more-btn"></button>
-                <button id="update-password-ok" class="load-more-btn"></button>
-            </div>
-        </div>
-    </div>
-
-    <div id="delete-account-overlay" class="custom-confirm-overlay disabled">
-        <div class="custom-confirm-box">
-            <h2 id="delete-account-title"></h2>
-            <div id="delete-account-content"></div>
-            <div class="custom-confirm-buttons">
-                <button id="delete-account-cancel" class="load-more-btn"></button>
-                <button id="delete-account-ok" class="load-more-btn btn-danger"></button>
-            </div>
-        </div>
-    </div>
-<div id="verify-password-overlay" class="custom-confirm-overlay disabled">
-    <div class="custom-confirm-box">
-        <h2 id="verify-password-title"></h2>
-        <div id="verify-password-content"></div>
-        <div class="custom-confirm-buttons">
-            <button id="verify-password-cancel" class="load-more-btn"></button>
-            <button id="verify-password-ok" class="load-more-btn"></button>
-        </div>
-    </div>
-</div>
-    <div id="change-role-overlay" class="custom-confirm-overlay disabled">
-        <div class="custom-confirm-box">
-            <h2 id="change-role-title"></h2>
-            <div id="change-role-content"></div>
-            <div class="custom-confirm-buttons">
-                <button id="change-role-cancel" class="load-more-btn"></button>
-                <button id="change-role-ok" class="load-more-btn"></button>
             </div>
         </div>
     </div>
