@@ -832,6 +832,75 @@ export function initMainController() {
         overlay.classList.remove('disabled');
     }
 
+    async function showVerifyPasswordForEmailChangeDialog() {
+        const overlay = document.getElementById('verify-password-overlay');
+        const titleEl = document.getElementById('verify-password-title');
+        const contentEl = document.getElementById('verify-password-content');
+        const cancelBtn = document.getElementById('verify-password-cancel');
+        const okBtn = document.getElementById('verify-password-ok');
+
+        const closeDialog = () => {
+            overlay.classList.add('disabled');
+            cancelBtn.onclick = null;
+            okBtn.onclick = null;
+        };
+
+        const tokenResponse = await api.getCsrfToken();
+        if (!tokenResponse.ok) {
+            showNotification("No se pudo iniciar la acción. Inténtalo de nuevo.", "error");
+            return;
+        }
+        const csrf_token = tokenResponse.data.csrf_token;
+
+        titleEl.textContent = "Verifica tu identidad";
+        contentEl.innerHTML = `
+        <p>Para proteger tu cuenta, por favor, ingresa tu contraseña para continuar.</p>
+        <input type="hidden" name="csrf_token" value="${csrf_token}">
+        <div class="form-field password-wrapper" style="margin-top: 16px;">
+            <input type="password" id="verify-email-change-password" class="auth-input" placeholder=" " autocomplete="current-password">
+            <label for="verify-email-change-password" class="auth-label">Contraseña</label>
+        </div>
+        <div class="auth-error-message-container" id="verify-email-change-error-container">
+            <ul id="verify-email-change-error-list"></ul>
+        </div>
+    `;
+
+        okBtn.textContent = "Confirmar";
+        cancelBtn.textContent = "Cancelar";
+
+        applyTranslations(overlay);
+
+        okBtn.onclick = async () => {
+            const password = document.getElementById('verify-email-change-password').value;
+            const csrfToken = contentEl.querySelector('input[name="csrf_token"]').value;
+
+            if (!password) {
+                displayAuthErrors('verify-email-change-error-container', 'verify-email-change-error-list', 'La contraseña es obligatoria.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('action_type', 'verify_password');
+            formData.append('password', password);
+            formData.append('csrf_token', csrfToken);
+
+            okBtn.classList.add('loading');
+            const response = await api.verifyPassword(formData);
+            okBtn.classList.remove('loading');
+
+            if (response.ok && response.data.success) {
+                closeDialog();
+                document.getElementById('email-view-mode').style.display = 'none';
+                document.getElementById('email-edit-mode').style.display = 'block';
+            } else {
+                displayAuthErrors('verify-email-change-error-container', 'verify-email-change-error-list', response.data.message || 'La contraseña es incorrecta.');
+            }
+        };
+
+        cancelBtn.onclick = closeDialog;
+        overlay.classList.remove('disabled');
+    }
+
     async function showChangeRoleDialog(userUuid, newRole, userName) {
         const overlay = document.getElementById('change-role-overlay');
         const titleEl = document.getElementById('change-role-title');
@@ -2572,7 +2641,7 @@ export function initMainController() {
                         const button = actionTarget.closest('button');
                         const input = document.getElementById('username-edit-input');
                         const newUsername = input.value.trim();
-                        
+
                         button.classList.add('loading');
                         const formData = new FormData();
                         formData.append('action_type', 'update_username');
@@ -3050,8 +3119,7 @@ export function initMainController() {
                         displayAuthErrors('username-error-container', 'username-error-list', []);
                     });
                     editEmailBtn.addEventListener('click', () => {
-                        document.getElementById('email-view-mode').style.display = 'none';
-                        document.getElementById('email-edit-mode').style.display = 'block';
+                        showVerifyPasswordForEmailChangeDialog();
                     });
                     cancelEmailBtn.addEventListener('click', () => {
                         document.getElementById('email-view-mode').style.display = 'flex';

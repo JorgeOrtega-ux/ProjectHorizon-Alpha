@@ -2537,4 +2537,11 @@ h6 {
 /* Forzar el icono de check a color primario en ambos temas cuando está activo */
 .toggle-switch.btn-primary.active .toggle-handle .material-symbols-rounded {
     color: #673ab7;
+}/* --- AJUSTE PARA ALINEAR BOTONES EN 'TU PERFIL' --- */
+#username-view-mode,
+#email-view-mode {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
 }

@@ -78,7 +78,16 @@
             </div>
         </div>
     </div>
-
+<div id="verify-password-overlay" class="custom-confirm-overlay disabled">
+    <div class="custom-confirm-box">
+        <h2 id="verify-password-title"></h2>
+        <div id="verify-password-content"></div>
+        <div class="custom-confirm-buttons">
+            <button id="verify-password-cancel" class="load-more-btn"></button>
+            <button id="verify-password-ok" class="load-more-btn"></button>
+        </div>
+    </div>
+</div>
     <div id="change-role-overlay" class="custom-confirm-overlay disabled">
         <div class="custom-confirm-box">
             <h2 id="change-role-title"></h2>
