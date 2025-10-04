@@ -382,6 +382,41 @@ export function initMainController() {
         button.classList.remove('loading');
 
         if (response.ok) {
+            navigateToUrl('auth', 'register', { step: 'verify-code' });
+            handleStateChange('auth', 'register', true, { step: 'verify-code' });
+        } else {
+            displayAuthErrors('register-error-container', 'register-error-list', response.data.message);
+            fetchAndSetCsrfToken('register-form');
+        }
+    }
+
+    async function handleVerifyRegistrationCode(form) {
+        const code = form.querySelector('#register-code').value.trim();
+        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+        const button = form.querySelector('[data-action="submit-register"]');
+
+        let errors = [];
+        if (!code) {
+            errors.push(window.getTranslation('auth.errors.codeRequired'));
+        }
+
+        if (errors.length > 0) {
+            displayAuthErrors('register-error-container', 'register-error-list', errors);
+            return;
+        }
+
+        displayAuthErrors('register-error-container', 'register-error-list', []);
+        button.classList.add('loading');
+
+        const formData = new FormData();
+        formData.append('action_type', 'verify_registration_code');
+        formData.append('code', code);
+        formData.append('csrf_token', csrfToken);
+
+        const response = await api.verifyRegistrationCode(formData);
+        button.classList.remove('loading');
+
+        if (response.ok) {
             const result = response.data;
             updateUserUI(result.user);
             showNotification(window.getTranslation('auth.registerSuccess'), 'success');
@@ -392,7 +427,6 @@ export function initMainController() {
             fetchAndSetCsrfToken('register-form');
         }
     }
-
 
     async function handleForgotPassword(form) {
         const email = form.querySelector('#forgot-email').value.trim();
@@ -2195,6 +2229,8 @@ export function initMainController() {
                                 handleRegisterStep1(registerForm);
                             } else if (currentStep === 'password') {
                                 handleRegisterStep2(registerForm);
+                            } else if (currentStep === 'verify-code') {
+                                handleVerifyRegistrationCode(registerForm);
                             }
                         }
                         break;
@@ -2970,17 +3006,23 @@ export function initMainController() {
 
                 const userInfoGroup = form.querySelector('#user-info-group');
                 const passwordGroup = form.querySelector('#password-group');
+                const verifyCodeGroup = form.querySelector('#verify-code-group');
                 const button = form.querySelector('[data-action="submit-register"]');
                 const buttonText = button.querySelector('.button-text');
 
+                userInfoGroup.style.display = 'none';
+                passwordGroup.style.display = 'none';
+                verifyCodeGroup.style.display = 'none';
+
                 if (step === 'user-info') {
                     userInfoGroup.style.display = 'block';
-                    passwordGroup.style.display = 'none';
                     buttonText.setAttribute('data-i18n', 'general.next');
                 } else if (step === 'password') {
-                    userInfoGroup.style.display = 'none';
                     passwordGroup.style.display = 'block';
                     buttonText.setAttribute('data-i18n', 'auth.registerButton');
+                } else if (step === 'verify-code') {
+                    verifyCodeGroup.style.display = 'block';
+                    buttonText.setAttribute('data-i18n', 'auth.verifyCodeButton');
                 }
 
                 applyTranslations(form.parentElement);
@@ -3601,6 +3643,7 @@ export function initMainController() {
         'login': { view: 'auth', section: 'login' },
         'register': { view: 'auth', section: 'register', data: { step: 'user-info' } },
         'register/password': { view: 'auth', section: 'register', data: { step: 'password' } },
+        'register/verify-code': { view: 'auth', section: 'register', data: { step: 'verify-code' } },
         'forgot-password': { view: 'auth', section: 'forgotPassword', data: { step: 'enter-email' } },
         'forgot-password/enter-code': { view: 'auth', section: 'forgotPassword', data: { step: 'enter-code' } },
         'forgot-password/new-password': { view: 'auth', section: 'forgotPassword', data: { step: 'new-password' } },

@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     $action_type = $_POST['action_type'] ?? '';
 
-    if (!in_array($action_type, ['register_user_step1', 'register_user_step2', 'login_user', 'logout_user', 'forgot_password', 'verify_reset_code', 'reset_password', 'verify_password', 'update_password', 'delete_account'])) {
+    if (!in_array($action_type, ['register_user_step1', 'register_user_step2', 'verify_registration_code', 'login_user', 'logout_user', 'forgot_password', 'verify_reset_code', 'reset_password', 'verify_password', 'update_password', 'delete_account'])) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Acción no válida.']);
         exit;
@@ -215,33 +215,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            $username = $_SESSION['registration_data']['username'];
             $email = $_SESSION['registration_data']['email'];
-            unset($_SESSION['registration_data']); 
+            $_SESSION['registration_data']['password_hash'] = password_hash($password, PASSWORD_DEFAULT);
 
-            $uuid = generate_uuid_v4();
-            $password_hash = password_hash($password, PASSWORD_DEFAULT);
-
-            $stmt_insert = $conn->prepare("INSERT INTO users (uuid, username, email, password_hash) VALUES (?, ?, ?, ?)");
-            $stmt_insert->bind_param("ssss", $uuid, $username, $email, $password_hash);
-
-            if ($stmt_insert->execute()) {
-                $_SESSION['loggedin'] = true;
-                $_SESSION['user_uuid'] = $uuid;
-                $_SESSION['username'] = $username;
-                $_SESSION['email'] = $email;
-                $_SESSION['user_role'] = 'user';
-
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Registro exitoso.',
-                    'user' => ['uuid' => $uuid, 'username' => $username, 'email' => $email, 'role' => 'user']
-                ]);
-            } else {
-                http_response_code(500);
-                echo json_encode(['success' => false, 'message' => 'Error en el servidor al registrar el usuario.']);
-            }
+            $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $stmt_insert = $conn->prepare("INSERT INTO registration_verifications (email, code) VALUES (?, ?)");
+            $stmt_insert->bind_param("ss", $email, $code);
+            $stmt_insert->execute();
             $stmt_insert->close();
+
+            echo json_encode(['success' => true, 'message' => 'Se ha enviado un código de verificación a tu correo.']);
+            break;
+
+        case 'verify_registration_code':
+            if (!isset($_SESSION['registration_data'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'No se encontraron datos de registro.']);
+                exit;
+            }
+
+            $email = $_SESSION['registration_data']['email'];
+            $code = str_replace('-', '', trim($_POST['code'] ?? ''));
+
+            $stmt_check = $conn->prepare("SELECT id FROM registration_verifications WHERE email = ? AND code = ? AND created_at > (NOW() - INTERVAL 15 MINUTE)");
+            $stmt_check->bind_param("ss", $email, $code);
+            $stmt_check->execute();
+            $stmt_check->store_result();
+
+            if ($stmt_check->num_rows > 0) {
+                $username = $_SESSION['registration_data']['username'];
+                $password_hash = $_SESSION['registration_data']['password_hash'];
+                $uuid = generate_uuid_v4();
+
+                $stmt_insert = $conn->prepare("INSERT INTO users (uuid, username, email, password_hash) VALUES (?, ?, ?, ?)");
+                $stmt_insert->bind_param("ssss", $uuid, $username, $email, $password_hash);
+
+                if ($stmt_insert->execute()) {
+                    $_SESSION['loggedin'] = true;
+                    $_SESSION['user_uuid'] = $uuid;
+                    $_SESSION['username'] = $username;
+                    $_SESSION['email'] = $email;
+                    $_SESSION['user_role'] = 'user';
+
+                    $stmt_delete = $conn->prepare("DELETE FROM registration_verifications WHERE email = ?");
+                    $stmt_delete->bind_param("s", $email);
+                    $stmt_delete->execute();
+                    $stmt_delete->close();
+                    
+                    unset($_SESSION['registration_data']);
+
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Registro exitoso.',
+                        'user' => ['uuid' => $uuid, 'username' => $username, 'email' => $email, 'role' => 'user']
+                    ]);
+                } else {
+                    http_response_code(500);
+                    echo json_encode(['success' => false, 'message' => 'Error en el servidor al registrar el usuario.']);
+                }
+                $stmt_insert->close();
+            } else {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El código es inválido o ha expirado.']);
+            }
+            $stmt_check->close();
             break;
 
         case 'login_user':
@@ -548,3 +585,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if (isset($conn) && $conn) {
     $conn->close();
 }
+?>

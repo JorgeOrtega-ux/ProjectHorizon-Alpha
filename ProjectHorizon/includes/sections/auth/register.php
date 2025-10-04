@@ -16,7 +16,7 @@
                 </div>
             </div>
 
-            <div id="password-group" class="form-step-group" style="display: none;">
+            <div id="password-group" class="form-step-group">
                 <div class="form-field password-wrapper">
                     <input type="password" id="register-password" class="auth-input" placeholder=" " autocomplete="new-password">
                     <label for="register-password" class="auth-label" data-i18n="auth.passwordPlaceholder"></label>
@@ -27,6 +27,13 @@
                 <div class="form-field password-wrapper">
                     <input type="password" id="register-confirm-password" class="auth-input" placeholder=" " autocomplete="new-password">
                     <label for="register-confirm-password" class="auth-label" data-i18n="auth.confirmPasswordPlaceholder"></label>
+                </div>
+            </div>
+
+            <div id="verify-code-group" class="form-step-group">
+                 <div class="form-field">
+                    <input type="text" id="register-code" class="auth-input" placeholder=" " autocomplete="one-time-code" maxlength="7">
+                    <label for="register-code" class="auth-label" data-i18n="auth.codePlaceholder"></label>
                 </div>
             </div>
 

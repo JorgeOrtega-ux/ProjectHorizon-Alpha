@@ -129,6 +129,13 @@ export function registerUser(formData) {
     });
 }
 
+export function verifyRegistrationCode(formData) {
+    return fetchData(`${window.BASE_PATH}/api/auth_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
 export function forgotPassword(formData) {
     return fetchData(`${window.BASE_PATH}/api/auth_handler.php`, {
         method: 'POST',
