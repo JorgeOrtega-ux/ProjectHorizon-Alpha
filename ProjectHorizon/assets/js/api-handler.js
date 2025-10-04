@@ -186,6 +186,21 @@ export function deleteAccount(formData) {
         body: formData
     });
 }
+
+export function updateUsername(formData) {
+    return fetchData(`${window.BASE_PATH}/api/auth_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+export function updateEmail(formData) {
+    return fetchData(`${window.BASE_PATH}/api/auth_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
 // --- Admin Requests ---
 export function getUsers(searchTerm, page, limit) {
     const encodedSearchTerm = encodeURIComponent(searchTerm);

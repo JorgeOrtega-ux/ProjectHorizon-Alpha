@@ -9,6 +9,7 @@ const urlMap = {
     'auth-forgotPassword': 'forgot-password',
     'auth-forgotPassword-enter-code': 'forgot-password/enter-code',
     'auth-forgotPassword-new-password': 'forgot-password/new-password',
+    'settings-yourProfile': 'settings/your-profile',
     'settings-accessibility': 'settings/accessibility',
     'settings-loginSecurity': 'settings/login-security',
     'settings-historyPrivacy': 'settings/history-privacy',

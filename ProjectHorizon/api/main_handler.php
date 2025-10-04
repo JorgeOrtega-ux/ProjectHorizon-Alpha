@@ -78,6 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $section = isset($_GET['section']) ? $_GET['section'] : 'home';
     
         $protected_sections = [
+            'settings-yourProfile',
             'settings-loginSecurity',
             'settings-history',
             'admin-manageUsers',
@@ -103,6 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'main-userSpecificFavorites' => '../includes/sections/main/user-specific-favorites.php',
             'main-adView' => '../includes/sections/main/ad-view.php',
             'main-privateGalleryProxy' => '../includes/sections/main/private-gallery-proxy.php',
+            'settings-yourProfile' => '../includes/sections/settings/your-profile.php',
             'settings-accessibility' => '../includes/sections/settings/accessibility.php',
             'settings-loginSecurity' => '../includes/sections/settings/loginSecurity.php',
             'settings-historyPrivacy' => '../includes/sections/settings/historyPrivacy.php',

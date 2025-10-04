@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     $action_type = $_POST['action_type'] ?? '';
 
-    if (!in_array($action_type, ['register_user_step1', 'register_user_step2', 'verify_registration_code', 'login_user', 'logout_user', 'forgot_password', 'verify_reset_code', 'reset_password', 'verify_password', 'update_password', 'delete_account'])) {
+    if (!in_array($action_type, ['register_user_step1', 'register_user_step2', 'verify_registration_code', 'login_user', 'logout_user', 'forgot_password', 'verify_reset_code', 'reset_password', 'verify_password', 'update_password', 'delete_account', 'update_username', 'update_email'])) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Acción no válida.']);
         exit;
@@ -575,6 +575,109 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode(['success' => false, 'message' => 'Usuario no encontrado.']);
             }
             $stmt->close();
+            break;
+        
+        case 'update_username':
+            if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'message' => 'No autorizado.']);
+                exit;
+            }
+        
+            $new_username = trim($_POST['username'] ?? '');
+            $user_uuid = $_SESSION['user_uuid'];
+        
+            // Validación
+            if (empty($new_username)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El nombre de usuario no puede estar vacío.']);
+                exit;
+            }
+            if (strlen($new_username) > 24) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El nombre de usuario no puede tener más de 24 caracteres.']);
+                exit;
+            }
+            if (!preg_match('/^[a-zA-Z0-9_]+$/', $new_username)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El nombre de usuario solo puede contener letras, números y guiones bajos (_).']);
+                exit;
+            }
+        
+            // Verificar si el nombre de usuario ya existe
+            $stmt_check = $conn->prepare("SELECT id FROM users WHERE username = ? AND uuid != ?");
+            $stmt_check->bind_param("ss", $new_username, $user_uuid);
+            $stmt_check->execute();
+            $stmt_check->store_result();
+            if ($stmt_check->num_rows > 0) {
+                http_response_code(409);
+                echo json_encode(['success' => false, 'message' => 'username_taken']);
+                $stmt_check->close();
+                exit;
+            }
+            $stmt_check->close();
+        
+            // Actualizar
+            $stmt_update = $conn->prepare("UPDATE users SET username = ? WHERE uuid = ?");
+            $stmt_update->bind_param("ss", $new_username, $user_uuid);
+            if ($stmt_update->execute()) {
+                $_SESSION['username'] = $new_username;
+                echo json_encode(['success' => true, 'message' => 'Nombre de usuario actualizado.', 'new_username' => $new_username]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error al actualizar el nombre de usuario.']);
+            }
+            $stmt_update->close();
+            break;
+        
+        case 'update_email':
+            if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'message' => 'No autorizado.']);
+                exit;
+            }
+        
+            $new_email = trim($_POST['email'] ?? '');
+            $user_uuid = $_SESSION['user_uuid'];
+        
+            // Validación
+            if (empty($new_email) || !filter_var($new_email, FILTER_VALIDATE_EMAIL)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El formato del correo electrónico no es válido.']);
+                exit;
+            }
+            $allowed_domains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com'];
+            $email_domain = substr(strrchr($new_email, "@"), 1);
+            if (!in_array($email_domain, $allowed_domains)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Solo se permiten correos de Gmail, Outlook, Hotmail o Yahoo.']);
+                exit;
+            }
+        
+            // Verificar si el email ya existe
+            $stmt_check = $conn->prepare("SELECT id FROM users WHERE email = ? AND uuid != ?");
+            $stmt_check->bind_param("ss", $new_email, $user_uuid);
+            $stmt_check->execute();
+            $stmt_check->store_result();
+            if ($stmt_check->num_rows > 0) {
+                http_response_code(409);
+                echo json_encode(['success' => false, 'message' => 'email_taken']);
+                $stmt_check->close();
+                exit;
+            }
+            $stmt_check->close();
+        
+            // Actualizar
+            $stmt_update = $conn->prepare("UPDATE users SET email = ? WHERE uuid = ?");
+            $stmt_update->bind_param("ss", $new_email, $user_uuid);
+            if ($stmt_update->execute()) {
+                $_SESSION['email'] = $new_email;
+                echo json_encode(['success' => true, 'message' => 'Correo electrónico actualizado.', 'new_email' => $new_email]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error al actualizar el correo electrónico.']);
+            }
+            $stmt_update->close();
             break;
     }
 } else {

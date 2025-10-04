@@ -44,6 +44,7 @@
     "trends": "Explorar tendencias",
     "favorites": "Mis favoritos",
     "backToHome": "Volver a inicio",
+    "yourProfile": "Tu perfil",
     "accessibility": "Accesibilidad",
     "loginSecurity": "Inicio de sesión y seguridad",
     "historyPrivacy": "Historial y Privacidad",
@@ -162,6 +163,14 @@
     }
   },
   "settings": {
+    "yourProfile": {
+      "title": "Tu perfil",
+      "description": "Gestiona la información de tu perfil y la configuración de tu cuenta.",
+      "usernameLabel": "Nombre de usuario",
+      "emailLabel": "Correo electrónico",
+      "usernamePlaceholder": "Nuevo nombre de usuario",
+      "emailPlaceholder": "Nuevo correo electrónico"
+    },
     "accessibility": {
       "title": "Accesibilidad",
       "description": "Configura las opciones de accesibilidad para adaptar la interfaz a tus necesidades.",
@@ -272,7 +281,11 @@
     "selectIssueType": "Por favor, selecciona un tipo de comentario.",
     "passwordMismatch": "Las contraseñas no coinciden.",
     "passwordUpdated": "Contraseña actualizada correctamente.",
-    "accountDeleted": "Tu cuenta ha sido eliminada permanentemente."
+    "accountDeleted": "Tu cuenta ha sido eliminada permanentemente.",
+    "usernameUpdated": "Nombre de usuario actualizado.",
+    "emailUpdated": "Correo electrónico actualizado.",
+    "usernameTaken": "Ese nombre de usuario ya está en uso.",
+    "emailTaken": "Ese correo electrónico ya está en uso."
   },
   "dialogs": {
     "clearHistoryTitle": "¿Eliminar todo el historial?",

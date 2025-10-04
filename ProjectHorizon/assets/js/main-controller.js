@@ -2165,7 +2165,7 @@ export function initMainController() {
 
 
     function setupEventListeners() {
-        document.addEventListener('click', function (event) {
+        document.addEventListener('click', async function (event) {
             const actionTarget = event.target.closest('[data-action]');
             const selectTrigger = event.target.closest('[data-action="toggle-select"]');
 
@@ -2266,9 +2266,9 @@ export function initMainController() {
                         handleStateChange('auth', 'login');
                         break;
                     case 'toggleSettings':
-                        if (currentAppView === 'settings' && currentAppSection === 'accessibility') return;
-                        navigateToUrl('settings', 'accessibility');
-                        handleStateChange('settings', 'accessibility');
+                        if (currentAppView === 'settings' && currentAppSection === 'yourProfile') return;
+                        navigateToUrl('settings', 'yourProfile');
+                        handleStateChange('settings', 'yourProfile');
                         break;
                     case 'toggleHelp':
                         if (currentAppView === 'help' && currentAppSection === 'privacyPolicy') return;
@@ -2293,6 +2293,7 @@ export function initMainController() {
                     case 'toggleSectionHome':
                     case 'toggleSectionTrends':
                     case 'toggleSectionFavorites':
+                    case 'toggleSectionYourProfile':
                     case 'toggleSectionAccessibility':
                     case 'toggleSectionLoginSecurity':
                     case 'toggleSectionHistoryPrivacy':
@@ -2565,6 +2566,70 @@ export function initMainController() {
                                 showNotification(response.data.message || 'Error al eliminar la foto', 'error');
                             }
                         });
+                        break;
+                    }
+                    case 'save-username': {
+                        const button = actionTarget.closest('button');
+                        const input = document.getElementById('username-edit-input');
+                        const newUsername = input.value.trim();
+                        
+                        button.classList.add('loading');
+                        const formData = new FormData();
+                        formData.append('action_type', 'update_username');
+                        formData.append('username', newUsername);
+                        const tokenResponse = await api.getCsrfToken();
+                        if (tokenResponse.ok) {
+                            formData.append('csrf_token', tokenResponse.data.csrf_token);
+                        }
+
+                        const response = await api.updateUsername(formData);
+                        button.classList.remove('loading');
+
+                        if (response.ok) {
+                            showNotification(window.getTranslation('notifications.usernameUpdated'), 'success');
+                            document.getElementById('username-display').textContent = newUsername;
+                            document.getElementById('username-edit-mode').style.display = 'none';
+                            document.getElementById('username-view-mode').style.display = 'flex';
+                            await checkSessionStatus();
+                        } else {
+                            let message = response.data.message;
+                            if (message === 'username_taken') {
+                                message = window.getTranslation('notifications.usernameTaken');
+                            }
+                            displayAuthErrors('username-error-container', 'username-error-list', [message]);
+                        }
+                        break;
+                    }
+                    case 'save-email': {
+                        const button = actionTarget.closest('button');
+                        const input = document.getElementById('email-edit-input');
+                        const newEmail = input.value.trim();
+
+                        button.classList.add('loading');
+                        const formData = new FormData();
+                        formData.append('action_type', 'update_email');
+                        formData.append('email', newEmail);
+                        const tokenResponse = await api.getCsrfToken();
+                        if (tokenResponse.ok) {
+                            formData.append('csrf_token', tokenResponse.data.csrf_token);
+                        }
+
+                        const response = await api.updateEmail(formData);
+                        button.classList.remove('loading');
+
+                        if (response.ok) {
+                            showNotification(window.getTranslation('notifications.emailUpdated'), 'success');
+                            document.getElementById('email-display').textContent = newEmail;
+                            document.getElementById('email-edit-mode').style.display = 'none';
+                            document.getElementById('email-view-mode').style.display = 'flex';
+                            await checkSessionStatus();
+                        } else {
+                            let message = response.data.message;
+                            if (message === 'email_taken') {
+                                message = window.getTranslation('notifications.emailTaken');
+                            }
+                            displayAuthErrors('email-error-container', 'email-error-list', [message]);
+                        }
                         break;
                     }
                     case 'save-gallery-changes':
@@ -2871,6 +2936,7 @@ export function initMainController() {
         }
 
         const protected_sections = [
+            'settings-yourProfile',
             'settings-loginSecurity',
             'settings-history',
             'admin-manageUsers',
@@ -2954,6 +3020,48 @@ export function initMainController() {
                     }
                 }
                 break;
+            case 'yourProfile': {
+                const sessionResponse = await api.checkSession();
+                if (sessionResponse.ok && sessionResponse.data.loggedin) {
+                    const user = sessionResponse.data.user;
+                    const usernameDisplay = document.getElementById('username-display');
+                    const emailDisplay = document.getElementById('email-display');
+                    const usernameInput = document.getElementById('username-edit-input');
+                    const emailInput = document.getElementById('email-edit-input');
+
+                    if (usernameDisplay) usernameDisplay.textContent = user.username;
+                    if (emailDisplay) emailDisplay.textContent = user.email;
+                    if (usernameInput) usernameInput.value = user.username;
+                    if (emailInput) emailInput.value = user.email;
+
+                    const editUsernameBtn = document.getElementById('edit-username-btn');
+                    const cancelUsernameBtn = document.getElementById('cancel-username-btn');
+                    const editEmailBtn = document.getElementById('edit-email-btn');
+                    const cancelEmailBtn = document.getElementById('cancel-email-btn');
+
+                    editUsernameBtn.addEventListener('click', () => {
+                        document.getElementById('username-view-mode').style.display = 'none';
+                        document.getElementById('username-edit-mode').style.display = 'block';
+                    });
+                    cancelUsernameBtn.addEventListener('click', () => {
+                        document.getElementById('username-view-mode').style.display = 'flex';
+                        document.getElementById('username-edit-mode').style.display = 'none';
+                        usernameInput.value = usernameDisplay.textContent;
+                        displayAuthErrors('username-error-container', 'username-error-list', []);
+                    });
+                    editEmailBtn.addEventListener('click', () => {
+                        document.getElementById('email-view-mode').style.display = 'none';
+                        document.getElementById('email-edit-mode').style.display = 'block';
+                    });
+                    cancelEmailBtn.addEventListener('click', () => {
+                        document.getElementById('email-view-mode').style.display = 'flex';
+                        document.getElementById('email-edit-mode').style.display = 'none';
+                        emailInput.value = emailDisplay.textContent;
+                        displayAuthErrors('email-error-container', 'email-error-list', []);
+                    });
+                }
+                break;
+            }
             case 'accessibility':
                 updateThemeSelectorUI(localStorage.getItem('theme') || 'system');
                 updateLanguageSelectorUI(localStorage.getItem('language') || 'es-419');
@@ -3632,6 +3740,7 @@ export function initMainController() {
         '': { view: 'main', section: 'home' },
         'trends': { view: 'main', section: 'trends' },
         'favorites': { view: 'main', section: 'favorites' },
+        'settings/your-profile': { view: 'settings', section: 'yourProfile' },
         'settings/accessibility': { view: 'settings', section: 'accessibility' },
         'settings/login-security': { view: 'settings', section: 'loginSecurity' },
         'settings/history-privacy': { view: 'settings', section: 'historyPrivacy' },
