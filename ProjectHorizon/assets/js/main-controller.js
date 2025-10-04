@@ -294,16 +294,14 @@ export function initMainController() {
         }
     }
 
-    async function handleRegister(form) {
+    async function handleRegisterStep1(form) {
         let username = form.querySelector('#register-username').value.trim();
         const email = form.querySelector('#register-email').value.trim();
-        const password = form.querySelector('#register-password').value.trim();
         const csrfToken = form.querySelector('input[name="csrf_token"]').value;
         const button = form.querySelector('[data-action="submit-register"]');
 
-        // Formateo final del nombre de usuario antes de validar y enviar
         username = username.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('_');
-        form.querySelector('#register-username').value = username; // Actualiza el campo visualmente
+        form.querySelector('#register-username').value = username;
 
         let errors = [];
         const allowedDomains = ['@gmail.com', '@outlook.com', '@hotmail.com', '@yahoo.com'];
@@ -324,10 +322,46 @@ export function initMainController() {
             errors.push('Solo se permiten correos de Gmail, Outlook, Hotmail o Yahoo.');
         }
 
+        if (errors.length > 0) {
+            displayAuthErrors('register-error-container', 'register-error-list', errors);
+            return;
+        }
+
+        displayAuthErrors('register-error-container', 'register-error-list', []);
+        button.classList.add('loading');
+
+        const formData = new FormData();
+        formData.append('action_type', 'register_user_step1');
+        formData.append('username', username);
+        formData.append('email', email);
+        formData.append('csrf_token', csrfToken);
+
+        const response = await api.registerUser(formData);
+        button.classList.remove('loading');
+
+        if (response.ok) {
+            navigateToUrl('auth', 'register', { step: 'password' });
+            handleStateChange('auth', 'register', true, { step: 'password' });
+        } else {
+            displayAuthErrors('register-error-container', 'register-error-list', response.data.message);
+            fetchAndSetCsrfToken('register-form');
+        }
+    }
+
+    async function handleRegisterStep2(form) {
+        const password = form.querySelector('#register-password').value;
+        const confirmPassword = form.querySelector('#register-confirm-password').value;
+        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+        const button = form.querySelector('[data-action="submit-register"]');
+
+        let errors = [];
         if (!password) {
             errors.push(window.getTranslation('auth.errors.passwordRequired'));
         } else if (password.length < 6) {
             errors.push(window.getTranslation('auth.errors.passwordTooShort'));
+        }
+        if (password !== confirmPassword) {
+            errors.push(window.getTranslation('notifications.passwordMismatch'));
         }
 
         if (errors.length > 0) {
@@ -339,10 +373,9 @@ export function initMainController() {
         button.classList.add('loading');
 
         const formData = new FormData();
-        formData.append('action_type', 'register_user');
-        formData.append('username', username);
-        formData.append('email', email);
+        formData.append('action_type', 'register_user_step2');
         formData.append('password', password);
+        formData.append('confirm_password', confirmPassword);
         formData.append('csrf_token', csrfToken);
 
         const response = await api.registerUser(formData);
@@ -359,6 +392,7 @@ export function initMainController() {
             fetchAndSetCsrfToken('register-form');
         }
     }
+
 
     async function handleForgotPassword(form) {
         const email = form.querySelector('#forgot-email').value.trim();
@@ -2155,7 +2189,14 @@ export function initMainController() {
                         break;
                     case 'submit-register':
                         const registerForm = document.getElementById('register-form');
-                        if (registerForm) handleRegister(registerForm);
+                        if (registerForm) {
+                            const currentStep = registerForm.dataset.step || 'user-info';
+                            if (currentStep === 'user-info') {
+                                handleRegisterStep1(registerForm);
+                            } else if (currentStep === 'password') {
+                                handleRegisterStep2(registerForm);
+                            }
+                        }
                         break;
                     case 'submit-forgot-password':
                         const forgotPasswordForm = document.getElementById('forgot-password-form');
@@ -2208,6 +2249,11 @@ export function initMainController() {
                         navigateToUrl('admin', 'manageUsers');
                         handleStateChange('admin', 'manageUsers');
                         break;
+                    case 'toggleSectionRegister':
+                        if (currentAppView === 'auth' && currentAppSection === 'register') return;
+                        navigateToUrl('auth', 'register', { step: 'user-info' });
+                        handleStateChange('auth', 'register', true, { step: 'user-info' });
+                        break;
                     case 'toggleSectionHome':
                     case 'toggleSectionTrends':
                     case 'toggleSectionFavorites':
@@ -2220,7 +2266,6 @@ export function initMainController() {
                     case 'toggleSectionCookiePolicy':
                     case 'toggleSectionSendFeedback':
                     case 'toggleSectionLogin':
-                    case 'toggleSectionRegister':
                     case 'toggleSectionManageUsers':
                     case 'toggleSectionManageContent':
                     case 'toggleSectionForgotPassword':
@@ -2228,7 +2273,7 @@ export function initMainController() {
                         const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
                         const parentMenu = actionTarget.closest('[data-menu]');
                         let targetView = parentMenu ? parentMenu.dataset.menu : currentAppView;
-                        if (action === 'toggleSectionLogin' || action === 'toggleSectionRegister' || action === 'toggleSectionForgotPassword') {
+                        if (action === 'toggleSectionLogin' || action === 'toggleSectionForgotPassword') {
                             targetView = 'auth';
                         }
                         if (currentAppView === targetView && currentAppSection === targetSection) return;
@@ -2276,7 +2321,6 @@ export function initMainController() {
                             handleStateChange('main', 'userSpecificFavorites', true, { uuid: lastVisitedData.uuid });
                         } else if (currentGalleryForPhotoView) {
                             navigateToUrl('main', 'galleryPhotos', { uuid: currentGalleryForPhotoView });
-                            // ✅ LÍNEA CORREGIDA: Se pasan los argumentos en el orden correcto.
                             handleStateChange('main', 'galleryPhotos', true, { uuid: currentGalleryForPhotoView });
                         } else {
                             navigateToUrl('main', 'home');
@@ -2919,51 +2963,69 @@ export function initMainController() {
             case 'login':
                 fetchAndSetCsrfToken('login-form');
                 break;
-           case 'register':
-        fetchAndSetCsrfToken('register-form');
-        const usernameInput = document.getElementById('register-username');
-        if (usernameInput) {
-            usernameInput.addEventListener('input', (e) => {
-                let value = e.target.value;
-                // Reemplaza espacios con guiones bajos
-                value = value.replace(/\s+/g, '_');
-                // Pone en mayúscula la primera letra de cada "palabra" separada por guion bajo
-                value = value.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('_');
-                e.target.value = value;
-            });
-        }
-        break;
-            case 'forgotPassword':
-                const form = document.getElementById('forgot-password-form');
-                const step = data?.step || 'enter-email';
+            case 'register':
+                const form = document.getElementById('register-form');
+                const step = data?.step || 'user-info';
                 form.dataset.step = step;
 
-                const emailGroup = form.querySelector('#email-group');
-                const codeGroup = form.querySelector('#code-group');
+                const userInfoGroup = form.querySelector('#user-info-group');
                 const passwordGroup = form.querySelector('#password-group');
-                const button = form.querySelector('[data-action="submit-forgot-password"]');
+                const button = form.querySelector('[data-action="submit-register"]');
                 const buttonText = button.querySelector('.button-text');
+
+                if (step === 'user-info') {
+                    userInfoGroup.style.display = 'block';
+                    passwordGroup.style.display = 'none';
+                    buttonText.setAttribute('data-i18n', 'general.next');
+                } else if (step === 'password') {
+                    userInfoGroup.style.display = 'none';
+                    passwordGroup.style.display = 'block';
+                    buttonText.setAttribute('data-i18n', 'auth.registerButton');
+                }
+
+                applyTranslations(form.parentElement);
+                fetchAndSetCsrfToken('register-form');
+                const usernameInput = document.getElementById('register-username');
+                if (usernameInput) {
+                    usernameInput.addEventListener('input', (e) => {
+                        let value = e.target.value;
+                        value = value.replace(/\s+/g, '_');
+                        value = value.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('_');
+                        e.target.value = value;
+                    });
+                }
+                break;
+            case 'forgotPassword':
+                const forgotPasswordForm = document.getElementById('forgot-password-form');
+                const forgotStep = data?.step || 'enter-email';
+                forgotPasswordForm.dataset.step = forgotStep;
+
+                const emailGroup = forgotPasswordForm.querySelector('#email-group');
+                const codeGroup = forgotPasswordForm.querySelector('#code-group');
+                const forgotPasswordGroup = forgotPasswordForm.querySelector('#password-group');
+                const forgotButton = forgotPasswordForm.querySelector('[data-action="submit-forgot-password"]');
+                const forgotButtonText = forgotButton.querySelector('.button-text');
                 const title = document.querySelector('.auth-container h2');
                 const subtitle = document.querySelector('.auth-container p:not(.auth-switch-prompt)');
 
                 emailGroup.style.display = 'none';
                 codeGroup.style.display = 'none';
-                passwordGroup.style.display = 'none';
+                forgotPasswordGroup.style.display = 'none';
 
-                if (step === 'enter-email') {
+                if (forgotStep === 'enter-email') {
                     emailGroup.style.display = 'block';
                     title.setAttribute('data-i18n', 'auth.forgotPasswordTitle');
                     subtitle.setAttribute('data-i18n', 'auth.forgotPasswordSubtitle');
-                    buttonText.setAttribute('data-i18n', 'auth.forgotPasswordButton');
-                } else if (step === 'enter-code') {
+                    forgotButtonText.setAttribute('data-i18n', 'auth.forgotPasswordButton');
+                } else if (forgotStep === 'enter-code') {
                     codeGroup.style.display = 'block';
-                    const emailInput = form.querySelector('#reset-email');
+                    const emailInput = forgotPasswordForm.querySelector('#reset-email');
                     if (data && data.email) emailInput.value = data.email;
                     title.setAttribute('data-i18n', 'auth.enterCodeTitle');
                     subtitle.setAttribute('data-i18n', 'auth.enterCodeSubtitle');
-                    buttonText.setAttribute('data-i18n', 'auth.verifyCodeButton');
+                    forgotButtonText.setAttribute('data-i18n', 'auth.verifyCodeButton');
 
-                    const codeInput = form.querySelector('#reset-code');
+                    const codeInput = forgotPasswordForm.querySelector('#reset-code');
                     if (codeInput) {
                         codeInput.addEventListener('input', (e) => {
                             let input = e.target;
@@ -2981,18 +3043,18 @@ export function initMainController() {
                         });
                     }
 
-                } else if (step === 'new-password') {
-                    passwordGroup.style.display = 'flex';
-                    const emailInput = form.querySelector('#reset-email');
+                } else if (forgotStep === 'new-password') {
+                    forgotPasswordGroup.style.display = 'flex';
+                    const emailInput = forgotPasswordForm.querySelector('#reset-email');
                     if (data && data.email) emailInput.value = data.email;
-                    const codeInput = form.querySelector('#reset-code');
+                    const codeInput = forgotPasswordForm.querySelector('#reset-code');
                     if (data && data.code) codeInput.value = data.code;
                     title.setAttribute('data-i18n', 'auth.newPasswordTitle');
                     subtitle.setAttribute('data-i18n', 'auth.newPasswordSubtitle');
-                    buttonText.setAttribute('data-i18n', 'auth.resetPasswordButton');
+                    forgotButtonText.setAttribute('data-i18n', 'auth.resetPasswordButton');
                 }
 
-                applyTranslations(form.parentElement);
+                applyTranslations(forgotPasswordForm.parentElement);
                 fetchAndSetCsrfToken('forgot-password-form');
                 break;
             case 'history':
@@ -3537,7 +3599,8 @@ export function initMainController() {
         'help/cookie-policy': { view: 'help', section: 'cookiePolicy' },
         'help/send-feedback': { view: 'help', section: 'sendFeedback' },
         'login': { view: 'auth', section: 'login' },
-        'register': { view: 'auth', section: 'register' },
+        'register': { view: 'auth', section: 'register', data: { step: 'user-info' } },
+        'register/password': { view: 'auth', section: 'register', data: { step: 'password' } },
         'forgot-password': { view: 'auth', section: 'forgotPassword', data: { step: 'enter-email' } },
         'forgot-password/enter-code': { view: 'auth', section: 'forgotPassword', data: { step: 'enter-code' } },
         'forgot-password/new-password': { view: 'auth', section: 'forgotPassword', data: { step: 'new-password' } },

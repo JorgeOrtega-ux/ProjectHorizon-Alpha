@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     $action_type = $_POST['action_type'] ?? '';
 
-    if (!in_array($action_type, ['register_user', 'login_user', 'logout_user', 'forgot_password', 'verify_reset_code', 'reset_password', 'verify_password', 'update_password', 'delete_account'])) {
+    if (!in_array($action_type, ['register_user_step1', 'register_user_step2', 'login_user', 'logout_user', 'forgot_password', 'verify_reset_code', 'reset_password', 'verify_password', 'update_password', 'delete_account'])) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Acción no válida.']);
         exit;
@@ -130,87 +130,119 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     switch ($action_type) {
-        case 'register_user':
-    $username = trim($_POST['username'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
+        case 'register_user_step1':
+            $username = trim($_POST['username'] ?? '');
+            $email = trim($_POST['email'] ?? '');
 
-    // Formateo y validación del nombre de usuario
-    $username = preg_replace('/\s+/', '_', $username); // Reemplaza espacios con guiones bajos
-    $username = implode('_', array_map('ucfirst', explode('_', $username))); // Pone en mayúscula cada palabra
+            // Formateo y validación del nombre de usuario
+            $username = preg_replace('/\s+/', '_', $username); // Reemplaza espacios con guiones bajos
+            $username = implode('_', array_map('ucfirst', explode('_', $username))); // Pone en mayúscula cada palabra
 
-    if (empty($username) || empty($email) || empty($password)) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios.']);
-        exit;
-    }
-    if (strlen($username) > 24) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'El nombre de usuario no puede tener más de 24 caracteres.']);
-        exit;
-    }
-    if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'El nombre de usuario solo puede contener letras, números y guiones bajos (_).']);
-        exit;
-    }
+            if (empty($username) || empty($email)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios.']);
+                exit;
+            }
+            if (strlen($username) > 24) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El nombre de usuario no puede tener más de 24 caracteres.']);
+                exit;
+            }
+            if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El nombre de usuario solo puede contener letras, números y guiones bajos (_).']);
+                exit;
+            }
 
-    // Validación del dominio del correo
-    $allowed_domains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com'];
-    $email_domain = substr(strrchr($email, "@"), 1);
-    if (!in_array($email_domain, $allowed_domains)) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Solo se permiten correos de Gmail, Outlook, Hotmail o Yahoo.']);
-        exit;
-    }
+            // Validación del dominio del correo
+            $allowed_domains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com'];
+            $email_domain = substr(strrchr($email, "@"), 1);
+            if (!in_array($email_domain, $allowed_domains)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Solo se permiten correos de Gmail, Outlook, Hotmail o Yahoo.']);
+                exit;
+            }
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'El formato del correo electrónico no es válido.']);
-        exit;
-    }
-    if (strlen($password) < 6) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres.']);
-        exit;
-    }
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El formato del correo electrónico no es válido.']);
+                exit;
+            }
 
-    $stmt_check = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
-    $stmt_check->bind_param("ss", $username, $email);
-    $stmt_check->execute();
-    $stmt_check->store_result();
-    if ($stmt_check->num_rows > 0) {
-        http_response_code(409);
-        echo json_encode(['success' => false, 'message' => 'El nombre de usuario o el correo electrónico ya existen.']);
-        $stmt_check->close();
-        exit;
-    }
-    $stmt_check->close();
+            $stmt_check = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
+            $stmt_check->bind_param("ss", $username, $email);
+            $stmt_check->execute();
+            $stmt_check->store_result();
+            if ($stmt_check->num_rows > 0) {
+                http_response_code(409);
+                echo json_encode(['success' => false, 'message' => 'El nombre de usuario o el correo electrónico ya existen.']);
+                $stmt_check->close();
+                exit;
+            }
+            $stmt_check->close();
 
-    $uuid = generate_uuid_v4();
-    $password_hash = password_hash($password, PASSWORD_DEFAULT);
+            $_SESSION['registration_data'] = [
+                'username' => $username,
+                'email' => $email
+            ];
 
-    $stmt_insert = $conn->prepare("INSERT INTO users (uuid, username, email, password_hash) VALUES (?, ?, ?, ?)");
-    $stmt_insert->bind_param("ssss", $uuid, $username, $email, $password_hash);
+            echo json_encode(['success' => true, 'message' => 'Paso 1 completado.']);
+            break;
 
-    if ($stmt_insert->execute()) {
-        $_SESSION['loggedin'] = true;
-        $_SESSION['user_uuid'] = $uuid;
-        $_SESSION['username'] = $username;
-        $_SESSION['email'] = $email;
-        $_SESSION['user_role'] = 'user';
+        case 'register_user_step2':
+            if (!isset($_SESSION['registration_data'])) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'No se encontraron datos de registro. Por favor, vuelve al primer paso.']);
+                exit;
+            }
 
-        echo json_encode([
-            'success' => true,
-            'message' => 'Registro exitoso.',
-            'user' => ['uuid' => $uuid, 'username' => $username, 'email' => $email, 'role' => 'user']
-        ]);
-    } else {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Error en el servidor al registrar el usuario.']);
-    }
-    $stmt_insert->close();
-    break;
+            $password = $_POST['password'] ?? '';
+            $confirm_password = $_POST['confirm_password'] ?? '';
+
+            if (empty($password) || empty($confirm_password)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Ambos campos de contraseña son obligatorios.']);
+                exit;
+            }
+            if ($password !== $confirm_password) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Las contraseñas no coinciden.']);
+                exit;
+            }
+            if (strlen($password) < 6) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres.']);
+                exit;
+            }
+
+            $username = $_SESSION['registration_data']['username'];
+            $email = $_SESSION['registration_data']['email'];
+            unset($_SESSION['registration_data']); 
+
+            $uuid = generate_uuid_v4();
+            $password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+            $stmt_insert = $conn->prepare("INSERT INTO users (uuid, username, email, password_hash) VALUES (?, ?, ?, ?)");
+            $stmt_insert->bind_param("ssss", $uuid, $username, $email, $password_hash);
+
+            if ($stmt_insert->execute()) {
+                $_SESSION['loggedin'] = true;
+                $_SESSION['user_uuid'] = $uuid;
+                $_SESSION['username'] = $username;
+                $_SESSION['email'] = $email;
+                $_SESSION['user_role'] = 'user';
+
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Registro exitoso.',
+                    'user' => ['uuid' => $uuid, 'username' => $username, 'email' => $email, 'role' => 'user']
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error en el servidor al registrar el usuario.']);
+            }
+            $stmt_insert->close();
+            break;
 
         case 'login_user':
             $email = trim($_POST['email'] ?? '');
