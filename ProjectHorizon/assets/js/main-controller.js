@@ -752,7 +752,7 @@ export function initMainController() {
                         const response = await api.verifyPassword(formData);
                         stopLoading();
 
-                        if (response.ok) {
+                        if (response.ok && response.data.success) { // ✅ **CAMBIO CLAVE**
                             renderUpdateStep(close);
                         } else {
                             displayAuthErrors('password-error-container', 'password-error-list', response.data.message);
@@ -875,7 +875,7 @@ export function initMainController() {
                         const response = await api.verifyPassword(formData);
                         stopLoading();
 
-                        if (response.ok) {
+                        if (response.ok && response.data.success) { // ✅ **CAMBIO CLAVE**
                             close();
                             document.getElementById('email-view-mode').style.display = 'none';
                             document.getElementById('email-edit-mode').style.display = 'block';
@@ -3038,7 +3038,7 @@ export function initMainController() {
             return;
         }
 
-        if (section !== 'photoView') {
+        if (section !== 'photoView') { // ✅ **CAMBIO CLAVE**
             lastVisitedView = section;
             lastVisitedData = data;
         }

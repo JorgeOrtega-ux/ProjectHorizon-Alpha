@@ -500,9 +500,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (password_verify($password, $user['password_hash'])) {
                     echo json_encode(['success' => true]);
                 } else {
+                    http_response_code(401); // ✅ **CAMBIO CLAVE**
                     echo json_encode(['success' => false, 'message' => 'La contraseña actual es incorrecta.']);
                 }
             } else {
+                http_response_code(404); // ✅ **CAMBIO CLAVE**
                 echo json_encode(['success' => false, 'message' => 'Usuario no encontrado.']);
             }
             $stmt->close();
