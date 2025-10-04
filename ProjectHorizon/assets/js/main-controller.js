@@ -239,77 +239,91 @@ export function initMainController() {
         }
     }
 
- async function handleLogin(form) {
-    const email = form.querySelector('#login-email').value.trim();
-    const password = form.querySelector('#login-password').value.trim();
-    const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-    const button = form.querySelector('[data-action="submit-login"]');
+    async function handleLogin(form) {
+        const email = form.querySelector('#login-email').value.trim();
+        const password = form.querySelector('#login-password').value.trim();
+        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+        const button = form.querySelector('[data-action="submit-login"]');
 
-    let errors = [];
-    if (!email) {
-        errors.push(window.getTranslation('auth.errors.emailRequired'));
-    }
-    if (!password) {
-        errors.push(window.getTranslation('auth.errors.passwordRequired'));
-    }
-
-    if (errors.length > 0) {
-        displayAuthErrors('login-error-container', 'login-error-list', errors);
-        return;
-    }
-
-    displayAuthErrors('login-error-container', 'login-error-list', []);
-    button.classList.add('loading');
-
-    const formData = new FormData();
-    formData.append('action_type', 'login_user');
-    formData.append('email', email);
-    formData.append('password', password);
-    formData.append('csrf_token', csrfToken);
-
-    const response = await api.loginUser(formData);
-    button.classList.remove('loading');
-
-    if (response.ok) {
-        const result = response.data;
-        updateUserUI(result.user);
-        showNotification(window.getTranslation('auth.loginSuccess'), 'success');
-        navigateToUrl('main', 'home');
-        handleStateChange('main', 'home');
-    } else {
-        const errorResult = response.data;
-        let errorMessage = errorResult.message;
-        
-        if (response.status === 429) {
-            const minutes = errorMessage.match(/\d+/)[0];
-            errorMessage = window.getTranslation('auth.errors.tooManyRequests', { minutes: minutes });
-        } else if (errorMessage === 'account_suspended') {
-            errorMessage = window.getTranslation('auth.errors.accountSuspended');
-        } else if (errorMessage === 'account_deleted') {
-            errorMessage = window.getTranslation('auth.errors.accountDeleted');
+        let errors = [];
+        if (!email) {
+            errors.push(window.getTranslation('auth.errors.emailRequired'));
+        }
+        if (!password) {
+            errors.push(window.getTranslation('auth.errors.passwordRequired'));
         }
 
-        displayAuthErrors('login-error-container', 'login-error-list', errorMessage);
-        fetchAndSetCsrfToken('login-form');
+        if (errors.length > 0) {
+            displayAuthErrors('login-error-container', 'login-error-list', errors);
+            return;
+        }
+
+        displayAuthErrors('login-error-container', 'login-error-list', []);
+        button.classList.add('loading');
+
+        const formData = new FormData();
+        formData.append('action_type', 'login_user');
+        formData.append('email', email);
+        formData.append('password', password);
+        formData.append('csrf_token', csrfToken);
+
+        const response = await api.loginUser(formData);
+        button.classList.remove('loading');
+
+        if (response.ok) {
+            const result = response.data;
+            updateUserUI(result.user);
+            showNotification(window.getTranslation('auth.loginSuccess'), 'success');
+            navigateToUrl('main', 'home');
+            handleStateChange('main', 'home');
+        } else {
+            const errorResult = response.data;
+            let errorMessage = errorResult.message;
+
+            if (response.status === 429) {
+                const minutes = errorMessage.match(/\d+/)[0];
+                errorMessage = window.getTranslation('auth.errors.tooManyRequests', { minutes: minutes });
+            } else if (errorMessage === 'account_suspended') {
+                errorMessage = window.getTranslation('auth.errors.accountSuspended');
+            } else if (errorMessage === 'account_deleted') {
+                errorMessage = window.getTranslation('auth.errors.accountDeleted');
+            }
+
+            displayAuthErrors('login-error-container', 'login-error-list', errorMessage);
+            fetchAndSetCsrfToken('login-form');
+        }
     }
-}
 
     async function handleRegister(form) {
-        const username = form.querySelector('#register-username').value.trim();
+        let username = form.querySelector('#register-username').value.trim();
         const email = form.querySelector('#register-email').value.trim();
         const password = form.querySelector('#register-password').value.trim();
         const csrfToken = form.querySelector('input[name="csrf_token"]').value;
         const button = form.querySelector('[data-action="submit-register"]');
 
+        // Formateo final del nombre de usuario antes de validar y enviar
+        username = username.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('_');
+        form.querySelector('#register-username').value = username; // Actualiza el campo visualmente
+
         let errors = [];
+        const allowedDomains = ['@gmail.com', '@outlook.com', '@hotmail.com', '@yahoo.com'];
+
         if (!username) {
             errors.push(window.getTranslation('auth.errors.usernameRequired'));
+        } else if (username.length > 24) {
+            errors.push('El nombre de usuario no puede tener más de 24 caracteres.');
+        } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+            errors.push('El nombre de usuario solo puede contener letras, números y guiones bajos (_).');
         }
+
         if (!email) {
             errors.push(window.getTranslation('auth.errors.emailRequired'));
         } else if (!/^\S+@\S+\.\S+$/.test(email)) {
             errors.push(window.getTranslation('auth.errors.emailInvalid'));
+        } else if (!allowedDomains.some(domain => email.endsWith(domain))) {
+            errors.push('Solo se permiten correos de Gmail, Outlook, Hotmail o Yahoo.');
         }
+
         if (!password) {
             errors.push(window.getTranslation('auth.errors.passwordRequired'));
         } else if (password.length < 6) {
@@ -381,30 +395,30 @@ export function initMainController() {
             fetchAndSetCsrfToken('forgot-password-form');
         }
     }
-    
+
     async function handleVerifyResetCode(form) {
         const email = form.querySelector('#reset-email').value.trim();
         const code = form.querySelector('#reset-code').value.trim();
         const csrfToken = form.querySelector('input[name="csrf_token"]').value;
         const button = form.querySelector('[data-action="submit-forgot-password"]');
-    
+
         if (!code) {
             displayAuthErrors('forgot-error-container', 'forgot-error-list', [window.getTranslation('auth.errors.codeRequired')]);
             return;
         }
-    
+
         displayAuthErrors('forgot-error-container', 'forgot-error-list', []);
         button.classList.add('loading');
-    
+
         const formData = new FormData();
         formData.append('action_type', 'verify_reset_code');
         formData.append('email', email);
         formData.append('code', code);
         formData.append('csrf_token', csrfToken);
-    
+
         const response = await api.verifyResetCode(formData);
         button.classList.remove('loading');
-    
+
         if (response.ok) {
             navigateToUrl('auth', 'forgotPassword', { step: 'new-password', email: email, code: code });
             handleStateChange('auth', 'forgotPassword', true, { step: 'new-password', email: email, code: code });
@@ -451,7 +465,7 @@ export function initMainController() {
             handleStateChange('auth', 'login');
         } else {
             let errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
-             if (response.status === 429) {
+            if (response.status === 429) {
                 const minutes = errorMessage.match(/\d+/)[0];
                 errorMessage = window.getTranslation('auth.errors.tooManyRequests', { minutes: minutes });
             }
@@ -776,7 +790,7 @@ export function initMainController() {
         `;
         okBtn.textContent = 'Confirmar';
         cancelBtn.textContent = 'Cancelar';
-        
+
         applyTranslations(overlay);
 
         okBtn.onclick = async () => {
@@ -1885,43 +1899,43 @@ export function initMainController() {
         applyTranslations(mainContainer);
     }
     async function fetchAndDisplayUsers(searchTerm = '', append = false) {
-    if (isLoadingAdminUsers) return;
-    isLoadingAdminUsers = true;
+        if (isLoadingAdminUsers) return;
+        isLoadingAdminUsers = true;
 
-    const section = document.querySelector('[data-section="manageUsers"]');
-    if (!section) {
-        isLoadingAdminUsers = false;
-        return;
-    }
-
-    const tableBody = section.querySelector('#users-table tbody');
-    const statusContainer = section.querySelector('.status-message-container');
-    const loadMoreContainer = section.querySelector('#users-admin-load-more-container');
-
-    if (!append) {
-        adminUsersCurrentPage = 1;
-        if (tableBody) tableBody.innerHTML = '';
-        if (statusContainer) {
-            statusContainer.classList.remove('disabled');
-            statusContainer.innerHTML = loaderHTML;
+        const section = document.querySelector('[data-section="manageUsers"]');
+        if (!section) {
+            isLoadingAdminUsers = false;
+            return;
         }
-    }
 
-    const response = await api.getUsers(searchTerm, adminUsersCurrentPage, ADMIN_USERS_BATCH_SIZE);
-    isLoadingAdminUsers = false;
+        const tableBody = section.querySelector('#users-table tbody');
+        const statusContainer = section.querySelector('.status-message-container');
+        const loadMoreContainer = section.querySelector('#users-admin-load-more-container');
 
-    if (statusContainer) {
-        statusContainer.classList.add('disabled');
-        statusContainer.innerHTML = '';
-    }
+        if (!append) {
+            adminUsersCurrentPage = 1;
+            if (tableBody) tableBody.innerHTML = '';
+            if (statusContainer) {
+                statusContainer.classList.remove('disabled');
+                statusContainer.innerHTML = loaderHTML;
+            }
+        }
 
-    if (response.ok) {
-        const users = response.data;
-        if (users.length > 0) {
-            users.forEach(user => {
-                const row = document.createElement('tr');
-                const createdDate = new Date(user.created_at).toLocaleDateString();
-                row.innerHTML = `
+        const response = await api.getUsers(searchTerm, adminUsersCurrentPage, ADMIN_USERS_BATCH_SIZE);
+        isLoadingAdminUsers = false;
+
+        if (statusContainer) {
+            statusContainer.classList.add('disabled');
+            statusContainer.innerHTML = '';
+        }
+
+        if (response.ok) {
+            const users = response.data;
+            if (users.length > 0) {
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    const createdDate = new Date(user.created_at).toLocaleDateString();
+                    row.innerHTML = `
                     <td>
                         <div class="user-info">
                             <div class="user-initials-avatar">${getInitials(user.username)}</div>
@@ -1980,68 +1994,68 @@ export function initMainController() {
                         </div>
                     </td>
                 `;
-                if (tableBody) tableBody.appendChild(row);
-            });
-        } else if (!append) {
+                    if (tableBody) tableBody.appendChild(row);
+                });
+            } else if (!append) {
+                if (statusContainer) {
+                    statusContainer.classList.remove('disabled');
+                    statusContainer.innerHTML = `<div><h2>${window.getTranslation('general.noResultsTitle')}</h2><p>${window.getTranslation('general.noResultsMessage')}</p></div>`;
+                }
+            }
+
+            if (loadMoreContainer) {
+                if (users.length < ADMIN_USERS_BATCH_SIZE) {
+                    loadMoreContainer.classList.add('disabled');
+                } else {
+                    loadMoreContainer.classList.remove('disabled');
+                    adminUsersCurrentPage++;
+                }
+            }
+        } else {
+            console.error('Error fetching users:', response.data);
+            if (!append && statusContainer) {
+                displayFetchError('[data-section="manageUsers"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
+            }
+        }
+    }
+    async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
+        if (isLoadingAdminGalleries) return;
+        isLoadingAdminGalleries = true;
+
+        const section = document.querySelector('[data-section="manageContent"]');
+        if (!section) {
+            isLoadingAdminGalleries = false;
+            return;
+        }
+
+        const listContainer = section.querySelector('#admin-galleries-list');
+        const statusContainer = section.querySelector('.status-message-container');
+        const loadMoreContainer = section.querySelector('#galleries-admin-load-more-container');
+
+        if (!append) {
+            adminGalleriesCurrentPage = 1;
+            if (listContainer) listContainer.innerHTML = '';
             if (statusContainer) {
                 statusContainer.classList.remove('disabled');
-                statusContainer.innerHTML = `<div><h2>${window.getTranslation('general.noResultsTitle')}</h2><p>${window.getTranslation('general.noResultsMessage')}</p></div>`;
+                statusContainer.innerHTML = loaderHTML;
             }
         }
 
-        if (loadMoreContainer) {
-            if (users.length < ADMIN_USERS_BATCH_SIZE) {
-                loadMoreContainer.classList.add('disabled');
-            } else {
-                loadMoreContainer.classList.remove('disabled');
-                adminUsersCurrentPage++;
-            }
-        }
-    } else {
-        console.error('Error fetching users:', response.data);
-        if (!append && statusContainer) {
-            displayFetchError('[data-section="manageUsers"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
-        }
-    }
-}
-async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
-    if (isLoadingAdminGalleries) return;
-    isLoadingAdminGalleries = true;
-
-    const section = document.querySelector('[data-section="manageContent"]');
-    if (!section) {
+        const response = await api.getGalleries('alpha-asc', searchTerm, adminGalleriesCurrentPage, ADMIN_GALLERIES_BATCH_SIZE);
         isLoadingAdminGalleries = false;
-        return;
-    }
 
-    const listContainer = section.querySelector('#admin-galleries-list');
-    const statusContainer = section.querySelector('.status-message-container');
-    const loadMoreContainer = section.querySelector('#galleries-admin-load-more-container');
-
-    if (!append) {
-        adminGalleriesCurrentPage = 1;
-        if (listContainer) listContainer.innerHTML = '';
         if (statusContainer) {
-            statusContainer.classList.remove('disabled');
-            statusContainer.innerHTML = loaderHTML;
+            statusContainer.classList.add('disabled');
+            statusContainer.innerHTML = '';
         }
-    }
 
-    const response = await api.getGalleries('alpha-asc', searchTerm, adminGalleriesCurrentPage, ADMIN_GALLERIES_BATCH_SIZE);
-    isLoadingAdminGalleries = false;
-
-    if (statusContainer) {
-        statusContainer.classList.add('disabled');
-        statusContainer.innerHTML = '';
-    }
-
-    if (response.ok) {
-        const galleries = response.data;
-        if (galleries.length > 0) {
-            galleries.forEach(gallery => {
-                const item = document.createElement('div');
-                item.className = 'admin-list-item';
-                item.innerHTML = `
+        if (response.ok) {
+            const galleries = response.data;
+            if (galleries.length > 0) {
+                galleries.forEach(gallery => {
+                    const item = document.createElement('div');
+                    item.className = 'admin-list-item';
+                    item.innerHTML = `
                     <div class="admin-list-item-thumbnail" style="background-image: url('${gallery.profile_picture_url || ''}')"></div>
                     <div class="admin-list-item-details">
                         <div class="admin-list-item-title">${gallery.name}</div>
@@ -2056,30 +2070,30 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
                         </button>
                     </div>
                 `;
-                if (listContainer) listContainer.appendChild(item);
-            });
-        } else if (!append) {
-            if (statusContainer) {
-                statusContainer.classList.remove('disabled');
-                statusContainer.innerHTML = `<div><h2>${window.getTranslation('general.noResultsTitle')}</h2><p>${window.getTranslation('general.noResultsMessage')}</p></div>`;
+                    if (listContainer) listContainer.appendChild(item);
+                });
+            } else if (!append) {
+                if (statusContainer) {
+                    statusContainer.classList.remove('disabled');
+                    statusContainer.innerHTML = `<div><h2>${window.getTranslation('general.noResultsTitle')}</h2><p>${window.getTranslation('general.noResultsMessage')}</p></div>`;
+                }
             }
-        }
 
-        if (loadMoreContainer) {
-            if (galleries.length < ADMIN_GALLERIES_BATCH_SIZE) {
-                loadMoreContainer.classList.add('disabled');
-            } else {
-                loadMoreContainer.classList.remove('disabled');
-                adminGalleriesCurrentPage++;
+            if (loadMoreContainer) {
+                if (galleries.length < ADMIN_GALLERIES_BATCH_SIZE) {
+                    loadMoreContainer.classList.add('disabled');
+                } else {
+                    loadMoreContainer.classList.remove('disabled');
+                    adminGalleriesCurrentPage++;
+                }
             }
-        }
-    } else {
-        console.error('Error fetching galleries for admin:', response.data);
-        if (!append && statusContainer) {
-            displayFetchError('[data-section="manageContent"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
+        } else {
+            console.error('Error fetching galleries for admin:', response.data);
+            if (!append && statusContainer) {
+                displayFetchError('[data-section="manageContent"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
+            }
         }
     }
-}
 
 
     function setupEventListeners() {
@@ -2101,7 +2115,7 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
                 });
                 document.querySelectorAll('.active-trigger').forEach(trigger => trigger.classList.remove('active-trigger'));
             }
-            
+
             if (!event.target.closest('.item-actions')) {
                 document.querySelectorAll('.module-select[id^="user-actions-menu-"]').forEach(menu => {
                     menu.classList.add('disabled');
@@ -2250,25 +2264,25 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
                         historySearchesShown += HISTORY_SEARCHES_BATCH;
                         displayHistory();
                         break;
-                  case 'returnToUserPhotos':
-    if (lastVisitedView === 'history') {
-        navigateToUrl('settings', 'history');
-        handleStateChange('settings', 'history');
-    } else if (lastVisitedView === 'favorites') {
-        navigateToUrl('main', 'favorites');
-        handleStateChange('main', 'favorites');
-    } else if (lastVisitedView === 'userSpecificFavorites' && lastVisitedData && lastVisitedData.uuid) {
-        navigateToUrl('main', 'userSpecificFavorites', { uuid: lastVisitedData.uuid });
-        handleStateChange('main', 'userSpecificFavorites', true, { uuid: lastVisitedData.uuid });
-    } else if (currentGalleryForPhotoView) {
-        navigateToUrl('main', 'galleryPhotos', { uuid: currentGalleryForPhotoView });
-        // ✅ LÍNEA CORREGIDA: Se pasan los argumentos en el orden correcto.
-        handleStateChange('main', 'galleryPhotos', true, { uuid: currentGalleryForPhotoView });
-    } else {
-        navigateToUrl('main', 'home');
-        handleStateChange('main', 'home');
-    }
-    break;
+                    case 'returnToUserPhotos':
+                        if (lastVisitedView === 'history') {
+                            navigateToUrl('settings', 'history');
+                            handleStateChange('settings', 'history');
+                        } else if (lastVisitedView === 'favorites') {
+                            navigateToUrl('main', 'favorites');
+                            handleStateChange('main', 'favorites');
+                        } else if (lastVisitedView === 'userSpecificFavorites' && lastVisitedData && lastVisitedData.uuid) {
+                            navigateToUrl('main', 'userSpecificFavorites', { uuid: lastVisitedData.uuid });
+                            handleStateChange('main', 'userSpecificFavorites', true, { uuid: lastVisitedData.uuid });
+                        } else if (currentGalleryForPhotoView) {
+                            navigateToUrl('main', 'galleryPhotos', { uuid: currentGalleryForPhotoView });
+                            // ✅ LÍNEA CORREGIDA: Se pasan los argumentos en el orden correcto.
+                            handleStateChange('main', 'galleryPhotos', true, { uuid: currentGalleryForPhotoView });
+                        } else {
+                            navigateToUrl('main', 'home');
+                            handleStateChange('main', 'home');
+                        }
+                        break;
                     case 'returnToHome':
                         navigateToUrl('main', 'home');
                         handleStateChange('main', 'home');
@@ -2431,7 +2445,7 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
                         showChangeRoleDialog(userUuid, newRole, userName);
                         const menuContainer = actionTarget.closest('.module-select');
                         if (menuContainer) {
-                           menuContainer.classList.add('disabled');
+                            menuContainer.classList.add('disabled');
                         }
                         break;
                     }
@@ -2461,7 +2475,7 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
                         handleStateChange('admin', 'editGallery', true, { uuid });
                         break;
                     }
-                     case 'delete-gallery-photo': {
+                    case 'delete-gallery-photo': {
                         const photoId = actionTarget.dataset.photoId;
                         api.deleteGalleryPhoto(photoId).then(response => {
                             if (response.ok) {
@@ -2509,7 +2523,7 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
                                     }
                                 });
                             }
-                            
+
                             const pendingFiles = window.pendingGalleryFiles || [];
                             if (pendingFiles.length > 0) {
                                 const newPhotosFormData = new FormData();
@@ -2905,9 +2919,20 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
             case 'login':
                 fetchAndSetCsrfToken('login-form');
                 break;
-            case 'register':
-                fetchAndSetCsrfToken('register-form');
-                break;
+           case 'register':
+        fetchAndSetCsrfToken('register-form');
+        const usernameInput = document.getElementById('register-username');
+        if (usernameInput) {
+            usernameInput.addEventListener('input', (e) => {
+                let value = e.target.value;
+                // Reemplaza espacios con guiones bajos
+                value = value.replace(/\s+/g, '_');
+                // Pone en mayúscula la primera letra de cada "palabra" separada por guion bajo
+                value = value.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('_');
+                e.target.value = value;
+            });
+        }
+        break;
             case 'forgotPassword':
                 const form = document.getElementById('forgot-password-form');
                 const step = data?.step || 'enter-email';
@@ -2933,17 +2958,17 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
                 } else if (step === 'enter-code') {
                     codeGroup.style.display = 'block';
                     const emailInput = form.querySelector('#reset-email');
-                    if(data && data.email) emailInput.value = data.email;
+                    if (data && data.email) emailInput.value = data.email;
                     title.setAttribute('data-i18n', 'auth.enterCodeTitle');
                     subtitle.setAttribute('data-i18n', 'auth.enterCodeSubtitle');
                     buttonText.setAttribute('data-i18n', 'auth.verifyCodeButton');
-                    
+
                     const codeInput = form.querySelector('#reset-code');
                     if (codeInput) {
                         codeInput.addEventListener('input', (e) => {
                             let input = e.target;
                             let sanitizedValue = input.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
-                            
+
                             if (sanitizedValue.length > 6) {
                                 sanitizedValue = sanitizedValue.substring(0, 6);
                             }
@@ -2959,14 +2984,14 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
                 } else if (step === 'new-password') {
                     passwordGroup.style.display = 'flex';
                     const emailInput = form.querySelector('#reset-email');
-                    if(data && data.email) emailInput.value = data.email;
+                    if (data && data.email) emailInput.value = data.email;
                     const codeInput = form.querySelector('#reset-code');
-                    if(data && data.code) codeInput.value = data.code;
+                    if (data && data.code) codeInput.value = data.code;
                     title.setAttribute('data-i18n', 'auth.newPasswordTitle');
                     subtitle.setAttribute('data-i18n', 'auth.newPasswordSubtitle');
                     buttonText.setAttribute('data-i18n', 'auth.resetPasswordButton');
                 }
-                
+
                 applyTranslations(form.parentElement);
                 fetchAndSetCsrfToken('forgot-password-form');
                 break;
@@ -3296,22 +3321,22 @@ async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = false) {
         initTooltips();
         applyTranslations(document.body);
     }
-    
-function renderEditGalleryForm(gallery) {
-    window.pendingGalleryFiles = [];
-    const container = document.getElementById('edit-gallery-form-container');
-    const titleEl = document.getElementById('edit-gallery-title');
-    const pathParts = window.location.pathname.split('/');
-    const uuid = pathParts[pathParts.length - 1];
 
-    if (!container || !titleEl) return;
+    function renderEditGalleryForm(gallery) {
+        window.pendingGalleryFiles = [];
+        const container = document.getElementById('edit-gallery-form-container');
+        const titleEl = document.getElementById('edit-gallery-title');
+        const pathParts = window.location.pathname.split('/');
+        const uuid = pathParts[pathParts.length - 1];
 
-    titleEl.textContent = window.getTranslation('admin.editGallery.title', { galleryName: gallery.name });
-    titleEl.removeAttribute('data-i18n');
+        if (!container || !titleEl) return;
 
-    let photosHTML = '';
-    gallery.photos.forEach(photo => {
-        photosHTML += `
+        titleEl.textContent = window.getTranslation('admin.editGallery.title', { galleryName: gallery.name });
+        titleEl.removeAttribute('data-i18n');
+
+        let photosHTML = '';
+        gallery.photos.forEach(photo => {
+            photosHTML += `
             <div class="photo-item-edit" data-id="${photo.id}">
                 <img src="${photo.photo_url}" alt="Miniatura">
                 <button class="delete-photo-btn" data-action="delete-gallery-photo" data-photo-id="${photo.id}">
@@ -3319,9 +3344,9 @@ function renderEditGalleryForm(gallery) {
                 </button>
             </div>
         `;
-    });
+        });
 
-    container.innerHTML = `
+        container.innerHTML = `
         <div class="edit-section">
             <div class="profile-picture-edit-container">
                 <div class="profile-info-wrapper">
@@ -3386,106 +3411,106 @@ function renderEditGalleryForm(gallery) {
         </div>
     `;
 
-    applyTranslations(container);
+        applyTranslations(container);
 
-    const nameViewMode = container.querySelector('#name-view-mode');
-    const nameEditMode = container.querySelector('#name-edit-mode');
-    const nameDisplay = container.querySelector('#gallery-name-display');
-    const nameInput = container.querySelector('#gallery-name-edit');
-    const profileNameText = container.querySelector('.profile-main-text');
+        const nameViewMode = container.querySelector('#name-view-mode');
+        const nameEditMode = container.querySelector('#name-edit-mode');
+        const nameDisplay = container.querySelector('#gallery-name-display');
+        const nameInput = container.querySelector('#gallery-name-edit');
+        const profileNameText = container.querySelector('.profile-main-text');
 
-    const editBtn = container.querySelector('#edit-name-btn');
-    const cancelBtn = container.querySelector('#cancel-name-btn');
-    const saveBtn = container.querySelector('#save-name-btn');
-    const privacyToggle = container.querySelector('#gallery-privacy-edit');
+        const editBtn = container.querySelector('#edit-name-btn');
+        const cancelBtn = container.querySelector('#cancel-name-btn');
+        const saveBtn = container.querySelector('#save-name-btn');
+        const privacyToggle = container.querySelector('#gallery-privacy-edit');
 
-    if (editBtn) {
-        editBtn.addEventListener('click', () => {
-            nameViewMode.style.display = 'none';
-            nameEditMode.style.display = 'block';
-            nameInput.focus();
-        });
-    }
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', () => {
-            nameInput.value = nameDisplay.textContent;
-            nameEditMode.style.display = 'none';
-            nameViewMode.style.display = 'flex';
-        });
-    }
-    if (saveBtn) {
-        saveBtn.addEventListener('click', () => {
-            const newName = nameInput.value.trim();
-            if (newName) {
-                const formData = new FormData();
-                formData.append('action_type', 'update_gallery_details');
-                formData.append('uuid', uuid);
-                formData.append('name', newName);
-                formData.append('privacy', privacyToggle.classList.contains('active'));
+        if (editBtn) {
+            editBtn.addEventListener('click', () => {
+                nameViewMode.style.display = 'none';
+                nameEditMode.style.display = 'block';
+                nameInput.focus();
+            });
+        }
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                nameInput.value = nameDisplay.textContent;
+                nameEditMode.style.display = 'none';
+                nameViewMode.style.display = 'flex';
+            });
+        }
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                const newName = nameInput.value.trim();
+                if (newName) {
+                    const formData = new FormData();
+                    formData.append('action_type', 'update_gallery_details');
+                    formData.append('uuid', uuid);
+                    formData.append('name', newName);
+                    formData.append('privacy', privacyToggle.classList.contains('active'));
 
-                api.updateGalleryDetails(formData).then(response => {
+                    api.updateGalleryDetails(formData).then(response => {
+                        if (response.ok) {
+                            showNotification(response.data.message, 'success');
+                            nameDisplay.textContent = newName;
+                            if (profileNameText) profileNameText.textContent = newName;
+                            titleEl.textContent = window.getTranslation('admin.editGallery.title', { galleryName: newName });
+                        } else {
+                            showNotification(response.data.message || 'Error al guardar el nombre.', 'error');
+                            nameInput.value = nameDisplay.textContent; // Revert input on error
+                        }
+                    });
+                }
+                nameEditMode.style.display = 'none';
+                nameViewMode.style.display = 'flex';
+            });
+        }
+
+        if (privacyToggle) {
+            privacyToggle.addEventListener('click', () => {
+                privacyToggle.classList.toggle('active');
+                const isPrivate = privacyToggle.classList.contains('active');
+
+                api.changeGalleryPrivacy(uuid, isPrivate).then(response => {
                     if (response.ok) {
                         showNotification(response.data.message, 'success');
-                        nameDisplay.textContent = newName;
-                        if(profileNameText) profileNameText.textContent = newName;
-                        titleEl.textContent = window.getTranslation('admin.editGallery.title', { galleryName: newName });
                     } else {
-                        showNotification(response.data.message || 'Error al guardar el nombre.', 'error');
-                        nameInput.value = nameDisplay.textContent; // Revert input on error
+                        showNotification(response.data.message || 'Error al cambiar la privacidad.', 'error');
+                        privacyToggle.classList.toggle('active'); // Revert on error
                     }
                 });
-            }
-            nameEditMode.style.display = 'none';
-            nameViewMode.style.display = 'flex';
-        });
-    }
-
-    if (privacyToggle) {
-        privacyToggle.addEventListener('click', () => {
-            privacyToggle.classList.toggle('active');
-            const isPrivate = privacyToggle.classList.contains('active');
-            
-            api.changeGalleryPrivacy(uuid, isPrivate).then(response => {
-                if (response.ok) {
-                    showNotification(response.data.message, 'success');
-                } else {
-                    showNotification(response.data.message || 'Error al cambiar la privacidad.', 'error');
-                    privacyToggle.classList.toggle('active'); // Revert on error
-                }
             });
-        });
-    }
-    
-    const photoGrid = document.getElementById('gallery-photos-grid-edit');
-    if (photoGrid) {
-        new Sortable(photoGrid, {
-            animation: 150,
-            ghostClass: 'sortable-ghost',
-        });
-    }
+        }
 
-    const newPhotosInput = document.getElementById('new-photos-upload');
-    newPhotosInput.addEventListener('change', (event) => {
-        const files = event.target.files;
-        for (const file of files) {
-            window.pendingGalleryFiles.push(file);
+        const photoGrid = document.getElementById('gallery-photos-grid-edit');
+        if (photoGrid) {
+            new Sortable(photoGrid, {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+            });
+        }
 
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const newPhotoHTML = `
+        const newPhotosInput = document.getElementById('new-photos-upload');
+        newPhotosInput.addEventListener('change', (event) => {
+            const files = event.target.files;
+            for (const file of files) {
+                window.pendingGalleryFiles.push(file);
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const newPhotoHTML = `
                     <div class="photo-item-edit pending-upload" data-id="">
                         <img src="${e.target.result}" alt="Nueva foto">
                         <button class="delete-photo-btn" data-action="delete-gallery-photo" data-photo-id="">
                             <span class="material-symbols-rounded">close</span>
                         </button>
                     </div>`;
-                photoGrid.insertAdjacentHTML('beforeend', newPhotoHTML);
-            };
-            reader.readAsDataURL(file);
-        }
-        newPhotosInput.value = '';
-    });
-}
+                    photoGrid.insertAdjacentHTML('beforeend', newPhotoHTML);
+                };
+                reader.readAsDataURL(file);
+            }
+            newPhotosInput.value = '';
+        });
+    }
 
 
     // --- INICIALIZACIÓN ---

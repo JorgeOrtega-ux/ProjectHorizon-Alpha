@@ -5,28 +5,36 @@ require_once '../config/db.php';
 
 // --- FUNCIONES DE UTILIDAD Y SEGURIDAD ---
 
-function generate_csrf_token() {
+function generate_csrf_token()
+{
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }
     return $_SESSION['csrf_token'];
 }
 
-function validate_csrf_token($token) {
+function validate_csrf_token($token)
+{
     return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
 }
 
-function generate_uuid_v4() {
-    return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-        mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+function generate_uuid_v4()
+{
+    return sprintf(
+        '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+        mt_rand(0, 0xffff),
+        mt_rand(0, 0xffff),
         mt_rand(0, 0xffff),
         mt_rand(0, 0x0fff) | 0x4000,
         mt_rand(0, 0x3fff) | 0x8000,
-        mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+        mt_rand(0, 0xffff),
+        mt_rand(0, 0xffff),
+        mt_rand(0, 0xffff)
     );
 }
 
-function handle_security_event($conn, $identifier, $action, &$custom_message = '') {
+function handle_security_event($conn, $identifier, $action, &$custom_message = '')
+{
     $lockout_duration = 300; // 5 minutos
     $max_attempts = 5;
 
@@ -47,7 +55,7 @@ function handle_security_event($conn, $identifier, $action, &$custom_message = '
         $stmt->close();
         return;
     }
-    
+
     if ($action === 'check_lock') {
         $stmt = $conn->prepare("SELECT COUNT(*) as attempt_count, MAX(created_at) as last_attempt_at FROM security_logs WHERE user_identifier = ? AND (action_type = 'login_fail' OR action_type = 'reset_fail') AND created_at > (NOW() - INTERVAL ? SECOND)");
         $stmt->bind_param("si", $identifier, $lockout_duration);
@@ -59,7 +67,7 @@ function handle_security_event($conn, $identifier, $action, &$custom_message = '
             $db_time_result = $conn->query("SELECT NOW() as now")->fetch_assoc();
             $now_timestamp = strtotime($db_time_result['now']);
             $last_attempt_timestamp = strtotime($result['last_attempt_at']);
-            
+
             $time_since_last_attempt = $now_timestamp - $last_attempt_timestamp;
             $time_left = $lockout_duration - $time_since_last_attempt;
 
@@ -79,26 +87,26 @@ function handle_security_event($conn, $identifier, $action, &$custom_message = '
         $stmt->execute();
         $result = $stmt->get_result()->fetch_assoc();
         $stmt->close();
-    
+
         if ($result) {
             $last_request_timestamp = strtotime($result['created_at']);
             $db_time_result = $conn->query("SELECT NOW() as now")->fetch_assoc();
             $now_timestamp = strtotime($db_time_result['now']);
             $time_since_last_request = $now_timestamp - $last_request_timestamp;
-    
+
             if ($time_since_last_request < $cooldown) {
                 $seconds_left = $cooldown - $time_since_last_request;
                 $custom_message = "Has solicitado un código de recuperación recientemente. Por favor, espera {$seconds_left} segundos antes de volver a intentarlo.";
                 return true;
             }
         }
-    
+
         $stmt_log = $conn->prepare("INSERT INTO security_logs (user_identifier, action_type, ip_address) VALUES (?, 'reset_request', ?)");
         $ip = $_SERVER['REMOTE_ADDR'];
         $stmt_log->bind_param("ss", $identifier, $ip);
         $stmt_log->execute();
         $stmt_log->close();
-    
+
         return false;
     }
 }
@@ -120,88 +128,112 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => false, 'message' => 'Error de validación CSRF.']);
         exit;
     }
-    
+
     switch ($action_type) {
         case 'register_user':
-            $username = trim($_POST['username'] ?? '');
-            $email = trim($_POST['email'] ?? '');
-            $password = $_POST['password'] ?? '';
+    $username = trim($_POST['username'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
 
-            if (empty($username) || empty($email) || empty($password)) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios.']);
-                exit;
-            }
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'El formato del correo electrónico no es válido.']);
-                exit;
-            }
-            if (strlen($password) < 6) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres.']);
-                exit;
-            }
+    // Formateo y validación del nombre de usuario
+    $username = preg_replace('/\s+/', '_', $username); // Reemplaza espacios con guiones bajos
+    $username = implode('_', array_map('ucfirst', explode('_', $username))); // Pone en mayúscula cada palabra
 
-            $stmt_check = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
-            $stmt_check->bind_param("ss", $username, $email);
-            $stmt_check->execute();
-            $stmt_check->store_result();
-            if ($stmt_check->num_rows > 0) {
-                http_response_code(409);
-                echo json_encode(['success' => false, 'message' => 'El nombre de usuario o el correo electrónico ya existen.']);
-                $stmt_check->close();
-                exit;
-            }
-            $stmt_check->close();
+    if (empty($username) || empty($email) || empty($password)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios.']);
+        exit;
+    }
+    if (strlen($username) > 24) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'El nombre de usuario no puede tener más de 24 caracteres.']);
+        exit;
+    }
+    if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'El nombre de usuario solo puede contener letras, números y guiones bajos (_).']);
+        exit;
+    }
 
-            $uuid = generate_uuid_v4();
-            $password_hash = password_hash($password, PASSWORD_DEFAULT);
+    // Validación del dominio del correo
+    $allowed_domains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com'];
+    $email_domain = substr(strrchr($email, "@"), 1);
+    if (!in_array($email_domain, $allowed_domains)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Solo se permiten correos de Gmail, Outlook, Hotmail o Yahoo.']);
+        exit;
+    }
 
-            $stmt_insert = $conn->prepare("INSERT INTO users (uuid, username, email, password_hash) VALUES (?, ?, ?, ?)");
-            $stmt_insert->bind_param("ssss", $uuid, $username, $email, $password_hash);
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'El formato del correo electrónico no es válido.']);
+        exit;
+    }
+    if (strlen($password) < 6) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres.']);
+        exit;
+    }
 
-            if ($stmt_insert->execute()) {
-                $_SESSION['loggedin'] = true;
-                $_SESSION['user_uuid'] = $uuid;
-                $_SESSION['username'] = $username;
-                $_SESSION['email'] = $email;
-                $_SESSION['user_role'] = 'user';
+    $stmt_check = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
+    $stmt_check->bind_param("ss", $username, $email);
+    $stmt_check->execute();
+    $stmt_check->store_result();
+    if ($stmt_check->num_rows > 0) {
+        http_response_code(409);
+        echo json_encode(['success' => false, 'message' => 'El nombre de usuario o el correo electrónico ya existen.']);
+        $stmt_check->close();
+        exit;
+    }
+    $stmt_check->close();
 
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Registro exitoso.',
-                    'user' => ['uuid' => $uuid, 'username' => $username, 'email' => $email, 'role' => 'user']
-                ]);
-            } else {
-                http_response_code(500);
-                echo json_encode(['success' => false, 'message' => 'Error en el servidor al registrar el usuario.']);
-            }
-            $stmt_insert->close();
-            break;
+    $uuid = generate_uuid_v4();
+    $password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+    $stmt_insert = $conn->prepare("INSERT INTO users (uuid, username, email, password_hash) VALUES (?, ?, ?, ?)");
+    $stmt_insert->bind_param("ssss", $uuid, $username, $email, $password_hash);
+
+    if ($stmt_insert->execute()) {
+        $_SESSION['loggedin'] = true;
+        $_SESSION['user_uuid'] = $uuid;
+        $_SESSION['username'] = $username;
+        $_SESSION['email'] = $email;
+        $_SESSION['user_role'] = 'user';
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Registro exitoso.',
+            'user' => ['uuid' => $uuid, 'username' => $username, 'email' => $email, 'role' => 'user']
+        ]);
+    } else {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Error en el servidor al registrar el usuario.']);
+    }
+    $stmt_insert->close();
+    break;
 
         case 'login_user':
             $email = trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
-        
+
             if (empty($email) || empty($password)) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'Correo y contraseña son obligatorios.']);
                 exit;
             }
-            
+
             $lock_message = '';
             if (handle_security_event($conn, $email, 'check_lock', $lock_message)) {
                 http_response_code(429);
                 echo json_encode(['success' => false, 'message' => $lock_message]);
                 exit;
             }
-    
+
             $stmt = $conn->prepare("SELECT uuid, username, email, password_hash, role, status FROM users WHERE email = ?");
             $stmt->bind_param("s", $email);
             $stmt->execute();
             $result = $stmt->get_result();
-        
+
             if ($user = $result->fetch_assoc()) {
                 if (password_verify($password, $user['password_hash'])) {
                     if ($user['status'] !== 'active') {
@@ -210,21 +242,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         echo json_encode(['success' => false, 'message' => $message_key]);
                         exit;
                     }
-        
+
                     handle_security_event($conn, $email, 'clear_all');
-        
+
                     $_SESSION['loggedin'] = true;
                     $_SESSION['user_uuid'] = $user['uuid'];
                     $_SESSION['username'] = $user['username'];
                     $_SESSION['email'] = $user['email'];
                     $_SESSION['user_role'] = $user['role'];
-        
+
                     echo json_encode([
                         'success' => true,
                         'message' => 'Inicio de sesión exitoso.',
                         'user' => ['uuid' => $user['uuid'], 'username' => $user['username'], 'email' => $user['email'], 'role' => $user['role']]
                     ]);
-        
                 } else {
                     handle_security_event($conn, $email, 'log_attempt');
                     $lock_message = '';
@@ -255,38 +286,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             session_destroy();
             echo json_encode(['success' => true, 'message' => 'Sesión cerrada correctamente.']);
             break;
-            
+
         case 'forgot_password':
             $email = trim($_POST['email'] ?? '');
-        
+
             if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'Por favor, introduce un correo electrónico válido.']);
                 exit;
             }
-        
+
             $cooldown_message = '';
             if (handle_security_event($conn, $email, 'check_reset_request', $cooldown_message)) {
                 http_response_code(429);
                 echo json_encode(['success' => false, 'message' => $cooldown_message]);
                 exit;
             }
-        
+
             $stmt = $conn->prepare("SELECT id FROM users WHERE email = ? AND status = 'active'");
             $stmt->bind_param("s", $email);
             $stmt->execute();
             $stmt->store_result();
-        
+
             if ($stmt->num_rows > 0) {
                 $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        
+
                 $stmt_insert = $conn->prepare("INSERT INTO password_resets (email, code) VALUES (?, ?)");
                 $stmt_insert->bind_param("ss", $email, $code);
                 $stmt_insert->execute();
                 $stmt_insert->close();
-                
+
                 echo json_encode(['success' => true, 'message' => 'Se ha enviado un código de recuperación a tu correo.']);
-        
             } else {
                 http_response_code(404);
                 echo json_encode(['success' => false, 'message' => 'No se encontró una cuenta con ese correo electrónico.']);
@@ -297,25 +327,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'verify_reset_code':
             $email = trim($_POST['email'] ?? '');
             $code = str_replace('-', '', trim($_POST['code'] ?? ''));
-        
+
             if (empty($email) || empty($code)) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'El correo y el código son obligatorios.']);
                 exit;
             }
-            
+
             $lock_message = '';
             if (handle_security_event($conn, $email, 'check_lock', $lock_message)) {
                 http_response_code(429);
                 echo json_encode(['success' => false, 'message' => $lock_message]);
                 exit;
             }
-    
+
             $stmt_check = $conn->prepare("SELECT id FROM password_resets WHERE email = ? AND code = ? AND created_at > (NOW() - INTERVAL 15 MINUTE)");
             $stmt_check->bind_param("ss", $email, $code);
             $stmt_check->execute();
             $stmt_check->store_result();
-        
+
             if ($stmt_check->num_rows > 0) {
                 handle_security_event($conn, $email, 'clear_all');
                 echo json_encode(['success' => true, 'message' => 'Código verificado correctamente.']);
@@ -337,37 +367,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = trim($_POST['email'] ?? '');
             $code = str_replace('-', '', trim($_POST['code'] ?? ''));
             $new_password = $_POST['new_password'] ?? '';
-        
+
             if (empty($email) || empty($code) || empty($new_password)) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios.']);
                 exit;
             }
-        
+
             if (strlen($new_password) < 6) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'La nueva contraseña debe tener al menos 6 caracteres.']);
                 exit;
             }
-        
+
             $stmt_check = $conn->prepare("SELECT id FROM password_resets WHERE email = ? AND code = ? AND created_at > (NOW() - INTERVAL 15 MINUTE)");
             $stmt_check->bind_param("ss", $email, $code);
             $stmt_check->execute();
             $stmt_check->store_result();
-        
+
             if ($stmt_check->num_rows > 0) {
                 $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
                 $stmt_update = $conn->prepare("UPDATE users SET password_hash = ?, password_last_updated_at = NOW() WHERE email = ?");
                 $stmt_update->bind_param("ss", $password_hash, $email);
-                
+
                 if ($stmt_update->execute()) {
                     handle_security_event($conn, $email, 'clear_all');
-                    
+
                     $stmt_delete = $conn->prepare("DELETE FROM password_resets WHERE email = ?");
                     $stmt_delete->bind_param("s", $email);
                     $stmt_delete->execute();
                     $stmt_delete->close();
-        
+
                     echo json_encode(['success' => true, 'message' => 'Contraseña actualizada correctamente.']);
                 } else {
                     http_response_code(500);
@@ -381,22 +411,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $stmt_check->close();
             break;
-            
+
         case 'verify_password':
             if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 http_response_code(401);
                 echo json_encode(['success' => false, 'message' => 'No autorizado.']);
                 exit;
             }
-    
+
             $password = $_POST['password'] ?? '';
             $user_uuid = $_SESSION['user_uuid'];
-    
+
             $stmt = $conn->prepare("SELECT password_hash FROM users WHERE uuid = ?");
             $stmt->bind_param("s", $user_uuid);
             $stmt->execute();
             $result = $stmt->get_result();
-    
+
             if ($user = $result->fetch_assoc()) {
                 if (password_verify($password, $user['password_hash'])) {
                     echo json_encode(['success' => true]);
@@ -415,21 +445,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode(['success' => false, 'message' => 'No autorizado.']);
                 exit;
             }
-    
+
             $new_password = $_POST['new_password'] ?? '';
             $user_uuid = $_SESSION['user_uuid'];
-    
+
             if (strlen($new_password) < 6) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'La nueva contraseña debe tener al menos 6 caracteres.']);
                 exit;
             }
-    
+
             $password_hash = password_hash($new_password, PASSWORD_DEFAULT);
-    
+
             $stmt = $conn->prepare("UPDATE users SET password_hash = ?, password_last_updated_at = NOW() WHERE uuid = ?");
             $stmt->bind_param("ss", $password_hash, $user_uuid);
-    
+
             if ($stmt->execute()) {
                 echo json_encode(['success' => true, 'message' => 'Contraseña actualizada correctamente.']);
             } else {
@@ -438,22 +468,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             $stmt->close();
             break;
-            
+
         case 'delete_account':
             if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 http_response_code(401);
                 echo json_encode(['success' => false, 'message' => 'No autorizado.']);
                 exit;
             }
-        
+
             $password = $_POST['password'] ?? '';
             $user_uuid = $_SESSION['user_uuid'];
-        
+
             $stmt = $conn->prepare("SELECT password_hash FROM users WHERE uuid = ?");
             $stmt->bind_param("s", $user_uuid);
             $stmt->execute();
             $result = $stmt->get_result();
-        
+
             if ($user = $result->fetch_assoc()) {
                 if (password_verify($password, $user['password_hash'])) {
                     $stmt_delete = $conn->prepare("UPDATE users SET status = 'deleted' WHERE uuid = ?");
@@ -478,7 +508,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->close();
             break;
     }
-
 } else {
     http_response_code(405);
     echo json_encode(['error' => 'Request method not supported']);
@@ -487,5 +516,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if (isset($conn) && $conn) {
     $conn->close();
 }
-
-?>

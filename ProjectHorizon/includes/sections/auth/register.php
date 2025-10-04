@@ -5,7 +5,7 @@
         <div class="auth-form" id="register-form">
             <input type="hidden" name="csrf_token" value="">
             <div class="form-field">
-                <input type="text" id="register-username" class="auth-input" placeholder=" " autocomplete="username">
+                <input type="text" id="register-username" class="auth-input" placeholder=" " autocomplete="username" maxlength="24">
                 <label for="register-username" class="auth-label" data-i18n="auth.usernamePlaceholder"></label>
             </div>
             <div class="form-field">
