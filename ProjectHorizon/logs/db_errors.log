@@ -1,0 +1,19 @@
+[04-Oct-2025 21:06:16 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 627
+[04-Oct-2025 21:06:17 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 627
+[04-Oct-2025 21:06:19 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 627
+[04-Oct-2025 21:06:36 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php:223
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 223
+[04-Oct-2025 21:06:38 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php:223
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 223
+[04-Oct-2025 21:07:09 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php:223
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 223
+[04-Oct-2025 21:07:10 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php:223
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 223

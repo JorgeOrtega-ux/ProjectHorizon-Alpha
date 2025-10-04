@@ -169,7 +169,9 @@
       "usernameLabel": "Nombre de usuario",
       "emailLabel": "Correo electrónico",
       "usernamePlaceholder": "Nuevo nombre de usuario",
-      "emailPlaceholder": "Nuevo correo electrónico"
+      "emailPlaceholder": "Nuevo correo electrónico",
+      "usernameCooldown": "Podrás cambiarlo de nuevo en {days} días.",
+      "emailCooldown": "Podrás cambiarlo de nuevo en {days} días."
     },
     "accessibility": {
       "title": "Accesibilidad",

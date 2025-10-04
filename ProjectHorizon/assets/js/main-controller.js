@@ -3106,16 +3106,47 @@ export function initMainController() {
                     const emailDisplay = document.getElementById('email-display');
                     const usernameInput = document.getElementById('username-edit-input');
                     const emailInput = document.getElementById('email-edit-input');
+                    const editUsernameBtn = document.getElementById('edit-username-btn');
+                    const cancelUsernameBtn = document.getElementById('cancel-username-btn');
+                    const editEmailBtn = document.getElementById('edit-email-btn');
+                    const cancelEmailBtn = document.getElementById('cancel-email-btn');
+                    const usernameCooldownMessage = document.getElementById('username-cooldown-message');
+                    const emailCooldownMessage = document.getElementById('email-cooldown-message');
 
                     if (usernameDisplay) usernameDisplay.textContent = user.username;
                     if (emailDisplay) emailDisplay.textContent = user.email;
                     if (usernameInput) usernameInput.value = user.username;
                     if (emailInput) emailInput.value = user.email;
 
-                    const editUsernameBtn = document.getElementById('edit-username-btn');
-                    const cancelUsernameBtn = document.getElementById('cancel-username-btn');
-                    const editEmailBtn = document.getElementById('edit-email-btn');
-                    const cancelEmailBtn = document.getElementById('cancel-email-btn');
+                    // Lógica de cooldown para nombre de usuario
+                    if (user.username_last_updated_at) {
+                        const lastUpdated = new Date(user.username_last_updated_at);
+                        const now = new Date();
+                        const diffTime = Math.abs(now - lastUpdated);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        
+                        if (diffDays < 30) {
+                            const daysLeft = 30 - diffDays;
+                            editUsernameBtn.disabled = true;
+                            usernameCooldownMessage.textContent = window.getTranslation('settings.yourProfile.usernameCooldown', { days: daysLeft });
+                            usernameCooldownMessage.style.display = 'block';
+                        }
+                    }
+
+                    // Lógica de cooldown para email
+                    if (user.email_last_updated_at) {
+                        const lastUpdated = new Date(user.email_last_updated_at);
+                        const now = new Date();
+                        const diffTime = Math.abs(now - lastUpdated);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                        if (diffDays < 30) {
+                            const daysLeft = 30 - diffDays;
+                            editEmailBtn.disabled = true;
+                            emailCooldownMessage.textContent = window.getTranslation('settings.yourProfile.emailCooldown', { days: daysLeft });
+                            emailCooldownMessage.style.display = 'block';
+                        }
+                    }
 
                     editUsernameBtn.addEventListener('click', () => {
                         document.getElementById('username-view-mode').style.display = 'none';

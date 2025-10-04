@@ -15,6 +15,7 @@
                 <div class="form-group-text">
                     <label class="form-label" data-i18n="settings.yourProfile.usernameLabel"></label>
                     <span id="username-display">Cargando...</span>
+                    <small id="username-cooldown-message" class="cooldown-message" style="display: none;"></small>
                 </div>
                 <button type="button" class="load-more-btn" id="edit-username-btn" data-i18n="general.edit"></button>
             </div>
@@ -41,6 +42,7 @@
                 <div class="form-group-text">
                     <label class="form-label" data-i18n="settings.yourProfile.emailLabel"></label>
                     <span id="email-display">Cargando...</span>
+                    <small id="email-cooldown-message" class="cooldown-message" style="display: none;"></small>
                 </div>
                 <button type="button" class="load-more-btn" id="edit-email-btn" data-i18n="general.edit"></button>
             </div>
@@ -63,3 +65,11 @@
         </div>
     </div>
 </div>
+
+<style>
+    .cooldown-message {
+        color: var(--muted-text-color);
+        font-size: 0.8rem;
+        margin-top: 4px;
+    }
+</style>

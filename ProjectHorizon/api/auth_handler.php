@@ -603,7 +603,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode(['success' => false, 'message' => 'El nombre de usuario solo puede contener letras, números y guiones bajos (_).']);
                 exit;
             }
-        
+
             // Verificar si el nombre de usuario ya existe
             $stmt_check = $conn->prepare("SELECT id FROM users WHERE username = ? AND uuid != ?");
             $stmt_check->bind_param("ss", $new_username, $user_uuid);
@@ -616,9 +616,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
             $stmt_check->close();
+
+            // Verificar el tiempo transcurrido desde el último cambio
+            $stmt_time_check = $conn->prepare("SELECT username_last_updated_at FROM users WHERE uuid = ?");
+            $stmt_time_check->bind_param("s", $user_uuid);
+            $stmt_time_check->execute();
+            $result_time = $stmt_time_check->get_result()->fetch_assoc();
+            $stmt_time_check->close();
+
+            if ($result_time['username_last_updated_at'] !== null) {
+                $last_updated = new DateTime($result_time['username_last_updated_at']);
+                $now = new DateTime();
+                $interval = $last_updated->diff($now);
+                if ($interval->days < 30) {
+                    http_response_code(429);
+                    $days_left = 30 - $interval->days;
+                    echo json_encode(['success' => false, 'message' => "Debes esperar {$days_left} días para volver a cambiar tu nombre de usuario."]);
+                    exit;
+                }
+            }
         
             // Actualizar
-            $stmt_update = $conn->prepare("UPDATE users SET username = ? WHERE uuid = ?");
+            $stmt_update = $conn->prepare("UPDATE users SET username = ?, username_last_updated_at = NOW() WHERE uuid = ?");
             $stmt_update->bind_param("ss", $new_username, $user_uuid);
             if ($stmt_update->execute()) {
                 $_SESSION['username'] = $new_username;
@@ -666,9 +685,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
             $stmt_check->close();
+            
+            // Verificar el tiempo transcurrido desde el último cambio
+            $stmt_time_check = $conn->prepare("SELECT email_last_updated_at FROM users WHERE uuid = ?");
+            $stmt_time_check->bind_param("s", $user_uuid);
+            $stmt_time_check->execute();
+            $result_time = $stmt_time_check->get_result()->fetch_assoc();
+            $stmt_time_check->close();
+
+            if ($result_time['email_last_updated_at'] !== null) {
+                $last_updated = new DateTime($result_time['email_last_updated_at']);
+                $now = new DateTime();
+                $interval = $last_updated->diff($now);
+                if ($interval->days < 30) {
+                    http_response_code(429);
+                    $days_left = 30 - $interval->days;
+                    echo json_encode(['success' => false, 'message' => "Debes esperar {$days_left} días para volver a cambiar tu correo electrónico."]);
+                    exit;
+                }
+            }
         
             // Actualizar
-            $stmt_update = $conn->prepare("UPDATE users SET email = ? WHERE uuid = ?");
+            $stmt_update = $conn->prepare("UPDATE users SET email = ?, email_last_updated_at = NOW() WHERE uuid = ?");
             $stmt_update->bind_param("ss", $new_email, $user_uuid);
             if ($stmt_update->execute()) {
                 $_SESSION['email'] = $new_email;
