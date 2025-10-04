@@ -1,6 +1,7 @@
 // assets/js/app-init.js
 
 import { initMainController } from './main-controller.js';
+import { initAuthController } from './auth-controller.js'; // <- AÑADIR ESTA LÍNEA
 import { initUrlManager } from './url-manager.js';
 import { initThemeManager } from './theme-manager.js';
 import { initLanguageManager } from './language-manager.js';
@@ -12,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initThemeManager();
     initLanguageManager();
     initNotificationManager();
+    initAuthController(); // <- AÑADIR ESTA LÍNEA
     initMainController();
     initTooltips();
 });

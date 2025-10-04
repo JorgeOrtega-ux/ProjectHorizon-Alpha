@@ -7,6 +7,8 @@ import { initTooltips } from './tooltip-manager.js';
 import { showNotification } from './notification-manager.js';
 import * as api from './api-handler.js';
 
+// --- FUNCIONES DE LA APLICACIÓN PRINCIPAL ---
+
 function getFavorites() {
     const favorites = localStorage.getItem('favoritePhotos');
     return favorites ? JSON.parse(favorites) : [];
@@ -124,439 +126,7 @@ export function initMainController() {
     const loaderHTML = '<div class="loader-container"><div class="spinner"></div></div>';
 
     let activeScrollHandlers = [];
-
-    // --- FUNCIONES DE AUTENTICACIÓN ---
-
-    async function fetchAndSetCsrfToken(formId) {
-        const response = await api.getCsrfToken();
-        if (response.ok) {
-            const form = document.getElementById(formId);
-            if (form) {
-                const tokenInput = form.querySelector('input[name="csrf_token"]');
-                if (tokenInput) {
-                    tokenInput.value = response.data.csrf_token;
-                }
-            }
-        } else {
-            console.error('Error fetching CSRF token:', response.data);
-        }
-    }
-
-    function getInitials(name) {
-        if (!name) return '';
-        const words = name.split(' ');
-        if (words.length > 1) {
-            return (words[0][0] + words[1][0]).toUpperCase();
-        }
-        return name.substring(0, 2).toUpperCase();
-    }
-
-    function displayAuthErrors(containerId, listId, messages) {
-        const container = document.getElementById(containerId);
-        const list = document.getElementById(listId);
-
-        if (!container || !list) return;
-
-        list.innerHTML = '';
-
-        if (!messages || messages.length === 0) {
-            container.style.display = 'none';
-            return;
-        }
-
-        const errorMessages = Array.isArray(messages) ? messages : [messages];
-
-        errorMessages.forEach(msg => {
-            const li = document.createElement('li');
-            li.textContent = msg;
-            list.appendChild(li);
-        });
-
-        container.style.display = 'block';
-    }
-
-    function updateUserUI(userData) {
-        const loggedOutContainer = document.getElementById('auth-container-logged-out');
-        const loggedInContainer = document.getElementById('auth-container-logged-in');
-        const helpBtn = document.getElementById('help-btn');
-        const settingsBtn = document.getElementById('settings-btn');
-        const profileBtn = loggedInContainer ? loggedInContainer.querySelector('.profile-btn') : null;
-        const adminPanelLink = document.querySelector('[data-action="toggleAdminPanel"]');
-
-        const authRequiredLinks = document.querySelectorAll('.auth-required');
-
-        if (userData && profileBtn) {
-            loggedOutContainer.classList.add('disabled');
-            loggedInContainer.classList.remove('disabled');
-            helpBtn.classList.add('disabled');
-            settingsBtn.classList.add('disabled');
-
-            authRequiredLinks.forEach(link => link.classList.remove('disabled'));
-
-            const initialsSpan = profileBtn.querySelector('.profile-initials');
-            initialsSpan.textContent = getInitials(userData.username);
-
-            profileBtn.classList.remove('profile-btn--user', 'profile-btn--moderator', 'profile-btn--administrator');
-            profileBtn.classList.add(`profile-btn--${userData.role || 'user'}`);
-            profileBtn.dataset.userRole = userData.role || 'user';
-
-            if (adminPanelLink) {
-                if (userData.role === 'administrator') {
-                    adminPanelLink.style.display = 'flex';
-                } else {
-                    adminPanelLink.style.display = 'none';
-                }
-            }
-
-        } else {
-            loggedOutContainer.classList.remove('disabled');
-            loggedInContainer.classList.add('disabled');
-            helpBtn.classList.remove('disabled');
-            settingsBtn.classList.remove('disabled');
-
-            authRequiredLinks.forEach(link => link.classList.add('disabled'));
-
-            if (profileBtn) {
-                profileBtn.classList.remove('profile-btn--user', 'profile-btn--moderator', 'profile-btn--administrator');
-            }
-            if (adminPanelLink) {
-                adminPanelLink.style.display = 'none';
-            }
-        }
-        applyTranslations(document.querySelector('.header-right'));
-    }
-    async function checkSessionStatus() {
-        const response = await api.checkSession();
-        if (response.ok && response.data.loggedin) {
-            updateUserUI(response.data.user);
-        } else {
-            updateUserUI(null);
-            if (response.data && response.data.status === 'suspended') {
-                showNotification(window.getTranslation('auth.errors.accountSuspended'), 'error');
-            } else if (response.data && response.data.status === 'deleted') {
-                showNotification(window.getTranslation('auth.errors.accountDeleted'), 'error');
-            }
-        }
-    }
-
-    async function handleLogin(form) {
-        const email = form.querySelector('#login-email').value.trim();
-        const password = form.querySelector('#login-password').value.trim();
-        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-        const button = form.querySelector('[data-action="submit-login"]');
-
-        let errors = [];
-        if (!email) {
-            errors.push(window.getTranslation('auth.errors.emailRequired'));
-        }
-        if (!password) {
-            errors.push(window.getTranslation('auth.errors.passwordRequired'));
-        }
-
-        if (errors.length > 0) {
-            displayAuthErrors('login-error-container', 'login-error-list', errors);
-            return;
-        }
-
-        displayAuthErrors('login-error-container', 'login-error-list', []);
-        button.classList.add('loading');
-
-        const formData = new FormData();
-        formData.append('action_type', 'login_user');
-        formData.append('email', email);
-        formData.append('password', password);
-        formData.append('csrf_token', csrfToken);
-
-        const response = await api.loginUser(formData);
-        button.classList.remove('loading');
-
-        if (response.ok) {
-            const result = response.data;
-            updateUserUI(result.user);
-            showNotification(window.getTranslation('auth.loginSuccess'), 'success');
-            navigateToUrl('main', 'home');
-            handleStateChange('main', 'home');
-        } else {
-            const errorResult = response.data;
-            let errorMessage = errorResult.message;
-
-            if (response.status === 429) {
-                const minutes = errorMessage.match(/\d+/)[0];
-                errorMessage = window.getTranslation('auth.errors.tooManyRequests', { minutes: minutes });
-            } else if (errorMessage === 'account_suspended') {
-                errorMessage = window.getTranslation('auth.errors.accountSuspended');
-            } else if (errorMessage === 'account_deleted') {
-                errorMessage = window.getTranslation('auth.errors.accountDeleted');
-            }
-
-            displayAuthErrors('login-error-container', 'login-error-list', errorMessage);
-            fetchAndSetCsrfToken('login-form');
-        }
-    }
-
-    async function handleRegisterStep1(form) {
-        let username = form.querySelector('#register-username').value.trim();
-        const email = form.querySelector('#register-email').value.trim();
-        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-        const button = form.querySelector('[data-action="submit-register"]');
-
-        username = username.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('_');
-        form.querySelector('#register-username').value = username;
-
-        let errors = [];
-        const allowedDomains = ['@gmail.com', '@outlook.com', '@hotmail.com', '@yahoo.com'];
-
-        if (!username) {
-            errors.push(window.getTranslation('auth.errors.usernameRequired'));
-        } else if (username.length > 24) {
-            errors.push('El nombre de usuario no puede tener más de 24 caracteres.');
-        } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-            errors.push('El nombre de usuario solo puede contener letras, números y guiones bajos (_).');
-        }
-
-        if (!email) {
-            errors.push(window.getTranslation('auth.errors.emailRequired'));
-        } else if (!/^\S+@\S+\.\S+$/.test(email)) {
-            errors.push(window.getTranslation('auth.errors.emailInvalid'));
-        } else if (!allowedDomains.some(domain => email.endsWith(domain))) {
-            errors.push('Solo se permiten correos de Gmail, Outlook, Hotmail o Yahoo.');
-        }
-
-        if (errors.length > 0) {
-            displayAuthErrors('register-error-container', 'register-error-list', errors);
-            return;
-        }
-
-        displayAuthErrors('register-error-container', 'register-error-list', []);
-        button.classList.add('loading');
-
-        const formData = new FormData();
-        formData.append('action_type', 'register_user_step1');
-        formData.append('username', username);
-        formData.append('email', email);
-        formData.append('csrf_token', csrfToken);
-
-        const response = await api.registerUser(formData);
-        button.classList.remove('loading');
-
-        if (response.ok) {
-            navigateToUrl('auth', 'register', { step: 'password' });
-            handleStateChange('auth', 'register', true, { step: 'password' });
-        } else {
-            displayAuthErrors('register-error-container', 'register-error-list', response.data.message);
-            fetchAndSetCsrfToken('register-form');
-        }
-    }
-
-    async function handleRegisterStep2(form) {
-        const password = form.querySelector('#register-password').value;
-        const confirmPassword = form.querySelector('#register-confirm-password').value;
-        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-        const button = form.querySelector('[data-action="submit-register"]');
-
-        let errors = [];
-        if (!password) {
-            errors.push(window.getTranslation('auth.errors.passwordRequired'));
-        } else if (password.length < 6) {
-            errors.push(window.getTranslation('auth.errors.passwordTooShort'));
-        }
-        if (password !== confirmPassword) {
-            errors.push(window.getTranslation('notifications.passwordMismatch'));
-        }
-
-        if (errors.length > 0) {
-            displayAuthErrors('register-error-container', 'register-error-list', errors);
-            return;
-        }
-
-        displayAuthErrors('register-error-container', 'register-error-list', []);
-        button.classList.add('loading');
-
-        const formData = new FormData();
-        formData.append('action_type', 'register_user_step2');
-        formData.append('password', password);
-        formData.append('confirm_password', confirmPassword);
-        formData.append('csrf_token', csrfToken);
-
-        const response = await api.registerUser(formData);
-        button.classList.remove('loading');
-
-        if (response.ok) {
-            navigateToUrl('auth', 'register', { step: 'verify-code' });
-            handleStateChange('auth', 'register', true, { step: 'verify-code' });
-        } else {
-            displayAuthErrors('register-error-container', 'register-error-list', response.data.message);
-            fetchAndSetCsrfToken('register-form');
-        }
-    }
-
-    async function handleVerifyRegistrationCode(form) {
-        const code = form.querySelector('#register-code').value.trim();
-        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-        const button = form.querySelector('[data-action="submit-register"]');
-
-        let errors = [];
-        if (!code) {
-            errors.push(window.getTranslation('auth.errors.codeRequired'));
-        }
-
-        if (errors.length > 0) {
-            displayAuthErrors('register-error-container', 'register-error-list', errors);
-            return;
-        }
-
-        displayAuthErrors('register-error-container', 'register-error-list', []);
-        button.classList.add('loading');
-
-        const formData = new FormData();
-        formData.append('action_type', 'verify_registration_code');
-        formData.append('code', code);
-        formData.append('csrf_token', csrfToken);
-
-        const response = await api.verifyRegistrationCode(formData);
-        button.classList.remove('loading');
-
-        if (response.ok) {
-            const result = response.data;
-            updateUserUI(result.user);
-            showNotification(window.getTranslation('auth.registerSuccess'), 'success');
-            navigateToUrl('main', 'home');
-            handleStateChange('main', 'home');
-        } else {
-            displayAuthErrors('register-error-container', 'register-error-list', response.data.message);
-            fetchAndSetCsrfToken('register-form');
-        }
-    }
-
-    async function handleForgotPassword(form) {
-        const email = form.querySelector('#forgot-email').value.trim();
-        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-        const button = form.querySelector('[data-action="submit-forgot-password"]');
-
-        if (!email) {
-            displayAuthErrors('forgot-error-container', 'forgot-error-list', [window.getTranslation('auth.errors.emailRequired')]);
-            return;
-        }
-
-        displayAuthErrors('forgot-error-container', 'forgot-error-list', []);
-        button.classList.add('loading');
-
-        const formData = new FormData();
-        formData.append('action_type', 'forgot_password');
-        formData.append('email', email);
-        formData.append('csrf_token', csrfToken);
-
-        const response = await api.forgotPassword(formData);
-        button.classList.remove('loading');
-
-        if (response.ok) {
-            showNotification(response.data.message, 'success');
-            navigateToUrl('auth', 'forgotPassword', { step: 'enter-code', email: email });
-            handleStateChange('auth', 'forgotPassword', true, { step: 'enter-code', email: email });
-        } else {
-            let errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
-            if (response.status === 429) {
-                const minutes = errorMessage.match(/\d+/)[0];
-                errorMessage = window.getTranslation('auth.errors.tooManyCodeRequests', { minutes: minutes });
-            }
-            displayAuthErrors('forgot-error-container', 'forgot-error-list', errorMessage);
-            fetchAndSetCsrfToken('forgot-password-form');
-        }
-    }
-
-    async function handleVerifyResetCode(form) {
-        const email = form.querySelector('#reset-email').value.trim();
-        const code = form.querySelector('#reset-code').value.trim();
-        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-        const button = form.querySelector('[data-action="submit-forgot-password"]');
-
-        if (!code) {
-            displayAuthErrors('forgot-error-container', 'forgot-error-list', [window.getTranslation('auth.errors.codeRequired')]);
-            return;
-        }
-
-        displayAuthErrors('forgot-error-container', 'forgot-error-list', []);
-        button.classList.add('loading');
-
-        const formData = new FormData();
-        formData.append('action_type', 'verify_reset_code');
-        formData.append('email', email);
-        formData.append('code', code);
-        formData.append('csrf_token', csrfToken);
-
-        const response = await api.verifyResetCode(formData);
-        button.classList.remove('loading');
-
-        if (response.ok) {
-            navigateToUrl('auth', 'forgotPassword', { step: 'new-password', email: email, code: code });
-            handleStateChange('auth', 'forgotPassword', true, { step: 'new-password', email: email, code: code });
-        } else {
-            displayAuthErrors('forgot-error-container', 'forgot-error-list', response.data.message);
-            fetchAndSetCsrfToken('forgot-password-form');
-        }
-    }
-
-    async function handleUpdatePasswordFromReset(form) {
-        const email = form.querySelector('#reset-email').value.trim();
-        const code = form.querySelector('#reset-code').value.trim();
-        const newPassword = form.querySelector('#reset-password').value;
-        const confirmPassword = form.querySelector('#reset-confirm-password').value;
-        const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-        const button = form.querySelector('[data-action="submit-forgot-password"]');
-
-        let errors = [];
-        if (!newPassword) errors.push(window.getTranslation('auth.errors.passwordRequired'));
-        if (newPassword.length < 6) errors.push(window.getTranslation('auth.errors.passwordTooShort'));
-        if (newPassword !== confirmPassword) errors.push(window.getTranslation('notifications.passwordMismatch'));
-
-        if (errors.length > 0) {
-            displayAuthErrors('forgot-error-container', 'forgot-error-list', errors);
-            return;
-        }
-
-        displayAuthErrors('forgot-error-container', 'forgot-error-list', []);
-        button.classList.add('loading');
-
-        const formData = new FormData();
-        formData.append('action_type', 'reset_password');
-        formData.append('email', email);
-        formData.append('code', code);
-        formData.append('new_password', newPassword);
-        formData.append('csrf_token', csrfToken);
-
-        const response = await api.resetPassword(formData);
-        button.classList.remove('loading');
-
-        if (response.ok) {
-            showNotification(response.data.message, 'success');
-            navigateToUrl('auth', 'login');
-            handleStateChange('auth', 'login');
-        } else {
-            let errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
-            if (response.status === 429) {
-                const minutes = errorMessage.match(/\d+/)[0];
-                errorMessage = window.getTranslation('auth.errors.tooManyRequests', { minutes: minutes });
-            }
-            displayAuthErrors('forgot-error-container', 'forgot-error-list', errorMessage);
-            fetchAndSetCsrfToken('forgot-password-form');
-        }
-    }
-
-
-    async function handleLogout() {
-        const response = await api.logoutUser();
-        if (response.ok && response.data.success) {
-            updateUserUI(null);
-            showNotification(window.getTranslation('auth.logoutSuccess'));
-            if (currentAppView === 'settings' || currentAppView === 'help' || currentAppView === 'admin') {
-                navigateToUrl('main', 'home');
-                handleStateChange('main', 'home');
-            }
-        } else {
-            console.error('Error logging out:', response.data);
-        }
-    }
-
+    
     // --- FUNCIONES DE DIÁLOGO DINÁMICO ---
     
     function showDialog(options) {
@@ -643,6 +213,15 @@ export function initMainController() {
         });
     }
 
+    function getInitials(name) {
+        if (!name) return '';
+        const words = name.split(' ');
+        if (words.length > 1 && words[1]) {
+            return (words[0][0] + words[1][0]).toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
+    }
+
     async function showUpdatePasswordDialog() {
         const sessionResponse = await api.checkSession();
         if (!sessionResponse.ok || !sessionResponse.data.loggedin) return;
@@ -688,7 +267,8 @@ export function initMainController() {
                             const csrfToken = getDialogElement().querySelector('input[name="csrf_token"]').value;
 
                             if (newPassword !== confirmPassword) {
-                                displayAuthErrors('password-error-container', 'password-error-list', window.getTranslation('notifications.passwordMismatch'));
+                                document.getElementById('password-error-list').innerHTML = `<li>${window.getTranslation('notifications.passwordMismatch')}</li>`;
+                                document.getElementById('password-error-container').style.display = 'block';
                                 return;
                             }
 
@@ -705,7 +285,8 @@ export function initMainController() {
                                 showNotification(window.getTranslation('notifications.passwordUpdated'), 'success');
                                 close();
                             } else {
-                                displayAuthErrors('password-error-container', 'password-error-list', response.data.message);
+                                document.getElementById('password-error-list').innerHTML = `<li>${response.data.message}</li>`;
+                                document.getElementById('password-error-container').style.display = 'block';
                             }
                         }
                     }
@@ -752,10 +333,11 @@ export function initMainController() {
                         const response = await api.verifyPassword(formData);
                         stopLoading();
 
-                        if (response.ok && response.data.success) { // ✅ **CAMBIO CLAVE**
+                        if (response.ok && response.data.success) {
                             renderUpdateStep(close);
                         } else {
-                            displayAuthErrors('password-error-container', 'password-error-list', response.data.message);
+                            getDialogElement().querySelector('#password-error-list').innerHTML = `<li>${response.data.message}</li>`;
+                            getDialogElement().querySelector('#password-error-container').style.display = 'block';
                         }
                     }
                 }
@@ -803,7 +385,8 @@ export function initMainController() {
                         const csrfToken = getDialogElement().querySelector('input[name="csrf_token"]').value;
 
                         if (!password) {
-                            displayAuthErrors('delete-error-container', 'delete-error-list', window.getTranslation('auth.errors.passwordRequired'));
+                            getDialogElement().querySelector('#delete-error-list').innerHTML = `<li>${window.getTranslation('auth.errors.passwordRequired')}</li>`;
+                            getDialogElement().querySelector('#delete-error-container').style.display = 'block';
                             return;
                         }
 
@@ -818,12 +401,12 @@ export function initMainController() {
 
                         if (response.ok) {
                             showNotification(window.getTranslation('notifications.accountDeleted'), 'success');
-                            updateUserUI(null);
+                            window.auth.updateUserUI(null);
                             close();
-                            navigateToUrl('main', 'home');
-                            handleStateChange('main', 'home');
+                            window.dispatchEvent(new CustomEvent('navigateTo', { detail: { view: 'main', section: 'home' } }));
                         } else {
-                            displayAuthErrors('delete-error-container', 'delete-error-list', response.data.message);
+                            getDialogElement().querySelector('#delete-error-list').innerHTML = `<li>${response.data.message}</li>`;
+                            getDialogElement().querySelector('#delete-error-container').style.display = 'block';
                             const newTokenResponse = await api.getCsrfToken();
                             if (newTokenResponse.ok) {
                                 getDialogElement().querySelector('input[name="csrf_token"]').value = newTokenResponse.data.csrf_token;
@@ -862,7 +445,8 @@ export function initMainController() {
                         const csrfToken = getDialogElement().querySelector('input[name="csrf_token"]').value;
                         
                         if (!password) {
-                            displayAuthErrors('verify-email-change-error-container', 'verify-email-change-error-list', 'La contraseña es obligatoria.');
+                            getDialogElement().querySelector('#verify-email-change-error-list').innerHTML = `<li>La contraseña es obligatoria.</li>`;
+                            getDialogElement().querySelector('#verify-email-change-error-container').style.display = 'block';
                             return;
                         }
 
@@ -875,12 +459,13 @@ export function initMainController() {
                         const response = await api.verifyPassword(formData);
                         stopLoading();
 
-                        if (response.ok && response.data.success) { // ✅ **CAMBIO CLAVE**
+                        if (response.ok && response.data.success) {
                             close();
                             document.getElementById('email-view-mode').style.display = 'none';
                             document.getElementById('email-edit-mode').style.display = 'block';
                         } else {
-                            displayAuthErrors('verify-email-change-error-container', 'verify-email-change-error-list', response.data.message || 'La contraseña es incorrecta.');
+                            getDialogElement().querySelector('#verify-email-change-error-list').innerHTML = `<li>${response.data.message || 'La contraseña es incorrecta.'}</li>`;
+                            getDialogElement().querySelector('#verify-email-change-error-container').style.display = 'block';
                         }
                     }
                 }
@@ -908,12 +493,16 @@ export function initMainController() {
                     className: 'btn-primary',
                     onClick: async ({ close, startLoading, stopLoading, getDialogElement }) => {
                         const password = getDialogElement().querySelector('#admin-confirm-password').value;
+                        const errorContainer = getDialogElement().querySelector('#change-role-error-container');
+                        const errorList = getDialogElement().querySelector('#change-role-error-list');
+
                         if (!password) {
-                            displayAuthErrors('change-role-error-container', 'change-role-error-list', 'La contraseña es obligatoria.');
+                            errorList.innerHTML = `<li>La contraseña es obligatoria.</li>`;
+                            errorContainer.style.display = 'block';
                             return;
                         }
 
-                        displayAuthErrors('change-role-error-container', 'change-role-error-list', []);
+                        errorContainer.style.display = 'none';
                         startLoading();
                         
                         const passResponse = await api.verifyAdminPassword(password);
@@ -924,10 +513,12 @@ export function initMainController() {
                                 fetchAndDisplayUsers(document.querySelector('#admin-user-search').value.trim());
                                 close();
                             } else {
-                                displayAuthErrors('change-role-error-container', 'change-role-error-list', roleResponse.data.message || 'Error al cambiar el rol.');
+                                errorList.innerHTML = `<li>${roleResponse.data.message || 'Error al cambiar el rol.'}</li>`;
+                                errorContainer.style.display = 'block';
                             }
                         } else {
-                            displayAuthErrors('change-role-error-container', 'change-role-error-list', passResponse.data.message || 'Error de verificación.');
+                            errorList.innerHTML = `<li>${passResponse.data.message || 'Error de verificación.'}</li>`;
+                            errorContainer.style.display = 'block';
                         }
                         
                         stopLoading();
@@ -2261,39 +1852,6 @@ export function initMainController() {
                 }
 
                 switch (action) {
-                    case 'submit-login':
-                        const loginForm = document.getElementById('login-form');
-                        if (loginForm) handleLogin(loginForm);
-                        break;
-                    case 'submit-register':
-                        const registerForm = document.getElementById('register-form');
-                        if (registerForm) {
-                            const currentStep = registerForm.dataset.step || 'user-info';
-                            if (currentStep === 'user-info') {
-                                handleRegisterStep1(registerForm);
-                            } else if (currentStep === 'password') {
-                                handleRegisterStep2(registerForm);
-                            } else if (currentStep === 'verify-code') {
-                                handleVerifyRegistrationCode(registerForm);
-                            }
-                        }
-                        break;
-                    case 'submit-forgot-password':
-                        const forgotPasswordForm = document.getElementById('forgot-password-form');
-                        if (forgotPasswordForm) {
-                            const currentStep = forgotPasswordForm.dataset.step || 'enter-email';
-                            if (currentStep === 'enter-email') {
-                                handleForgotPassword(forgotPasswordForm);
-                            } else if (currentStep === 'enter-code') {
-                                handleVerifyResetCode(forgotPasswordForm);
-                            } else if (currentStep === 'new-password') {
-                                handleUpdatePasswordFromReset(forgotPasswordForm);
-                            }
-                        }
-                        break;
-                    case 'logout':
-                        handleLogout();
-                        break;
                     case 'update-password':
                         showUpdatePasswordDialog();
                         break;
@@ -2643,13 +2201,14 @@ export function initMainController() {
                             document.getElementById('username-display').textContent = newUsername;
                             document.getElementById('username-edit-mode').style.display = 'none';
                             document.getElementById('username-view-mode').style.display = 'flex';
-                            await checkSessionStatus();
+                            await window.auth.checkSessionStatus();
                         } else {
                             let message = response.data.message;
                             if (message === 'username_taken') {
                                 message = window.getTranslation('notifications.usernameTaken');
                             }
-                            displayAuthErrors('username-error-container', 'username-error-list', [message]);
+                            document.getElementById('username-error-list').innerHTML = `<li>${message}</li>`;
+                            document.getElementById('username-error-container').style.display = 'block';
                         }
                         break;
                     }
@@ -2675,13 +2234,14 @@ export function initMainController() {
                             document.getElementById('email-display').textContent = newEmail;
                             document.getElementById('email-edit-mode').style.display = 'none';
                             document.getElementById('email-view-mode').style.display = 'flex';
-                            await checkSessionStatus();
+                            await window.auth.checkSessionStatus();
                         } else {
                             let message = response.data.message;
                             if (message === 'email_taken') {
                                 message = window.getTranslation('notifications.emailTaken');
                             }
-                            displayAuthErrors('email-error-container', 'email-error-list', [message]);
+                            document.getElementById('email-error-list').innerHTML = `<li>${message}</li>`;
+                            document.getElementById('email-error-container').style.display = 'block';
                         }
                         break;
                     }
@@ -3038,7 +2598,7 @@ export function initMainController() {
             return;
         }
 
-        if (section !== 'photoView') { // ✅ **CAMBIO CLAVE**
+        if (section !== 'photoView') {
             lastVisitedView = section;
             lastVisitedData = data;
         }
@@ -3131,7 +2691,6 @@ export function initMainController() {
                         document.getElementById('username-view-mode').style.display = 'flex';
                         document.getElementById('username-edit-mode').style.display = 'none';
                         usernameInput.value = usernameDisplay.textContent;
-                        displayAuthErrors('username-error-container', 'username-error-list', []);
                     });
                     editEmailBtn.addEventListener('click', () => {
                         showVerifyPasswordForEmailChangeDialog();
@@ -3140,7 +2699,6 @@ export function initMainController() {
                         document.getElementById('email-view-mode').style.display = 'flex';
                         document.getElementById('email-edit-mode').style.display = 'none';
                         emailInput.value = emailDisplay.textContent;
-                        displayAuthErrors('email-error-container', 'email-error-list', []);
                     });
                 }
                 break;
@@ -3188,9 +2746,9 @@ export function initMainController() {
                 }
                 break;
             case 'login':
-                fetchAndSetCsrfToken('login-form');
+                window.auth.fetchAndSetCsrfToken('login-form');
                 break;
-            case 'register':
+            case 'register': {
                 const form = document.getElementById('register-form');
                 const step = data?.step || 'user-info';
                 form.dataset.step = step;
@@ -3217,7 +2775,7 @@ export function initMainController() {
                 }
 
                 applyTranslations(form.parentElement);
-                fetchAndSetCsrfToken('register-form');
+                window.auth.fetchAndSetCsrfToken('register-form');
                 const usernameInput = document.getElementById('register-username');
                 if (usernameInput) {
                     usernameInput.addEventListener('input', (e) => {
@@ -3228,7 +2786,8 @@ export function initMainController() {
                     });
                 }
                 break;
-            case 'forgotPassword':
+            }
+            case 'forgotPassword': {
                 const forgotPasswordForm = document.getElementById('forgot-password-form');
                 const forgotStep = data?.step || 'enter-email';
                 forgotPasswordForm.dataset.step = forgotStep;
@@ -3263,19 +2822,10 @@ export function initMainController() {
                         codeInput.addEventListener('input', (e) => {
                             let input = e.target;
                             let sanitizedValue = input.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
-
-                            if (sanitizedValue.length > 6) {
-                                sanitizedValue = sanitizedValue.substring(0, 6);
-                            }
-
-                            if (sanitizedValue.length > 3) {
-                                input.value = sanitizedValue.substring(0, 3) + '-' + sanitizedValue.substring(3);
-                            } else {
-                                input.value = sanitizedValue;
-                            }
+                            if (sanitizedValue.length > 6) sanitizedValue = sanitizedValue.substring(0, 6);
+                            input.value = sanitizedValue.length > 3 ? `${sanitizedValue.substring(0, 3)}-${sanitizedValue.substring(3)}` : sanitizedValue;
                         });
                     }
-
                 } else if (forgotStep === 'new-password') {
                     forgotPasswordGroup.style.display = 'flex';
                     const emailInput = forgotPasswordForm.querySelector('#reset-email');
@@ -3288,8 +2838,9 @@ export function initMainController() {
                 }
 
                 applyTranslations(forgotPasswordForm.parentElement);
-                fetchAndSetCsrfToken('forgot-password-form');
+                window.auth.fetchAndSetCsrfToken('forgot-password-form');
                 break;
+            }
             case 'history':
                 historyProfilesShown = HISTORY_PROFILES_BATCH;
                 historyPhotosShown = HISTORY_PHOTOS_BATCH;
@@ -3385,11 +2936,7 @@ export function initMainController() {
                 const MAX_FILES = 3;
 
                 const updateUploadButtonState = () => {
-                    if (uploadedFiles.length >= MAX_FILES) {
-                        uploadBtn.disabled = true;
-                    } else {
-                        uploadBtn.disabled = false;
-                    }
+                    uploadBtn.disabled = uploadedFiles.length >= MAX_FILES;
                 };
 
                 const renderPreviews = () => {
@@ -3810,8 +3357,13 @@ export function initMainController() {
 
     // --- INICIALIZACIÓN ---
     setupEventListeners();
-    checkSessionStatus();
     startUnlockCountdownTimer();
+
+    window.addEventListener('navigateTo', (e) => {
+        const { view, section, data } = e.detail;
+        navigateToUrl(view, section, data);
+        handleStateChange(view, section, true, data);
+    });
 
     setupPopStateHandler((view, section, pushState, data) => {
         handleStateChange(view, section, pushState, data);
