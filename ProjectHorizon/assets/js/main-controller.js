@@ -2335,9 +2335,18 @@ export function initMainController() {
                         handleStateChange('auth', 'login');
                         break;
                     case 'toggleSettings':
-                        if (currentAppView === 'settings' && currentAppSection === 'yourProfile') return;
-                        navigateToUrl('settings', 'yourProfile');
-                        handleStateChange('settings', 'yourProfile');
+                        {
+                            const sessionResponse = await api.checkSession();
+                            if (sessionResponse.ok && sessionResponse.data.loggedin) {
+                                if (currentAppView === 'settings' && currentAppSection === 'yourProfile') return;
+                                navigateToUrl('settings', 'yourProfile');
+                                handleStateChange('settings', 'yourProfile');
+                            } else {
+                                if (currentAppView === 'settings' && currentAppSection === 'accessibility') return;
+                                navigateToUrl('settings', 'accessibility');
+                                handleStateChange('settings', 'accessibility');
+                            }
+                        }
                         break;
                     case 'toggleHelp':
                         if (currentAppView === 'help' && currentAppSection === 'privacyPolicy') return;
