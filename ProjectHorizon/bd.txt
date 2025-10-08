@@ -1,0 +1,210 @@
+-- Borra la base de datos si ya existe para empezar desde cero
+DROP DATABASE IF EXISTS project_horizon;
+-- Crea la base de datos
+CREATE DATABASE project_horizon;
+
+-- Selecciona la base de datos para usarla
+USE project_horizon;
+-- --------------------------------------------------------
+-- TABLAS DE USUARIOS
+-- --------------------------------------------------------
+
+-- Estructura de la tabla `users`
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uuid` varchar(36) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `role` ENUM('user','moderator','administrator') NOT NULL DEFAULT 'user',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `status` ENUM('active','suspended','deleted') NOT NULL DEFAULT 'active',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uuid` (`uuid`),
+  UNIQUE KEY `username` (`username`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Estructura de la tabla `user_metadata`
+CREATE TABLE `user_metadata` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_uuid` varchar(36) NOT NULL,
+  `password_last_updated_at` timestamp NULL DEFAULT NULL,
+  `username_last_updated_at` timestamp NULL DEFAULT NULL,
+  `email_last_updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_uuid` (`user_uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Estructura de la tabla `user_favorites`
+CREATE TABLE `user_favorites` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_uuid` varchar(36) NOT NULL,
+  `photo_id` int(11) NOT NULL,
+  `added_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_photo_unique` (`user_uuid`,`photo_id`),
+  KEY `user_uuid` (`user_uuid`),
+  KEY `photo_id` (`photo_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Estructura de la tabla `user_history`
+CREATE TABLE `user_history` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_uuid` varchar(36) NOT NULL,
+  `history_type` enum('profile','photo','search') NOT NULL,
+  `item_id` varchar(255) NOT NULL,
+  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata`)),
+  `visited_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `user_uuid` (`user_uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- --------------------------------------------------------
+-- TABLAS DE GALERÍAS
+-- --------------------------------------------------------
+
+-- Estructura de la tabla `galleries`
+CREATE TABLE `galleries` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `uuid` VARCHAR(36) NOT NULL UNIQUE,
+    `name` VARCHAR(255) NOT NULL,
+    `privacy` BOOLEAN DEFAULT FALSE,
+    `visibility` ENUM('visible','hidden') NOT NULL DEFAULT 'visible',
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Estructura de la tabla `galleries_metadata`
+CREATE TABLE `galleries_metadata` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `gallery_uuid` VARCHAR(36) NOT NULL,
+    `total_likes` INT DEFAULT 0,
+    `total_saves` INT DEFAULT 0,
+    `total_interactions` INT DEFAULT 0,
+    `last_edited` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Estructura de la tabla `gallery_photos`
+CREATE TABLE `gallery_photos` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `gallery_uuid` varchar(36) NOT NULL,
+  `photo_url` varchar(255) NOT NULL,
+  `display_order` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Estructura de la tabla `gallery_photos_metadata`
+CREATE TABLE `gallery_photos_metadata` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `photo_id` int(11) NOT NULL,
+  `likes` int(11) DEFAULT 0,
+  `saves` int(11) DEFAULT 0,
+  `interactions` int(11) DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Estructura de la tabla `gallery_profile_pictures`
+CREATE TABLE `gallery_profile_pictures` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `gallery_uuid` varchar(36) NOT NULL,
+  `profile_picture_url` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `gallery_uuid` (`gallery_uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Estructura de la tabla `photo_comments`
+CREATE TABLE `photo_comments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `photo_id` int(11) NOT NULL,
+  `user_uuid` varchar(36) NOT NULL,
+  `comment_text` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `photo_id` (`photo_id`),
+  KEY `user_uuid` (`user_uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- --------------------------------------------------------
+-- OTRAS TABLAS
+-- --------------------------------------------------------
+
+-- Estructura de la tabla `verification_codes`
+CREATE TABLE `verification_codes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) NOT NULL,
+  `code` varchar(6) NOT NULL,
+  `type` ENUM('registration', 'password_reset') NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Estructura de la tabla `feedback`
+CREATE TABLE `feedback` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uuid` varchar(36) NOT NULL,
+  `issue_type` varchar(50) NOT NULL,
+  `title` varchar(100) DEFAULT NULL,
+  `description` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uuid` (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Estructura de la tabla `feedback_attachments`
+CREATE TABLE `feedback_attachments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `feedback_uuid` varchar(36) NOT NULL,
+  `attachment_url` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Estructura de la tabla `security_logs`
+CREATE TABLE `security_logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_identifier` varchar(255) NOT NULL,
+  `action_type` enum('login_fail','reset_fail','reset_request') NOT NULL,
+  `ip_address` varchar(45) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `user_identifier` (`user_identifier`),
+  KEY `created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Estructura de la tabla `comment_likes`
+CREATE TABLE `comment_likes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `comment_id` int(11) NOT NULL,
+  `user_uuid` varchar(36) NOT NULL,
+  `vote_type` tinyint(4) NOT NULL COMMENT '1 for like, -1 for dislike',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `comment_user_unique` (`comment_id`,`user_uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Estructura de la tabla `comment_reports`
+CREATE TABLE `comment_reports` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `comment_id` int(11) NOT NULL,
+  `reporter_uuid` varchar(36) NOT NULL,
+  `reason` varchar(255) NOT NULL,
+  `status` enum('pending','reviewed','dismissed') NOT NULL DEFAULT 'pending',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- --------------------------------------------------------
+-- DEFINICIÓN DE CLAVES FORÁNEAS
+-- --------------------------------------------------------
+
+ALTER TABLE `user_metadata`
+  ADD CONSTRAINT `user_metadata_ibfk_1` FOREIGN KEY (`user_uuid`) REFERENCES `users` (`uuid`) ON DELETE CASCADE;
+ALTER TABLE `user_favorites`
+  ADD CONSTRAINT `user_favorites_ibfk_1` FOREIGN KEY (`user_uuid`) REFERENCES `users` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `user_favorites_ibfk_2` FOREIGN KEY (`photo_id`) REFERENCES `gallery_photos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `user_history`
+  ADD CONSTRAINT `user_history_ibfk_1` FOREIGN KEY (`user_uuid`) REFERENCES `users` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `galleries_metadata`
+  ADD CONSTRAINT `galleries_metadata_ibfk_1` FOREIGN KEY (`gallery_uuid`) REFERENCES `galleries`(`uuid`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `gallery_photos`
+  ADD CONSTRAINT `gallery_photos_ibfk_1` FOREIGN KEY (`gallery_uuid`) REFERENCES `galleries`(`uuid`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `gallery_photos_metadata`
+  ADD CONSTRAINT `gallery_photos_metadata_ibfk_1` FOREIGN KEY (`photo_id`) REFERENCES `gallery_photos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `gallery_profile_pictures`
+  ADD CONSTRAINT `gallery_profile_pictures_ibfk_1` FOREIGN KEY (`gallery_uuid`) REFERENCES `galleries`(`uuid`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `feedback_attachments`
+  ADD CONSTRAINT `feedback_attachments_ibfk_1` FOREIGN KEY (`feedback_uuid`) REFERENCES `feedback` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `photo_comments`
+  ADD CONSTRAINT `photo_comments_ibfk_1` FOREIGN KEY (`photo_id`) REFERENCES `gallery_photos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `photo_comments_ibfk_2` FOREIGN KEY (`user_uuid`) REFERENCES `users` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `comment_likes`
+  ADD CONSTRAINT `comment_likes_ibfk_1` FOREIGN KEY (`comment_id`) REFERENCES `photo_comments` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `comment_likes_ibfk_2` FOREIGN KEY (`user_uuid`) REFERENCES `users` (`uuid`) ON DELETE CASCADE;
+ALTER TABLE `comment_reports`
+  ADD CONSTRAINT `comment_reports_ibfk_1` FOREIGN KEY (`comment_id`) REFERENCES `photo_comments` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `comment_reports_ibfk_2` FOREIGN KEY (`reporter_uuid`) REFERENCES `users` (`uuid`) ON DELETE CASCADE;

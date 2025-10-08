@@ -1,0 +1,125 @@
+[04-Oct-2025 21:06:16 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 627
+[04-Oct-2025 21:06:17 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 627
+[04-Oct-2025 21:06:19 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 627
+[04-Oct-2025 21:06:36 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php:223
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 223
+[04-Oct-2025 21:06:38 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php:223
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 223
+[04-Oct-2025 21:07:09 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php:223
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 223
+[04-Oct-2025 21:07:10 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php:223
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 223
+[05-Oct-2025 04:51:44 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php:223
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 223
+[05-Oct-2025 04:53:00 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php:223
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 223
+[05-Oct-2025 04:56:50 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php:223
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 223
+[05-Oct-2025 07:21:06 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:509
+Stack trace:
+#0 E:\xampp\htdocs\ProjectHorizon\api\main_handler.php(509): mysqli_stmt->bind_param('ssiiii', 'db2b8ad0-16a8-4...', 'light', 'es-419', 0, 0, 1, 1)
+#1 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 509
+[05-Oct-2025 07:21:20 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:509
+Stack trace:
+#0 E:\xampp\htdocs\ProjectHorizon\api\main_handler.php(509): mysqli_stmt->bind_param('ssiiii', 'db2b8ad0-16a8-4...', 'system', 'es-419', 0, 0, 1, 1)
+#1 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 509
+[05-Oct-2025 07:21:26 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:509
+Stack trace:
+#0 E:\xampp\htdocs\ProjectHorizon\api\main_handler.php(509): mysqli_stmt->bind_param('ssiiii', 'db2b8ad0-16a8-4...', 'system', 'es-419', 0, 0, 1, 1)
+#1 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 509
+[05-Oct-2025 07:21:55 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:509
+Stack trace:
+#0 E:\xampp\htdocs\ProjectHorizon\api\main_handler.php(509): mysqli_stmt->bind_param('ssiiii', 'db2b8ad0-16a8-4...', 'system', 'es-419', 0, 0, 1, 1)
+#1 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 509
+[05-Oct-2025 07:23:13 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:509
+Stack trace:
+#0 E:\xampp\htdocs\ProjectHorizon\api\main_handler.php(509): mysqli_stmt->bind_param('ssiiii', 'db2b8ad0-16a8-4...', 'light', 'es-419', 0, 0, 1, 1)
+#1 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 509
+[05-Oct-2025 07:23:22 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:509
+Stack trace:
+#0 E:\xampp\htdocs\ProjectHorizon\api\main_handler.php(509): mysqli_stmt->bind_param('ssiiii', 'db2b8ad0-16a8-4...', 'system', 'es-419', 0, 0, 1, 1)
+#1 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 509
+[05-Oct-2025 07:55:30 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:42
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 42
+[05-Oct-2025 07:55:34 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:42
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 42
+[05-Oct-2025 07:55:34 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:42
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 42
+[05-Oct-2025 07:55:38 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:42
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 42
+[05-Oct-2025 07:55:41 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:42
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 42
+[05-Oct-2025 07:55:42 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:42
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 42
+[05-Oct-2025 07:55:44 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:42
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 42
+[06-Oct-2025 00:23:46 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:217
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 217
+[06-Oct-2025 00:23:46 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:217
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 217
+[06-Oct-2025 00:23:46 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:294
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 294
+[06-Oct-2025 00:24:10 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:217
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 217
+[06-Oct-2025 00:24:10 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:294
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 294
+[07-Oct-2025 07:14:21 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:323
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 323
+[07-Oct-2025 07:14:46 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:323
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 323
+[07-Oct-2025 07:15:24 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:323
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 323
+[07-Oct-2025 07:15:54 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:323
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 323
