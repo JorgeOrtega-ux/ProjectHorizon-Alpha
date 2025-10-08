@@ -54,6 +54,7 @@
                         <th data-i18n="admin.manageComments.table.user"></th>
                         <th data-i18n="admin.manageComments.table.photo"></th>
                         <th data-i18n="admin.manageComments.table.reports"></th>
+                        <th data-i18n="admin.manageComments.table.status"></th>
                         <th data-i18n="admin.manageComments.table.date"></th>
                         <th data-i18n="admin.manageComments.table.actions"></th>
                     </tr>

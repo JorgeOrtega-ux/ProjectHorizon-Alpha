@@ -3164,4 +3164,24 @@ h6 {
     right: 0;
     left: auto;
     width: 240px;
+}/* ================================================= */
+/* ========= ESTILOS PARA COMENTARIO EN REVISIÓN ====== */
+/* ================================================= */
+
+.comment-in-review {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background-color: var(--hover-bg);
+    border: 1px solid var(--border-color);
+    color: var(--muted-text-color);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-top: 8px;
+}
+
+.comment-in-review .material-symbols-rounded {
+    font-size: 20px;
 }

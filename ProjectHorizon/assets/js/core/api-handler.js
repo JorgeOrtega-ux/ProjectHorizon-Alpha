@@ -285,10 +285,11 @@ export function getAdminComments(searchTerm, filter, page, limit) {
     return fetchData(url);
 }
 
-export function deleteComment(commentId) {
+export function updateCommentStatus(commentId, status) {
     const formData = new FormData();
-    formData.append('action_type', 'delete_comment');
+    formData.append('action_type', 'update_comment_status');
     formData.append('comment_id', commentId);
+    formData.append('status', status);
     return postDataWithCsrf(formData);
 }
 

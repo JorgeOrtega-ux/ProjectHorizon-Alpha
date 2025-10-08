@@ -996,6 +996,38 @@ export function displayAdminComments(comments, tableBody, statusContainer, appen
             const reportStatus = comment.pending_reports > 0 ? 'pending' : (comment.report_count > 0 ? 'reviewed' : 'active');
             const reportText = `${comment.report_count} (${comment.pending_reports} ${window.getTranslation('admin.manageComments.filter.pending')})`;
 
+            let actionsMenu = '';
+            if (comment.status === 'visible') {
+                actionsMenu = `
+                    <div class="menu-link" data-action="set-comment-status" data-id="${comment.id}" data-status="review">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">rate_review</span></div>
+                        <div class="menu-link-text"><span data-i18n="admin.manageComments.table.actions.review"></span></div>
+                    </div>
+                    <div class="menu-link" data-action="set-comment-status" data-id="${comment.id}" data-status="deleted">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">delete</span></div>
+                        <div class="menu-link-text"><span data-i18n="admin.manageComments.table.actions.delete"></span></div>
+                    </div>
+                `;
+            } else if (comment.status === 'review') {
+                actionsMenu = `
+                    <div class="menu-link" data-action="set-comment-status" data-id="${comment.id}" data-status="visible">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">visibility</span></div>
+                        <div class="menu-link-text"><span data-i18n="admin.manageComments.table.actions.makeVisible"></span></div>
+                    </div>
+                    <div class="menu-link" data-action="set-comment-status" data-id="${comment.id}" data-status="deleted">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">delete</span></div>
+                        <div class="menu-link-text"><span data-i18n="admin.manageComments.table.actions.delete"></span></div>
+                    </div>
+                `;
+            } else if (comment.status === 'deleted') {
+                actionsMenu = `
+                    <div class="menu-link" data-action="set-comment-status" data-id="${comment.id}" data-status="visible">
+                        <div class="menu-link-icon"><span class="material-symbols-rounded">restore</span></div>
+                        <div class="menu-link-text"><span data-i18n="admin.manageComments.table.actions.restore"></span></div>
+                    </div>
+                `;
+            }
+
             row.innerHTML = `
                 <td title="${comment.comment_text}">${truncatedComment}</td>
                 <td>
@@ -1012,8 +1044,9 @@ export function displayAdminComments(comments, tableBody, statusContainer, appen
                     </a>
                 </td>
                 <td>
-                    <span class="status-badge status-${reportStatus}">${reportText}</span>
+                    <span class="status-badge status-report-${reportStatus}">${reportText}</span>
                 </td>
+                <td><span class="status-badge status-comment-${comment.status}">${comment.status}</span></td>
                 <td>${createdDate}</td>
                 <td>
                     <div class="item-actions">
@@ -1023,14 +1056,7 @@ export function displayAdminComments(comments, tableBody, statusContainer, appen
                         <div class="module-content module-select disabled">
                             <div class="menu-content">
                                 <div class="menu-list">
-                                    <div class="menu-link" data-action="delete-comment" data-id="${comment.id}">
-                                        <div class="menu-link-icon"><span class="material-symbols-rounded">delete</span></div>
-                                        <div class="menu-link-text"><span data-i18n="admin.manageComments.table.actions.delete"></span></div>
-                                    </div>
-                                    <div class="menu-link" data-action="review-reports" data-id="${comment.id}" ${comment.pending_reports == 0 ? 'style="display:none;"' : ''}>
-                                        <div class="menu-link-icon"><span class="material-symbols-rounded">check</span></div>
-                                        <div class="menu-link-text"><span data-i18n="admin.manageComments.table.actions.review"></span></div>
-                                    </div>
+                                    ${actionsMenu}
                                 </div>
                             </div>
                         </div>

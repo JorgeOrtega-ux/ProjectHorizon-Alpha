@@ -410,6 +410,8 @@
     "manageComments": {
       "title": "Gestionar Comentarios",
       "searchPlaceholder": "Buscar por comentario o usuario...",
+      "noResultsTitle": "No se encontraron comentarios",
+      "noResultsMessage": "No hay comentarios que coincidan con los filtros y la búsqueda actual.",
       "filter": {
         "all": "Todos los comentarios",
         "reported": "Reportados",
@@ -420,8 +422,23 @@
         "user": "Usuario",
         "photo": "Foto",
         "reports": "Reportes",
+        "status": "Estado",
         "date": "Fecha",
-        "actions": "Acciones"
+        "actions": "Acciones",
+        "actions_tooltip": "Acciones de comentario",
+        "states": {
+          "visible": "Visible",
+          "review": "En Revisión",
+          "deleted": "Eliminado"
+        },
+        "actions": {
+            "review": "Marcar para revisión",
+            "delete": "Eliminar comentario",
+            "makeVisible": "Hacer visible",
+            "restore": "Restaurar comentario",
+            "confirmDelete": "¿Estás seguro de que quieres eliminar este comentario permanentemente?",
+            "confirmDeleteTitle": "Eliminar Comentario Permanentemente"
+        }
       }
     },
     "editGallery": {

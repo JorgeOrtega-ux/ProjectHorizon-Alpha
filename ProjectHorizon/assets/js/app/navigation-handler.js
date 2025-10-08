@@ -90,19 +90,23 @@ function displayComments(comments) {
         const initials = comment.username.substring(0, 2).toUpperCase();
         const date = new Date(comment.created_at).toLocaleString();
 
-        const fullText = comment.comment_text;
-        const isLong = fullText.length > 250;
-        const shortText = isLong ? fullText.substring(0, 250) + '...' : fullText;
+        let commentBodyHTML = '';
 
-        commentElement.innerHTML = `
-            <div class="comment-avatar-container">
-                <div class="comment-avatar profile-btn--${comment.role}">${initials}</div>
-            </div>
-            <div class="comment-content">
-                <div class="comment-header">
-                    <span class="comment-author">${comment.username}</span>
-                    <span class="comment-date">${date}</span>
+        if (comment.status === 'review') {
+            // Si el comentario está en revisión, muestra un badge en lugar del texto
+            commentBodyHTML = `
+                <div class="comment-in-review">
+                    <span class="material-symbols-rounded">rate_review</span>
+                    <span data-i18n="admin.manageComments.table.states.review"></span>
                 </div>
+            `;
+        } else {
+            // Si es visible, muestra el texto y las acciones
+            const fullText = comment.comment_text;
+            const isLong = fullText.length > 250;
+            const shortText = isLong ? fullText.substring(0, 250) + '...' : fullText;
+            
+            commentBodyHTML = `
                 <p class="comment-text" data-full-text="${fullText}">${shortText}</p>
                 ${isLong ? `<button class="show-more-comment-btn" data-action="toggle-comment-length">${window.getTranslation('photoView.comments.showMore')}</button>` : ''}
                 <div class="comment-actions">
@@ -120,10 +124,24 @@ function displayComments(comments) {
                         <span class="material-symbols-rounded">flag</span>
                     </button>
                 </div>
+            `;
+        }
+
+        commentElement.innerHTML = `
+            <div class="comment-avatar-container">
+                <div class="comment-avatar profile-btn--${comment.role}">${initials}</div>
+            </div>
+            <div class="comment-content">
+                <div class="comment-header">
+                    <span class="comment-author">${comment.username}</span>
+                    <span class="comment-date">${date}</span>
+                </div>
+                ${commentBodyHTML}
             </div>
         `;
         commentsList.appendChild(commentElement);
     });
+    applyTranslations(commentsList); // Se aplica para traducir el badge si es necesario
 }
 
 export async function handleStateChange(view, section, pushState = true, data, appState) {

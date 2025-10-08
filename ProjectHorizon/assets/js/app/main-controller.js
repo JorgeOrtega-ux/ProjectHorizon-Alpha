@@ -79,7 +79,7 @@ export function initMainController() {
         BATCH_SIZE: 20,
         ADMIN_USERS_BATCH_SIZE: 25,
         ADMIN_GALLERIES_BATCH_SIZE: 25,
-        ADMIN_COMMENTS_BATCH_SIZE: 25, // <-- AÑADIDO
+        ADMIN_COMMENTS_BATCH_SIZE: 25,
         HISTORY_PROFILES_BATCH: 20,
         HISTORY_PHOTOS_BATCH: 20,
         HISTORY_SEARCHES_BATCH: 25,
@@ -88,7 +88,7 @@ export function initMainController() {
             photos: { currentPage: 1, isLoading: false, photoList: [], batchSize: 20 },
             adminUsers: { currentPage: 1, isLoading: false, batchSize: 25 },
             adminGalleries: { currentPage: 1, isLoading: false, batchSize: 25 },
-            adminComments: { currentPage: 1, isLoading: false, batchSize: 25 }, // <-- AÑADIDO
+            adminComments: { currentPage: 1, isLoading: false, batchSize: 25 },
             historyProfiles: { shown: 20 },
             historyPhotos: { shown: 20 },
             historySearches: { shown: 25 }
@@ -472,7 +472,6 @@ export function initMainController() {
                         const newComment = response.data.comment;
                         const commentElement = document.createElement('div');
                         commentElement.className = 'comment-item';
-                        // ✅ **INICIO DE LA CORRECCIÓN**
                         commentElement.dataset.commentId = newComment.id; 
                         const initials = newComment.username.substring(0, 2).toUpperCase();
                         const date = new Date(newComment.created_at).toLocaleString();
@@ -509,7 +508,6 @@ export function initMainController() {
                                 </div>
                             </div>
                         `;
-                        // ✅ **FIN DE LA CORRECCIÓN**
                         commentsList.prepend(commentElement);
                         commentInput.value = '';
                     } else {
@@ -528,20 +526,15 @@ export function initMainController() {
                         const commentId = commentItem.dataset.commentId;
                         const isLike = action === 'like-comment';
                         
-                        // Determina el nuevo vote_type
-                        // Si se hace clic en el mismo botón activo, se anula el voto (vote_type = 0)
-                        // Si no, se establece el nuevo voto (1 para like, -1 para dislike)
                         const currentVoteIsActive = actionTarget.classList.contains('active');
                         const voteType = currentVoteIsActive ? 0 : (isLike ? 1 : -1);
             
                         const response = await api.likeComment(commentId, voteType);
             
                         if (response.ok) {
-                            // Actualiza los contadores
                             commentItem.querySelector('.like-count').textContent = response.data.likes;
                             commentItem.querySelector('.dislike-count').textContent = response.data.dislikes;
             
-                            // Actualiza los estados de los botones
                             const likeBtn = commentItem.querySelector('.like-btn');
                             const dislikeBtn = commentItem.querySelector('.dislike-btn');
             
@@ -684,7 +677,7 @@ export function initMainController() {
                     case 'toggleSectionForgotPassword':
                     case 'toggleSectionManageUsers':
                     case 'toggleSectionManageContent':
-                    case 'toggleSectionManageComments': // <-- AÑADIDO
+                    case 'toggleSectionManageComments':
                     case 'toggleSectionCreateGallery':
                         const sectionName = action.substring("toggleSection".length);
                         const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
@@ -714,7 +707,7 @@ export function initMainController() {
                         const adminGallerySearch = document.querySelector('#admin-gallery-search');
                         fetchAndDisplayGalleriesAdmin(adminGallerySearch ? adminGallerySearch.value.trim() : '', true, appState.paginationState.adminGalleries);
                         break;
-                    case 'load-more-admin-comments': // <-- AÑADIDO
+                    case 'load-more-admin-comments':
                         const adminCommentSearch = document.querySelector('#admin-comment-search');
                         const adminCommentFilter = document.querySelector('#comments-filter-select .menu-link.active')?.dataset.value || 'all';
                         fetchAndDisplayAdminComments(adminCommentSearch ? adminCommentSearch.value.trim() : '', adminCommentFilter, true, appState.paginationState.adminComments);
@@ -939,7 +932,7 @@ export function initMainController() {
                         menu.classList.toggle('disabled');
                         break;
                     }
-                    case 'toggle-comment-actions': { // <-- AÑADIDO
+                    case 'toggle-comment-actions': {
                         const row = actionTarget.closest('tr');
                         const menu = row.querySelector('.module-select');
                         menu.classList.toggle('disabled');
@@ -1000,22 +993,21 @@ export function initMainController() {
                         });
                         break;
                     }
-                    case 'delete-comment': { // <-- AÑADIDO
+                    case 'set-comment-status': {
                         const commentId = actionTarget.dataset.id;
-                        const confirmed = await showCustomConfirm('Eliminar Comentario', '¿Estás seguro de que quieres eliminar este comentario? Esta acción no se puede deshacer.');
-                        if (confirmed) {
-                            const response = await api.deleteComment(commentId);
-                            if (response.ok) {
-                                showNotification(response.data.message, 'success');
-                                const row = actionTarget.closest('tr');
-                                if (row) row.remove();
-                            } else {
-                                showNotification(response.data.message || 'Error al eliminar el comentario.', 'error');
-                            }
+                        const status = actionTarget.dataset.status;
+                        const response = await api.updateCommentStatus(commentId, status);
+                        if (response.ok) {
+                            showNotification(response.data.message, 'success');
+                            const adminCommentSearch = document.querySelector('#admin-comment-search');
+                            const adminCommentFilter = document.querySelector('#comments-filter-select .menu-link.active')?.dataset.value || 'all';
+                            fetchAndDisplayAdminComments(adminCommentSearch ? adminCommentSearch.value.trim() : '', adminCommentFilter, false, appState.paginationState.adminComments);
+                        } else {
+                            showNotification(response.data.message || 'Error al actualizar el estado.', 'error');
                         }
                         break;
                     }
-                    case 'review-reports': { // <-- AÑADIDO
+                    case 'review-reports': {
                         const commentId = actionTarget.dataset.id;
                         const response = await api.updateReportStatus(commentId, 'reviewed');
                         if (response.ok) {
@@ -1314,7 +1306,7 @@ export function initMainController() {
                         updateSelectActiveState('favorites-sort-select', appState.currentFavoritesSortBy);
                     }
                 }
-                else if (selectId.includes('comments-filter-select')) { // <-- AÑADIDO
+                else if (selectId.includes('comments-filter-select')) {
                     const adminCommentSearch = document.querySelector('#admin-comment-search');
                     fetchAndDisplayAdminComments(adminCommentSearch ? adminCommentSearch.value.trim() : '', value, false, appState.paginationState.adminComments);
                     updateSelectActiveState('comments-filter-select', value);
@@ -1435,7 +1427,7 @@ export function initMainController() {
                     fetchAndDisplayUsers(searchTerm, false, appState.paginationState.adminUsers);
                 } else if (section === 'manageContent') {
                     fetchAndDisplayGalleriesAdmin(searchTerm, false, appState.paginationState.adminGalleries);
-                } else if (section === 'manageComments') { // <-- AÑADIDO
+                } else if (section === 'manageComments') {
                     const adminCommentFilter = document.querySelector('#comments-filter-select .menu-link.active')?.dataset.value || 'all';
                     fetchAndDisplayAdminComments(searchTerm, adminCommentFilter, false, appState.paginationState.adminComments);
                 }
@@ -1533,7 +1525,7 @@ export function initMainController() {
         'forgot-password/new-password': { view: 'auth', section: 'forgotPassword', data: { step: 'new-password' } },
         'admin/users': { view: 'admin', section: 'manageUsers' },
         'admin/content': { view: 'admin', section: 'manageContent' },
-        'admin/comments': { view: 'admin', section: 'manageComments' }, // <-- AÑADIDO
+        'admin/comments': { view: 'admin', section: 'manageComments' },
         'admin/create-gallery': { view: 'admin', section: 'createGallery' }
     };
     let initialRoute = routes[path] || null;

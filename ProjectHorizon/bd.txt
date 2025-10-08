@@ -109,6 +109,7 @@ CREATE TABLE `photo_comments` (
   `photo_id` int(11) NOT NULL,
   `user_uuid` varchar(36) NOT NULL,
   `comment_text` text NOT NULL,
+  `status` ENUM('visible','review','deleted') NOT NULL DEFAULT 'visible',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `photo_id` (`photo_id`),
@@ -167,7 +168,6 @@ CREATE TABLE `comment_likes` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `comment_user_unique` (`comment_id`,`user_uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- Estructura de la tabla `comment_reports`
 CREATE TABLE `comment_reports` (
   `id` int(11) NOT NULL AUTO_INCREMENT,

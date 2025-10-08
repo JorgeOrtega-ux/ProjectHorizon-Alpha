@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'admin-createGallery',
             'settings-historyPrivacy', 
             'settings-history',
-            'admin-manageComments' // <-- AÑADIR ESTA LÍNEA
+            'admin-manageComments'
         ];
         $section_key = $view . '-' . $section;
     
@@ -142,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'admin-manageContent' => '../includes/sections/admin/manage-content.php',
             'admin-editGallery' => '../includes/sections/admin/edit-gallery.php',
             'admin-createGallery' => '../includes/sections/admin/create-gallery.php',
-            'admin-manageComments' => '../includes/sections/admin/manage-comments.php' // <-- AÑADIR ESTA LÍNEA
+            'admin-manageComments' => '../includes/sections/admin/manage-comments.php'
         ];
     
         if (array_key_exists($section_key, $allowed_sections)) {
@@ -166,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     header('Content-Type: application/json');
     require_once '../config/db.php';
 
-    if ($request_type === 'admin_comments') { // <-- INICIA NUEVO BLOQUE
+    if ($request_type === 'admin_comments') {
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'moderator'])) {
             http_response_code(403);
             echo json_encode(['error' => 'Acción no autorizada.']);
@@ -211,7 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $where_clause = count($where_conditions) > 0 ? "WHERE " . implode(' AND ', $where_conditions) : "";
         
         $sql = "SELECT 
-                    c.id, c.comment_text, c.created_at,
+                    c.id, c.comment_text, c.created_at, c.status,
                     u.username,
                     p.id as photo_id, p.photo_url,
                     IFNULL(cr.report_count, 0) as report_count,
@@ -235,7 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt->close();
         echo json_encode($comments);
         exit;
-    } // <-- TERMINA NUEVO BLOQUE
+    }
 
     if ($request_type === 'comments') {
         $photo_id = isset($_GET['photo_id']) ? (int)$_GET['photo_id'] : 0;
@@ -252,6 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 c.id, 
                 c.comment_text, 
                 c.created_at, 
+                c.status,
                 u.username, 
                 u.role,
                 (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id AND vote_type = 1) as likes,
@@ -259,7 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 (SELECT vote_type FROM comment_likes WHERE comment_id = c.id AND user_uuid = ?) as user_vote
             FROM photo_comments c
             JOIN users u ON c.user_uuid = u.uuid
-            WHERE c.photo_id = ?
+            WHERE c.photo_id = ? AND c.status IN ('visible', 'review')
             ORDER BY c.created_at DESC
         ");
         $stmt->bind_param("si", $user_uuid, $photo_id);
@@ -267,6 +268,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $result = $stmt->get_result();
         $comments = [];
         while($row = $result->fetch_assoc()){
+            if ($row['status'] === 'review') {
+                $row['comment_text'] = ''; // Vacía el texto si está en revisión
+            }
             $row['user_vote'] = $row['user_vote'] ? (int)$row['user_vote'] : 0;
             $comments[] = $row;
         }
@@ -627,32 +631,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     $action_type = $_POST['action_type'] ?? '';
 
-    if ($action_type === 'delete_comment') { // <-- INICIA NUEVO BLOQUE
+    if ($action_type === 'update_comment_status') {
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'moderator'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
             exit;
         }
         $comment_id = $_POST['comment_id'] ?? 0;
-        if (empty($comment_id)) {
+        $status = $_POST['status'] ?? '';
+        $allowed_statuses = ['visible', 'review', 'deleted'];
+
+        if (empty($comment_id) || !in_array($status, $allowed_statuses)) {
             http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'ID de comentario no válido.']);
+            echo json_encode(['success' => false, 'message' => 'Datos no válidos.']);
             exit;
         }
 
-        $stmt = $conn->prepare("DELETE FROM photo_comments WHERE id = ?");
-        $stmt->bind_param("i", $comment_id);
+        $stmt = $conn->prepare("UPDATE photo_comments SET status = ? WHERE id = ?");
+        $stmt->bind_param("si", $status, $comment_id);
         if ($stmt->execute()) {
-            echo json_encode(['success' => true, 'message' => 'Comentario eliminado.']);
+            echo json_encode(['success' => true, 'message' => 'Estado del comentario actualizado.']);
         } else {
             http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Error al eliminar el comentario.']);
+            echo json_encode(['success' => false, 'message' => 'Error al actualizar el comentario.']);
         }
         $stmt->close();
         exit;
-    } // <-- TERMINA NUEVO BLOQUE
+    }
 
-    if ($action_type === 'update_report_status') { // <-- INICIA NUEVO BLOQUE
+    if ($action_type === 'update_report_status') {
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'moderator'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
@@ -676,7 +683,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         $stmt->close();
         exit;
-    } // <-- TERMINA NUEVO BLOQUE
+    }
 
 
     if ($action_type === 'like_comment') {
@@ -794,7 +801,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         if ($stmt->execute()) {
             $new_comment_id = $conn->insert_id;
             
-            // ✅ **INICIO DE LA CORRECCIÓN**
             $stmt_get = $conn->prepare("
                 SELECT 
                     c.id, 
@@ -815,7 +821,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $comment = $result->fetch_assoc();
             $comment['user_vote'] = $comment['user_vote'] ? (int)$comment['user_vote'] : 0;
             $stmt_get->close();
-            // ✅ **FIN DE LA CORRECCIÓN**
 
             echo json_encode(['success' => true, 'comment' => $comment]);
         } else {
