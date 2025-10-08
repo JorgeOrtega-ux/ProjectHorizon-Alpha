@@ -94,6 +94,105 @@ export async function showCustomConfirm(title, message) {
     });
 }
 
+/**
+ * Muestra el diálogo para reportar un comentario con un selector de motivos.
+ * @param {number} commentId - El ID del comentario a reportar.
+ * @returns {Promise<boolean>} - Promesa que se resuelve a `true` si el reporte fue exitoso, `false` en caso contrario.
+ */
+export async function showReportCommentDialog(commentId) {
+    return new Promise((resolve) => {
+        const reportReasons = window.getTranslation('dialogs.reportComment.reasons');
+        let optionsHTML = '';
+        for (const key in reportReasons) {
+            optionsHTML += `<div class="menu-link" data-value="${key}"><div class="menu-link-text"><span>${reportReasons[key]}</span></div></div>`;
+        }
+
+        showDialog({
+            title: window.getTranslation('dialogs.reportComment.title'),
+            contentHTML: `
+                <p>${window.getTranslation('dialogs.reportComment.description')}</p>
+                <div class="select-wrapper body-title" style="margin-top: 16px;">
+                    <div class="custom-select-trigger" data-action="toggle-select" data-target="report-reason-select">
+                        <span class="select-trigger-text" data-i18n="dialogs.reportComment.selectReason"></span>
+                        <div class="select-trigger-icon select-trigger-arrow">
+                            <span class="material-symbols-rounded">expand_more</span>
+                        </div>
+                    </div>
+                    <div class="module-content module-select disabled" id="report-reason-select">
+                        <div class="menu-content"><div class="menu-list">${optionsHTML}</div></div>
+                    </div>
+                </div>
+                <div class="auth-error-message-container" id="report-error-container" style="display: none; margin-top: 12px;">
+                    <ul id="report-error-list"></ul>
+                </div>
+            `,
+            buttons: [
+                {
+                    text: window.getTranslation('general.cancel'),
+                    onClick: ({ close }) => {
+                        close();
+                        resolve(false);
+                    }
+                },
+                {
+                    text: window.getTranslation('dialogs.reportComment.reportButton'),
+                    className: 'btn-danger',
+                    onClick: async ({ close, startLoading, stopLoading, getDialogElement }) => {
+                        const selectedReasonElement = getDialogElement().querySelector('#report-reason-select .menu-link.active');
+                        const reason = selectedReasonElement ? selectedReasonElement.dataset.value : null;
+                        const errorContainer = getDialogElement().querySelector('#report-error-container');
+                        const errorList = getDialogElement().querySelector('#report-error-list');
+
+                        if (!reason) {
+                            errorList.innerHTML = `<li>${window.getTranslation('dialogs.reportComment.errorNoReason')}</li>`;
+                            errorContainer.style.display = 'block';
+                            return;
+                        }
+
+                        errorContainer.style.display = 'none';
+                        startLoading();
+                        
+                        const response = await api.reportComment(commentId, reason);
+                        stopLoading();
+
+                        if (response.ok) {
+                            showNotification(window.getTranslation('dialogs.reportComment.success'), 'success');
+                            close();
+                            resolve(true);
+                        } else {
+                            errorList.innerHTML = `<li>${response.data.message || 'Error al enviar el reporte.'}</li>`;
+                            errorContainer.style.display = 'block';
+                            resolve(false);
+                        }
+                    }
+                }
+            ],
+            onOpen: (dialogBox) => {
+                const trigger = dialogBox.querySelector('[data-action="toggle-select"]');
+                const selectMenu = dialogBox.querySelector('.module-select');
+                const options = dialogBox.querySelectorAll('.menu-link');
+                const triggerText = trigger.querySelector('.select-trigger-text');
+
+                trigger.addEventListener('click', () => {
+                    selectMenu.classList.toggle('disabled');
+                    selectMenu.classList.toggle('active');
+                });
+
+                options.forEach(option => {
+                    option.addEventListener('click', () => {
+                        options.forEach(opt => opt.classList.remove('active'));
+                        option.classList.add('active');
+                        triggerText.textContent = option.textContent;
+                        selectMenu.classList.add('disabled');
+                        selectMenu.classList.remove('active');
+                    });
+                });
+            }
+        });
+    });
+}
+
+
 function getInitials(name) {
     if (!name) return '';
     const words = name.split(' ');

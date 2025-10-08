@@ -311,7 +311,23 @@
     "deleteAccountTitle": "¿Estás seguro de que quieres eliminar tu cuenta?",
     "deleteAccountMessage": "Si eliminas tu cuenta creada el {date}, ya no podrás acceder a tu contenido ni iniciar sesión en Project Horizon. Esta acción es permanente. Para confirmar, por favor ingresa tu contraseña actual.",
     "deleteGalleryTitle": "Eliminar \"{galleryName}\"",
-    "deleteGalleryMessage": "Esta acción eliminará permanentemente la galería y todo su contenido. Esta acción no se puede deshacer. Para confirmar, por favor ingresa tu contraseña de administrador."
+    "deleteGalleryMessage": "Esta acción eliminará permanentemente la galería y todo su contenido. Esta acción no se puede deshacer. Para confirmar, por favor ingresa tu contraseña de administrador.",
+    "reportComment": {
+      "title": "Reportar Comentario",
+      "description": "Selecciona un motivo para reportar este comentario. Tu reporte es anónimo.",
+      "selectReason": "Selecciona un motivo...",
+      "reportButton": "Reportar",
+      "errorNoReason": "Debes seleccionar un motivo para el reporte.",
+      "success": "Comentario reportado. Gracias por tu ayuda.",
+      "reasons": {
+        "spam": "Spam o publicidad no deseada",
+        "hate_speech": "Lenguaje de odio o discriminación",
+        "harassment": "Acoso o bullying",
+        "false_info": "Información falsa o engañosa",
+        "inappropriate": "Contenido inapropiado o explícito",
+        "other": "Otro"
+      }
+    }
   },
   "404": {
     "badge": "404",

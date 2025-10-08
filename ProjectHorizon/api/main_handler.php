@@ -612,32 +612,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $reason = trim($_POST['reason'] ?? '');
         $reporter_uuid = $_SESSION['user_uuid'];
     
-        if ($comment_id <= 0 || empty($reason)) {
+        $allowed_reasons = ['spam', 'hate_speech', 'harassment', 'false_info', 'inappropriate', 'other'];
+        if ($comment_id <= 0 || empty($reason) || !in_array($reason, $allowed_reasons)) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Datos de reporte no válidos.']);
             exit;
         }
     
-        // Verificar si ya existe un reporte del mismo usuario para el mismo comentario
         $stmt_check = $conn->prepare("SELECT id FROM comment_reports WHERE comment_id = ? AND reporter_uuid = ?");
         $stmt_check->bind_param("is", $comment_id, $reporter_uuid);
         $stmt_check->execute();
         $stmt_check->store_result();
     
         if ($stmt_check->num_rows > 0) {
-            http_response_code(409); // Conflict
+            http_response_code(409);
             echo json_encode(['success' => false, 'message' => 'Ya has reportado este comentario.']);
             $stmt_check->close();
             exit;
         }
         $stmt_check->close();
     
-        // Insertar el nuevo reporte
         $stmt = $conn->prepare("INSERT INTO comment_reports (comment_id, reporter_uuid, reason) VALUES (?, ?, ?)");
         $stmt->bind_param("iss", $comment_id, $reporter_uuid, $reason);
     
         if ($stmt->execute()) {
-            echo json_encode(['success' => true, 'message' => 'Comentario reportado con éxito.']);
+            echo json_encode(['success' => true]);
         } else {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Error al enviar el reporte.']);

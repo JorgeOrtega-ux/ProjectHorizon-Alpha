@@ -12,7 +12,8 @@ import {
     showUpdatePasswordDialog,
     showDeleteAccountDialog,
     showChangeRoleDialog,
-    showDeleteGalleryDialog
+    showDeleteGalleryDialog,
+    showReportCommentDialog
 } from '../managers/dialog-manager.js';
 import {
     fetchAndDisplayGalleries,
@@ -539,23 +540,10 @@ export function initMainController() {
                     case 'report-comment': {
                         const commentItem = actionTarget.closest('.comment-item');
                         const commentId = commentItem.dataset.commentId;
-
-                        const confirmed = await showCustomConfirm(
-                            'Reportar Comentario',
-                            '¿Estás seguro de que quieres reportar este comentario por contenido inapropiado?'
-                        );
-
-                        if (confirmed) {
-                            // Aquí podrías implementar una lógica más compleja para pedir una razón
-                            const reason = 'Contenido inapropiado';
-                            const response = await api.reportComment(commentId, reason);
-                            if (response.ok) {
-                                showNotification('Comentario reportado. Gracias por tu ayuda.', 'success');
-                                actionTarget.disabled = true; // Deshabilita el botón para evitar reportes múltiples
-                                actionTarget.style.opacity = '0.5';
-                            } else {
-                                showNotification(response.data.message || 'Error al reportar el comentario.', 'error');
-                            }
+                        const reported = await showReportCommentDialog(commentId);
+                        if (reported) {
+                            actionTarget.disabled = true;
+                            actionTarget.style.opacity = '0.5';
                         }
                         break;
                     }
