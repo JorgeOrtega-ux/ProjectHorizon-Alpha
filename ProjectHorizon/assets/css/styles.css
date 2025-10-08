@@ -2231,20 +2231,25 @@ h6 {
     /* overflow: hidden; */ /* <<-- CORRECCIÓN: Se elimina esta línea para evitar que el menú se corte */
 }
 
-#users-table {
+#users-table,
+#feedback-table {
     width: 100%;
     border-collapse: separate; /* <<-- CORRECCIÓN: Necesario para que el border-radius funcione en tablas */
     border-spacing: 0;
 }
 
 #users-table th,
-#users-table td {
+#users-table td,
+#feedback-table th,
+#feedback-table td {
     padding: 12px 16px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
 }
 
-#users-table thead th {
+#users-table thead th,
+#feedback-table thead th {
     font-weight: 500;
     font-size: 0.8rem;
     text-transform: uppercase;
@@ -2252,18 +2257,24 @@ h6 {
 }
 
 
-#users-table tbody tr:last-child td {
+#users-table tbody tr:last-child td,
+#feedback-table tbody tr:last-child td {
     border-bottom: none;
 }
 
 /* <<-- CORRECCIÓN: Se añaden estos estilos para redondear las esquinas de la tabla directamente */
-#users-table thead tr:first-child th:first-child { border-top-left-radius: 11px; }
-#users-table thead tr:first-child th:last-child { border-top-right-radius: 11px; }
-#users-table tbody tr:last-child td:first-child { border-bottom-left-radius: 11px; }
-#users-table tbody tr:last-child td:last-child { border-bottom-right-radius: 11px; }
+#users-table thead tr:first-child th:first-child,
+#feedback-table thead tr:first-child th:first-child { border-top-left-radius: 11px; }
+#users-table thead tr:first-child th:last-child,
+#feedback-table thead tr:first-child th:last-child { border-top-right-radius: 11px; }
+#users-table tbody tr:last-child td:first-child,
+#feedback-table tbody tr:last-child td:first-child { border-bottom-left-radius: 11px; }
+#users-table tbody tr:last-child td:last-child,
+#feedback-table tbody tr:last-child td:last-child { border-bottom-right-radius: 11px; }
 
 
-#users-table tbody tr:hover {
+#users-table tbody tr:hover,
+#feedback-table tbody tr:hover {
     background-color: var(--hover-bg);
 }
 
@@ -2872,146 +2883,6 @@ h6 {
     color: var(--text-color);
 }
 
-
-/* ================================================= */
-/* ============= ESTILOS DE COMENTARIOS ============ */
-/* ================================================= */
-
-.comments-section-container {
-    width: 100%;
-    margin: 8px auto;
-}
-
-.comments-section-container h3 {
-    margin-bottom: 16px;
-}
-
-.comment-form-container {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    margin-bottom: 8px;
-}
-
-.comment-form-container .feedback-textarea {
-    min-height: 40px;
-    height: 40px;
-    flex-grow: 1;
-}
-
-.comment-form-container .load-more-btn {
-    height: 40px;
-    flex-shrink: 0;
-}
-
-#comments-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.comment-item {
-    display: flex;
-    gap: 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 12px;
-    align-items: flex-start;
-}
-
-.comment-avatar-container {
-    width: 50px;
-    height: 50px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.comment-avatar {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 500;
-    flex-shrink: 0;
-    font-size: 1rem;
-    color: var(--secondary-bg);
-}
-
-.comment-avatar.profile-btn--user {
-    background-color: #808080;
-}
-.comment-avatar.profile-btn--moderator {
-    background-color: #0000ff;
-}
-.comment-avatar.profile-btn--administrator {
-    background-color: #ff0000;
-}
-.dark-theme .comment-avatar.profile-btn--user {
-    background-color: #808080;
-}
-.dark-theme .comment-avatar.profile-btn--moderator {
-    background-color: #6a6aff;
-}
-.dark-theme .comment-avatar.profile-btn--administrator {
-    background-color: #ff6a6a;
-}
-
-.comment-content {
-    flex-grow: 1;
-    padding-top: 4px;
-    min-width: 0;
-}
-
-.comment-header {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    margin-bottom: 4px;
-}
-
-.comment-author {
-    font-weight: 500;
-    color: var(--text-color);
-}
-
-.comment-date {
-    font-size: 0.8rem;
-    color: var(--muted-text-color);
-}
-
-.comment-text {
-    color: var(--text-color);
-    line-height: 1.5;
-    margin: 0;
-    white-space: pre-wrap;
-    word-break: break-all;
-    overflow-wrap: break-word;
-}
-
-#comments-list > p {
-    color: var(--muted-text-color);
-    text-align: center;
-    padding: 20px;
-}
-
-.show-more-comment-btn {
-    background: none;
-    border: none;
-    color: var(--muted-text-color);
-    cursor: pointer;
-    font-weight: 500;
-    padding: 4px 0;
-    margin-top: 8px;
-}
-.show-more-comment-btn:hover {
-    text-decoration: underline;
-    color: var(--text-color);
-}
-
 .comment-actions {
     display: flex;
     justify-content: space-between;
@@ -3131,7 +3002,8 @@ h6 {
     background-color: var(--hover-bg);
 }
 
-#comments-table .admin-comment-thumbnail {
+#comments-table .admin-comment-thumbnail,
+#feedback-table .admin-comment-thumbnail {
     width: 50px;
     height: 50px;
     object-fit: cover;
@@ -3164,7 +3036,8 @@ h6 {
     right: 0;
     left: auto;
     width: 240px;
-}/* ================================================= */
+}
+/* ================================================= */
 /* ========= ESTILOS PARA COMENTARIO EN REVISIÓN ====== */
 /* ================================================= */
 
@@ -3184,4 +3057,28 @@ h6 {
 
 .comment-in-review .material-symbols-rounded {
     font-size: 20px;
+}
+
+/* ================================================= */
+/* ============ ADMIN FEEDBACK TABLE =============== */
+/* ================================================= */
+
+.attachment-gallery {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.attachment-gallery .admin-comment-thumbnail {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.attachment-gallery .admin-comment-thumbnail:hover {
+    transform: scale(1.1);
+}
+
+#feedback-table .admin-comment-thumbnail {
+    width: 50px;
+    height: 50px;
 }

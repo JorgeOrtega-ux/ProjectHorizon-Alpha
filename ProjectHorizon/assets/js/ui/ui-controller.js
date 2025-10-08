@@ -1072,3 +1072,34 @@ export function displayAdminComments(comments, tableBody, statusContainer, appen
         }
     }
 }
+
+export function displayFeedback(feedbackItems, tableBody, statusContainer, append = false) {
+    if (feedbackItems.length > 0) {
+        feedbackItems.forEach(item => {
+            const row = document.createElement('tr');
+            const createdDate = new Date(item.created_at).toLocaleString();
+            const translatedType = window.getTranslation(`admin.manageFeedback.types.${item.issue_type}`) || item.issue_type;
+
+            let attachmentsHTML = '';
+            if (item.attachments && item.attachments.length > 0) {
+                item.attachments.forEach(url => {
+                    attachmentsHTML += `<a href="${window.BASE_PATH}/${url}" target="_blank"><img src="${window.BASE_PATH}/${url}" class="admin-comment-thumbnail"></a>`;
+                });
+            }
+
+            row.innerHTML = `
+                <td>${translatedType}</td>
+                <td>${item.title || 'N/A'}</td>
+                <td title="${item.description}">${item.description.substring(0, 150)}...</td>
+                <td><div class="attachment-gallery">${attachmentsHTML}</div></td>
+                <td>${createdDate}</td>
+            `;
+            if (tableBody) tableBody.appendChild(row);
+        });
+    } else if (!append) {
+        if (statusContainer) {
+            statusContainer.classList.remove('disabled');
+            statusContainer.innerHTML = `<div><h2>${window.getTranslation('admin.manageFeedback.noResultsTitle')}</h2><p>${window.getTranslation('admin.manageFeedback.noResultsMessage')}</p></div>`;
+        }
+    }
+}

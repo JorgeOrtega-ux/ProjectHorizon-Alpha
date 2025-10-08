@@ -27,6 +27,8 @@ const urlMap = {
     'admin-manageContent': 'admin/content',
     'admin-editGallery': 'admin/edit-gallery/{uuid}',
     'admin-createGallery': 'admin/create-gallery',
+    'admin-manageComments': 'admin/comments',
+    'admin-manageFeedback': 'admin/feedback',
     'main-photoComments': 'gallery/{uuid}/photo/{photoId}/comments',
     'main-404': '404'
 };

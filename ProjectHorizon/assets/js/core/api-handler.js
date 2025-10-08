@@ -285,6 +285,12 @@ export function getAdminComments(searchTerm, filter, page, limit) {
     return fetchData(url);
 }
 
+export function getAdminFeedback(searchTerm, page, limit) {
+    const encodedSearchTerm = encodeURIComponent(searchTerm);
+    const url = `${window.BASE_PATH}/api/main_handler.php?request_type=admin_feedback&search=${encodedSearchTerm}&page=${page}&limit=${limit}`;
+    return fetchData(url);
+}
+
 export function updateCommentStatus(commentId, status) {
     const formData = new FormData();
     formData.append('action_type', 'update_comment_status');

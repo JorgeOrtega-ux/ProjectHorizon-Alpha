@@ -17,7 +17,8 @@ import {
     fetchAndDisplayTrends,
     fetchAndDisplayUsers,
     fetchAndDisplayGalleriesAdmin,
-    fetchAndDisplayAdminComments
+    fetchAndDisplayAdminComments,
+    fetchAndDisplayFeedback
 } from './view-handlers.js';
 import { showVerifyPasswordForEmailChangeDialog } from '../managers/dialog-manager.js';
 
@@ -178,7 +179,8 @@ export async function handleStateChange(view, section, pushState = true, data, a
         'admin-createGallery',
         'settings-historyPrivacy',
         'settings-history',
-        'admin-manageComments' // <-- AÑADIR ESTA LÍNEA
+        'admin-manageComments',
+        'admin-manageFeedback'
     ];
     const section_key = view + '-' + section;
 
@@ -270,6 +272,9 @@ export async function handleStateChange(view, section, pushState = true, data, a
             break;
         case 'manageComments':
             fetchAndDisplayAdminComments('', 'all', false, paginationState.adminComments);
+            break;
+        case 'manageFeedback':
+            fetchAndDisplayFeedback('', false, paginationState.adminFeedback);
             break;
         case 'editGallery':
             if (data && data.uuid) {

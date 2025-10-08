@@ -94,6 +94,10 @@ $is_logged_in = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
                 <div class="menu-link-icon"><span class="material-symbols-rounded">comment</span></div>
                 <div class="menu-link-text"><span data-i18n="moduleSurface.manageComments"></span></div>
             </div>
+            <div class="menu-link <?php echo ($CURRENT_SECTION === 'manageFeedback') ? 'active' : ''; ?>" data-action="toggleSectionManageFeedback">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">rate_review</span></div>
+                <div class="menu-link-text"><span data-i18n="moduleSurface.manageFeedback"></span></div>
+            </div>
         </div>
     </div>
 </div>

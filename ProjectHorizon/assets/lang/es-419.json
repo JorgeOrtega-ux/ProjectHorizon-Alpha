@@ -55,7 +55,8 @@
     "sendFeedback": "Enviar Comentarios",
     "manageUsers": "Administrar usuarios",
     "manageContent": "Administrar contenido",
-    "manageComments": "Gestionar comentarios"
+    "manageComments": "Gestionar comentarios",
+    "manageFeedback": "Gestionar Feedback"
   },
   "home": {
     "searchInputPlaceholder": "Buscar...",
@@ -439,6 +440,24 @@
             "confirmDelete": "¿Estás seguro de que quieres eliminar este comentario permanentemente?",
             "confirmDeleteTitle": "Eliminar Comentario Permanentemente"
         }
+      }
+    },
+    "manageFeedback": {
+      "title": "Gestionar Feedback",
+      "searchPlaceholder": "Buscar en descripciones...",
+      "noResultsTitle": "No se encontró feedback",
+      "noResultsMessage": "No hay feedback que coincida con la búsqueda actual.",
+      "table": {
+        "type": "Tipo",
+        "title": "Título",
+        "description": "Descripción",
+        "attachments": "Adjuntos",
+        "date": "Fecha"
+      },
+      "types": {
+        "suggestion": "Sugerencia",
+        "problem": "Problema",
+        "other": "Otro"
       }
     },
     "editGallery": {

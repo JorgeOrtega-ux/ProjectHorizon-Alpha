@@ -102,7 +102,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'admin-createGallery',
             'settings-historyPrivacy', 
             'settings-history',
-            'admin-manageComments'
+            'admin-manageComments',
+            'admin-manageFeedback'
         ];
         $section_key = $view . '-' . $section;
     
@@ -142,7 +143,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'admin-manageContent' => '../includes/sections/admin/manage-content.php',
             'admin-editGallery' => '../includes/sections/admin/edit-gallery.php',
             'admin-createGallery' => '../includes/sections/admin/create-gallery.php',
-            'admin-manageComments' => '../includes/sections/admin/manage-comments.php'
+            'admin-manageComments' => '../includes/sections/admin/manage-comments.php',
+            'admin-manageFeedback' => '../includes/sections/admin/manage-feedback.php'
         ];
     
         if (array_key_exists($section_key, $allowed_sections)) {
@@ -165,6 +167,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     header('Content-Type: application/json');
     require_once '../config/db.php';
+
+    if ($request_type === 'admin_feedback') {
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator'])) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Acción no autorizada.']);
+            exit;
+        }
+    
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 25;
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $offset = ($page - 1) * $limit;
+    
+        $stmt_feedback = $conn->prepare("
+            SELECT f.uuid, f.issue_type, f.title, f.description, f.created_at
+            FROM feedback f
+            ORDER BY f.created_at DESC
+            LIMIT ? OFFSET ?
+        ");
+        $stmt_feedback->bind_param("ii", $limit, $offset);
+        $stmt_feedback->execute();
+        $feedback_result = $stmt_feedback->get_result();
+        $feedback_items = $feedback_result->fetch_all(MYSQLI_ASSOC);
+        $stmt_feedback->close();
+    
+        $feedback_uuids = array_column($feedback_items, 'uuid');
+        if (!empty($feedback_uuids)) {
+            $in_clause = implode(',', array_fill(0, count($feedback_uuids), '?'));
+            $stmt_attachments = $conn->prepare("
+                SELECT feedback_uuid, attachment_url 
+                FROM feedback_attachments 
+                WHERE feedback_uuid IN ($in_clause)
+            ");
+            $stmt_attachments->bind_param(str_repeat('s', count($feedback_uuids)), ...$feedback_uuids);
+            $stmt_attachments->execute();
+            $attachments_result = $stmt_attachments->get_result();
+            $attachments = [];
+            while ($row = $attachments_result->fetch_assoc()) {
+                $attachments[$row['feedback_uuid']][] = $row['attachment_url'];
+            }
+            $stmt_attachments->close();
+    
+            foreach ($feedback_items as &$item) {
+                $item['attachments'] = $attachments[$item['uuid']] ?? [];
+            }
+        }
+    
+        echo json_encode($feedback_items);
+        exit;
+    }
 
     if ($request_type === 'admin_comments') {
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'moderator'])) {
@@ -214,6 +265,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     c.id, c.comment_text, c.created_at, c.status,
                     u.username,
                     p.id as photo_id, p.photo_url,
+                    p.gallery_uuid,
                     IFNULL(cr.report_count, 0) as report_count,
                     IFNULL(cr.pending_reports, 0) as pending_reports
                 " . $base_query . " " . $where_clause . "

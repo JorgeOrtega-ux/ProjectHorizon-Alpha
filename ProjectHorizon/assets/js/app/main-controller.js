@@ -21,7 +21,8 @@ import {
     fetchAndDisplayTrends,
     fetchAndDisplayUsers,
     fetchAndDisplayGalleriesAdmin,
-    fetchAndDisplayAdminComments
+    fetchAndDisplayAdminComments,
+    fetchAndDisplayFeedback
 } from './view-handlers.js';
 import { handleStateChange } from './navigation-handler.js';
 
@@ -80,6 +81,7 @@ export function initMainController() {
         ADMIN_USERS_BATCH_SIZE: 25,
         ADMIN_GALLERIES_BATCH_SIZE: 25,
         ADMIN_COMMENTS_BATCH_SIZE: 25,
+        ADMIN_FEEDBACK_BATCH_SIZE: 25,
         HISTORY_PROFILES_BATCH: 20,
         HISTORY_PHOTOS_BATCH: 20,
         HISTORY_SEARCHES_BATCH: 25,
@@ -89,6 +91,7 @@ export function initMainController() {
             adminUsers: { currentPage: 1, isLoading: false, batchSize: 25 },
             adminGalleries: { currentPage: 1, isLoading: false, batchSize: 25 },
             adminComments: { currentPage: 1, isLoading: false, batchSize: 25 },
+            adminFeedback: { currentPage: 1, isLoading: false, batchSize: 25 },
             historyProfiles: { shown: 20 },
             historyPhotos: { shown: 20 },
             historySearches: { shown: 25 }
@@ -678,6 +681,7 @@ export function initMainController() {
                     case 'toggleSectionManageUsers':
                     case 'toggleSectionManageContent':
                     case 'toggleSectionManageComments':
+                    case 'toggleSectionManageFeedback':
                     case 'toggleSectionCreateGallery':
                         const sectionName = action.substring("toggleSection".length);
                         const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
@@ -711,6 +715,10 @@ export function initMainController() {
                         const adminCommentSearch = document.querySelector('#admin-comment-search');
                         const adminCommentFilter = document.querySelector('#comments-filter-select .menu-link.active')?.dataset.value || 'all';
                         fetchAndDisplayAdminComments(adminCommentSearch ? adminCommentSearch.value.trim() : '', adminCommentFilter, true, appState.paginationState.adminComments);
+                        break;
+                    case 'load-more-admin-feedback':
+                        const adminFeedbackSearch = document.querySelector('#admin-feedback-search');
+                        fetchAndDisplayFeedback(adminFeedbackSearch ? adminFeedbackSearch.value.trim() : '', true, appState.paginationState.adminFeedback);
                         break;
                     case 'load-more-history-profiles':
                         appState.paginationState.historyProfiles.shown += appState.HISTORY_PROFILES_BATCH;
@@ -1430,6 +1438,8 @@ export function initMainController() {
                 } else if (section === 'manageComments') {
                     const adminCommentFilter = document.querySelector('#comments-filter-select .menu-link.active')?.dataset.value || 'all';
                     fetchAndDisplayAdminComments(searchTerm, adminCommentFilter, false, appState.paginationState.adminComments);
+                } else if (section === 'manageFeedback') {
+                    fetchAndDisplayFeedback(searchTerm, false, appState.paginationState.adminFeedback);
                 }
             }
 
@@ -1526,7 +1536,8 @@ export function initMainController() {
         'admin/users': { view: 'admin', section: 'manageUsers' },
         'admin/content': { view: 'admin', section: 'manageContent' },
         'admin/comments': { view: 'admin', section: 'manageComments' },
-        'admin/create-gallery': { view: 'admin', section: 'createGallery' }
+        'admin/create-gallery': { view: 'admin', section: 'createGallery' },
+        'admin/feedback': { view: 'admin', section: 'manageFeedback' }
     };
     let initialRoute = routes[path] || null;
     let initialStateData = initialRoute ? initialRoute.data : null;
