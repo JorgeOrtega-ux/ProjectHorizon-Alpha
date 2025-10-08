@@ -984,3 +984,65 @@ export function displayGalleriesAdmin(galleries, listContainer, statusContainer,
         }
     }
 }
+
+export function displayAdminComments(comments, tableBody, statusContainer, append = false) {
+    if (comments.length > 0) {
+        comments.forEach(comment => {
+            const row = document.createElement('tr');
+            row.dataset.commentId = comment.id;
+            const createdDate = new Date(comment.created_at).toLocaleString();
+            const truncatedComment = comment.comment_text.length > 100 ? comment.comment_text.substring(0, 100) + '...' : comment.comment_text;
+
+            const reportStatus = comment.pending_reports > 0 ? 'pending' : (comment.report_count > 0 ? 'reviewed' : 'active');
+            const reportText = `${comment.report_count} (${comment.pending_reports} ${window.getTranslation('admin.manageComments.filter.pending')})`;
+
+            row.innerHTML = `
+                <td title="${comment.comment_text}">${truncatedComment}</td>
+                <td>
+                    <div class="user-info">
+                        <div class="user-initials-avatar">${getInitials(comment.username)}</div>
+                        <div class="user-details">
+                            <div class="username">${comment.username}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <a href="${window.BASE_PATH}/gallery/${comment.gallery_uuid}/photo/${comment.photo_id}" target="_blank" class="admin-comment-thumbnail-link">
+                        <img src="${window.BASE_PATH}/${comment.photo_url}" class="admin-comment-thumbnail">
+                    </a>
+                </td>
+                <td>
+                    <span class="status-badge status-${reportStatus}">${reportText}</span>
+                </td>
+                <td>${createdDate}</td>
+                <td>
+                    <div class="item-actions">
+                        <button class="header-button" data-action="toggle-comment-actions">
+                            <span class="material-symbols-rounded">more_vert</span>
+                        </button>
+                        <div class="module-content module-select disabled">
+                            <div class="menu-content">
+                                <div class="menu-list">
+                                    <div class="menu-link" data-action="delete-comment" data-id="${comment.id}">
+                                        <div class="menu-link-icon"><span class="material-symbols-rounded">delete</span></div>
+                                        <div class="menu-link-text"><span data-i18n="admin.manageComments.table.actions.delete"></span></div>
+                                    </div>
+                                    <div class="menu-link" data-action="review-reports" data-id="${comment.id}" ${comment.pending_reports == 0 ? 'style="display:none;"' : ''}>
+                                        <div class="menu-link-icon"><span class="material-symbols-rounded">check</span></div>
+                                        <div class="menu-link-text"><span data-i18n="admin.manageComments.table.actions.review"></span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            `;
+            if (tableBody) tableBody.appendChild(row);
+        });
+    } else if (!append) {
+        if (statusContainer) {
+            statusContainer.classList.remove('disabled');
+            statusContainer.innerHTML = `<div><h2>${window.getTranslation('admin.manageComments.noResultsTitle')}</h2><p>${window.getTranslation('admin.manageComments.noResultsMessage')}</p></div>`;
+        }
+    }
+}

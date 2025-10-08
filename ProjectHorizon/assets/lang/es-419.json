@@ -54,7 +54,8 @@
     "cookiePolicy": "Política de Cookies",
     "sendFeedback": "Enviar Comentarios",
     "manageUsers": "Administrar usuarios",
-    "manageContent": "Administrar contenido"
+    "manageContent": "Administrar contenido",
+    "manageComments": "Gestionar comentarios"
   },
   "home": {
     "searchInputPlaceholder": "Buscar...",
@@ -405,6 +406,23 @@
       "editTooltip": "Editar galería",
       "viewPhotosTooltip": "Ver fotos",
       "privacyTooltip": "Cambiar privacidad"
+    },
+    "manageComments": {
+      "title": "Gestionar Comentarios",
+      "searchPlaceholder": "Buscar por comentario o usuario...",
+      "filter": {
+        "all": "Todos los comentarios",
+        "reported": "Reportados",
+        "pending": "Reportes Pendientes"
+      },
+      "table": {
+        "comment": "Comentario",
+        "user": "Usuario",
+        "photo": "Foto",
+        "reports": "Reportes",
+        "date": "Fecha",
+        "actions": "Acciones"
+      }
     },
     "editGallery": {
       "title": "Editando \"{galleryName}\"",

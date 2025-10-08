@@ -90,6 +90,10 @@ $is_logged_in = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
                 <div class="menu-link-icon"><span class="material-symbols-rounded">folder_managed</span></div>
                 <div class="menu-link-text"><span data-i18n="moduleSurface.manageContent"></span></div>
             </div>
+            <div class="menu-link <?php echo ($CURRENT_SECTION === 'manageComments') ? 'active' : ''; ?>" data-action="toggleSectionManageComments">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">comment</span></div>
+                <div class="menu-link-text"><span data-i18n="moduleSurface.manageComments"></span></div>
+            </div>
         </div>
     </div>
 </div>

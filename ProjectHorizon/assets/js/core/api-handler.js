@@ -279,6 +279,27 @@ export function getUsers(searchTerm, page, limit) {
     return fetchData(url);
 }
 
+export function getAdminComments(searchTerm, filter, page, limit) {
+    const encodedSearchTerm = encodeURIComponent(searchTerm);
+    const url = `${window.BASE_PATH}/api/main_handler.php?request_type=admin_comments&search=${encodedSearchTerm}&filter=${filter}&page=${page}&limit=${limit}`;
+    return fetchData(url);
+}
+
+export function deleteComment(commentId) {
+    const formData = new FormData();
+    formData.append('action_type', 'delete_comment');
+    formData.append('comment_id', commentId);
+    return postDataWithCsrf(formData);
+}
+
+export function updateReportStatus(commentId, status) {
+    const formData = new FormData();
+    formData.append('action_type', 'update_report_status');
+    formData.append('comment_id', commentId);
+    formData.append('status', status);
+    return postDataWithCsrf(formData);
+}
+
 export function changeUserRole(uuid, role) {
     const formData = new FormData();
     formData.append('action_type', 'change_user_role');

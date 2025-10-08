@@ -9,7 +9,8 @@ import {
     renderPhotoView,
     renderEditGalleryForm,
     displayUsers,
-    displayGalleriesAdmin
+    displayGalleriesAdmin,
+    displayAdminComments
 } from '../ui/ui-controller.js';
 
 const loaderHTML = '<div class="loader-container"><div class="spinner"></div></div>';
@@ -400,6 +401,60 @@ export async function fetchAndDisplayGalleriesAdmin(searchTerm = '', append = fa
         console.error('Error fetching galleries for admin:', response.data);
         if (!append && statusContainer) {
             displayFetchError('[data-section="manageContent"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
+        }
+    }
+}
+
+export async function fetchAndDisplayAdminComments(searchTerm = '', filter = 'all', append = false, state) {
+    if (state.isLoading) return;
+    state.isLoading = true;
+
+    const section = document.querySelector('[data-section="manageComments"]');
+    if (!section) {
+        state.isLoading = false;
+        return;
+    }
+
+    const tableBody = section.querySelector('#comments-table tbody');
+    const statusContainer = section.querySelector('.status-message-container');
+    const loadMoreContainer = section.querySelector('#comments-admin-load-more-container');
+
+    if (!append) {
+        state.currentPage = 1;
+        if (tableBody) tableBody.innerHTML = '';
+        if (statusContainer) {
+            statusContainer.classList.remove('disabled');
+            statusContainer.innerHTML = loaderHTML;
+        }
+    }
+
+    const response = await api.getAdminComments(searchTerm, filter, state.currentPage, state.batchSize);
+    state.isLoading = false;
+
+    if (statusContainer) {
+        statusContainer.classList.add('disabled');
+        statusContainer.innerHTML = '';
+    }
+
+    if (response.ok) {
+        const comments = response.data;
+        displayAdminComments(comments, tableBody, statusContainer, append);
+
+        if (loadMoreContainer) {
+            if (comments.length < state.batchSize) {
+                loadMoreContainer.classList.add('disabled');
+            } else {
+                loadMoreContainer.classList.remove('disabled');
+                state.currentPage++;
+            }
+        }
+        
+        applyTranslations(section);
+
+    } else {
+        console.error('Error fetching comments:', response.data);
+        if (!append && statusContainer) {
+            displayFetchError('[data-section="manageComments"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
         }
     }
 }

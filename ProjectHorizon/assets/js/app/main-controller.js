@@ -20,7 +20,8 @@ import {
     fetchAndDisplayGalleryPhotos,
     fetchAndDisplayTrends,
     fetchAndDisplayUsers,
-    fetchAndDisplayGalleriesAdmin
+    fetchAndDisplayGalleriesAdmin,
+    fetchAndDisplayAdminComments
 } from './view-handlers.js';
 import { handleStateChange } from './navigation-handler.js';
 
@@ -78,6 +79,7 @@ export function initMainController() {
         BATCH_SIZE: 20,
         ADMIN_USERS_BATCH_SIZE: 25,
         ADMIN_GALLERIES_BATCH_SIZE: 25,
+        ADMIN_COMMENTS_BATCH_SIZE: 25, // <-- AÑADIDO
         HISTORY_PROFILES_BATCH: 20,
         HISTORY_PHOTOS_BATCH: 20,
         HISTORY_SEARCHES_BATCH: 25,
@@ -86,6 +88,7 @@ export function initMainController() {
             photos: { currentPage: 1, isLoading: false, photoList: [], batchSize: 20 },
             adminUsers: { currentPage: 1, isLoading: false, batchSize: 25 },
             adminGalleries: { currentPage: 1, isLoading: false, batchSize: 25 },
+            adminComments: { currentPage: 1, isLoading: false, batchSize: 25 }, // <-- AÑADIDO
             historyProfiles: { shown: 20 },
             historyPhotos: { shown: 20 },
             historySearches: { shown: 25 }
@@ -681,6 +684,7 @@ export function initMainController() {
                     case 'toggleSectionForgotPassword':
                     case 'toggleSectionManageUsers':
                     case 'toggleSectionManageContent':
+                    case 'toggleSectionManageComments': // <-- AÑADIDO
                     case 'toggleSectionCreateGallery':
                         const sectionName = action.substring("toggleSection".length);
                         const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
@@ -709,6 +713,11 @@ export function initMainController() {
                     case 'load-more-admin-galleries':
                         const adminGallerySearch = document.querySelector('#admin-gallery-search');
                         fetchAndDisplayGalleriesAdmin(adminGallerySearch ? adminGallerySearch.value.trim() : '', true, appState.paginationState.adminGalleries);
+                        break;
+                    case 'load-more-admin-comments': // <-- AÑADIDO
+                        const adminCommentSearch = document.querySelector('#admin-comment-search');
+                        const adminCommentFilter = document.querySelector('#comments-filter-select .menu-link.active')?.dataset.value || 'all';
+                        fetchAndDisplayAdminComments(adminCommentSearch ? adminCommentSearch.value.trim() : '', adminCommentFilter, true, appState.paginationState.adminComments);
                         break;
                     case 'load-more-history-profiles':
                         appState.paginationState.historyProfiles.shown += appState.HISTORY_PROFILES_BATCH;
@@ -930,6 +939,12 @@ export function initMainController() {
                         menu.classList.toggle('disabled');
                         break;
                     }
+                    case 'toggle-comment-actions': { // <-- AÑADIDO
+                        const row = actionTarget.closest('tr');
+                        const menu = row.querySelector('.module-select');
+                        menu.classList.toggle('disabled');
+                        break;
+                    }
                     case 'show-role-menu': {
                         const menuContainer = actionTarget.closest('.module-select');
                         menuContainer.querySelector('[data-menu-type="main-actions"]').style.display = 'none';
@@ -983,6 +998,34 @@ export function initMainController() {
                                 showNotification('Error al cambiar el estado', 'error');
                             }
                         });
+                        break;
+                    }
+                    case 'delete-comment': { // <-- AÑADIDO
+                        const commentId = actionTarget.dataset.id;
+                        const confirmed = await showCustomConfirm('Eliminar Comentario', '¿Estás seguro de que quieres eliminar este comentario? Esta acción no se puede deshacer.');
+                        if (confirmed) {
+                            const response = await api.deleteComment(commentId);
+                            if (response.ok) {
+                                showNotification(response.data.message, 'success');
+                                const row = actionTarget.closest('tr');
+                                if (row) row.remove();
+                            } else {
+                                showNotification(response.data.message || 'Error al eliminar el comentario.', 'error');
+                            }
+                        }
+                        break;
+                    }
+                    case 'review-reports': { // <-- AÑADIDO
+                        const commentId = actionTarget.dataset.id;
+                        const response = await api.updateReportStatus(commentId, 'reviewed');
+                        if (response.ok) {
+                            showNotification(response.data.message, 'success');
+                             const adminCommentSearch = document.querySelector('#admin-comment-search');
+                            const adminCommentFilter = document.querySelector('#comments-filter-select .menu-link.active')?.dataset.value || 'all';
+                            fetchAndDisplayAdminComments(adminCommentSearch ? adminCommentSearch.value.trim() : '', adminCommentFilter, false, appState.paginationState.adminComments);
+                        } else {
+                            showNotification(response.data.message || 'Error al actualizar los reportes.', 'error');
+                        }
                         break;
                     }
                     case 'view-gallery-photos-admin': {
@@ -1271,6 +1314,11 @@ export function initMainController() {
                         updateSelectActiveState('favorites-sort-select', appState.currentFavoritesSortBy);
                     }
                 }
+                else if (selectId.includes('comments-filter-select')) { // <-- AÑADIDO
+                    const adminCommentSearch = document.querySelector('#admin-comment-search');
+                    fetchAndDisplayAdminComments(adminCommentSearch ? adminCommentSearch.value.trim() : '', value, false, appState.paginationState.adminComments);
+                    updateSelectActiveState('comments-filter-select', value);
+                }
                 else if (selectId === 'theme-select') {
                     setTheme(value);
                 }
@@ -1387,6 +1435,9 @@ export function initMainController() {
                     fetchAndDisplayUsers(searchTerm, false, appState.paginationState.adminUsers);
                 } else if (section === 'manageContent') {
                     fetchAndDisplayGalleriesAdmin(searchTerm, false, appState.paginationState.adminGalleries);
+                } else if (section === 'manageComments') { // <-- AÑADIDO
+                    const adminCommentFilter = document.querySelector('#comments-filter-select .menu-link.active')?.dataset.value || 'all';
+                    fetchAndDisplayAdminComments(searchTerm, adminCommentFilter, false, appState.paginationState.adminComments);
                 }
             }
 
@@ -1482,6 +1533,7 @@ export function initMainController() {
         'forgot-password/new-password': { view: 'auth', section: 'forgotPassword', data: { step: 'new-password' } },
         'admin/users': { view: 'admin', section: 'manageUsers' },
         'admin/content': { view: 'admin', section: 'manageContent' },
+        'admin/comments': { view: 'admin', section: 'manageComments' }, // <-- AÑADIDO
         'admin/create-gallery': { view: 'admin', section: 'createGallery' }
     };
     let initialRoute = routes[path] || null;

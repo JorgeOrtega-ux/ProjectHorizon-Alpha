@@ -101,7 +101,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'admin-editGallery',
             'admin-createGallery',
             'settings-historyPrivacy', 
-            'settings-history' 
+            'settings-history',
+            'admin-manageComments' // <-- AÑADIR ESTA LÍNEA
         ];
         $section_key = $view . '-' . $section;
     
@@ -140,7 +141,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'admin-manageUsers' => '../includes/sections/admin/manage-users.php',
             'admin-manageContent' => '../includes/sections/admin/manage-content.php',
             'admin-editGallery' => '../includes/sections/admin/edit-gallery.php',
-            'admin-createGallery' => '../includes/sections/admin/create-gallery.php'
+            'admin-createGallery' => '../includes/sections/admin/create-gallery.php',
+            'admin-manageComments' => '../includes/sections/admin/manage-comments.php' // <-- AÑADIR ESTA LÍNEA
         ];
     
         if (array_key_exists($section_key, $allowed_sections)) {
@@ -163,6 +165,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     header('Content-Type: application/json');
     require_once '../config/db.php';
+
+    if ($request_type === 'admin_comments') { // <-- INICIA NUEVO BLOQUE
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'moderator'])) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Acción no autorizada.']);
+            exit;
+        }
+
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 25;
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $offset = ($page - 1) * $limit;
+        $search_term = $_GET['search'] ?? '';
+        $filter = $_GET['filter'] ?? 'all';
+
+        $params = [];
+        $types = "";
+        
+        $base_query = "
+            FROM photo_comments c
+            JOIN users u ON c.user_uuid = u.uuid
+            JOIN gallery_photos p ON c.photo_id = p.id
+            LEFT JOIN (
+                SELECT comment_id, COUNT(*) as report_count, 
+                       SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_reports
+                FROM comment_reports
+                GROUP BY comment_id
+            ) cr ON c.id = cr.comment_id
+        ";
+        
+        $where_conditions = [];
+        if (!empty($search_term)) {
+            $where_conditions[] = "(c.comment_text LIKE ? OR u.username LIKE ?)";
+            $types .= "ss";
+            $params[] = "%" . $search_term . "%";
+            $params[] = "%" . $search_term . "%";
+        }
+
+        if ($filter === 'reported') {
+            $where_conditions[] = "cr.report_count > 0";
+        } elseif ($filter === 'pending') {
+            $where_conditions[] = "cr.pending_reports > 0";
+        }
+        
+        $where_clause = count($where_conditions) > 0 ? "WHERE " . implode(' AND ', $where_conditions) : "";
+        
+        $sql = "SELECT 
+                    c.id, c.comment_text, c.created_at,
+                    u.username,
+                    p.id as photo_id, p.photo_url,
+                    IFNULL(cr.report_count, 0) as report_count,
+                    IFNULL(cr.pending_reports, 0) as pending_reports
+                " . $base_query . " " . $where_clause . "
+                ORDER BY c.created_at DESC
+                LIMIT ? OFFSET ?";
+        
+        $types .= "ii";
+        $params[] = $limit;
+        $params[] = $offset;
+
+        $stmt = $conn->prepare($sql);
+        if (!empty($types)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $comments = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        echo json_encode($comments);
+        exit;
+    } // <-- TERMINA NUEVO BLOQUE
 
     if ($request_type === 'comments') {
         $photo_id = isset($_GET['photo_id']) ? (int)$_GET['photo_id'] : 0;
@@ -553,6 +626,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     require_once '../config/db.php';
 
     $action_type = $_POST['action_type'] ?? '';
+
+    if ($action_type === 'delete_comment') { // <-- INICIA NUEVO BLOQUE
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'moderator'])) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
+            exit;
+        }
+        $comment_id = $_POST['comment_id'] ?? 0;
+        if (empty($comment_id)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'ID de comentario no válido.']);
+            exit;
+        }
+
+        $stmt = $conn->prepare("DELETE FROM photo_comments WHERE id = ?");
+        $stmt->bind_param("i", $comment_id);
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true, 'message' => 'Comentario eliminado.']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error al eliminar el comentario.']);
+        }
+        $stmt->close();
+        exit;
+    } // <-- TERMINA NUEVO BLOQUE
+
+    if ($action_type === 'update_report_status') { // <-- INICIA NUEVO BLOQUE
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'moderator'])) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
+            exit;
+        }
+        $comment_id = $_POST['comment_id'] ?? 0;
+        $status = $_POST['status'] ?? '';
+        if (empty($comment_id) || !in_array($status, ['reviewed', 'dismissed'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Datos no válidos.']);
+            exit;
+        }
+        
+        $stmt = $conn->prepare("UPDATE comment_reports SET status = ? WHERE comment_id = ? AND status = 'pending'");
+        $stmt->bind_param("si", $status, $comment_id);
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true, 'message' => 'Reportes actualizados.']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error al actualizar los reportes.']);
+        }
+        $stmt->close();
+        exit;
+    } // <-- TERMINA NUEVO BLOQUE
+
 
     if ($action_type === 'like_comment') {
         if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {

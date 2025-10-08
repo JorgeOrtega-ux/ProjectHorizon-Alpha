@@ -23,6 +23,7 @@ class Router {
         'admin/users' => ['view' => 'admin', 'section' => 'manageUsers'],
         'admin/content' => ['view' => 'admin', 'section' => 'manageContent'],
         'admin/create-gallery' => ['view' => 'admin', 'section' => 'createGallery'],
+        'admin/comments' => ['view' => 'admin', 'section' => 'manageComments'], // <-- AÑADIR ESTA LÍNEA
         'gallery/{uuid}/photo/{photoId}/comments' => ['view' => 'main', 'section' => 'photoComments']
     ];
     public static function getRouteConfig($path) {

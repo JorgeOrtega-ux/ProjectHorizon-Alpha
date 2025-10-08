@@ -3093,3 +3093,75 @@ h6 {
     padding-top: 0;
     width: 100%;
 }
+
+/* ================================================= */
+/* ============ ADMIN COMMENTS TABLE =============== */
+/* ================================================= */
+#comments-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+#comments-table th,
+#comments-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+#comments-table thead th {
+    font-weight: 500;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--muted-text-color);
+}
+
+#comments-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+#comments-table thead tr:first-child th:first-child { border-top-left-radius: 11px; }
+#comments-table thead tr:first-child th:last-child { border-top-right-radius: 11px; }
+#comments-table tbody tr:last-child td:first-child { border-bottom-left-radius: 11px; }
+#comments-table tbody tr:last-child td:last-child { border-bottom-right-radius: 11px; }
+
+#comments-table tbody tr:hover {
+    background-color: var(--hover-bg);
+}
+
+#comments-table .admin-comment-thumbnail {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.status-badge.status-pending {
+    background-color: #fff3e0;
+    color: #f57c00;
+}
+.dark-theme .status-badge.status-pending {
+    background-color: #4a341a;
+    color: #ffa726;
+}
+.status-badge.status-reviewed {
+    background-color: #e8f5e9;
+    color: #388e3c;
+}
+.dark-theme .status-badge.status-reviewed {
+    background-color: #1c3b1e;
+    color: #66bb6a;
+}
+
+#comments-table .item-actions {
+    position: relative;
+}
+
+#comments-table .item-actions .module-select {
+    right: 0;
+    left: auto;
+    width: 240px;
+}
