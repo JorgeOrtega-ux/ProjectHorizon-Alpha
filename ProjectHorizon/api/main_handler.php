@@ -668,17 +668,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         
         if ($stmt->execute()) {
             $new_comment_id = $conn->insert_id;
+            
+            // ✅ **INICIO DE LA CORRECCIÓN**
             $stmt_get = $conn->prepare("
-                SELECT c.id, c.comment_text, c.created_at, u.username, u.role 
+                SELECT 
+                    c.id, 
+                    c.comment_text, 
+                    c.created_at, 
+                    u.username, 
+                    u.role,
+                    (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id AND vote_type = 1) as likes,
+                    (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id AND vote_type = -1) as dislikes,
+                    (SELECT vote_type FROM comment_likes WHERE comment_id = c.id AND user_uuid = ?) as user_vote
                 FROM photo_comments c
                 JOIN users u ON c.user_uuid = u.uuid
                 WHERE c.id = ?
             ");
-            $stmt_get->bind_param("i", $new_comment_id);
+            $stmt_get->bind_param("si", $user_uuid, $new_comment_id);
             $stmt_get->execute();
             $result = $stmt_get->get_result();
             $comment = $result->fetch_assoc();
+            $comment['user_vote'] = $comment['user_vote'] ? (int)$comment['user_vote'] : 0;
             $stmt_get->close();
+            // ✅ **FIN DE LA CORRECCIÓN**
 
             echo json_encode(['success' => true, 'comment' => $comment]);
         } else {

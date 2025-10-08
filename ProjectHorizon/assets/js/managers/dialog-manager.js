@@ -168,15 +168,9 @@ export async function showReportCommentDialog(commentId) {
                 }
             ],
             onOpen: (dialogBox) => {
-                const trigger = dialogBox.querySelector('[data-action="toggle-select"]');
-                const selectMenu = dialogBox.querySelector('.module-select');
                 const options = dialogBox.querySelectorAll('.menu-link');
-                const triggerText = trigger.querySelector('.select-trigger-text');
-
-                trigger.addEventListener('click', () => {
-                    selectMenu.classList.toggle('disabled');
-                    selectMenu.classList.toggle('active');
-                });
+                const triggerText = dialogBox.querySelector('.select-trigger-text');
+                const selectMenu = dialogBox.querySelector('.module-select');
 
                 options.forEach(option => {
                     option.addEventListener('click', () => {

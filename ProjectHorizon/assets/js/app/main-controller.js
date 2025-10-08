@@ -469,6 +469,8 @@ export function initMainController() {
                         const newComment = response.data.comment;
                         const commentElement = document.createElement('div');
                         commentElement.className = 'comment-item';
+                        // ✅ **INICIO DE LA CORRECCIÓN**
+                        commentElement.dataset.commentId = newComment.id; 
                         const initials = newComment.username.substring(0, 2).toUpperCase();
                         const date = new Date(newComment.created_at).toLocaleString();
 
@@ -487,8 +489,24 @@ export function initMainController() {
                                 </div>
                                 <p class="comment-text" data-full-text="${fullText}">${shortText}</p>
                                 ${isLong ? `<button class="show-more-comment-btn" data-action="toggle-comment-length">${window.getTranslation('photoView.comments.showMore')}</button>` : ''}
+                                <div class="comment-actions">
+                                    <div class="like-dislike-container">
+                                        <button class="comment-action-btn like-btn" data-action="like-comment">
+                                            <span class="material-symbols-rounded">thumb_up</span>
+                                        </button>
+                                        <span class="like-count">${newComment.likes || 0}</span>
+                                        <button class="comment-action-btn dislike-btn" data-action="dislike-comment">
+                                            <span class="material-symbols-rounded">thumb_down</span>
+                                        </button>
+                                        <span class="dislike-count">${newComment.dislikes || 0}</span>
+                                    </div>
+                                    <button class="comment-action-btn report-btn" data-action="report-comment">
+                                        <span class="material-symbols-rounded">flag</span>
+                                    </button>
+                                </div>
                             </div>
                         `;
+                        // ✅ **FIN DE LA CORRECCIÓN**
                         commentsList.prepend(commentElement);
                         commentInput.value = '';
                     } else {
