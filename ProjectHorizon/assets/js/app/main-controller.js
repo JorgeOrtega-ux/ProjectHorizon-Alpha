@@ -1,12 +1,12 @@
 // assets/js/app/main-controller.js
 
-import { navigateToUrl, setupPopStateHandler, setInitialHistoryState } from '../core/url-manager.js';
+import { navigateToUrl, setupPopStateHandler, setInitialHistoryState, generateUrl } from '../core/url-manager.js';
 import { setTheme, updateThemeSelectorUI } from '../managers/theme-manager.js';
 import { setLanguage, updateLanguageSelectorUI, applyTranslations } from '../managers/language-manager.js';
 import { initTooltips } from '../managers/tooltip-manager.js';
 import { showNotification } from '../managers/notification-manager.js';
 import * as api from '../core/api-handler.js';
-import { displayFavoritePhotos, updateCardPrivacyStatus } from '../ui/ui-controller.js';
+import { displayFavoritePhotos, updateCardPrivacyStatus, renderPhotoView } from '../ui/ui-controller.js';
 import {
     showCustomConfirm,
     showUpdatePasswordDialog,
@@ -829,7 +829,6 @@ export function initMainController() {
                                 let nextIndex = (action === 'next-photo') ? currentIndex + 1 : currentIndex - 1;
                                 if (nextIndex >= 0 && nextIndex < listToUse.length) {
                                     const nextPhoto = listToUse[nextIndex];
-                                    navigateToUrl('main', 'photoView', { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id });
                                     
                                     const showAd = await shouldShowAd();
                                     if (showAd && !appState.adCooldownActive && Math.random() < 0.15) {
@@ -838,7 +837,13 @@ export function initMainController() {
                                         handleStateChange('main', 'adView', true, null, appState);
                                         appState.adCooldownActive = true;
                                     } else {
-                                        handleStateChange('main', 'photoView', false, { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id }, appState);
+                                        const url = generateUrl('main', 'photoView', { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id });
+                                        history.pushState({ view: 'main', section: 'photoView', data: { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id } }, document.title, url);
+
+                                        appState.currentPhotoData = await renderPhotoView(nextPhoto.gallery_uuid, nextPhoto.id, listToUse);
+                                        if (appState.currentPhotoData) {
+                                            window.addToHistory('photo', appState.currentPhotoData);
+                                        }
                                         appState.adCooldownActive = false;
                                     }
                                 }
