@@ -327,6 +327,29 @@
         "inappropriate": "Contenido inapropiado o explícito",
         "other": "Otro"
       }
+    },
+    "verifyIdentity": {
+      "title": "Verifica tu identidad",
+      "description": "Para proteger tu cuenta, por favor, ingresa tu contraseña para continuar.",
+      "passwordLabel": "Contraseña",
+      "errorRequired": "La contraseña es obligatoria.",
+      "errorIncorrect": "La contraseña es incorrecta."
+    },
+    "changeRole": {
+      "title": "Confirmar cambio de rol",
+      "description": "Para cambiar el rol de <strong>{userName}</strong> a <strong>{newRole}</strong>, por favor ingresa tu contraseña de administrador.",
+      "passwordLabel": "Contraseña de Administrador",
+      "errorRequired": "La contraseña es obligatoria.",
+      "errorChangingRole": "Error al cambiar el rol.",
+      "errorVerification": "Error de verificación.",
+      "success": "Rol de usuario actualizado con éxito."
+    },
+    "deleteGallery": {
+      "passwordLabel": "Contraseña de Administrador",
+      "errorRequired": "La contraseña es obligatoria.",
+      "success": "Galería eliminada con éxito.",
+      "errorDelete": "Error al eliminar la galería.",
+      "errorVerification": "Error de verificación."
     }
   },
   "404": {

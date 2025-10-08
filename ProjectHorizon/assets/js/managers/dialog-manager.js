@@ -409,13 +409,13 @@ export async function showVerifyPasswordForEmailChangeDialog() {
     if (!tokenResponse.ok) return;
 
     showDialog({
-        title: "Verifica tu identidad",
+        title: window.getTranslation('dialogs.verifyIdentity.title'),
         contentHTML: `
-            <p>Para proteger tu cuenta, por favor, ingresa tu contraseña para continuar.</p>
+            <p>${window.getTranslation('dialogs.verifyIdentity.description')}</p>
             <input type="hidden" name="csrf_token" value="${tokenResponse.data.csrf_token}">
             <div class="form-field password-wrapper" style="margin-top: 16px;">
                 <input type="password" id="verify-email-change-password" class="auth-input" placeholder=" " autocomplete="current-password">
-                <label for="verify-email-change-password" class="auth-label">Contraseña</label>
+                <label for="verify-email-change-password" class="auth-label">${window.getTranslation('dialogs.verifyIdentity.passwordLabel')}</label>
                 <button type="button" class="password-toggle-btn" data-action="toggle-password-visibility"><span class="material-symbols-rounded">visibility</span></button>
             </div>
             <div class="auth-error-message-container" id="verify-email-change-error-container">
@@ -423,16 +423,16 @@ export async function showVerifyPasswordForEmailChangeDialog() {
             </div>
         `,
         buttons: [
-            { text: "Cancelar", onClick: ({ close }) => close() },
+            { text: window.getTranslation('general.cancel'), onClick: ({ close }) => close() },
             {
-                text: "Confirmar",
+                text: window.getTranslation('general.confirm'),
                 className: 'btn-primary',
                 onClick: async ({ close, startLoading, stopLoading, getDialogElement }) => {
                     const password = getDialogElement().querySelector('#verify-email-change-password').value;
                     const csrfToken = getDialogElement().querySelector('input[name="csrf_token"]').value;
 
                     if (!password) {
-                        getDialogElement().querySelector('#verify-email-change-error-list').innerHTML = `<li>La contraseña es obligatoria.</li>`;
+                        getDialogElement().querySelector('#verify-email-change-error-list').innerHTML = `<li>${window.getTranslation('dialogs.verifyIdentity.errorRequired')}</li>`;
                         getDialogElement().querySelector('#verify-email-change-error-container').style.display = 'block';
                         return;
                     }
@@ -451,7 +451,7 @@ export async function showVerifyPasswordForEmailChangeDialog() {
                         document.getElementById('email-view-mode').style.display = 'none';
                         document.getElementById('email-edit-mode').style.display = 'block';
                     } else {
-                        getDialogElement().querySelector('#verify-email-change-error-list').innerHTML = `<li>${response.data.message || 'La contraseña es incorrecta.'}</li>`;
+                        getDialogElement().querySelector('#verify-email-change-error-list').innerHTML = `<li>${response.data.message || window.getTranslation('dialogs.verifyIdentity.errorIncorrect')}</li>`;
                         getDialogElement().querySelector('#verify-email-change-error-container').style.display = 'block';
                     }
                 }
@@ -468,12 +468,12 @@ export async function showVerifyPasswordForEmailChangeDialog() {
  */
 export async function showChangeRoleDialog(userUuid, newRole, userName) {
     showDialog({
-        title: `Confirmar cambio de rol`,
+        title: window.getTranslation('dialogs.changeRole.title'),
         contentHTML: `
-            <p>Para cambiar el rol de <strong>${userName}</strong> a <strong>${newRole}</strong>, por favor ingresa tu contraseña de administrador.</p>
+            <p>${window.getTranslation('dialogs.changeRole.description', { userName: userName, newRole: newRole })}</p>
             <div class="form-field password-wrapper" style="margin-top: 16px;">
                 <input type="password" id="admin-confirm-password" class="auth-input" placeholder=" " autocomplete="current-password">
-                <label for="admin-confirm-password" class="auth-label">Contraseña de Administrador</label>
+                <label for="admin-confirm-password" class="auth-label">${window.getTranslation('dialogs.changeRole.passwordLabel')}</label>
                 <button type="button" class="password-toggle-btn" data-action="toggle-password-visibility"><span class="material-symbols-rounded">visibility</span></button>
             </div>
             <div class="auth-error-message-container" id="change-role-error-container">
@@ -481,9 +481,9 @@ export async function showChangeRoleDialog(userUuid, newRole, userName) {
             </div>
         `,
         buttons: [
-            { text: 'Cancelar', onClick: ({ close }) => close() },
+            { text: window.getTranslation('general.cancel'), onClick: ({ close }) => close() },
             {
-                text: 'Confirmar',
+                text: window.getTranslation('general.confirm'),
                 className: 'btn-primary',
                 onClick: async ({ close, startLoading, stopLoading, getDialogElement }) => {
                     const password = getDialogElement().querySelector('#admin-confirm-password').value;
@@ -491,7 +491,7 @@ export async function showChangeRoleDialog(userUuid, newRole, userName) {
                     const errorList = getDialogElement().querySelector('#change-role-error-list');
 
                     if (!password) {
-                        errorList.innerHTML = `<li>La contraseña es obligatoria.</li>`;
+                        errorList.innerHTML = `<li>${window.getTranslation('dialogs.changeRole.errorRequired')}</li>`;
                         errorContainer.style.display = 'block';
                         return;
                     }
@@ -503,16 +503,16 @@ export async function showChangeRoleDialog(userUuid, newRole, userName) {
                     if (passResponse.ok) {
                         const roleResponse = await api.changeUserRole(userUuid, newRole);
                         if (roleResponse.ok) {
-                            showNotification('Rol de usuario actualizado con éxito.', 'success');
+                            showNotification(window.getTranslation('dialogs.changeRole.success'), 'success');
                             // Nota: fetchAndDisplayUsers se llamará desde el main-controller
                             window.dispatchEvent(new CustomEvent('userRoleChanged'));
                             close();
                         } else {
-                            errorList.innerHTML = `<li>${roleResponse.data.message || 'Error al cambiar el rol.'}</li>`;
+                            errorList.innerHTML = `<li>${roleResponse.data.message || window.getTranslation('dialogs.changeRole.errorChangingRole')}</li>`;
                             errorContainer.style.display = 'block';
                         }
                     } else {
-                        errorList.innerHTML = `<li>${passResponse.data.message || 'Error de verificación.'}</li>`;
+                        errorList.innerHTML = `<li>${passResponse.data.message || window.getTranslation('dialogs.changeRole.errorVerification')}</li>`;
                         errorContainer.style.display = 'block';
                     }
 
@@ -531,7 +531,7 @@ export async function showDeleteGalleryDialog(galleryUuid, galleryName) {
             <p>${window.getTranslation('dialogs.deleteGalleryMessage')}</p>
             <div class="form-field password-wrapper" style="margin-top: 16px;">
                 <input type="password" id="admin-confirm-password" class="auth-input" placeholder=" " autocomplete="current-password">
-                <label for="admin-confirm-password" class="auth-label">Contraseña de Administrador</label>
+                <label for="admin-confirm-password" class="auth-label">${window.getTranslation('dialogs.deleteGallery.passwordLabel')}</label>
                 <button type="button" class="password-toggle-btn" data-action="toggle-password-visibility"><span class="material-symbols-rounded">visibility</span></button>
             </div>
             <div class="auth-error-message-container" id="delete-gallery-error-container">
@@ -549,7 +549,7 @@ export async function showDeleteGalleryDialog(galleryUuid, galleryName) {
                     const errorList = getDialogElement().querySelector('#delete-gallery-error-list');
 
                     if (!password) {
-                        errorList.innerHTML = `<li>La contraseña es obligatoria.</li>`;
+                        errorList.innerHTML = `<li>${window.getTranslation('dialogs.deleteGallery.errorRequired')}</li>`;
                         errorContainer.style.display = 'block';
                         return;
                     }
@@ -561,15 +561,15 @@ export async function showDeleteGalleryDialog(galleryUuid, galleryName) {
                     if (passResponse.ok) {
                         const deleteResponse = await api.deleteGallery(galleryUuid);
                         if (deleteResponse.ok) {
-                            showNotification('Galería eliminada con éxito.', 'success');
+                            showNotification(window.getTranslation('dialogs.deleteGallery.success'), 'success');
                             window.dispatchEvent(new CustomEvent('navigateTo', { detail: { view: 'admin', section: 'manageContent' } }));
                             close();
                         } else {
-                            errorList.innerHTML = `<li>${deleteResponse.data.message || 'Error al eliminar la galería.'}</li>`;
+                            errorList.innerHTML = `<li>${deleteResponse.data.message || window.getTranslation('dialogs.deleteGallery.errorDelete')}</li>`;
                             errorContainer.style.display = 'block';
                         }
                     } else {
-                        errorList.innerHTML = `<li>${passResponse.data.message || 'Error de verificación.'}</li>`;
+                        errorList.innerHTML = `<li>${passResponse.data.message || window.getTranslation('dialogs.deleteGallery.errorVerification')}</li>`;
                         errorContainer.style.display = 'block';
                     }
 
