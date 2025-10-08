@@ -769,9 +769,20 @@ export async function handleStateChange(view, section, pushState = true, data, a
                 };
             }
             break;
-        case 'userSpecificFavorites':
+      case 'userSpecificFavorites':
             if (data && data.uuid) {
-                const userFavorites = currentFavoritesList.filter(p => p.gallery_uuid === data.uuid);
+                
+                // ===== INICIO DE LA CORRECCIÓN =====
+                // Nos aseguramos de que la lista de favoritos se haya cargado antes de continuar.
+                // Si la lista está vacía, la obtenemos del servidor.
+                if (appState.currentFavoritesList.length === 0 && isLoggedIn) {
+                    await appState.fetchUserFavorites();
+                }
+                
+                // Ahora usamos la variable de estado actualizada que SÍ tiene los datos.
+                const userFavorites = appState.currentFavoritesList.filter(p => p.gallery_uuid === data.uuid);
+                // ===== FIN DE LA CORRECCIÓN =====
+
                 const sectionEl = document.querySelector('[data-section="userSpecificFavorites"]');
                 if (sectionEl) {
                     const grid = sectionEl.querySelector('#user-specific-favorites-grid');
@@ -787,6 +798,7 @@ export async function handleStateChange(view, section, pushState = true, data, a
                         statusContainer.classList.remove('active');
                         title.textContent = window.getTranslation('userSpecificFavorites.titleFrom', { userName: userFavorites[0].gallery_name });
                         userFavorites.forEach(photo => {
+                            // ... (resto del código para mostrar las tarjetas, que ya es correcto)
                             const card = document.createElement('div');
                             card.className = 'card photo-card';
                             card.dataset.photoUrl = photo.photo_url;
@@ -797,7 +809,7 @@ export async function handleStateChange(view, section, pushState = true, data, a
                             background.style.backgroundImage = `url('${window.BASE_PATH}/${photo.photo_url}')`;
                             card.appendChild(background);
                             const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
-                            card.innerHTML += `<div class="card-actions-container"><div class="card-hover-overlay"><div class="card-hover-icons"><div class="icon-wrapper active" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div><div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div></div></div><div class="module-content module-select photo-context-menu disabled body-title"><div class="menu-content"><div class="menu-list"><a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.openInNewTab')}</span></div></a><div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.copyLink')}</span></div></a><a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.download')}</span></div></a></div></div></div></div>`;
+                            card.innerHTML += `<div class="card-actions-container"><div class="card-hover-overlay"><div class="card-hover-icons"><div class="icon-wrapper active" data-action="toggle-favorite-card" data-photo-id="${photo.id}"><span class="material-symbols-rounded">favorite</span></div><div class="icon-wrapper" data-action="toggle-photo-menu"><span class="material-symbols-rounded">more_horiz</span></div></div></div><div class="module-content module-select photo-context-menu disabled body-title"><div class="menu-content"><div class="menu-list"><a class="menu-link" href="${photoPageUrl}" target="_blank"><div class="menu-link-icon"><span class="material-symbols-rounded">open_in_new</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.openInNewTab')}</span></div></a><div class="menu-link" data-action="copy-link"><div class="menu-link-icon"><span class="material-symbols-rounded">link</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.copyLink')}</span></div></div><a class="menu-link" href="#" data-action="download-photo"><div class="menu-link-icon"><span class="material-symbols-rounded">download</span></div><div class="menu-link-text"><span>${window.getTranslation('photoCard.download')}</span></div></a></div></div></div></div>`;
                             grid.appendChild(card);
                         });
                     } else {
