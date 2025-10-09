@@ -96,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'settings-loginSecurity',
             'settings-history',
             'main-favorites',
+            'admin-dashboard',
             'admin-manageUsers',
             'admin-manageContent',
             'admin-editGallery',
@@ -139,6 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'auth-login' => '../includes/sections/auth/login.php',
             'auth-register' => '../includes/sections/auth/register.php',
             'auth-forgotPassword' => '../includes/sections/auth/forgot-password.php',
+            'admin-dashboard' => '../includes/sections/admin/dashboard.php',
             'admin-manageUsers' => '../includes/sections/admin/manage-users.php',
             'admin-manageContent' => '../includes/sections/admin/manage-content.php',
             'admin-editGallery' => '../includes/sections/admin/edit-gallery.php',
@@ -167,6 +169,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
     header('Content-Type: application/json');
     require_once '../config/db.php';
+
+    if ($request_type === 'dashboard_stats') {
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator'])) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Acción no autorizada.']);
+            exit;
+        }
+    
+        $stats = [];
+    
+        // Estadísticas clave
+        $stats['total_users'] = $conn->query("SELECT COUNT(*) as count FROM users WHERE status = 'active'")->fetch_assoc()['count'];
+        $stats['new_users_last_30_days'] = $conn->query("SELECT COUNT(*) as count FROM users WHERE created_at >= NOW() - INTERVAL 30 DAY")->fetch_assoc()['count'];
+        $stats['total_galleries'] = $conn->query("SELECT COUNT(*) as count FROM galleries")->fetch_assoc()['count'];
+        $stats['total_photos'] = $conn->query("SELECT COUNT(*) as count FROM gallery_photos")->fetch_assoc()['count'];
+        $stats['pending_comments'] = $conn->query("SELECT COUNT(*) as count FROM photo_comments WHERE status = 'review'")->fetch_assoc()['count'];
+    
+        // Gráficos de actividad (últimos 30 días)
+        $user_growth = $conn->query("SELECT DATE(created_at) as date, COUNT(*) as count FROM users WHERE created_at >= NOW() - INTERVAL 30 DAY GROUP BY DATE(created_at) ORDER BY date ASC")->fetch_all(MYSQLI_ASSOC);
+        
+        $favorites_activity = $conn->query("SELECT DATE(added_at) as date, COUNT(*) as count FROM user_favorites WHERE added_at >= NOW() - INTERVAL 30 DAY GROUP BY DATE(added_at) ORDER BY date ASC")->fetch_all(MYSQLI_ASSOC);
+        $comments_activity = $conn->query("SELECT DATE(created_at) as date, COUNT(*) as count FROM photo_comments WHERE created_at >= NOW() - INTERVAL 30 DAY GROUP BY DATE(created_at) ORDER BY date ASC")->fetch_all(MYSQLI_ASSOC);
+
+        $stats['charts']['user_growth'] = $user_growth;
+        $stats['charts']['content_activity'] = [
+            'favorites' => $favorites_activity,
+            'comments' => $comments_activity
+        ];
+    
+        // Contenido popular (Top 10)
+        $stats['top_galleries'] = $conn->query("SELECT g.name, gm.total_interactions FROM galleries g JOIN galleries_metadata gm ON g.uuid = gm.gallery_uuid ORDER BY gm.total_interactions DESC LIMIT 10")->fetch_all(MYSQLI_ASSOC);
+        $stats['top_photos'] = $conn->query("SELECT p.id, p.photo_url, g.name as gallery_name, pm.interactions FROM gallery_photos p JOIN gallery_photos_metadata pm ON p.id = pm.photo_id JOIN galleries g ON p.gallery_uuid = g.uuid ORDER BY pm.interactions DESC LIMIT 10")->fetch_all(MYSQLI_ASSOC);
+    
+        echo json_encode($stats);
+        exit;
+    }
 
     if ($request_type === 'admin_feedback') {
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator'])) {

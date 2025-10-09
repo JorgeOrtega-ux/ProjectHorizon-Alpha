@@ -82,6 +82,10 @@ $is_logged_in = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
                 <div class="menu-link-icon"><span class="material-symbols-rounded">arrow_back</span></div>
                 <div class="menu-link-text"><span data-i18n="moduleSurface.backToHome"></span></div>
             </div>
+            <div class="menu-link <?php echo ($CURRENT_SECTION === 'dashboard') ? 'active' : ''; ?>" data-action="toggleSectionDashboard">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">dashboard</span></div>
+                <div class="menu-link-text"><span data-i18n="moduleSurface.dashboard"></span></div>
+            </div>
             <div class="menu-link <?php echo ($CURRENT_SECTION === 'manageUsers') ? 'active' : ''; ?>" data-action="toggleSectionManageUsers">
                 <div class="menu-link-icon"><span class="material-symbols-rounded">manage_accounts</span></div>
                 <div class="menu-link-text"><span data-i18n="moduleSurface.manageUsers"></span></div>

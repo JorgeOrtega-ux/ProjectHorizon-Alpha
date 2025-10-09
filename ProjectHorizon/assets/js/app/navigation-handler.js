@@ -12,6 +12,7 @@ import {
     renderCreateGalleryForm
 } from '../ui/ui-controller.js';
 import {
+    fetchAndDisplayDashboard,
     fetchAndDisplayGalleries,
     fetchAndDisplayGalleryPhotos,
     fetchAndDisplayTrends,
@@ -173,6 +174,7 @@ export async function handleStateChange(view, section, pushState = true, data, a
         'settings-loginSecurity',
         'settings-history',
         'main-favorites',
+        'admin-dashboard',
         'admin-manageUsers',
         'admin-manageContent',
         'admin-editGallery',
@@ -263,6 +265,9 @@ export async function handleStateChange(view, section, pushState = true, data, a
             break;
         case 'trends':
             fetchAndDisplayTrends().then(photos => appState.currentTrendingPhotosList = photos);
+            break;
+        case 'dashboard':
+            fetchAndDisplayDashboard();
             break;
         case 'manageUsers':
             fetchAndDisplayUsers('', false, paginationState.adminUsers);

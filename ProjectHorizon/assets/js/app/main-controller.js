@@ -16,6 +16,7 @@ import {
     showReportCommentDialog
 } from '../managers/dialog-manager.js';
 import {
+    fetchAndDisplayDashboard,
     fetchAndDisplayGalleries,
     fetchAndDisplayGalleryPhotos,
     fetchAndDisplayTrends,
@@ -655,9 +656,9 @@ export function initMainController() {
                         handleStateChange('main', 'home', true, null, appState);
                         break;
                     case 'toggleAdminPanel':
-                        if (appState.currentAppView === 'admin' && appState.currentAppSection === 'manageUsers') return;
-                        navigateToUrl('admin', 'manageUsers');
-                        handleStateChange('admin', 'manageUsers', true, null, appState);
+                        if (appState.currentAppView === 'admin' && appState.currentAppSection === 'dashboard') return;
+                        navigateToUrl('admin', 'dashboard');
+                        handleStateChange('admin', 'dashboard', true, null, appState);
                         break;
                     case 'toggleSectionRegister':
                         if (appState.currentAppView === 'auth' && appState.currentAppSection === 'register') return;
@@ -678,6 +679,7 @@ export function initMainController() {
                     case 'toggleSectionSendFeedback':
                     case 'toggleSectionLogin':
                     case 'toggleSectionForgotPassword':
+                    case 'toggleSectionDashboard':
                     case 'toggleSectionManageUsers':
                     case 'toggleSectionManageContent':
                     case 'toggleSectionManageComments':
@@ -1533,6 +1535,7 @@ export function initMainController() {
         'forgot-password': { view: 'auth', section: 'forgotPassword', data: { step: 'enter-email' } },
         'forgot-password/enter-code': { view: 'auth', section: 'forgotPassword', data: { step: 'enter-code' } },
         'forgot-password/new-password': { view: 'auth', section: 'forgotPassword', data: { step: 'new-password' } },
+        'admin/dashboard': { view: 'admin', section: 'dashboard' },
         'admin/users': { view: 'admin', section: 'manageUsers' },
         'admin/content': { view: 'admin', section: 'manageContent' },
         'admin/comments': { view: 'admin', section: 'manageComments' },

@@ -15,6 +15,8 @@ import {
 } from '../ui/ui-controller.js';
 
 const loaderHTML = '<div class="loader-container"><div class="spinner"></div></div>';
+let userGrowthChartInstance = null;
+let contentActivityChartInstance = null;
 
 function displayFetchError(containerSelector, titleKey, messageKey) {
     const section = document.querySelector(containerSelector);
@@ -32,6 +34,191 @@ function displayFetchError(containerSelector, titleKey, messageKey) {
         grid.innerHTML = '';
     }
 }
+
+function getChartColors() {
+    const isDarkMode = document.documentElement.classList.contains('dark-theme');
+    return {
+        gridColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+        textColor: isDarkMode ? '#ffffff' : '#000000',
+        
+        // Colores para Crecimiento de Usuarios (Verde)
+        successBorder: isDarkMode ? '#66bb6a' : '#388e3c',
+        successBackground: 'rgba(76, 175, 80, 0.2)',
+
+        // Colores para Actividad de Contenido
+        primaryBorder: '#007bff',
+        primaryBackground: 'rgba(0, 123, 255, 0.5)', // Azul para Comentarios
+        secondaryBorder: '#ffc107',
+        secondaryBackground: 'rgba(255, 193, 7, 0.5)' // Amarillo para Favoritos
+    };
+}
+
+function renderUserGrowthChart(data) {
+    const ctx = document.getElementById('user-growth-chart');
+    if (!ctx) return;
+
+    const colors = getChartColors();
+
+    if (userGrowthChartInstance) {
+        userGrowthChartInstance.destroy();
+    }
+
+    const labels = data.map(item => item.date);
+    const counts = data.map(item => item.count);
+
+    userGrowthChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Nuevos Usuarios',
+                data: counts,
+                borderColor: colors.successBorder,
+                backgroundColor: colors.successBackground,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    ticks: { color: colors.textColor },
+                    grid: { color: colors.gridColor }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: colors.textColor, precision: 0 },
+                    grid: { color: colors.gridColor }
+                }
+            }
+        }
+    });
+}
+
+function renderContentActivityChart(data) {
+    const ctx = document.getElementById('content-activity-chart');
+    if (!ctx) return;
+
+    const colors = getChartColors();
+    
+    if (contentActivityChartInstance) {
+        contentActivityChartInstance.destroy();
+    }
+    
+    const allDates = [...new Set([...data.favorites.map(d => d.date), ...data.comments.map(d => d.date)])].sort();
+
+    const favoritesData = allDates.map(date => {
+        const item = data.favorites.find(d => d.date === date);
+        return item ? item.count : 0;
+    });
+
+    const commentsData = allDates.map(date => {
+        const item = data.comments.find(d => d.date === date);
+        return item ? item.count : 0;
+    });
+
+    contentActivityChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: allDates,
+            datasets: [
+                {
+                    label: 'Nuevos Favoritos',
+                    data: favoritesData,
+                    backgroundColor: colors.secondaryBackground, // Fondo semitransparente
+                    borderColor: colors.secondaryBorder,       // Borde sólido
+                    borderWidth: 1.5                           // Ancho del borde
+                },
+                {
+                    label: 'Nuevos Comentarios',
+                    data: commentsData,
+                    backgroundColor: colors.primaryBackground, // Fondo semitransparente
+                    borderColor: colors.primaryBorder,       // Borde sólido
+                    borderWidth: 1.5                         // Ancho del borde
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { 
+                legend: { 
+                    labels: {
+                        color: colors.textColor
+                    }
+                } 
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: { color: colors.textColor },
+                    grid: { display: false }
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    ticks: { color: colors.textColor, precision: 0 },
+                    grid: { color: colors.gridColor }
+                }
+            }
+        }
+    });
+}
+
+
+export async function fetchAndDisplayDashboard() {
+    const section = document.querySelector('[data-section="dashboard"]');
+    if (!section) return;
+
+    const loader = document.getElementById('dashboard-loader');
+    const content = document.getElementById('dashboard-content');
+
+    loader.style.display = 'flex';
+    content.style.display = 'none';
+
+    const response = await api.getDashboardStats();
+
+    if (response.ok) {
+        const stats = response.data;
+
+        // Rellenar tarjetas de estadísticas
+        document.getElementById('total-users-value').textContent = stats.total_users;
+        document.getElementById('new-users-value').textContent = stats.new_users_last_30_days;
+        document.getElementById('total-galleries-value').textContent = stats.total_galleries;
+        document.getElementById('total-photos-value').textContent = stats.total_photos;
+        document.getElementById('pending-comments-value').textContent = stats.pending_comments;
+        
+        // Rellenar listas Top 10
+        const topGalleriesList = document.getElementById('top-galleries-list');
+        if (stats.top_galleries.length > 0) {
+            topGalleriesList.innerHTML = stats.top_galleries.map(g => `<li>${g.name} <span>(${g.total_interactions} vistas)</span></li>`).join('');
+        } else {
+            topGalleriesList.innerHTML = `<li>No hay datos suficientes.</li>`;
+        }
+
+        const topPhotosList = document.getElementById('top-photos-list');
+        if (stats.top_photos.length > 0) {
+            topPhotosList.innerHTML = stats.top_photos.map(p => `<li>Foto #${p.id} en ${p.gallery_name} <span>(${p.interactions} vistas)</span></li>`).join('');
+        } else {
+            topPhotosList.innerHTML = `<li>No hay datos suficientes.</li>`;
+        }
+
+        loader.style.display = 'none';
+        // --- INICIO DE LA CORRECCIÓN ---
+        content.style.display = 'flex'; // Cambiado de 'block' a 'flex'
+        // --- FIN DE LA CORRECCIÓN ---
+
+        // Renderizar los gráficos después de que el contenido sea visible
+        renderUserGrowthChart(stats.charts.user_growth);
+        renderContentActivityChart(stats.charts.content_activity);
+
+    } else {
+        loader.innerHTML = `<p>${window.getTranslation('general.connectionErrorMessage')}</p>`;
+    }
+    applyTranslations(section);
+}
+
 
 export async function fetchAndDisplayGalleries(sortBy = 'relevant', searchTerm = '', append = false, state) {
     if (state.isLoading) return;

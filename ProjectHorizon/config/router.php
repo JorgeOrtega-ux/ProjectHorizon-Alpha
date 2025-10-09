@@ -20,6 +20,7 @@ class Router {
         'forgot-password' => ['view' => 'auth', 'section' => 'forgotPassword', 'data' => ['step' => 'enter-email']],
         'forgot-password/enter-code' => ['view' => 'auth', 'section' => 'forgotPassword', 'data' => ['step' => 'enter-code']],
         'forgot-password/new-password' => ['view' => 'auth', 'section' => 'forgotPassword', 'data' => ['step' => 'new-password']],
+        'admin/dashboard' => ['view' => 'admin', 'section' => 'dashboard'],
         'admin/users' => ['view' => 'admin', 'section' => 'manageUsers'],
         'admin/content' => ['view' => 'admin', 'section' => 'manageContent'],
         'admin/create-gallery' => ['view' => 'admin', 'section' => 'createGallery'],

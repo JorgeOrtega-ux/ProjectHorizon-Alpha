@@ -53,6 +53,7 @@
     "termsConditions": "Términos y Condiciones",
     "cookiePolicy": "Política de Cookies",
     "sendFeedback": "Enviar Comentarios",
+    "dashboard": "Dashboard General",
     "manageUsers": "Administrar usuarios",
     "manageContent": "Administrar contenido",
     "manageComments": "Gestionar comentarios",
@@ -360,6 +361,18 @@
     "message": "No pudimos encontrar la página que estás buscando. Puede que haya sido movida o que ya no exista."
   },
   "admin": {
+    "dashboard": {
+      "title": "Dashboard General",
+      "totalUsers": "Usuarios Totales",
+      "newUsers": "Nuevos Usuarios (30d)",
+      "totalGalleries": "Galerías Totales",
+      "totalPhotos": "Fotos Totales",
+      "pendingComments": "Comentarios Pendientes",
+      "userGrowth": "Crecimiento de Usuarios",
+      "contentActivity": "Actividad de Contenido",
+      "topGalleries": "Top 10 Galerías Populares",
+      "topPhotos": "Top 10 Fotos Populares"
+    },
     "manageUsers": {
       "title": "Administrar usuarios",
       "description": "Administra los usuarios de la aplicación.",

@@ -46,7 +46,7 @@
     </div>
 
     <script src="https://unpkg.com/@popperjs/core@2"></script>
-    <script type="module" src="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'); ?>/assets/js/app-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <script type="module" src="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'); ?>/assets/js/app-init.js"></script>
 </body>
 
 </html>
