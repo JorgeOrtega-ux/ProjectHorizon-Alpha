@@ -334,15 +334,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['error' => 'ID de foto no válido.']);
             exit;
         }
-
+    
         $user_uuid = $_SESSION['user_uuid'] ?? null;
-
+    
         $stmt = $conn->prepare("
             SELECT 
                 c.id, 
                 c.comment_text, 
                 c.created_at, 
                 c.status,
+                c.parent_id,
                 u.username, 
                 u.role,
                 (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id AND vote_type = 1) as likes,
@@ -359,13 +360,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $comments = [];
         while($row = $result->fetch_assoc()){
             if ($row['status'] === 'review') {
-                $row['comment_text'] = ''; // Vacía el texto si está en revisión
+                $row['comment_text'] = '';
             }
             $row['user_vote'] = $row['user_vote'] ? (int)$row['user_vote'] : 0;
+            $row['replies'] = []; 
             $comments[] = $row;
         }
         $stmt->close();
-        echo json_encode($comments);
+    
+        $comments_by_id = [];
+        foreach ($comments as $comment) {
+            $comments_by_id[$comment['id']] = $comment;
+        }
+    
+        $structured_comments = [];
+        foreach ($comments_by_id as $id => &$comment) {
+            if ($comment['parent_id'] && isset($comments_by_id[$comment['parent_id']])) {
+                $comments_by_id[$comment['parent_id']]['replies'][] = &$comment;
+            }
+        }
+        unset($comment); 
+    
+        foreach ($comments_by_id as $id => $comment) {
+            if (!$comment['parent_id']) {
+                $structured_comments[] = $comment;
+            }
+        }
+    
+        echo json_encode($structured_comments);
         exit;
     }
 
@@ -873,20 +895,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['success' => false, 'message' => 'Debes iniciar sesión para comentar.']);
             exit;
         }
-
+    
         $photo_id = isset($_POST['photo_id']) ? (int)$_POST['photo_id'] : 0;
         $comment_text = trim($_POST['comment_text'] ?? '');
-
+        $parent_id = isset($_POST['parent_id']) && !empty($_POST['parent_id']) ? (int)$_POST['parent_id'] : null;
+    
         if ($photo_id <= 0 || empty($comment_text)) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Datos de comentario no válidos.']);
             exit;
         }
-
+    
         $user_uuid = $_SESSION['user_uuid'];
-
-        $stmt = $conn->prepare("INSERT INTO photo_comments (photo_id, user_uuid, comment_text) VALUES (?, ?, ?)");
-        $stmt->bind_param("iss", $photo_id, $user_uuid, $comment_text);
+    
+        $stmt = $conn->prepare("INSERT INTO photo_comments (photo_id, user_uuid, comment_text, parent_id) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("issi", $photo_id, $user_uuid, $comment_text, $parent_id);
         
         if ($stmt->execute()) {
             $new_comment_id = $conn->insert_id;
@@ -896,6 +919,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     c.id, 
                     c.comment_text, 
                     c.created_at, 
+                    c.parent_id,
                     u.username, 
                     u.role,
                     (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id AND vote_type = 1) as likes,
@@ -911,7 +935,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $comment = $result->fetch_assoc();
             $comment['user_vote'] = $comment['user_vote'] ? (int)$comment['user_vote'] : 0;
             $stmt_get->close();
-
+    
             echo json_encode(['success' => true, 'comment' => $comment]);
         } else {
             http_response_code(500);

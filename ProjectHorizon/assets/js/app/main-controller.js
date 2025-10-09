@@ -25,7 +25,7 @@ import {
     fetchAndDisplayAdminComments,
     fetchAndDisplayFeedback
 } from './view-handlers.js';
-import { handleStateChange } from './navigation-handler.js';
+import { handleStateChange, displayComments } from './navigation-handler.js';
 
 
 // --- FUNCIONES DE LA APLICACIÓN PRINCIPAL ---
@@ -562,6 +562,54 @@ export function initMainController() {
                         if (reported) {
                             actionTarget.disabled = true;
                             actionTarget.style.opacity = '0.5';
+                        }
+                        break;
+                    }
+                    case 'reply-comment': {
+                        const commentItem = actionTarget.closest('.comment-item');
+                        const commentId = commentItem.dataset.commentId;
+                        const repliesContainer = commentItem.querySelector('.replies-container');
+                        let replyForm = repliesContainer.querySelector('.comment-form-container');
+            
+                        if (!replyForm) {
+                            replyForm = document.createElement('div');
+                            replyForm.className = 'comment-form-container reply-form-container';
+                            replyForm.innerHTML = `
+                                <textarea class="feedback-textarea" rows="2" maxlength="500" placeholder="Escribe una respuesta..."></textarea>
+                                <button class="load-more-btn" data-action="submit-reply" data-parent-id="${commentId}">
+                                    <span class="button-text">Responder</span>
+                                    <div class="button-spinner"></div>
+                                </button>
+                            `;
+                            repliesContainer.prepend(replyForm);
+                            replyForm.querySelector('textarea').focus();
+                        } else {
+                            replyForm.remove();
+                        }
+                        break;
+                    }
+            
+                    case 'submit-reply': {
+                        const parentId = actionTarget.dataset.parentId;
+                        const replyForm = actionTarget.closest('.reply-form-container');
+                        const textarea = replyForm.querySelector('textarea');
+                        const replyText = textarea.value.trim();
+                        const photoId = appState.currentPhotoData.id;
+            
+                        if (replyText) {
+                            actionTarget.classList.add('loading');
+                            const response = await api.addComment(photoId, replyText, parentId);
+                            actionTarget.classList.remove('loading');
+            
+                            if (response.ok) {
+                                // Reload comments to show the new reply
+                                const commentsResponse = await api.getComments(photoId);
+                                if (commentsResponse.ok) {
+                                    displayComments(commentsResponse.data);
+                                }
+                            } else {
+                                showNotification(response.data.message || 'Error al publicar la respuesta.', 'error');
+                            }
                         }
                         break;
                     }

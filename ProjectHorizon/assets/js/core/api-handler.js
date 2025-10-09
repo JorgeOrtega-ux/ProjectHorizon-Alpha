@@ -161,11 +161,14 @@ export function getComments(photoId) {
     return fetchData(`${window.BASE_PATH}/api/main_handler.php?request_type=comments&photo_id=${photoId}`);
 }
 
-export function addComment(photoId, commentText) {
+export function addComment(photoId, commentText, parentId = null) {
     const formData = new FormData();
     formData.append('action_type', 'add_comment');
     formData.append('photo_id', photoId);
     formData.append('comment_text', commentText);
+    if (parentId) {
+        formData.append('parent_id', parentId);
+    }
     return postDataWithCsrf(formData);
 }
 

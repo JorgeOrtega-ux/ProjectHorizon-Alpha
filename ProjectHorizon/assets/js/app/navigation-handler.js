@@ -73,7 +73,7 @@ function setupMoreOptionsMenu() {
     }
 }
 
-function displayComments(comments) {
+export function displayComments(comments) {
     const commentsList = document.getElementById('comments-list');
     if (!commentsList) return;
 
@@ -84,18 +84,16 @@ function displayComments(comments) {
         return;
     }
 
-    comments.forEach(comment => {
+    const createCommentElement = (comment, isReply = false) => {
         const commentElement = document.createElement('div');
-        commentElement.className = 'comment-item';
+        commentElement.className = `comment-item ${isReply ? 'comment-reply' : ''}`;
         commentElement.dataset.commentId = comment.id;
-        
+
         const initials = comment.username.substring(0, 2).toUpperCase();
         const date = new Date(comment.created_at).toLocaleString();
 
         let commentBodyHTML = '';
-
         if (comment.status === 'review') {
-            // Si el comentario está en revisión, muestra un badge en lugar del texto
             commentBodyHTML = `
                 <div class="comment-in-review">
                     <span class="material-symbols-rounded">rate_review</span>
@@ -103,7 +101,6 @@ function displayComments(comments) {
                 </div>
             `;
         } else {
-            // Si es visible, muestra el texto y las acciones
             const fullText = comment.comment_text;
             const isLong = fullText.length > 250;
             const shortText = isLong ? fullText.substring(0, 250) + '...' : fullText;
@@ -122,9 +119,14 @@ function displayComments(comments) {
                         </button>
                         <span class="dislike-count">${comment.dislikes}</span>
                     </div>
-                    <button class="comment-action-btn report-btn" data-action="report-comment">
-                        <span class="material-symbols-rounded">flag</span>
-                    </button>
+                    <div>
+                        <button class="comment-action-btn reply-btn" data-action="reply-comment">
+                            <span class="material-symbols-rounded">reply</span>
+                        </button>
+                        <button class="comment-action-btn report-btn" data-action="report-comment">
+                            <span class="material-symbols-rounded">flag</span>
+                        </button>
+                    </div>
                 </div>
             `;
         }
@@ -139,11 +141,25 @@ function displayComments(comments) {
                     <span class="comment-date">${date}</span>
                 </div>
                 ${commentBodyHTML}
+                <div class="replies-container"></div>
             </div>
         `;
+        return commentElement;
+    };
+
+    comments.forEach(comment => {
+        const commentElement = createCommentElement(comment);
+        const repliesContainer = commentElement.querySelector('.replies-container');
+        if (comment.replies && comment.replies.length > 0) {
+            comment.replies.forEach(reply => {
+                const replyElement = createCommentElement(reply, true);
+                repliesContainer.appendChild(replyElement);
+            });
+        }
         commentsList.appendChild(commentElement);
     });
-    applyTranslations(commentsList); // Se aplica para traducir el badge si es necesario
+
+    applyTranslations(commentsList);
 }
 
 export async function handleStateChange(view, section, pushState = true, data, appState) {

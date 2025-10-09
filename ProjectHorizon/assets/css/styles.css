@@ -2965,6 +2965,23 @@ h6 {
     width: 100%;
 }
 
+.comment-reply {
+    margin-left: 50px; /* Indentación para las respuestas */
+}
+
+.reply-form-container {
+    margin-left: 50px; /* Indentación para el formulario de respuesta */
+    margin-top: 10px;
+}
+
+.replies-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+
 /* ================================================= */
 /* ============ ADMIN COMMENTS TABLE =============== */
 /* ================================================= */
