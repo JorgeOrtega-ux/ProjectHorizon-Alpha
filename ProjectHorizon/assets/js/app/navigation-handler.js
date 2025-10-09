@@ -73,6 +73,88 @@ function setupMoreOptionsMenu() {
     }
 }
 
+// --- INICIO DE LA CORRECCIÓN ---
+// Se extrae createCommentElement y se exporta
+export function createCommentElement(comment, isReply = false) {
+    const commentElement = document.createElement('div');
+    commentElement.className = `comment-item ${isReply ? 'comment-reply' : ''}`;
+    commentElement.dataset.commentId = comment.id;
+
+    const initials = comment.username.substring(0, 2).toUpperCase();
+    const date = new Date(comment.created_at).toLocaleString();
+
+    let commentBodyHTML = '';
+    if (comment.status === 'review') {
+        commentBodyHTML = `
+            <div class="comment-in-review">
+                <span class="material-symbols-rounded">rate_review</span>
+                <span data-i18n="admin.manageComments.table.states.review"></span>
+            </div>
+        `;
+    } else {
+        const fullText = comment.comment_text;
+        const isLong = fullText.length > 250;
+        const shortText = isLong ? fullText.substring(0, 250) + '...' : fullText;
+
+        commentBodyHTML = `
+            <p class="comment-text" data-full-text="${fullText}">${shortText}</p>
+            ${isLong ? `<button class="show-more-comment-btn" data-action="toggle-comment-length">${window.getTranslation('photoView.comments.showMore')}</button>` : ''}
+            <div class="comment-actions">
+                <div class="like-dislike-container">
+                    <button class="comment-action-btn like-btn ${comment.user_vote === 1 ? 'active' : ''}" data-action="like-comment">
+                        <span class="material-symbols-rounded">thumb_up</span>
+                    </button>
+                    <span class="like-count">${comment.likes}</span>
+                    <button class="comment-action-btn dislike-btn ${comment.user_vote === -1 ? 'active' : ''}" data-action="dislike-comment">
+                        <span class="material-symbols-rounded">thumb_down</span>
+                    </button>
+                    <span class="dislike-count">${comment.dislikes}</span>
+                </div>
+                <div>
+                    ${!isReply ? `
+                    <button class="comment-action-btn reply-btn" data-action="reply-comment">
+                        <span class="material-symbols-rounded">reply</span>
+                    </button>
+                    ` : ''}
+                    <button class="comment-action-btn report-btn" data-action="report-comment">
+                        <span class="material-symbols-rounded">flag</span>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    let repliesControlHTML = '';
+    if (!isReply && comment.replies && comment.replies.length > 0) {
+        const replyCount = comment.replies.length;
+        const buttonText = `Ver ${replyCount} ${replyCount > 1 ? 'respuestas' : 'respuesta'}`;
+        repliesControlHTML = `
+            <div class="replies-control-container">
+                <button class="toggle-replies-btn" data-action="toggle-replies" data-state="hidden" data-total-replies="${replyCount}">
+                    ${buttonText}
+                </button>
+            </div>
+        `;
+    }
+
+    commentElement.innerHTML = `
+        <div class="comment-avatar-container">
+            <div class="comment-avatar profile-btn--${comment.role}">${initials}</div>
+        </div>
+        <div class="comment-content">
+            <div class="comment-header">
+                <span class="comment-author">${comment.username}</span>
+                <span class="comment-date">${date}</span>
+            </div>
+            ${commentBodyHTML}
+            ${repliesControlHTML}
+            <div class="replies-container" style="display: none;"></div>
+        </div>
+    `;
+    return commentElement;
+}
+// --- FIN DE LA CORRECCIÓN ---
+
 export function displayComments(comments) {
     const commentsList = document.getElementById('comments-list');
     if (!commentsList) return;
@@ -84,77 +166,10 @@ export function displayComments(comments) {
         return;
     }
 
-    const createCommentElement = (comment, isReply = false) => {
-        const commentElement = document.createElement('div');
-        commentElement.className = `comment-item ${isReply ? 'comment-reply' : ''}`;
-        commentElement.dataset.commentId = comment.id;
-
-        const initials = comment.username.substring(0, 2).toUpperCase();
-        const date = new Date(comment.created_at).toLocaleString();
-
-        let commentBodyHTML = '';
-        if (comment.status === 'review') {
-            commentBodyHTML = `
-                <div class="comment-in-review">
-                    <span class="material-symbols-rounded">rate_review</span>
-                    <span data-i18n="admin.manageComments.table.states.review"></span>
-                </div>
-            `;
-        } else {
-            const fullText = comment.comment_text;
-            const isLong = fullText.length > 250;
-            const shortText = isLong ? fullText.substring(0, 250) + '...' : fullText;
-            
-            commentBodyHTML = `
-                <p class="comment-text" data-full-text="${fullText}">${shortText}</p>
-                ${isLong ? `<button class="show-more-comment-btn" data-action="toggle-comment-length">${window.getTranslation('photoView.comments.showMore')}</button>` : ''}
-                <div class="comment-actions">
-                    <div class="like-dislike-container">
-                        <button class="comment-action-btn like-btn ${comment.user_vote === 1 ? 'active' : ''}" data-action="like-comment">
-                            <span class="material-symbols-rounded">thumb_up</span>
-                        </button>
-                        <span class="like-count">${comment.likes}</span>
-                        <button class="comment-action-btn dislike-btn ${comment.user_vote === -1 ? 'active' : ''}" data-action="dislike-comment">
-                            <span class="material-symbols-rounded">thumb_down</span>
-                        </button>
-                        <span class="dislike-count">${comment.dislikes}</span>
-                    </div>
-                    <div>
-                        <button class="comment-action-btn reply-btn" data-action="reply-comment">
-                            <span class="material-symbols-rounded">reply</span>
-                        </button>
-                        <button class="comment-action-btn report-btn" data-action="report-comment">
-                            <span class="material-symbols-rounded">flag</span>
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-
-        commentElement.innerHTML = `
-            <div class="comment-avatar-container">
-                <div class="comment-avatar profile-btn--${comment.role}">${initials}</div>
-            </div>
-            <div class="comment-content">
-                <div class="comment-header">
-                    <span class="comment-author">${comment.username}</span>
-                    <span class="comment-date">${date}</span>
-                </div>
-                ${commentBodyHTML}
-                <div class="replies-container"></div>
-            </div>
-        `;
-        return commentElement;
-    };
-
     comments.forEach(comment => {
         const commentElement = createCommentElement(comment);
-        const repliesContainer = commentElement.querySelector('.replies-container');
         if (comment.replies && comment.replies.length > 0) {
-            comment.replies.forEach(reply => {
-                const replyElement = createCommentElement(reply, true);
-                repliesContainer.appendChild(replyElement);
-            });
+            commentElement.dataset.replies = JSON.stringify(comment.replies);
         }
         commentsList.appendChild(commentElement);
     });

@@ -2981,6 +2981,26 @@ h6 {
     margin-top: 10px;
 }
 
+/* --- INICIO DE LA CORRECCIÓN --- */
+.replies-control-container {
+    margin-top: 12px;
+}
+
+.toggle-replies-btn {
+    background: none;
+    border: none;
+    color: var(--muted-text-color);
+    cursor: pointer;
+    font-weight: 500;
+    padding: 4px 0;
+    font-size: 0.875rem;
+}
+
+.toggle-replies-btn:hover {
+    text-decoration: underline;
+    color: var(--text-color);
+}
+/* --- FIN DE LA CORRECCIÓN --- */
 
 /* ================================================= */
 /* ============ ADMIN COMMENTS TABLE =============== */

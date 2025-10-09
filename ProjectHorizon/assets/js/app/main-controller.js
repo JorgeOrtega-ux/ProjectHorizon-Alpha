@@ -25,7 +25,9 @@ import {
     fetchAndDisplayAdminComments,
     fetchAndDisplayFeedback
 } from './view-handlers.js';
-import { handleStateChange, displayComments } from './navigation-handler.js';
+// --- INICIO DE LA CORRECCIÓN ---
+import { handleStateChange, displayComments, createCommentElement } from './navigation-handler.js';
+// --- FIN DE LA CORRECCIÓN ---
 
 
 // --- FUNCIONES DE LA APLICACIÓN PRINCIPAL ---
@@ -506,10 +508,16 @@ export function initMainController() {
                                         </button>
                                         <span class="dislike-count">${newComment.dislikes || 0}</span>
                                     </div>
-                                    <button class="comment-action-btn report-btn" data-action="report-comment">
-                                        <span class="material-symbols-rounded">flag</span>
-                                    </button>
+                                    <div>
+                                        <button class="comment-action-btn reply-btn" data-action="reply-comment">
+                                            <span class="material-symbols-rounded">reply</span>
+                                        </button>
+                                        <button class="comment-action-btn report-btn" data-action="report-comment">
+                                            <span class="material-symbols-rounded">flag</span>
+                                        </button>
+                                    </div>
                                 </div>
+                                <div class="replies-container"></div>
                             </div>
                         `;
                         commentsList.prepend(commentElement);
@@ -609,6 +617,60 @@ export function initMainController() {
                                 }
                             } else {
                                 showNotification(response.data.message || 'Error al publicar la respuesta.', 'error');
+                            }
+                        }
+                        break;
+                    }
+                    
+                    case 'toggle-replies': {
+                        const commentItem = actionTarget.closest('.comment-item');
+                        const repliesContainer = commentItem.querySelector('.replies-container');
+                        const repliesData = JSON.parse(commentItem.dataset.replies || '[]');
+                        const totalReplies = parseInt(actionTarget.dataset.totalReplies, 10);
+                        const state = actionTarget.dataset.state;
+
+                        if (state === 'hidden') {
+                            repliesContainer.style.display = 'flex';
+                            actionTarget.dataset.state = 'shown';
+                            
+                            const repliesToShow = repliesData.slice(0, 10);
+                            repliesContainer.innerHTML = ''; // Limpiar
+                            
+                            repliesToShow.forEach(reply => {
+                                const replyElement = createCommentElement(reply, true);
+                                repliesContainer.appendChild(replyElement);
+                            });
+
+                            if (totalReplies > 10) {
+                                actionTarget.textContent = 'Mostrar más respuestas';
+                                actionTarget.dataset.shownCount = 10;
+                            } else {
+                                actionTarget.textContent = 'Ocultar respuestas';
+                            }
+
+                        } else if (state === 'shown') {
+                            const shownCount = parseInt(actionTarget.dataset.shownCount || '10', 10);
+                            
+                            if (shownCount < totalReplies) {
+                                const newCount = Math.min(shownCount + 10, totalReplies);
+                                const newReplies = repliesData.slice(shownCount, newCount);
+
+                                newReplies.forEach(reply => {
+                                    const replyElement = createCommentElement(reply, true);
+                                    repliesContainer.appendChild(replyElement);
+                                });
+                                
+                                actionTarget.dataset.shownCount = newCount;
+
+                                if (newCount === totalReplies) {
+                                    actionTarget.textContent = 'Ocultar respuestas';
+                                }
+
+                            } else {
+                                repliesContainer.style.display = 'none';
+                                repliesContainer.innerHTML = '';
+                                actionTarget.dataset.state = 'hidden';
+                                actionTarget.textContent = `Ver ${totalReplies} ${totalReplies > 1 ? 'respuestas' : 'respuesta'}`;
                             }
                         }
                         break;
@@ -1586,8 +1648,8 @@ export function initMainController() {
         'admin/dashboard': { view: 'admin', section: 'dashboard' },
         'admin/users': { view: 'admin', section: 'manageUsers' },
         'admin/content': { view: 'admin', section: 'manageContent' },
-        'admin/comments': { view: 'admin', section: 'manageComments' },
         'admin/create-gallery': { view: 'admin', section: 'createGallery' },
+        'admin/comments': { view: 'admin', section: 'manageComments' },
         'admin/feedback': { view: 'admin', section: 'manageFeedback' }
     };
     let initialRoute = routes[path] || null;
