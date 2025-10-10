@@ -151,6 +151,7 @@ CREATE TABLE `feedback` (
   `issue_type` varchar(50) NOT NULL,
   `title` varchar(100) DEFAULT NULL,
   `description` text NOT NULL,
+  `user_uuid` varchar(36) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid` (`uuid`)

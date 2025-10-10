@@ -5,6 +5,7 @@ if (session_status() == PHP_SESSION_NONE) {
 // La variable $is_logged_in ya no es necesaria para la lógica de este archivo,
 // pero la mantenemos por si se usa en otros contextos.
 $is_logged_in = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
+$user_role = $_SESSION['user_role'] ?? 'user';
 ?>
 <div class="module-content module-surface body-title disabled" data-module="moduleSurface">
     <div class="menu-content <?php echo ($CURRENT_VIEW === 'main') ? 'active' : 'disabled'; ?>" data-menu="main">
@@ -82,26 +83,35 @@ $is_logged_in = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
                 <div class="menu-link-icon"><span class="material-symbols-rounded">arrow_back</span></div>
                 <div class="menu-link-text"><span data-i18n="moduleSurface.backToHome"></span></div>
             </div>
-            <div class="menu-link <?php echo ($CURRENT_SECTION === 'dashboard') ? 'active' : ''; ?>" data-action="toggleSectionDashboard">
-                <div class="menu-link-icon"><span class="material-symbols-rounded">dashboard</span></div>
-                <div class="menu-link-text"><span data-i18n="moduleSurface.dashboard"></span></div>
-            </div>
-            <div class="menu-link <?php echo ($CURRENT_SECTION === 'manageUsers') ? 'active' : ''; ?>" data-action="toggleSectionManageUsers">
-                <div class="menu-link-icon"><span class="material-symbols-rounded">manage_accounts</span></div>
-                <div class="menu-link-text"><span data-i18n="moduleSurface.manageUsers"></span></div>
-            </div>
-            <div class="menu-link <?php echo ($CURRENT_SECTION === 'manageContent') ? 'active' : ''; ?>" data-action="toggleSectionManageContent">
-                <div class="menu-link-icon"><span class="material-symbols-rounded">folder_managed</span></div>
-                <div class="menu-link-text"><span data-i18n="moduleSurface.manageContent"></span></div>
-            </div>
-            <div class="menu-link <?php echo ($CURRENT_SECTION === 'manageComments') ? 'active' : ''; ?>" data-action="toggleSectionManageComments">
-                <div class="menu-link-icon"><span class="material-symbols-rounded">comment</span></div>
-                <div class="menu-link-text"><span data-i18n="moduleSurface.manageComments"></span></div>
-            </div>
-            <div class="menu-link <?php echo ($CURRENT_SECTION === 'manageFeedback') ? 'active' : ''; ?>" data-action="toggleSectionManageFeedback">
-                <div class="menu-link-icon"><span class="material-symbols-rounded">rate_review</span></div>
-                <div class="menu-link-text"><span data-i18n="moduleSurface.manageFeedback"></span></div>
-            </div>
+
+            <?php if (in_array($user_role, ['administrator', 'founder'])): ?>
+                <div class="menu-link <?php echo ($CURRENT_SECTION === 'dashboard') ? 'active' : ''; ?>" data-action="toggleSectionDashboard">
+                    <div class="menu-link-icon"><span class="material-symbols-rounded">dashboard</span></div>
+                    <div class="menu-link-text"><span data-i18n="moduleSurface.dashboard"></span></div>
+                </div>
+                <div class="menu-link <?php echo ($CURRENT_SECTION === 'manageUsers') ? 'active' : ''; ?>" data-action="toggleSectionManageUsers">
+                    <div class="menu-link-icon"><span class="material-symbols-rounded">manage_accounts</span></div>
+                    <div class="menu-link-text"><span data-i18n="moduleSurface.manageUsers"></span></div>
+                </div>
+                <div class="menu-link <?php echo ($CURRENT_SECTION === 'manageContent') ? 'active' : ''; ?>" data-action="toggleSectionManageContent">
+                    <div class="menu-link-icon"><span class="material-symbols-rounded">folder_managed</span></div>
+                    <div class="menu-link-text"><span data-i18n="moduleSurface.manageContent"></span></div>
+                </div>
+            <?php endif; ?>
+
+            <?php if (in_array($user_role, ['administrator', 'founder', 'moderator'])): ?>
+                <div class="menu-link <?php echo ($CURRENT_SECTION === 'manageComments') ? 'active' : ''; ?>" data-action="toggleSectionManageComments">
+                    <div class="menu-link-icon"><span class="material-symbols-rounded">comment</span></div>
+                    <div class="menu-link-text"><span data-i18n="moduleSurface.manageComments"></span></div>
+                </div>
+            <?php endif; ?>
+
+            <?php if (in_array($user_role, ['administrator', 'founder'])): ?>
+                <div class="menu-link <?php echo ($CURRENT_SECTION === 'manageFeedback') ? 'active' : ''; ?>" data-action="toggleSectionManageFeedback">
+                    <div class="menu-link-icon"><span class="material-symbols-rounded">rate_review</span></div>
+                    <div class="menu-link-text"><span data-i18n="moduleSurface.manageFeedback"></span></div>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

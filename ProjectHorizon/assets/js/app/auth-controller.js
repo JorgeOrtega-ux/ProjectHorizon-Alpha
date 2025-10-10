@@ -74,9 +74,9 @@ function updateUserUI(userData) {
         profileBtn.dataset.userRole = userData.role || 'user';
 
         if (adminPanelLink) {
-            // -- CORRECCIÓN: Se añade 'founder' a la condición para que también vea el enlace. --
-            const isAdminOrFounder = ['administrator', 'founder'].includes(userData.role);
-            adminPanelLink.style.display = isAdminOrFounder ? 'flex' : 'none';
+            // -- CORRECCIÓN: Se añade 'moderator' a la condición para que también vea el enlace. --
+            const hasAdminAccess = ['administrator', 'founder', 'moderator'].includes(userData.role);
+            adminPanelLink.style.display = hasAdminAccess ? 'flex' : 'none';
         }
     } else {
         loggedOutContainer.classList.remove('disabled');

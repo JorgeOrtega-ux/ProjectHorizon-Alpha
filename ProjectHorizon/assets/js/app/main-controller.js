@@ -851,11 +851,21 @@ export function initMainController() {
                         navigateToUrl('main', 'home');
                         handleStateChange('main', 'home', true, null, appState);
                         break;
-                    case 'toggleAdminPanel':
-                        if (appState.currentAppView === 'admin' && appState.currentAppSection === 'dashboard') return;
-                        navigateToUrl('admin', 'dashboard');
-                        handleStateChange('admin', 'dashboard', true, null, appState);
+                    case 'toggleAdminPanel': {
+                        const profileBtn = document.querySelector('.profile-btn');
+                        const userRole = profileBtn ? profileBtn.dataset.userRole : 'user';
+
+                        if (userRole === 'moderator') {
+                            if (appState.currentAppView === 'admin' && appState.currentAppSection === 'manageComments') return;
+                            navigateToUrl('admin', 'manageComments');
+                            handleStateChange('admin', 'manageComments', true, null, appState);
+                        } else {
+                            if (appState.currentAppView === 'admin' && appState.currentAppSection === 'dashboard') return;
+                            navigateToUrl('admin', 'dashboard');
+                            handleStateChange('admin', 'dashboard', true, null, appState);
+                        }
                         break;
+                    }
                     case 'toggleSectionRegister':
                         if (appState.currentAppView === 'auth' && appState.currentAppSection === 'register') return;
                         navigateToUrl('auth', 'register', { step: 'user-info' });

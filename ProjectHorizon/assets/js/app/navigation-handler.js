@@ -228,7 +228,15 @@ export async function handleStateChange(view, section, pushState = true, data, a
     }
 
     if (view === 'admin') {
-        if (!isLoggedIn || !['administrator', 'founder'].includes(sessionResponse.data.user.role)) {
+        const userRole = sessionResponse.data?.user?.role;
+        const allowedAdminRoles = ['administrator', 'founder', 'moderator'];
+
+        if (!isLoggedIn || !allowedAdminRoles.includes(userRole)) {
+            handleStateChange('main', '404', true, null, appState);
+            return;
+        }
+
+        if (userRole === 'moderator' && section !== 'manageComments') {
             handleStateChange('main', '404', true, null, appState);
             return;
         }

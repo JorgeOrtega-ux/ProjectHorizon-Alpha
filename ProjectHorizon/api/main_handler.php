@@ -307,12 +307,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $offset = ($page - 1) * $limit;
     
+        // --- INICIO DE LA CORRECCIÓN ---
         $stmt_feedback = $conn->prepare("
-            SELECT f.uuid, f.issue_type, f.title, f.description, f.created_at
+            SELECT f.uuid, f.issue_type, f.title, f.description, f.created_at, f.user_uuid, u.username
             FROM feedback f
+            LEFT JOIN users u ON f.user_uuid = u.uuid
             ORDER BY f.created_at DESC
             LIMIT ? OFFSET ?
         ");
+        // --- FIN DE LA CORRECCIÓN ---
         $stmt_feedback->bind_param("ii", $limit, $offset);
         $stmt_feedback->execute();
         $feedback_result = $stmt_feedback->get_result();
@@ -1256,6 +1259,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $issue_type = filter_input(INPUT_POST, 'issue_type', FILTER_SANITIZE_STRING);
         $other_title = filter_input(INPUT_POST, 'other_title', FILTER_SANITIZE_STRING);
         $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_STRING);
+        
+        // --- INICIO DE LA CORRECCIÓN ---
+        $user_uuid = (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) ? $_SESSION['user_uuid'] : null;
+        // --- FIN DE LA CORRECCIÓN ---
     
         $errors = [];
     
@@ -1330,8 +1337,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
         $conn->begin_transaction();
         try {
-            $stmt_feedback = $conn->prepare("INSERT INTO feedback (uuid, issue_type, title, description) VALUES (?, ?, ?, ?)");
-            $stmt_feedback->bind_param("ssss", $feedback_uuid, $issue_type, $title_to_insert, $description);
+            // --- INICIO DE LA CORRECCIÓN ---
+            $stmt_feedback = $conn->prepare("INSERT INTO feedback (uuid, issue_type, title, description, user_uuid) VALUES (?, ?, ?, ?, ?)");
+            $stmt_feedback->bind_param("sssss", $feedback_uuid, $issue_type, $title_to_insert, $description, $user_uuid);
+            // --- FIN DE LA CORRECCIÓN ---
             $stmt_feedback->execute();
             $stmt_feedback->close();
     

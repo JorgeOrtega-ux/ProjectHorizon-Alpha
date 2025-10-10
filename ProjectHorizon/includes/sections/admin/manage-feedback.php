@@ -27,6 +27,7 @@
                         <th data-i18n="admin.manageFeedback.table.type"></th>
                         <th data-i18n="admin.manageFeedback.table.title"></th>
                         <th data-i18n="admin.manageFeedback.table.description"></th>
+                        <th data-i18n="admin.manageFeedback.table.user"></th>
                         <th data-i18n="admin.manageFeedback.table.attachments"></th>
                         <th data-i18n="admin.manageFeedback.table.date"></th>
                     </tr>

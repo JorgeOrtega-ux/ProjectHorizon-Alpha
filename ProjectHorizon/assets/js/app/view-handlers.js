@@ -650,6 +650,16 @@ export async function fetchAndDisplayAdminComments(searchTerm = '', filter = 'al
     }
 }
 
+// --- INICIO DE LA CORRECCIÓN ---
+function getInitials(name) {
+    if (!name) return '';
+    const words = name.split(/[\s_]+/);
+    if (words.length > 1 && words[1]) {
+        return (words[0][0] + words[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+}
+
 export async function fetchAndDisplayFeedback(searchTerm = '', append = false, state) {
     if (state.isLoading) return;
     state.isLoading = true;
@@ -683,6 +693,9 @@ export async function fetchAndDisplayFeedback(searchTerm = '', append = false, s
 
     if (response.ok) {
         const feedbackItems = response.data;
+        
+        // La función displayFeedback ahora se encuentra en ui-controller.js
+        // y se importa al principio del archivo.
         displayFeedback(feedbackItems, tableBody, statusContainer, append);
 
         if (loadMoreContainer) {
@@ -703,6 +716,7 @@ export async function fetchAndDisplayFeedback(searchTerm = '', append = false, s
         }
     }
 }
+// --- FIN DE LA CORRECCIÓN ---
 
 export async function fetchAndDisplayUserProfile(uuid) {
     const section = document.querySelector('[data-section="userProfile"]');

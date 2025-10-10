@@ -112,6 +112,7 @@
         "type": "Tipo",
         "title": "Título",
         "description": "Descripción",
+        "user": "Usuario",
         "attachments": "Adjuntos",
         "date": "Fecha"
       },
