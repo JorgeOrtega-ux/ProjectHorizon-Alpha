@@ -1786,6 +1786,7 @@ h6 {
 /* ================================================= */
 /* =========== ESTILOS ORIGINALES DE PERFIL ========== */
 /* ================================================= */
+
 .profile-btn {
     border-width: 2px;
     border-radius: 50%;
@@ -2522,4 +2523,67 @@ h6 {
 
 .comment-in-review .material-symbols-rounded {
     font-size: 20px;
+}
+
+/* ================================================= */
+/* ============= ESTILOS AGE VERIFICATION ========== */
+/* ================================================= */
+
+.age-verification-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.age-verification-overlay.disabled {
+    display: none;
+}
+
+.age-verification-content {
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+    padding: 24px 32px;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+    border: 1px solid var(--border-color);
+}
+
+.age-verification-content h2 {
+    margin-bottom: 16px;
+    font-size: 1.5rem;
+}
+
+.age-verification-content p {
+    color: var(--muted-text-color);
+    line-height: 1.6;
+    text-align: left;
+    margin-bottom: 16px;
+}
+
+.age-verification-content p:last-of-type {
+    margin-bottom: 0;
+}
+
+.age-verification-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.age-verification-buttons .load-more-btn {
+    flex-grow: 1;
+    min-width: 200px;
 }

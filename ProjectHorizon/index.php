@@ -37,6 +37,18 @@
 </head>
 
 <body>
+    <div id="age-verification-overlay" class="age-verification-overlay disabled">
+        <div class="age-verification-content">
+            <h2 data-i18n="ageVerification.title"></h2>
+            <p><strong data-i18n="ageVerification.noticeTitle"></strong></p>
+            <p data-i18n="ageVerification.noticeContent"></p>
+            <p data-i18n="ageVerification.termsNotice"></p>
+            <div class="age-verification-buttons">
+                <button id="age-decline-btn" class="load-more-btn" data-i18n="ageVerification.declineButton"></button>
+                <button id="age-confirm-btn" class="load-more-btn btn-primary" data-i18n="ageVerification.confirmButton"></button>
+            </div>
+        </div>
+    </div>
     <div class="page-wrapper">
         <div class="main-content">
             <div class="general-content">

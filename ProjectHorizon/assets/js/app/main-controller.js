@@ -63,8 +63,30 @@ async function addToHistory(type, data) {
     await api.addHistory(type, data.id || data.term, metadata);
 }
 
+function handleAgeVerification() {
+    if (localStorage.getItem('ageVerified') === 'true') {
+        return;
+    }
+
+    const overlay = document.getElementById('age-verification-overlay');
+    const confirmBtn = document.getElementById('age-confirm-btn');
+    const declineBtn = document.getElementById('age-decline-btn');
+
+    if (overlay && confirmBtn && declineBtn) {
+        overlay.classList.remove('disabled');
+        
+        confirmBtn.addEventListener('click', () => {
+            localStorage.setItem('ageVerified', 'true');
+            overlay.classList.add('disabled');
+        });
+        
+        // El botón de declinar no hace nada por ahora, como se solicitó.
+    }
+}
+
 
 export function initMainController() {
+    handleAgeVerification();
     const appState = {
         currentAppView: null,
         currentAppSection: null,

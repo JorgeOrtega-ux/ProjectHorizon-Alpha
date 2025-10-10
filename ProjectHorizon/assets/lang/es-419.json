@@ -90,6 +90,10 @@
     "backButtonTooltip": "Volver",
     "userTitle": "Usuario",
     "favoriteButtonTooltip": "Añadir a favoritos",
+    "commentsButtonTooltip": "Ver comentarios",
+    "optionsButtonTooltip": "Más opciones",
+    "previousPhotoButtonTooltip": "Foto anterior",
+    "nextPhotoButtonTooltip": "Foto siguiente",
     "rotateLeft": "Girar a la izquierda",
     "rotateRight": "Girar a la derecha",
     "download": "Descargar",
@@ -366,6 +370,14 @@
         "permanent_suspension": "Suspensión Permanente"
       }
     }
+  },
+  "ageVerification": {
+    "title": "Este es un Sitio Web para adultos",
+    "noticeTitle": "Notice to Users",
+    "noticeContent": "Este sitio web contiene material restringido a menores de edad, que incluye desnudez y representaciones explícitas de actividad sexual. Al entrar, afirma que tiene por lo menos 18 años de edad o la mayoría de edad en la jurisdicción desde que está accediendo el sitio web y que da consentimiento en ver contenido sexualmente explícito.",
+    "termsNotice": "Nuestros Términos están cambiando. Estos cambios entrarán en vigor o ya han entrado en vigor el 30 de junio de 2025. Para ver los cambios actualizados, por favor consulta nuestros Nuevos Términos de Servicio.",
+    "declineButton": "No soy mayor de 18 años",
+    "confirmButton": "Soy mayor de 18 años"
   },
   "404": {
     "badge": "404",

@@ -13,13 +13,13 @@
 
             </div>
             <div class="content-header-right">
-                <div class="header-button" data-action="toggle-favorite">
+                <div class="header-button" data-action="toggle-favorite" data-i18n-tooltip="photoView.favoriteButtonTooltip">
                     <span class="material-symbols-rounded">favorite</span>
                 </div>
-                <div class="header-button" data-action="toggle-photo-comments">
+                <div class="header-button" data-action="toggle-photo-comments" data-i18n-tooltip="photoView.commentsButtonTooltip">
                     <span class="material-symbols-rounded">comment</span>
                 </div>
-                <div class="header-button" data-action="toggle-photo-options-menu">
+                <div class="header-button" data-action="toggle-photo-options-menu" data-i18n-tooltip="photoView.optionsButtonTooltip">
                     <span class="material-symbols-rounded">more_vert</span>
                 </div>
                 <div class="module-content module-select photo-options-menu disabled body-title">
@@ -41,11 +41,11 @@
                     </div>
                 </div>
                 <div class="photo-nav-control">
-                    <div class="photo-nav-button" data-action="previous-photo">
+                    <div class="photo-nav-button" data-action="previous-photo" data-i18n-tooltip="photoView.previousPhotoButtonTooltip">
                         <span class="material-symbols-rounded">chevron_left</span>
                     </div>
                     <div class="photo-nav-counter" id="photo-counter">1 / 1</div>
-                    <div class="photo-nav-button" data-action="next-photo">
+                    <div class="photo-nav-button" data-action="next-photo" data-i18n-tooltip="photoView.nextPhotoButtonTooltip">
                         <span class="material-symbols-rounded">chevron_right</span>
                     </div>
                 </div>
