@@ -1,4 +1,4 @@
-// assets/js/language-manager.js
+// assets/js/managers/language-manager.js
 
 import * as api from '../core/api-handler.js';
 
@@ -13,11 +13,31 @@ const availableLanguages = {
 
 async function fetchTranslations(langCode) {
     try {
-        const response = await fetch(`${window.BASE_PATH}/assets/lang/${langCode}.json`);
-        if (!response.ok) {
-            throw new Error(`Could not load ${langCode}.json`);
+        // 1. Cargar las traducciones principales
+        const mainResponse = await fetch(`${window.BASE_PATH}/assets/lang/${langCode}.json`);
+        if (!mainResponse.ok) {
+            throw new Error(`Could not load main ${langCode}.json`);
         }
-        translations = await response.json();
+        let mainTranslations = await mainResponse.json();
+
+        // 2. Comprobar si el usuario es administrador
+        const session = await api.checkSession();
+        if (session.ok && session.data.loggedin && session.data.user.role === 'administrator') {
+            try {
+                // 3. Si es admin, cargar y fusionar las traducciones de administrador
+                const adminResponse = await fetch(`${window.BASE_PATH}/assets/lang/admin/${langCode}.json`);
+                if (adminResponse.ok) {
+                    const adminTranslations = await adminResponse.json();
+                    // Fusionar traducciones, las de admin tienen prioridad
+                    mainTranslations = { ...mainTranslations, ...adminTranslations };
+                }
+            } catch (adminError) {
+                console.warn("Could not load admin translations, continuing with main translations:", adminError);
+            }
+        }
+
+        translations = mainTranslations;
+
     } catch (error) {
         console.error("Failed to fetch translations:", error);
         translations = {};
