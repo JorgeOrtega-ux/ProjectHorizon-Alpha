@@ -196,28 +196,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt_user->close();
     
         // Comments
-        $stmt_comments = $conn->prepare("SELECT id, comment_text, status, created_at FROM photo_comments WHERE user_uuid = ? ORDER BY created_at DESC LIMIT 50");
+        $stmt_comments = $conn->prepare("
+            SELECT c.id, c.comment_text, c.status, c.created_at, p.id as photo_id, p.gallery_uuid, g.name as gallery_name 
+            FROM photo_comments c
+            JOIN gallery_photos p ON c.photo_id = p.id
+            JOIN galleries g ON p.gallery_uuid = g.uuid
+            WHERE c.user_uuid = ? 
+            ORDER BY c.created_at DESC 
+            LIMIT 50
+        ");
         $stmt_comments->bind_param("s", $user_uuid);
         $stmt_comments->execute();
         $profile_data['comments'] = $stmt_comments->get_result()->fetch_all(MYSQLI_ASSOC);
         $stmt_comments->close();
     
         // Favorites
-        $stmt_favorites = $conn->prepare("SELECT p.id, p.photo_url, g.name as gallery_name FROM user_favorites uf JOIN gallery_photos p ON uf.photo_id = p.id JOIN galleries g ON p.gallery_uuid = g.uuid WHERE uf.user_uuid = ? ORDER BY uf.added_at DESC LIMIT 50");
+        $stmt_favorites = $conn->prepare("
+            SELECT p.id as photo_id, p.photo_url, p.gallery_uuid, g.name as gallery_name 
+            FROM user_favorites uf 
+            JOIN gallery_photos p ON uf.photo_id = p.id 
+            JOIN galleries g ON p.gallery_uuid = g.uuid 
+            WHERE uf.user_uuid = ? 
+            ORDER BY uf.added_at DESC 
+            LIMIT 50
+        ");
         $stmt_favorites->bind_param("s", $user_uuid);
         $stmt_favorites->execute();
         $profile_data['favorites'] = $stmt_favorites->get_result()->fetch_all(MYSQLI_ASSOC);
         $stmt_favorites->close();
     
         // Reports
-        $stmt_reports = $conn->prepare("SELECT cr.id, cr.reason, cr.status, cr.created_at, c.comment_text FROM comment_reports cr JOIN photo_comments c ON cr.comment_id = c.id WHERE cr.reporter_uuid = ? ORDER BY cr.created_at DESC LIMIT 50");
+        $stmt_reports = $conn->prepare("
+            SELECT cr.id, cr.reason, cr.status, cr.created_at, c.comment_text, p.id as photo_id, p.gallery_uuid 
+            FROM comment_reports cr 
+            JOIN photo_comments c ON cr.comment_id = c.id 
+            JOIN gallery_photos p ON c.photo_id = p.id
+            WHERE cr.reporter_uuid = ? 
+            ORDER BY cr.created_at DESC 
+            LIMIT 50
+        ");
         $stmt_reports->bind_param("s", $user_uuid);
         $stmt_reports->execute();
         $profile_data['reports'] = $stmt_reports->get_result()->fetch_all(MYSQLI_ASSOC);
         $stmt_reports->close();
     
         // Sanctions
-        $stmt_sanctions = $conn->prepare("SELECT s.id, s.sanction_type, s.reason, s.expires_at, s.created_at, a.username as admin_username FROM user_sanctions s JOIN users a ON s.admin_uuid = a.uuid WHERE s.user_uuid = ? ORDER BY s.created_at DESC");
+        $stmt_sanctions = $conn->prepare("
+            SELECT s.id, s.sanction_type, s.reason, s.expires_at, s.created_at, a.username as admin_username 
+            FROM user_sanctions s 
+            JOIN users a ON s.admin_uuid = a.uuid 
+            WHERE s.user_uuid = ? 
+            ORDER BY s.created_at DESC
+        ");
         $stmt_sanctions->bind_param("s", $user_uuid);
         $stmt_sanctions->execute();
         $profile_data['sanctions'] = $stmt_sanctions->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -883,6 +913,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         } else {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Error al aplicar la sanción.']);
+        }
+        $stmt->close();
+        exit;
+    }
+
+    if ($action_type === 'delete_user_sanction') {
+        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
+            exit;
+        }
+        
+        $sanction_id = $_POST['sanction_id'] ?? 0;
+        if (empty($sanction_id)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Falta el ID de la sanción.']);
+            exit;
+        }
+    
+        $stmt = $conn->prepare("DELETE FROM user_sanctions WHERE id = ?");
+        $stmt->bind_param("i", $sanction_id);
+    
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true, 'message' => 'Sanción eliminada correctamente.']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error al eliminar la sanción.']);
         }
         $stmt->close();
         exit;

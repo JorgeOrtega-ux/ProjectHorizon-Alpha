@@ -1109,28 +1109,61 @@ export function displayFeedback(feedbackItems, tableBody, statusContainer, appen
 }
 
 export function renderUserProfile(data) {
-      const section = document.querySelector('[data-section="userProfile"]'); // Obtén el elemento de la sección
+    const section = document.querySelector('[data-section="userProfile"]');
     const container = document.getElementById('user-profile-container');
-    if (!container || !section) return; // Añade 'section' a la comprobación
+    if (!container || !section) return;
 
     const { user, comments, favorites, reports, sanctions } = data;
+    section.dataset.uuid = user.uuid; 
+    
     const createdDate = new Date(user.created_at).toLocaleDateString();
 
-    // --- INICIO DE LA CORRECCIÓN ---
-    // Añade el UUID del usuario al dataset del elemento de la sección.
-    // Esto es crucial para que la acción 'add-sanction' funcione.
-    section.dataset.uuid = user.uuid;
-    // --- FIN DE LA CORRECCIÓN ---
-    let sanctionsHTML = sanctions.map(s => `
+    const sanctionsHTML = sanctions.length > 0 ? sanctions.map(s => `
         <div class="activity-item">
             <div class="activity-item-icon"><span class="material-symbols-rounded">gavel</span></div>
             <div class="activity-item-content">
                 <p><strong>${s.sanction_type}</strong> por ${s.admin_username}</p>
-                <p>${s.reason}</p>
+                <p>${s.reason || '<i>Sin motivo especificado.</i>'}</p>
                 <div class="activity-item-meta">${new Date(s.created_at).toLocaleString()}</div>
             </div>
+            <button class="header-button" data-action="delete-sanction" data-sanction-id="${s.id}" data-i18n-tooltip="admin.userProfile.sanctions.deleteTooltip">
+                <span class="material-symbols-rounded">delete</span>
+            </button>
         </div>
-    `).join('');
+    `).join('') : '<p>No hay sanciones registradas para este usuario.</p>';
+
+    const commentsHTML = comments.length > 0 ? comments.map(c => `
+        <div class="activity-item">
+            <div class="activity-item-icon"><span class="material-symbols-rounded">comment</span></div>
+            <div class="activity-item-content">
+                <p>${c.comment_text}</p>
+                <div class="activity-item-meta">
+                    Comentado en <a href="${window.BASE_PATH}/gallery/${c.gallery_uuid}/photo/${c.photo_id}/comments" target="_blank">${c.gallery_name}</a>
+                    - ${new Date(c.created_at).toLocaleString()}
+                </div>
+            </div>
+        </div>
+    `).join('') : '<p>Este usuario no ha realizado comentarios.</p>';
+    
+    const favoritesHTML = favorites.length > 0 ? favorites.map(f => `
+        <div class="activity-item">
+            <div class="activity-item-icon"><span class="material-symbols-rounded">favorite</span></div>
+            <div class="activity-item-content">
+                <p>Marcó una <a href="${window.BASE_PATH}/gallery/${f.gallery_uuid}/photo/${f.photo_id}" target="_blank">foto</a> en <strong>${f.gallery_name}</strong> como favorita.</p>
+            </div>
+        </div>
+    `).join('') : '<p>Este usuario no tiene fotos favoritas.</p>';
+
+    const reportsHTML = reports.length > 0 ? reports.map(r => `
+        <div class="activity-item">
+            <div class="activity-item-icon"><span class="material-symbols-rounded">flag</span></div>
+            <div class="activity-item-content">
+                <p>Reportó un <a href="${window.BASE_PATH}/gallery/${r.gallery_uuid}/photo/${r.photo_id}/comments" target="_blank">comentario</a> por: <strong>${r.reason}</strong></p>
+                <div class="activity-item-meta">Reportado el ${new Date(r.created_at).toLocaleString()}</div>
+            </div>
+        </div>
+    `).join('') : '<p>Este usuario no ha realizado reportes.</p>';
+
 
     container.innerHTML = `
         <div class="profile-grid">
@@ -1149,40 +1182,20 @@ export function renderUserProfile(data) {
                 </div>
                 <div class="profile-card">
                     <h3 class="profile-section-title">Sanciones</h3>
-                    <div class="activity-list">${sanctionsHTML || '<p>No hay sanciones registradas.</p>'}</div>
+                    <div class="activity-list">${sanctionsHTML}</div>
                 </div>
             </div>
             <div class="profile-main-content">
                 <div class="profile-card">
                     <h3 class="profile-section-title">Actividad Reciente</h3>
-                    <div class="activity-list">
-                        ${comments.map(c => `
-                            <div class="activity-item">
-                                <div class="activity-item-icon"><span class="material-symbols-rounded">comment</span></div>
-                                <div class="activity-item-content">
-                                    <p>${c.comment_text}</p>
-                                    <div class="activity-item-meta">Comentado el ${new Date(c.created_at).toLocaleString()}</div>
-                                </div>
-                            </div>
-                        `).join('')}
-                         ${favorites.map(f => `
-                            <div class="activity-item">
-                                <div class="activity-item-icon"><span class="material-symbols-rounded">favorite</span></div>
-                                <div class="activity-item-content">
-                                    <p>Marcó una foto en <strong>${f.gallery_name}</strong> como favorita.</p>
-                                </div>
-                            </div>
-                        `).join('')}
-                          ${reports.map(r => `
-                            <div class="activity-item">
-                                <div class="activity-item-icon"><span class="material-symbols-rounded">flag</span></div>
-                                <div class="activity-item-content">
-                                    <p>Reportó un comentario por: <strong>${r.reason}</strong></p>
-                                    <div class="activity-item-meta">Reportado el ${new Date(r.created_at).toLocaleString()}</div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
+                    <h4>Comentarios</h4>
+                    <div class="activity-list">${commentsHTML}</div>
+                    <hr class="form-divider">
+                    <h4>Favoritos</h4>
+                    <div class="activity-list">${favoritesHTML}</div>
+                    <hr class="form-divider">
+                    <h4>Reportes Realizados</h4>
+                    <div class="activity-list">${reportsHTML}</div>
                 </div>
             </div>
         </div>
@@ -1192,4 +1205,7 @@ export function renderUserProfile(data) {
     if (titleEl) {
         titleEl.textContent = `Perfil de ${user.username}`;
     }
+
+    applyTranslations(container);
+    initTooltips();
 }

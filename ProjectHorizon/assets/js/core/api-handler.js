@@ -402,6 +402,13 @@ export function addUserSanction(formData) {
     return postDataWithCsrf(formData);
 }
 
+export function deleteUserSanction(sanctionId) {
+    const formData = new FormData();
+    formData.append('action_type', 'delete_user_sanction');
+    formData.append('sanction_id', sanctionId);
+    return postDataWithCsrf(formData);
+}
+
 export function batchUpdateUsers(formData) {
     return postDataWithCsrf(formData);
 }
