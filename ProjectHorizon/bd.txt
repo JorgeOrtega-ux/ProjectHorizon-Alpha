@@ -16,7 +16,7 @@ CREATE TABLE `users` (
   `username` varchar(50) NOT NULL,
   `email` varchar(255) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
-  `role` ENUM('user','moderator','administrator') NOT NULL DEFAULT 'user',
+  `role` ENUM('user','moderator','administrator','founder') NOT NULL DEFAULT 'user', -- ROL AÑADIDO
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `status` ENUM('active','suspended','deleted') NOT NULL DEFAULT 'active',
   PRIMARY KEY (`id`),
