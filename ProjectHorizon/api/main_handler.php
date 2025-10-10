@@ -173,8 +173,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     require_once '../config/db.php';
 
     if ($request_type === 'user_profile') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
-        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
+        // ✅ **INICIO DE LA CORRECCIÓN**
+        $session_role = $_SESSION['user_role'] ?? 'user';
+        if (!isset($_SESSION['loggedin']) || !in_array($session_role, ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['error' => 'Acción no autorizada.']);
             exit;
@@ -195,67 +196,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt_user->execute();
         $profile_data['user'] = $stmt_user->get_result()->fetch_assoc();
         $stmt_user->close();
+
+        if (!$profile_data['user']) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Usuario no encontrado.']);
+            exit;
+        }
+
+        $target_role = $profile_data['user']['role'];
+
+        // Si el perfil solicitado es de un fundador y quien lo ve no es fundador, la actividad es privada.
+        if ($target_role === 'founder' && $session_role !== 'founder') {
+            $profile_data['comments'] = [];
+            $profile_data['favorites'] = [];
+            $profile_data['reports'] = [];
+            $profile_data['sanctions'] = [];
+            $profile_data['private'] = true; // Añadimos una bandera para que el frontend lo sepa
+        } else {
+            $profile_data['private'] = false;
     
-        // Comments
-        $stmt_comments = $conn->prepare("
-            SELECT c.id, c.comment_text, c.status, c.created_at, p.id as photo_id, p.gallery_uuid, g.name as gallery_name 
-            FROM photo_comments c
-            JOIN gallery_photos p ON c.photo_id = p.id
-            JOIN galleries g ON p.gallery_uuid = g.uuid
-            WHERE c.user_uuid = ? 
-            ORDER BY c.created_at DESC 
-            LIMIT 50
-        ");
-        $stmt_comments->bind_param("s", $user_uuid);
-        $stmt_comments->execute();
-        $profile_data['comments'] = $stmt_comments->get_result()->fetch_all(MYSQLI_ASSOC);
-        $stmt_comments->close();
-    
-        // Favorites
-        $stmt_favorites = $conn->prepare("
-            SELECT p.id as photo_id, p.photo_url, p.gallery_uuid, g.name as gallery_name 
-            FROM user_favorites uf 
-            JOIN gallery_photos p ON uf.photo_id = p.id 
-            JOIN galleries g ON p.gallery_uuid = g.uuid 
-            WHERE uf.user_uuid = ? 
-            ORDER BY uf.added_at DESC 
-            LIMIT 50
-        ");
-        $stmt_favorites->bind_param("s", $user_uuid);
-        $stmt_favorites->execute();
-        $profile_data['favorites'] = $stmt_favorites->get_result()->fetch_all(MYSQLI_ASSOC);
-        $stmt_favorites->close();
-    
-        // Reports
-        $stmt_reports = $conn->prepare("
-            SELECT cr.id, cr.reason, cr.status, cr.created_at, c.comment_text, p.id as photo_id, p.gallery_uuid 
-            FROM comment_reports cr 
-            JOIN photo_comments c ON cr.comment_id = c.id 
-            JOIN gallery_photos p ON c.photo_id = p.id
-            WHERE cr.reporter_uuid = ? 
-            ORDER BY cr.created_at DESC 
-            LIMIT 50
-        ");
-        $stmt_reports->bind_param("s", $user_uuid);
-        $stmt_reports->execute();
-        $profile_data['reports'] = $stmt_reports->get_result()->fetch_all(MYSQLI_ASSOC);
-        $stmt_reports->close();
-    
-        // Sanctions
-        $stmt_sanctions = $conn->prepare("
-            SELECT s.id, s.sanction_type, s.reason, s.expires_at, s.created_at, a.username as admin_username 
-            FROM user_sanctions s 
-            JOIN users a ON s.admin_uuid = a.uuid 
-            WHERE s.user_uuid = ? 
-            ORDER BY s.created_at DESC
-        ");
-        $stmt_sanctions->bind_param("s", $user_uuid);
-        $stmt_sanctions->execute();
-        $profile_data['sanctions'] = $stmt_sanctions->get_result()->fetch_all(MYSQLI_ASSOC);
-        $stmt_sanctions->close();
+            // Comments
+            $stmt_comments = $conn->prepare("
+                SELECT c.id, c.comment_text, c.status, c.created_at, p.id as photo_id, p.gallery_uuid, g.name as gallery_name 
+                FROM photo_comments c
+                JOIN gallery_photos p ON c.photo_id = p.id
+                JOIN galleries g ON p.gallery_uuid = g.uuid
+                WHERE c.user_uuid = ? 
+                ORDER BY c.created_at DESC 
+                LIMIT 50
+            ");
+            $stmt_comments->bind_param("s", $user_uuid);
+            $stmt_comments->execute();
+            $profile_data['comments'] = $stmt_comments->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmt_comments->close();
+        
+            // Favorites
+            $stmt_favorites = $conn->prepare("
+                SELECT p.id as photo_id, p.photo_url, p.gallery_uuid, g.name as gallery_name 
+                FROM user_favorites uf 
+                JOIN gallery_photos p ON uf.photo_id = p.id 
+                JOIN galleries g ON p.gallery_uuid = g.uuid 
+                WHERE uf.user_uuid = ? 
+                ORDER BY uf.added_at DESC 
+                LIMIT 50
+            ");
+            $stmt_favorites->bind_param("s", $user_uuid);
+            $stmt_favorites->execute();
+            $profile_data['favorites'] = $stmt_favorites->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmt_favorites->close();
+        
+            // Reports
+            $stmt_reports = $conn->prepare("
+                SELECT cr.id, cr.reason, cr.status, cr.created_at, c.comment_text, p.id as photo_id, p.gallery_uuid 
+                FROM comment_reports cr 
+                JOIN photo_comments c ON cr.comment_id = c.id 
+                JOIN gallery_photos p ON c.photo_id = p.id
+                WHERE cr.reporter_uuid = ? 
+                ORDER BY cr.created_at DESC 
+                LIMIT 50
+            ");
+            $stmt_reports->bind_param("s", $user_uuid);
+            $stmt_reports->execute();
+            $profile_data['reports'] = $stmt_reports->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmt_reports->close();
+        
+            // Sanctions
+            $stmt_sanctions = $conn->prepare("
+                SELECT s.id, s.sanction_type, s.reason, s.expires_at, s.created_at, a.username as admin_username 
+                FROM user_sanctions s 
+                JOIN users a ON s.admin_uuid = a.uuid 
+                WHERE s.user_uuid = ? 
+                ORDER BY s.created_at DESC
+            ");
+            $stmt_sanctions->bind_param("s", $user_uuid);
+            $stmt_sanctions->execute();
+            $profile_data['sanctions'] = $stmt_sanctions->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmt_sanctions->close();
+        }
     
         echo json_encode($profile_data);
         exit;
+        // ✅ **FIN DE LA CORRECCIÓN**
     }
 
     if ($request_type === 'dashboard_stats') {

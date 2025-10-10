@@ -58,6 +58,21 @@
       "actionsTooltip": "Más acciones",
       "actions": {
         "sanction": "Sancionar Usuario"
+      },
+      "privateActivity": "La actividad de este usuario es privada y solo puede ser vista por otros Fundadores.",
+      "sanctions": {
+        "title": "Sanciones",
+        "noSanctions": "No hay sanciones registradas para este usuario.",
+        "deleteTooltip": "Eliminar sanción"
+      },
+      "activity": {
+        "title": "Actividad Reciente",
+        "commentsTitle": "Comentarios",
+        "noComments": "Este usuario no ha realizado comentarios.",
+        "favoritesTitle": "Favoritos",
+        "noFavorites": "Este usuario no tiene fotos favoritas.",
+        "reportsTitle": "Reportes Realizados",
+        "noReports": "Este usuario no ha realizado reportes."
       }
     },
     "manageContent": {
