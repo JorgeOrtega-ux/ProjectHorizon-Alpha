@@ -393,3 +393,15 @@ export function deleteGallery(uuid) {
     formData.append('uuid', uuid);
     return postDataWithCsrf(formData);
 }
+
+export function getUserProfile(uuid) {
+    return fetchData(`${window.BASE_PATH}/api/main_handler.php?request_type=user_profile&uuid=${uuid}`);
+}
+
+export function addUserSanction(formData) {
+    return postDataWithCsrf(formData);
+}
+
+export function batchUpdateUsers(formData) {
+    return postDataWithCsrf(formData);
+}

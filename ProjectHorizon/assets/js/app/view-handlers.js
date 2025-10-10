@@ -11,7 +11,8 @@ import {
     displayUsers,
     displayGalleriesAdmin,
     displayAdminComments,
-    displayFeedback
+    displayFeedback,
+    renderUserProfile
 } from '../ui/ui-controller.js';
 
 const loaderHTML = '<div class="loader-container"><div class="spinner"></div></div>';
@@ -698,5 +699,19 @@ export async function fetchAndDisplayFeedback(searchTerm = '', append = false, s
         if (!append && statusContainer) {
             displayFetchError('[data-section="manageFeedback"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
         }
+    }
+}
+
+export async function fetchAndDisplayUserProfile(uuid) {
+    const section = document.querySelector('[data-section="userProfile"]');
+    if (!section) return;
+
+    const response = await api.getUserProfile(uuid);
+
+    if (response.ok) {
+        renderUserProfile(response.data);
+    } else {
+        console.error('Error fetching user profile:', response.data);
+        displayFetchError('[data-section="userProfile"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
     }
 }

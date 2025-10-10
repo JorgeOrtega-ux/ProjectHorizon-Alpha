@@ -13,7 +13,8 @@ import {
     showDeleteAccountDialog,
     showChangeRoleDialog,
     showDeleteGalleryDialog,
-    showReportCommentDialog
+    showReportCommentDialog,
+    showSanctionDialog
 } from '../managers/dialog-manager.js';
 import {
     fetchAndDisplayDashboard,
@@ -23,7 +24,8 @@ import {
     fetchAndDisplayUsers,
     fetchAndDisplayGalleriesAdmin,
     fetchAndDisplayAdminComments,
-    fetchAndDisplayFeedback
+    fetchAndDisplayFeedback,
+    fetchAndDisplayUserProfile
 } from './view-handlers.js';
 // --- INICIO DE LA CORRECCIÓN ---
 import { handleStateChange, displayComments, createCommentElement } from './navigation-handler.js';
@@ -532,6 +534,47 @@ export function initMainController() {
                 const action = actionTarget.dataset.action;
 
                 switch(action) {
+                    case 'add-sanction': {
+                        const userProfileSection = document.querySelector('[data-section="userProfile"]');
+                        if (userProfileSection) {
+                            const userUuid = userProfileSection.dataset.uuid;
+                            const userName = userProfileSection.querySelector('.profile-card-name')?.textContent;
+                            if(userUuid && userName) {
+                                showSanctionDialog(userUuid, userName);
+                            }
+                        }
+                        break;
+                    }
+                    case 'view-user-profile': {
+                        const userUuid = actionTarget.dataset.uuid;
+                        navigateToUrl('admin', 'userProfile', { uuid: userUuid });
+                        handleStateChange('admin', 'userProfile', true, { uuid: userUuid }, appState);
+                        break;
+                    }
+                    case 'batch-action': {
+                        const selectedCheckboxes = document.querySelectorAll('#users-table tbody .user-select:checked');
+                        const selectedUuids = Array.from(selectedCheckboxes).map(cb => cb.dataset.uuid);
+                        const batchAction = document.getElementById('batch-action-select').value;
+                
+                        if (selectedUuids.length === 0) {
+                            showNotification('Por favor, selecciona al menos un usuario.', 'error');
+                            return;
+                        }
+                
+                        const formData = new FormData();
+                        formData.append('action_type', 'batch_update_users');
+                        formData.append('uuids', JSON.stringify(selectedUuids));
+                        formData.append('batch_action', batchAction);
+                
+                        const response = await api.batchUpdateUsers(formData);
+                        if (response.ok) {
+                            showNotification(response.data.message, 'success');
+                            fetchAndDisplayUsers('', false, appState.paginationState.adminUsers); // Recargar la lista
+                        } else {
+                            showNotification(response.data.message || 'Error al realizar la acción en lote.', 'error');
+                        }
+                        break;
+                    }
                     case 'like-comment':
                     case 'dislike-comment': {
                         const commentItem = actionTarget.closest('.comment-item');
@@ -1661,8 +1704,12 @@ export function initMainController() {
     const userFavoritesMatch = path.match(/^favorites\/([a-f0-9-]{36})$/);
     const editGalleryMatch = path.match(/^admin\/edit-gallery\/([a-f0-9-]{36})$/);
     const commentsMatch = path.match(/^gallery\/([a-f0-9-]{36})\/photo\/(\d+)\/comments$/);
+    const userProfileMatch = path.match(/^admin\/user\/([a-f0-9-]{36})$/);
 
-    if (commentsMatch) {
+    if (userProfileMatch) {
+        initialRoute = { view: 'admin', section: 'userProfile' };
+        initialStateData = { uuid: userProfileMatch[1] };
+    } else if (commentsMatch) {
         initialRoute = { view: 'main', section: 'photoComments' };
         initialStateData = { uuid: commentsMatch[1], photoId: commentsMatch[2] };
     } else if (privateGalleryMatch) {

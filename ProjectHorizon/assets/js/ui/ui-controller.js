@@ -856,6 +856,7 @@ export function displayUsers(users, tableBody, statusContainer, append = false) 
             const isAdmin = user.role === 'administrator';
             const translatedRole = window.getTranslation(`admin.manageUsers.roles.${user.role}`) || user.role;
             row.innerHTML = `
+            <td><input type="checkbox" class="user-select" data-uuid="${user.uuid}"></td>
             <td>
                 <div class="user-info">
                     <div class="user-initials-avatar">${getInitials(user.username)}</div>
@@ -870,6 +871,9 @@ export function displayUsers(users, tableBody, statusContainer, append = false) 
             <td>${createdDate}</td>
             <td>
                 <div class="item-actions">
+                    <button class="header-button" data-action="view-user-profile" data-uuid="${user.uuid}" data-i18n-tooltip="admin.manageUsers.table.actions.viewProfile">
+                        <span class="material-symbols-rounded">visibility</span>
+                    </button>
                     <button class="header-button" data-action="toggle-user-actions" data-i18n-tooltip="admin.manageUsers.table.actionsTitle" ${isAdmin ? 'disabled' : ''}>
                         <span class="material-symbols-rounded">more_vert</span>
                     </button>
@@ -1101,5 +1105,85 @@ export function displayFeedback(feedbackItems, tableBody, statusContainer, appen
             statusContainer.classList.remove('disabled');
             statusContainer.innerHTML = `<div><h2>${window.getTranslation('admin.manageFeedback.noResultsTitle')}</h2><p>${window.getTranslation('admin.manageFeedback.noResultsMessage')}</p></div>`;
         }
+    }
+}
+
+export function renderUserProfile(data) {
+    const container = document.getElementById('user-profile-container');
+    if (!container) return;
+
+    const { user, comments, favorites, reports, sanctions } = data;
+    const createdDate = new Date(user.created_at).toLocaleDateString();
+
+    let sanctionsHTML = sanctions.map(s => `
+        <div class="activity-item">
+            <div class="activity-item-icon"><span class="material-symbols-rounded">gavel</span></div>
+            <div class="activity-item-content">
+                <p><strong>${s.sanction_type}</strong> por ${s.admin_username}</p>
+                <p>${s.reason}</p>
+                <div class="activity-item-meta">${new Date(s.created_at).toLocaleString()}</div>
+            </div>
+        </div>
+    `).join('');
+
+    container.innerHTML = `
+        <div class="profile-grid">
+            <div class="profile-sidebar">
+                <div class="profile-card">
+                    <div class="profile-card-header">
+                        <div class="profile-card-avatar">${getInitials(user.username)}</div>
+                        <h2 class="profile-card-name">${user.username}</h2>
+                        <span class="status-badge status-${user.status}">${user.status}</span>
+                    </div>
+                    <ul class="profile-card-info-list">
+                        <li><span class="material-symbols-rounded">mail</span> ${user.email}</li>
+                        <li><span class="material-symbols-rounded">shield</span> ${user.role}</li>
+                        <li><span class="material-symbols-rounded">calendar_today</span> Se unió el ${createdDate}</li>
+                    </ul>
+                </div>
+                <div class="profile-card">
+                    <h3 class="profile-section-title">Sanciones</h3>
+                    <div class="activity-list">${sanctionsHTML || '<p>No hay sanciones registradas.</p>'}</div>
+                </div>
+            </div>
+            <div class="profile-main-content">
+                <div class="profile-card">
+                    <h3 class="profile-section-title">Actividad Reciente</h3>
+                    <div class="activity-list">
+                        ${comments.map(c => `
+                            <div class="activity-item">
+                                <div class="activity-item-icon"><span class="material-symbols-rounded">comment</span></div>
+                                <div class="activity-item-content">
+                                    <p>${c.comment_text}</p>
+                                    <div class="activity-item-meta">Comentado el ${new Date(c.created_at).toLocaleString()}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                         ${favorites.map(f => `
+                            <div class="activity-item">
+                                <div class="activity-item-icon"><span class="material-symbols-rounded">favorite</span></div>
+                                <div class="activity-item-content">
+                                    <p>Marcó una foto en <strong>${f.gallery_name}</strong> como favorita.</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                          ${reports.map(r => `
+                            <div class="activity-item">
+                                <div class="activity-item-icon"><span class="material-symbols-rounded">flag</span></div>
+                                <div class="activity-item-content">
+                                    <p>Reportó un comentario por: <strong>${r.reason}</strong></p>
+                                    <div class="activity-item-meta">Reportado el ${new Date(r.created_at).toLocaleString()}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const titleEl = document.getElementById('user-profile-title');
+    if (titleEl) {
+        titleEl.textContent = `Perfil de ${user.username}`;
     }
 }

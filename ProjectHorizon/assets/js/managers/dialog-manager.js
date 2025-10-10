@@ -580,6 +580,71 @@ export async function showDeleteGalleryDialog(galleryUuid, galleryName) {
     });
 }
 
+export async function showSanctionDialog(userUuid, userName) {
+    showDialog({
+        title: `Sancionar a ${userName}`,
+        contentHTML: `
+            <div class="form-field">
+                <label for="sanction-type">Tipo de Sanción</label>
+                <select id="sanction-type" class="auth-input">
+                    <option value="warning">Advertencia</option>
+                    <option value="temp_suspension">Suspensión Temporal</option>
+                    <option value="permanent_suspension">Suspensión Permanente</option>
+                </select>
+            </div>
+            <div class="form-field" id="duration-field" style="display:none;">
+                <label for="sanction-duration">Duración (días)</label>
+                <input type="number" id="sanction-duration" class="auth-input" min="1">
+            </div>
+            <div class="form-field">
+                <label for="sanction-reason">Motivo</label>
+                <textarea id="sanction-reason" class="feedback-textarea" rows="3"></textarea>
+            </div>
+        `,
+        buttons: [
+            { text: window.getTranslation('general.cancel'), onClick: ({ close }) => close() },
+            {
+                text: 'Aplicar Sanción',
+                className: 'btn-danger',
+                onClick: async ({ close, startLoading, stopLoading, getDialogElement }) => {
+                    const sanctionType = getDialogElement().querySelector('#sanction-type').value;
+                    const duration = getDialogElement().querySelector('#sanction-duration').value;
+                    const reason = getDialogElement().querySelector('#sanction-reason').value;
+
+                    const formData = new FormData();
+                    formData.append('action_type', 'add_user_sanction');
+                    formData.append('user_uuid', userUuid);
+                    formData.append('sanction_type', sanctionType);
+                    formData.append('reason', reason);
+                    if (sanctionType === 'temp_suspension') {
+                        formData.append('duration', duration);
+                    }
+
+                    startLoading();
+                    const response = await api.addUserSanction(formData);
+                    stopLoading();
+
+                    if (response.ok) {
+                        showNotification(response.data.message, 'success');
+                        window.dispatchEvent(new CustomEvent('userSanctioned'));
+                        close();
+                    } else {
+                        showNotification(response.data.message || 'Error al aplicar la sanción.', 'error');
+                    }
+                }
+            }
+        ],
+        onOpen: (dialogBox) => {
+            const sanctionTypeSelect = dialogBox.querySelector('#sanction-type');
+            const durationField = dialogBox.querySelector('#duration-field');
+            sanctionTypeSelect.addEventListener('change', (e) => {
+                durationField.style.display = e.target.value === 'temp_suspension' ? 'block' : 'none';
+            });
+        }
+    });
+}
+
+
 export function initDialogManager() {
     console.log("Dialog Manager Initialized.");
 }

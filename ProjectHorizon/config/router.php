@@ -33,6 +33,10 @@ class Router {
             return self::$routes[$path];
         }
 
+        if (preg_match('/^admin\/user\/[a-f0-9-]{36}$/', $path)) {
+            return ['view' => 'admin', 'section' => 'userProfile'];
+        }
+
         if (preg_match('/^gallery\/private\/[a-f0-9-]{36}$/', $path)) {
             return ['view' => 'main', 'section' => 'privateGalleryProxy'];
         }

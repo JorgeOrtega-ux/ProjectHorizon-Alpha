@@ -19,7 +19,8 @@ import {
     fetchAndDisplayUsers,
     fetchAndDisplayGalleriesAdmin,
     fetchAndDisplayAdminComments,
-    fetchAndDisplayFeedback
+    fetchAndDisplayFeedback,
+    fetchAndDisplayUserProfile
 } from './view-handlers.js';
 import { showVerifyPasswordForEmailChangeDialog } from '../managers/dialog-manager.js';
 
@@ -213,7 +214,8 @@ export async function handleStateChange(view, section, pushState = true, data, a
         'settings-historyPrivacy',
         'settings-history',
         'admin-manageComments',
-        'admin-manageFeedback'
+        'admin-manageFeedback',
+        'admin-userProfile'
     ];
     const section_key = view + '-' + section;
 
@@ -299,6 +301,11 @@ export async function handleStateChange(view, section, pushState = true, data, a
             break;
         case 'dashboard':
             fetchAndDisplayDashboard();
+            break;
+        case 'userProfile':
+            if (data && data.uuid) {
+                fetchAndDisplayUserProfile(data.uuid);
+            }
             break;
         case 'manageUsers':
             fetchAndDisplayUsers('', false, paginationState.adminUsers);
