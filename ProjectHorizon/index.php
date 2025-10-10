@@ -30,10 +30,9 @@
     <link rel="stylesheet" type="text/css" href="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'); ?>/assets/css/styles.css">
     
     <?php
-    // Carga la hoja de estilos de administración solo si estamos en una vista de admin
-    if ($CURRENT_VIEW === 'admin') {
-        echo '<link rel="stylesheet" type="text/css" href="' . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/assets/css/styles-admin.css">';
-    }
+    // Carga la hoja de estilos de administración incondicionalmente.
+    // Sus estilos no afectarán a otras páginas.
+    echo '<link rel="stylesheet" type="text/css" href="' . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/assets/css/styles-admin.css">';
     ?>
 </head>
 

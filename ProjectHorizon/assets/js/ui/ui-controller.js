@@ -2,6 +2,7 @@
 
 import { getHistory } from '../core/api-handler.js';
 import * as api from '../core/api-handler.js';
+import { initTooltips } from '../managers/tooltip-manager.js';
 
 function getInitials(name) {
     if (!name) return '';

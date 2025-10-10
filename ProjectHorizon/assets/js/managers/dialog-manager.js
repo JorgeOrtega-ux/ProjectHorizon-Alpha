@@ -585,12 +585,30 @@ export async function showSanctionDialog(userUuid, userName) {
         title: window.getTranslation('dialogs.sanction.title', { userName }),
         contentHTML: `
             <div class="form-group" style="width: 100%; text-align: left;">
-                <label class="form-label" for="sanction-type" data-i18n="dialogs.sanction.typeLabel"></label>
-                <select id="sanction-type" class="auth-input">
-                    <option value="warning" data-i18n="dialogs.sanction.types.warning"></option>
-                    <option value="temp_suspension" data-i18n="dialogs.sanction.types.temp_suspension"></option>
-                    <option value="permanent_suspension" data-i18n="dialogs.sanction.types.permanent_suspension"></option>
-                </select>
+                <label class="form-label" data-i18n="dialogs.sanction.typeLabel"></label>
+                <div class="select-wrapper body-title">
+                    <div class="custom-select-trigger" data-action="toggle-select" data-target="sanction-type-select">
+                        <span class="select-trigger-text">${window.getTranslation('dialogs.sanction.types.warning')}</span>
+                        <div class="select-trigger-icon select-trigger-arrow">
+                            <span class="material-symbols-rounded">expand_more</span>
+                        </div>
+                    </div>
+                    <div class="module-content module-select disabled" id="sanction-type-select">
+                        <div class="menu-content">
+                            <div class="menu-list">
+                                <div class="menu-link active" data-value="warning">
+                                    <div class="menu-link-text"><span data-i18n="dialogs.sanction.types.warning"></span></div>
+                                </div>
+                                <div class="menu-link" data-value="temp_suspension">
+                                    <div class="menu-link-text"><span data-i18n="dialogs.sanction.types.temp_suspension"></span></div>
+                                </div>
+                                <div class="menu-link" data-value="permanent_suspension">
+                                    <div class="menu-link-text"><span data-i18n="dialogs.sanction.types.permanent_suspension"></span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="form-group" id="duration-field" style="display:none; width: 100%; text-align: left;">
                 <label for="sanction-expires-at" class="form-label" data-i18n="dialogs.sanction.expiresAtLabel"></label>
@@ -607,7 +625,7 @@ export async function showSanctionDialog(userUuid, userName) {
                 text: window.getTranslation('dialogs.sanction.applyButton'),
                 className: 'btn-danger',
                 onClick: async ({ close, startLoading, stopLoading, getDialogElement }) => {
-                    const sanctionType = getDialogElement().querySelector('#sanction-type').value;
+                    const sanctionType = getDialogElement().querySelector('#sanction-type-select .menu-link.active').dataset.value;
                     const expiresAt = getDialogElement().querySelector('#sanction-expires-at').value;
                     const reason = getDialogElement().querySelector('#sanction-reason').value;
 
@@ -635,10 +653,31 @@ export async function showSanctionDialog(userUuid, userName) {
             }
         ],
         onOpen: (dialogBox) => {
-            const sanctionTypeSelect = dialogBox.querySelector('#sanction-type');
+            const sanctionTypeTrigger = dialogBox.querySelector('[data-target="sanction-type-select"]');
+            const sanctionTypeMenu = dialogBox.querySelector('#sanction-type-select');
+            const triggerText = sanctionTypeTrigger.querySelector('.select-trigger-text');
             const durationField = dialogBox.querySelector('#duration-field');
-            sanctionTypeSelect.addEventListener('change', (e) => {
-                durationField.style.display = e.target.value === 'temp_suspension' ? 'block' : 'none';
+
+            // Dejamos que el manejador de eventos global en main-controller se encargue de abrir/cerrar.
+
+            sanctionTypeMenu.querySelectorAll('.menu-link').forEach(option => {
+                option.addEventListener('click', () => {
+                    // Actualizar estado activo de la opción
+                    sanctionTypeMenu.querySelectorAll('.menu-link').forEach(opt => opt.classList.remove('active'));
+                    option.classList.add('active');
+
+                    // Actualizar texto del trigger
+                    triggerText.textContent = option.textContent.trim();
+                    
+                    // Cerrar el menú correctamente
+                    sanctionTypeMenu.classList.add('disabled');
+                    sanctionTypeMenu.classList.remove('active');
+                    sanctionTypeTrigger.classList.remove('active-trigger');
+
+                    // Lógica para mostrar/ocultar campo de duración
+                    const selectedValue = option.dataset.value;
+                    durationField.style.display = selectedValue === 'temp_suspension' ? 'block' : 'none';
+                });
             });
         }
     });
