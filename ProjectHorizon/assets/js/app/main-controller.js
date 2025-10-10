@@ -534,13 +534,32 @@ export function initMainController() {
                 const action = actionTarget.dataset.action;
 
                 switch(action) {
+                    // ✅ **INICIO DE LA LÓGICA AÑADIDA**
                     case 'add-sanction': {
                         const userProfileSection = document.querySelector('[data-section="userProfile"]');
                         if (userProfileSection) {
                             const userUuid = userProfileSection.dataset.uuid;
                             const userName = userProfileSection.querySelector('.profile-card-name')?.textContent;
-                            if(userUuid && userName) {
+                            if (userUuid && userName) {
                                 showSanctionDialog(userUuid, userName);
+                            }
+                        }
+                        break;
+                    }
+                    case 'delete-sanction': {
+                        const sanctionId = actionTarget.dataset.sanctionId;
+                        const confirmed = await showCustomConfirm('¿Eliminar Sanción?', 'Esta acción eliminará permanentemente el registro de esta sanción. ¿Estás seguro?');
+                        if (confirmed) {
+                            const response = await api.deleteUserSanction(sanctionId);
+                            if (response.ok) {
+                                showNotification(response.data.message, 'success');
+                                const userProfileSection = document.querySelector('[data-section="userProfile"]');
+                                const userUuid = userProfileSection?.dataset.uuid;
+                                if (userUuid) {
+                                    fetchAndDisplayUserProfile(userUuid);
+                                }
+                            } else {
+                                showNotification(response.data.message || 'Error al eliminar la sanción.', 'error');
                             }
                         }
                         break;
@@ -551,15 +570,17 @@ export function initMainController() {
                         handleStateChange('admin', 'userProfile', true, { uuid: userUuid }, appState);
                         break;
                     }
+                    // ✅ **FIN DE LA LÓGICA AÑADIDA**
                     case 'batch-action': {
                         const selectedCheckboxes = document.querySelectorAll('#users-table tbody .user-select:checked');
                         const selectedUuids = Array.from(selectedCheckboxes).map(cb => cb.dataset.uuid);
-                        const batchAction = document.getElementById('batch-action-select').value;
                 
                         if (selectedUuids.length === 0) {
                             showNotification('Por favor, selecciona al menos un usuario.', 'error');
                             return;
                         }
+                
+                        const batchAction = document.getElementById('batch-action-select').value;
                 
                         const formData = new FormData();
                         formData.append('action_type', 'batch_update_users');

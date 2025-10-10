@@ -29,6 +29,12 @@ const urlMap = {
     'admin-createGallery': 'admin/create-gallery',
     'admin-manageComments': 'admin/comments',
     'admin-manageFeedback': 'admin/feedback',
+
+    // --- INICIO DE LAS CORRECCIONES ---
+    'admin-dashboard': 'admin/dashboard',       // <-- LÍNEA AÑADIDA PARA EL DASHBOARD
+    'admin-userProfile': 'admin/user/{uuid}',   // <-- LÍNEA AÑADIDA PARA EL PERFIL DE USUARIO
+    // --- FIN DE LAS CORRECCIONES ---
+    
     'main-photoComments': 'gallery/{uuid}/photo/{photoId}/comments',
     'main-404': '404'
 };

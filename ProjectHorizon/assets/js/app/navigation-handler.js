@@ -74,8 +74,7 @@ function setupMoreOptionsMenu() {
     }
 }
 
-// --- INICIO DE LA CORRECCIÓN ---
-// Se extrae createCommentElement y se exporta
+// ✅ **INICIO DE LA CORRECCIÓN: Función extraída y exportada**
 export function createCommentElement(comment, isReply = false) {
     const commentElement = document.createElement('div');
     commentElement.className = `comment-item ${isReply ? 'comment-reply' : ''}`;
@@ -154,7 +153,7 @@ export function createCommentElement(comment, isReply = false) {
     `;
     return commentElement;
 }
-// --- FIN DE LA CORRECCIÓN ---
+// ✅ **FIN DE LA CORRECCIÓN**
 
 export function displayComments(comments) {
     const commentsList = document.getElementById('comments-list');
