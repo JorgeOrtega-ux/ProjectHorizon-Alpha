@@ -1109,12 +1109,18 @@ export function displayFeedback(feedbackItems, tableBody, statusContainer, appen
 }
 
 export function renderUserProfile(data) {
+      const section = document.querySelector('[data-section="userProfile"]'); // Obtén el elemento de la sección
     const container = document.getElementById('user-profile-container');
-    if (!container) return;
+    if (!container || !section) return; // Añade 'section' a la comprobación
 
     const { user, comments, favorites, reports, sanctions } = data;
     const createdDate = new Date(user.created_at).toLocaleDateString();
 
+    // --- INICIO DE LA CORRECCIÓN ---
+    // Añade el UUID del usuario al dataset del elemento de la sección.
+    // Esto es crucial para que la acción 'add-sanction' funcione.
+    section.dataset.uuid = user.uuid;
+    // --- FIN DE LA CORRECCIÓN ---
     let sanctionsHTML = sanctions.map(s => `
         <div class="activity-item">
             <div class="activity-item-icon"><span class="material-symbols-rounded">gavel</span></div>
