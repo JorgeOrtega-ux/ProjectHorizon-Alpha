@@ -28,6 +28,13 @@
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="stylesheet" type="text/css" href="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'); ?>/assets/css/styles.css">
+    
+    <?php
+    // Carga la hoja de estilos de administración solo si estamos en una vista de admin
+    if ($CURRENT_VIEW === 'admin') {
+        echo '<link rel="stylesheet" type="text/css" href="' . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/assets/css/styles-admin.css">';
+    }
+    ?>
 </head>
 
 <body>
@@ -46,7 +53,8 @@
     </div>
 
     <script src="https://unpkg.com/@popperjs/core@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <script type="module" src="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'); ?>/assets/js/app-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'); ?>/assets/js/app-init.js"></script>
 </body>
 
 </html>
