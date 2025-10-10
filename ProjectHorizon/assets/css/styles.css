@@ -2592,19 +2592,50 @@ h6 {
 /* =========== ESTILOS PARA EL ROL FUNDADOR ======== */
 /* ================================================= */
 
+/* --- INICIO DE LA CORRECCIÓN --- */
+/*
+  Este estilo se aplica al avatar del Fundador en la cabecera.
+  Utiliza un gradiente cónico como fondo para crear el anillo multicolor.
+  El padding define el grosor de este anillo.
+  La rotación (from 315deg) y los porcentajes ajustan la posición y tamaño de cada color.
+*/
 .profile-btn.profile-btn--founder {
-    border-color: #c5a62a;
-    background-color: #fffbeb;
+    border: none;
+    padding: 2px;
+    background: conic-gradient(from 300deg, #d32f2f 20.83%, #1976d2 20.83% 62.5%, #4caf50 62.5% 83.33%, #ffc107 83.33%);
 }
 
-.dark-theme .profile-btn.profile-btn--founder {
-    border-color: #ffde59;
-    background-color: #4a401a;
+/*
+  Este estilo se aplica al <span> interior del avatar.
+  Crea un círculo interior con un color de fondo y un borde,
+  lo que genera el efecto de separación solicitado.
+*/
+.profile-btn.profile-btn--founder .profile-initials {
+    width: 100%;
+    height: 100%;
+    background-color: var(--primary-bg);
+    border: 2px solid var(--secondary-bg); /* Esta es la línea de separación */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
+/*
+  Este estilo aplica un borde de gradiente cónico a los avatares
+  más pequeños que aparecen en la sección de comentarios.
+*/
 .comment-avatar.profile-btn--founder {
-    background-color: #c5a62a;
+    border: 3px solid transparent;
+    border-image: conic-gradient(from 300deg, #d32f2f 20.83%, #1976d2 20.83% 62.5%, #4caf50 62.5% 83.33%, #ffc107 83.33%) 1;
+    background-color: var(--primary-bg);
 }
+
+/*
+  Se asegura de que el estilo se mantenga en el tema oscuro.
+*/
 .dark-theme .comment-avatar.profile-btn--founder {
-    background-color: #ffde59;
+    border-image: conic-gradient(from 300deg, #d32f2f 20.83%, #1976d2 20.83% 62.5%, #4caf50 62.5% 83.33%, #ffc107 83.33%) 1;
+    background-color: var(--primary-bg);
 }
+/* --- FIN DE LA CORRECCIÓN --- */
