@@ -198,20 +198,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt_user->close();
 
         if (!$profile_data['user']) {
-            http_response_code(404);
-            echo json_encode(['error' => 'Usuario no encontrado.']);
-            exit;
+             http_response_code(404);
+             echo json_encode(['error' => 'Usuario no encontrado.']);
+             exit;
         }
 
         $target_role = $profile_data['user']['role'];
 
-        // Si el perfil solicitado es de un fundador y quien lo ve no es fundador, la actividad es privada.
-        if ($target_role === 'founder' && $session_role !== 'founder') {
+        // Si el perfil solicitado es de un fundador, la actividad es siempre privada.
+        if ($target_role === 'founder') {
             $profile_data['comments'] = [];
             $profile_data['favorites'] = [];
             $profile_data['reports'] = [];
             $profile_data['sanctions'] = [];
-            $profile_data['private'] = true; // Añadimos una bandera para que el frontend lo sepa
+            $profile_data['private'] = true;
         } else {
             $profile_data['private'] = false;
     

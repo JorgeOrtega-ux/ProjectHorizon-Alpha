@@ -59,7 +59,7 @@
       "actions": {
         "sanction": "Sancionar Usuario"
       },
-      "privateActivity": "La actividad de este usuario es privada y solo puede ser vista por otros Fundadores.",
+      "privateActivity": "La actividad de los usuarios con el rol de Fundador es privada.",
       "sanctions": {
         "title": "Sanciones",
         "noSanctions": "No hay sanciones registradas para este usuario.",
