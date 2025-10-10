@@ -10,9 +10,21 @@
                 </div>
             </div>
             <div class="content-header-right">
-                <button class="load-more-btn btn-danger" data-action="add-sanction">
-                    <span class="button-text" data-i18n="admin.userProfile.sanctionButton"></span>
-                </button>
+                <div class="header-item">
+                    <button class="header-button" data-action="toggle-select" data-target="user-profile-actions-menu" data-i18n-tooltip="admin.userProfile.actionsTooltip">
+                        <span class="material-symbols-rounded">more_vert</span>
+                    </button>
+                    <div class="module-content module-select disabled" id="user-profile-actions-menu">
+                        <div class="menu-content">
+                            <div class="menu-list">
+                                <div class="menu-link" data-action="add-sanction">
+                                    <div class="menu-link-icon"><span class="material-symbols-rounded">gavel</span></div>
+                                    <div class="menu-link-text"><span data-i18n="admin.userProfile.actions.sanction"></span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

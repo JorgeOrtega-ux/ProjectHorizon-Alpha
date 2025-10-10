@@ -885,7 +885,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $user_uuid = $_POST['user_uuid'] ?? '';
         $sanction_type = $_POST['sanction_type'] ?? '';
         $reason = $_POST['reason'] ?? '';
-        $duration = $_POST['duration'] ?? null; // en días
+        // --- INICIO DE LA MODIFICACIÓN ---
+        $expires_at = $_POST['expires_at'] ?? null;
         $admin_uuid = $_SESSION['user_uuid'];
     
         if (empty($user_uuid) || empty($sanction_type)) {
@@ -894,13 +895,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             exit;
         }
     
-        $expires_at = null;
-        if ($sanction_type === 'temp_suspension' && is_numeric($duration) && $duration > 0) {
-            $expires_at = date('Y-m-d H:i:s', strtotime("+$duration days"));
+        // Si no es una suspensión temporal, nos aseguramos que expires_at sea NULL
+        if ($sanction_type !== 'temp_suspension') {
+            $expires_at = null;
         }
     
         $stmt = $conn->prepare("INSERT INTO user_sanctions (user_uuid, admin_uuid, sanction_type, reason, expires_at) VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param("sssss", $user_uuid, $admin_uuid, $sanction_type, $reason, $expires_at);
+        // --- FIN DE LA MODIFICACIÓN ---
         
         if ($stmt->execute()) {
             if ($sanction_type === 'temp_suspension' || $sanction_type === 'permanent_suspension') {

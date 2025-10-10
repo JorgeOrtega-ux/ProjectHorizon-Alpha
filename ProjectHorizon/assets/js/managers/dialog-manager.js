@@ -582,33 +582,33 @@ export async function showDeleteGalleryDialog(galleryUuid, galleryName) {
 
 export async function showSanctionDialog(userUuid, userName) {
     showDialog({
-        title: `Sancionar a ${userName}`,
+        title: window.getTranslation('dialogs.sanction.title', { userName }),
         contentHTML: `
-            <div class="form-field">
-                <label for="sanction-type">Tipo de Sanción</label>
+            <div class="form-group" style="width: 100%; text-align: left;">
+                <label class="form-label" for="sanction-type" data-i18n="dialogs.sanction.typeLabel"></label>
                 <select id="sanction-type" class="auth-input">
-                    <option value="warning">Advertencia</option>
-                    <option value="temp_suspension">Suspensión Temporal</option>
-                    <option value="permanent_suspension">Suspensión Permanente</option>
+                    <option value="warning" data-i18n="dialogs.sanction.types.warning"></option>
+                    <option value="temp_suspension" data-i18n="dialogs.sanction.types.temp_suspension"></option>
+                    <option value="permanent_suspension" data-i18n="dialogs.sanction.types.permanent_suspension"></option>
                 </select>
             </div>
-            <div class="form-field" id="duration-field" style="display:none;">
-                <label for="sanction-duration">Duración (días)</label>
-                <input type="number" id="sanction-duration" class="auth-input" min="1">
+            <div class="form-group" id="duration-field" style="display:none; width: 100%; text-align: left;">
+                <label for="sanction-expires-at" class="form-label" data-i18n="dialogs.sanction.expiresAtLabel"></label>
+                <input type="datetime-local" id="sanction-expires-at" class="auth-input">
             </div>
-            <div class="form-field">
-                <label for="sanction-reason">Motivo</label>
+            <div class="form-group" style="width: 100%; text-align: left;">
+                <label for="sanction-reason" class="form-label" data-i18n="dialogs.sanction.reasonLabel"></label>
                 <textarea id="sanction-reason" class="feedback-textarea" rows="3"></textarea>
             </div>
         `,
         buttons: [
             { text: window.getTranslation('general.cancel'), onClick: ({ close }) => close() },
             {
-                text: 'Aplicar Sanción',
+                text: window.getTranslation('dialogs.sanction.applyButton'),
                 className: 'btn-danger',
                 onClick: async ({ close, startLoading, stopLoading, getDialogElement }) => {
                     const sanctionType = getDialogElement().querySelector('#sanction-type').value;
-                    const duration = getDialogElement().querySelector('#sanction-duration').value;
+                    const expiresAt = getDialogElement().querySelector('#sanction-expires-at').value;
                     const reason = getDialogElement().querySelector('#sanction-reason').value;
 
                     const formData = new FormData();
@@ -616,8 +616,8 @@ export async function showSanctionDialog(userUuid, userName) {
                     formData.append('user_uuid', userUuid);
                     formData.append('sanction_type', sanctionType);
                     formData.append('reason', reason);
-                    if (sanctionType === 'temp_suspension') {
-                        formData.append('duration', duration);
+                    if (sanctionType === 'temp_suspension' && expiresAt) {
+                        formData.append('expires_at', expiresAt);
                     }
 
                     startLoading();

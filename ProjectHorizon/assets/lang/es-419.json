@@ -353,6 +353,18 @@
       "success": "Galería eliminada con éxito.",
       "errorDelete": "Error al eliminar la galería.",
       "errorVerification": "Error de verificación."
+    },
+    "sanction": {
+      "title": "Sancionar a {userName}",
+      "typeLabel": "Tipo de Sanción",
+      "reasonLabel": "Motivo (opcional)",
+      "expiresAtLabel": "La suspensión finaliza el",
+      "applyButton": "Aplicar Sanción",
+      "types": {
+        "warning": "Advertencia",
+        "temp_suspension": "Suspensión Temporal",
+        "permanent_suspension": "Suspensión Permanente"
+      }
     }
   },
   "404": {
@@ -411,6 +423,14 @@
         "moderator": "Moderador",
         "administrator": "Administrador"
       }
+    },
+    "userProfile": {
+        "title": "Perfil de Usuario",
+        "backButtonTooltip": "Volver a la gestión de usuarios",
+        "actionsTooltip": "Más acciones",
+        "actions": {
+            "sanction": "Sancionar Usuario"
+        }
     },
     "manageContent": {
       "title": "Administrar contenido",

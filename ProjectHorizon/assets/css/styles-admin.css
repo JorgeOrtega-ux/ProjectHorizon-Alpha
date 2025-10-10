@@ -773,3 +773,16 @@
     background-color: var(--border-color);
     margin: 24px 0;
 }
+
+/* --- INICIO DE LA MODIFICACIÓN --- */
+/* Estilos para el campo de fecha y hora */
+.auth-input[type="datetime-local"] {
+    position: relative;
+    padding-right: 16px; /* Asegura espacio para el icono del calendario */
+}
+
+/* Estilos para el icono del calendario en tema oscuro */
+.dark-theme .auth-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+/* --- FIN DE LA MODIFICACIÓN --- */
