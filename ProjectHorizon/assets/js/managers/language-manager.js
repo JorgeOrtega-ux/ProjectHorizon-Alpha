@@ -20,11 +20,13 @@ async function fetchTranslations(langCode) {
         }
         let mainTranslations = await mainResponse.json();
 
-        // 2. Comprobar si el usuario es administrador
+        // 2. Comprobar si el usuario es administrador o fundador
         const session = await api.checkSession();
-        if (session.ok && session.data.loggedin && session.data.user.role === 'administrator') {
+        
+        // -- CORRECCIÓN: Se añade 'founder' a la lista de roles que pueden cargar traducciones de admin. --
+        if (session.ok && session.data.loggedin && ['administrator', 'founder'].includes(session.data.user.role)) {
             try {
-                // 3. Si es admin, cargar y fusionar las traducciones de administrador
+                // 3. Si es admin/founder, cargar y fusionar las traducciones de administrador
                 const adminResponse = await fetch(`${window.BASE_PATH}/assets/lang/admin/${langCode}.json`);
                 if (adminResponse.ok) {
                     const adminTranslations = await adminResponse.json();

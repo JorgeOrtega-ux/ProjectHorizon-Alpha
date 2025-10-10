@@ -48,7 +48,8 @@
       "roles": {
         "user": "Usuario",
         "moderator": "Moderador",
-        "administrator": "Administrador"
+        "administrator": "Administrador",
+        "founder": "Fundador"
       }
     },
     "userProfile": {

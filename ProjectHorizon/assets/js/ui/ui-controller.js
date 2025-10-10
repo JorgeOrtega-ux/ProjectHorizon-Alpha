@@ -848,16 +848,25 @@ export function renderCreateGalleryForm() {
     }
 }
 
-
-export function displayUsers(users, tableBody, statusContainer, append = false) {
+// -- CORRECCIÓN: Se añade 'sessionUser' para recibir la info del usuario logueado. --
+export function displayUsers(users, tableBody, statusContainer, append = false, sessionUser) {
     if (users.length > 0) {
         users.forEach(user => {
             const row = document.createElement('tr');
             const createdDate = new Date(user.created_at).toLocaleDateString();
+
+            const isProtected = user.role === 'founder';
             const isAdmin = user.role === 'administrator';
+
+            // -- CORRECCIÓN FINAL: La lógica ahora es correcta. --
+            // Se deshabilita si:
+            // 1. El usuario objetivo (user.role) es un fundador.
+            // 2. El usuario objetivo (user.role) es un administrador Y el usuario actual (sessionUser) NO es un fundador.
+            const disableActions = isProtected || (isAdmin && sessionUser?.role !== 'founder');
             const translatedRole = window.getTranslation(`admin.manageUsers.roles.${user.role}`) || user.role;
+
             row.innerHTML = `
-            <td><input type="checkbox" class="user-select" data-uuid="${user.uuid}"></td>
+            <td><input type="checkbox" class="user-select" data-uuid="${user.uuid}" ${isProtected ? 'disabled' : ''}></td>
             <td>
                 <div class="user-info">
                     <div class="user-initials-avatar">${getInitials(user.username)}</div>
@@ -875,7 +884,7 @@ export function displayUsers(users, tableBody, statusContainer, append = false) 
                     <button class="header-button" data-action="view-user-profile" data-uuid="${user.uuid}" data-i18n-tooltip="admin.manageUsers.table.actions.viewProfile">
                         <span class="material-symbols-rounded">visibility</span>
                     </button>
-                    <button class="header-button" data-action="toggle-user-actions" data-i18n-tooltip="admin.manageUsers.table.actionsTitle" ${isAdmin ? 'disabled' : ''}>
+                    <button class="header-button" data-action="toggle-user-actions" data-i18n-tooltip="admin.manageUsers.table.actionsTitle" ${disableActions ? 'disabled' : ''}>
                         <span class="material-symbols-rounded">more_vert</span>
                     </button>
                     <div class="module-content module-select disabled" id="user-actions-menu-${user.uuid}">
@@ -1117,7 +1126,18 @@ export function renderUserProfile(data) {
     const { user, comments, favorites, reports, sanctions } = data;
     section.dataset.uuid = user.uuid; 
     
+    const actionsButton = section.querySelector('[data-action="toggle-select"][data-target="user-profile-actions-menu"]');
+    if (actionsButton) {
+        if (user.role === 'founder') {
+            actionsButton.style.display = 'none';
+        } else {
+            actionsButton.style.display = 'flex';
+        }
+    }
+
     const createdDate = new Date(user.created_at).toLocaleDateString();
+    
+    const translatedRole = window.getTranslation(`admin.manageUsers.roles.${user.role}`) || user.role;
 
     const sanctionsHTML = sanctions.length > 0 ? sanctions.map(s => `
         <div class="activity-item">
@@ -1177,7 +1197,7 @@ export function renderUserProfile(data) {
                     </div>
                     <ul class="profile-card-info-list">
                         <li><span class="material-symbols-rounded">mail</span> ${user.email}</li>
-                        <li><span class="material-symbols-rounded">shield</span> ${user.role}</li>
+                        <li><span class="material-symbols-rounded">shield</span> ${translatedRole}</li>
                         <li><span class="material-symbols-rounded">calendar_today</span> Se unió el ${createdDate}</li>
                     </ul>
                 </div>

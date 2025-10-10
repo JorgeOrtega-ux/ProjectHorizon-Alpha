@@ -488,7 +488,8 @@ export async function fetchAndDisplayTrends(searchTerm = '') {
     return [];
 }
 
-export async function fetchAndDisplayUsers(searchTerm = '', append = false, state) {
+// -- CORRECCIÓN: Se añade el parámetro 'sessionUser' para recibir la info del usuario logueado. --
+export async function fetchAndDisplayUsers(searchTerm = '', append = false, state, sessionUser) {
     if (state.isLoading) return;
     state.isLoading = true;
 
@@ -521,7 +522,8 @@ export async function fetchAndDisplayUsers(searchTerm = '', append = false, stat
 
     if (response.ok) {
         const users = response.data;
-        displayUsers(users, tableBody, statusContainer, append);
+        // -- CORRECCIÓN: Pasamos 'sessionUser' a la función que dibuja la tabla. --
+        displayUsers(users, tableBody, statusContainer, append, sessionUser);
 
         if (loadMoreContainer) {
             if (users.length < state.batchSize) {

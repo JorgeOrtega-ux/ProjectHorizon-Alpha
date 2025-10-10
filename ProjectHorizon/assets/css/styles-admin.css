@@ -786,3 +786,59 @@
     filter: invert(1);
 }
 /* --- FIN DE LA MODIFICACIÓN --- */
+
+/* ================================================= */
+/* =========== ESTILOS PARA INSIGNIAS DE ROL ======== */
+/* ================================================= */
+
+/* Si vas a usar insignias en vez de texto plano para los roles, 
+   puedes usar estas clases. Necesitarás modificar ui-controller.js 
+   para envolver el texto del rol en un <span class="role-badge role-user">, etc. */
+
+.role-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: capitalize;
+    border: 1px solid transparent;
+}
+
+.role-badge.role-user {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+.dark-theme .role-badge.role-user {
+    background-color: #122a3d;
+    color: #64b5f6;
+}
+
+.role-badge.role-moderator {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+.dark-theme .role-badge.role-moderator {
+    background-color: #1c3b1e;
+    color: #81c784;
+}
+
+.role-badge.role-administrator {
+    background-color: #ffebee;
+    color: #c62828;
+}
+.dark-theme .role-badge.role-administrator {
+    background-color: #451c1c;
+    color: #e57373;
+}
+
+.role-badge.role-founder {
+    background-color: #fff8e1;
+    color: #e65100;
+    border-color: #ffca28;
+}
+.dark-theme .role-badge.role-founder {
+    background-color: #3e2723;
+    color: #ffb74d;
+    border-color: #ffa726;
+}

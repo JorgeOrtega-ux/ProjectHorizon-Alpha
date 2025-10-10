@@ -2587,3 +2587,24 @@ h6 {
     flex-grow: 1;
     min-width: 200px;
 }
+
+/* ================================================= */
+/* =========== ESTILOS PARA EL ROL FUNDADOR ======== */
+/* ================================================= */
+
+.profile-btn.profile-btn--founder {
+    border-color: #c5a62a;
+    background-color: #fffbeb;
+}
+
+.dark-theme .profile-btn.profile-btn--founder {
+    border-color: #ffde59;
+    background-color: #4a401a;
+}
+
+.comment-avatar.profile-btn--founder {
+    background-color: #c5a62a;
+}
+.dark-theme .comment-avatar.profile-btn--founder {
+    background-color: #ffde59;
+}

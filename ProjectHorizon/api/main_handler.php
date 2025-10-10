@@ -173,7 +173,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     require_once '../config/db.php';
 
     if ($request_type === 'user_profile') {
-        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator'])) {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['error' => 'Acción no autorizada.']);
             exit;
@@ -258,7 +259,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     if ($request_type === 'dashboard_stats') {
-        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator'])) {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['error' => 'Acción no autorizada.']);
             exit;
@@ -294,7 +296,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     if ($request_type === 'admin_feedback') {
-        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator'])) {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['error' => 'Acción no autorizada.']);
             exit;
@@ -343,7 +346,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     if ($request_type === 'admin_comments') {
-        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'moderator'])) {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'moderator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['error' => 'Acción no autorizada.']);
             exit;
@@ -563,7 +567,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     if ($request_type === 'galleries') {
-        $is_admin_context = isset($_GET['context']) && $_GET['context'] === 'admin' && isset($_SESSION['loggedin']) && $_SESSION['user_role'] === 'administrator';
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        $is_admin_context = isset($_GET['context']) && $_GET['context'] === 'admin' && isset($_SESSION['loggedin']) && in_array($_SESSION['user_role'], ['administrator', 'founder']);
 
         if (isset($_GET['uuid'])) {
             $uuid = $_GET['uuid'];
@@ -774,7 +779,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode($users);
 
     } elseif ($request_type === 'gallery_for_edit') {
-        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['error' => 'Acción no autorizada.']);
             exit;
@@ -831,7 +837,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $action_type = $_POST['action_type'] ?? '';
 
     if ($action_type === 'batch_update_users') {
-        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
             exit;
@@ -846,8 +853,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             exit;
         }
     
-        $in_clause = implode(',', array_fill(0, count($user_uuids), '?'));
+        // -- CORRECCIÓN: Protección para rol Fundador --
+        $placeholders = implode(',', array_fill(0, count($user_uuids), '?'));
         $types = str_repeat('s', count($user_uuids));
+        $stmt_check = $conn->prepare("SELECT uuid FROM users WHERE role = 'founder' AND uuid IN ($placeholders)");
+        $stmt_check->bind_param($types, ...$user_uuids);
+        $stmt_check->execute();
+        $founder_uuids = array_map(function($item) { return $item['uuid']; }, $stmt_check->get_result()->fetch_all(MYSQLI_ASSOC));
+        $stmt_check->close();
+
+        $user_uuids_to_update = array_diff($user_uuids, $founder_uuids);
+
+        if (empty($user_uuids_to_update)) {
+            echo json_encode(['success' => true, 'message' => 'Ninguna acción realizada. Los usuarios seleccionados están protegidos.']);
+            exit;
+        }
+
+        $in_clause = implode(',', array_fill(0, count($user_uuids_to_update), '?'));
+        $types = str_repeat('s', count($user_uuids_to_update));
         
         $sql = "";
         if ($batch_action === 'suspend') {
@@ -863,7 +886,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param($types, ...$user_uuids);
+        $stmt->bind_param($types, ...$user_uuids_to_update);
         
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Usuarios actualizados correctamente.']);
@@ -876,7 +899,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
     
     if ($action_type === 'add_user_sanction') {
-        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
             exit;
@@ -885,7 +909,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $user_uuid = $_POST['user_uuid'] ?? '';
         $sanction_type = $_POST['sanction_type'] ?? '';
         $reason = $_POST['reason'] ?? '';
-        // --- INICIO DE LA MODIFICACIÓN ---
         $expires_at = $_POST['expires_at'] ?? null;
         $admin_uuid = $_SESSION['user_uuid'];
     
@@ -894,15 +917,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['success' => false, 'message' => 'Faltan datos para aplicar la sanción.']);
             exit;
         }
+
+        // -- CORRECCIÓN: Protección para rol Fundador --
+        $stmt_check = $conn->prepare("SELECT role FROM users WHERE uuid = ?");
+        $stmt_check->bind_param("s", $user_uuid);
+        $stmt_check->execute();
+        $user_to_sanction = $stmt_check->get_result()->fetch_assoc();
+        $stmt_check->close();
+
+        if ($user_to_sanction && $user_to_sanction['role'] === 'founder') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'No se puede sancionar a un usuario Fundador.']);
+            exit;
+        }
     
-        // Si no es una suspensión temporal, nos aseguramos que expires_at sea NULL
         if ($sanction_type !== 'temp_suspension') {
             $expires_at = null;
         }
     
         $stmt = $conn->prepare("INSERT INTO user_sanctions (user_uuid, admin_uuid, sanction_type, reason, expires_at) VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param("sssss", $user_uuid, $admin_uuid, $sanction_type, $reason, $expires_at);
-        // --- FIN DE LA MODIFICACIÓN ---
         
         if ($stmt->execute()) {
             if ($sanction_type === 'temp_suspension' || $sanction_type === 'permanent_suspension') {
@@ -921,7 +955,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     if ($action_type === 'delete_user_sanction') {
-        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
             exit;
@@ -948,7 +983,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     if ($action_type === 'update_comment_status') {
-        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'moderator'])) {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'moderator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
             exit;
@@ -976,7 +1012,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     if ($action_type === 'update_report_status') {
-        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'moderator'])) {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'moderator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
             exit;
@@ -1405,7 +1442,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['success' => false, 'message' => 'Error al actualizar favoritos.']);
         }
     } elseif ($action_type === 'change_user_role' || $action_type === 'change_user_status') {
-        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
             exit;
@@ -1419,12 +1457,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             exit;
         }
         
+        // -- CORRECCIÓN: Protección para rol Fundador --
+        $stmt_check = $conn->prepare("SELECT role FROM users WHERE uuid = ?");
+        $stmt_check->bind_param("s", $user_uuid);
+        $stmt_check->execute();
+        $user_to_modify = $stmt_check->get_result()->fetch_assoc();
+        $stmt_check->close();
+
+        if ($user_to_modify && $user_to_modify['role'] === 'founder') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'No se pueden modificar los usuarios Fundadores.']);
+            exit;
+        }
+        
         if ($action_type === 'change_user_role') {
             $new_role = $_POST['role'] ?? '';
-            $allowed_roles = ['user', 'moderator', 'administrator'];
+            $allowed_roles = ['user', 'moderator', 'administrator', 'founder'];
             if (!in_array($new_role, $allowed_roles)) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'Rol no válido.']);
+                exit;
+            }
+            // -- CORRECCIÓN: Un admin no puede crear un fundador --
+            if ($new_role === 'founder' && $_SESSION['user_role'] !== 'founder') {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'No tienes permiso para asignar el rol de Fundador.']);
                 exit;
             }
             $stmt = $conn->prepare("UPDATE users SET role = ? WHERE uuid = ?");
@@ -1449,7 +1506,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         $stmt->close();
     } elseif ($action_type === 'verify_admin_password') {
-        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
             exit;
@@ -1465,7 +1523,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['success' => false, 'message' => 'La contraseña es incorrecta.']);
         }
     } elseif ($action_type === 'change_gallery_privacy') {
-        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
             exit;
@@ -1491,7 +1550,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         $stmt->close();
     } elseif ($action_type === 'change_gallery_visibility') {
-        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
             exit;
@@ -1517,7 +1577,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         $stmt->close();
     } elseif ($action_type === 'update_gallery_details') {
-        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
             exit;
@@ -1543,7 +1604,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt->close();
 
     } elseif ($action_type === 'create_gallery') {
-        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
             exit;
@@ -1630,7 +1692,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['success' => false, 'message' => 'Error interno al crear la galería.']);
         }
     } elseif ($action_type === 'update_profile_picture') {
-        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
             exit;
@@ -1664,7 +1727,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         
     } elseif ($action_type === 'upload_gallery_photos') {
-        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
             exit;
@@ -1710,7 +1774,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         
     } elseif ($action_type === 'delete_gallery_photo') {
-        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
             exit;
@@ -1732,7 +1797,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         $stmt->close();
     } elseif ($action_type === 'update_photo_order') {
-        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
             exit;
@@ -1762,7 +1828,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['success' => false, 'message' => 'Error al actualizar el orden de las fotos.']);
         }
     } elseif ($action_type === 'delete_gallery') {
-        if (!isset($_SESSION['loggedin']) || $_SESSION['user_role'] !== 'administrator') {
+        // -- CORRECCIÓN: Permitir acceso a fundadores --
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
             exit;

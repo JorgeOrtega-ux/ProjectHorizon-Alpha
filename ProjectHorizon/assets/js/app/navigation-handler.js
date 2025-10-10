@@ -227,9 +227,8 @@ export async function handleStateChange(view, section, pushState = true, data, a
         return;
     }
 
-
     if (view === 'admin') {
-        if (!isLoggedIn || sessionResponse.data.user.role !== 'administrator') {
+        if (!isLoggedIn || !['administrator', 'founder'].includes(sessionResponse.data.user.role)) {
             handleStateChange('main', '404', true, null, appState);
             return;
         }
@@ -307,7 +306,8 @@ export async function handleStateChange(view, section, pushState = true, data, a
             }
             break;
         case 'manageUsers':
-            fetchAndDisplayUsers('', false, paginationState.adminUsers);
+            // -- CORRECCIÓN: Pasamos la información de la sesión del usuario actual --
+            fetchAndDisplayUsers('', false, paginationState.adminUsers, sessionResponse.data.user);
             break;
         case 'manageContent':
             fetchAndDisplayGalleriesAdmin('', false, paginationState.adminGalleries);

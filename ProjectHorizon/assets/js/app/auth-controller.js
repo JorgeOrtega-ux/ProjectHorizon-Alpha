@@ -74,7 +74,9 @@ function updateUserUI(userData) {
         profileBtn.dataset.userRole = userData.role || 'user';
 
         if (adminPanelLink) {
-            adminPanelLink.style.display = (userData.role === 'administrator') ? 'flex' : 'none';
+            // -- CORRECCIÓN: Se añade 'founder' a la condición para que también vea el enlace. --
+            const isAdminOrFounder = ['administrator', 'founder'].includes(userData.role);
+            adminPanelLink.style.display = isAdminOrFounder ? 'flex' : 'none';
         }
     } else {
         loggedOutContainer.classList.remove('disabled');
