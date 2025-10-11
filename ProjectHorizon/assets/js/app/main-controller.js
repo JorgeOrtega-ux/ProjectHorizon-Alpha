@@ -82,6 +82,30 @@ function handleAgeVerification() {
     }
 }
 
+// ✅ **INICIO DE LA CORRECCIÓN: FUNCIÓN MOVIDA Y MEJORADA**
+/**
+ * Actualiza la visibilidad del grid de fotos y el mensaje de estado (ej. "No hay fotos").
+ * Se activa cuando no hay fotos en el contenedor.
+ */
+function updatePhotoGridVisibility() {
+    const grid = document.getElementById('manage-photos-grid');
+    if (!grid) return;
+    
+    // Busca el contenedor de estado relativo al grid actual
+    const statusContainer = grid.closest('.edit-gallery-container').querySelector('.status-message-container');
+    if (!statusContainer) return;
+    
+    // Si no hay elementos hijos en el grid (fotos)
+    if (grid.children.length === 0) {
+        statusContainer.classList.remove('disabled'); // Muestra el mensaje
+        grid.classList.add('disabled'); // Oculta el grid
+    } else {
+        statusContainer.classList.add('disabled'); // Oculta el mensaje
+        grid.classList.remove('disabled'); // Muestra el grid
+    }
+}
+// ✅ **FIN DE LA CORRECCIÓN**
+
 
 export function initMainController() {
     handleAgeVerification();
@@ -481,21 +505,6 @@ export function initMainController() {
         }
     }
 
-    function updatePhotoGridVisibility() {
-        const grid = document.getElementById('manage-photos-grid');
-        if (!grid) return;
-        
-        const statusContainer = grid.closest('.edit-gallery-container').querySelector('.status-message-container');
-        
-        if (grid.children.length === 0) {
-            statusContainer.classList.remove('disabled');
-            grid.classList.add('disabled');
-        } else {
-            statusContainer.classList.add('disabled');
-            grid.classList.remove('disabled');
-        }
-    }
-
     function setupEventListeners() {
         document.addEventListener('input', (event) => {
             if (appState.currentAppSection === 'createGallery') {
@@ -520,12 +529,11 @@ export function initMainController() {
                     reader.readAsDataURL(fileInput.files[0]);
                 }
             }
-
+            
+            // ✅ **INICIO DE LA CORRECCIÓN: LÓGICA DE ACTUALIZACIÓN AL SUBIR FOTOS**
             if (fileInput.matches('#add-photos-input')) {
                 const gridEl = document.getElementById('manage-photos-grid');
                 if (!gridEl) return;
-                
-                updatePhotoGridVisibility();
 
                 const currentSection = document.querySelector('[data-section="manageGalleryPhotos"]');
                 const isNewGalleryMode = currentSection && currentSection.dataset.mode === 'new';
@@ -550,11 +558,14 @@ export function initMainController() {
                         newPhotoItem.dataset.fileName = file.name;
                         newPhotoItem.innerHTML = `<img src="${e.target.result}" alt="Nueva foto"><button class="delete-photo-btn" data-action="delete-gallery-photo"><span class="material-symbols-rounded">close</span></button>`;
                         gridEl.appendChild(newPhotoItem);
+                        // Llama a la función de actualización después de que la imagen se haya agregado al DOM
+                        updatePhotoGridVisibility(); 
                     };
                     reader.readAsDataURL(file);
                 }
-                fileInput.value = '';
+                fileInput.value = ''; // Limpia el input para permitir subir el mismo archivo de nuevo
             }
+            // ✅ **FIN DE LA CORRECCIÓN**
         });
 
         document.addEventListener('click', async function (event) {
@@ -1345,6 +1356,7 @@ export function initMainController() {
                         handleStateChange('admin', 'editGallery', true, { uuid }, appState);
                         break;
                     }
+                    // ✅ **INICIO DE LA CORRECCIÓN: LÓGICA DE ACTUALIZACIÓN AL BORRAR FOTOS**
                     case 'delete-gallery-photo': {
                         const photoItem = actionTarget.closest('.photo-item-edit');
                         const photoId = actionTarget.dataset.photoId;
@@ -1358,13 +1370,13 @@ export function initMainController() {
                             );
                             photoItem.remove();
                             showNotification('Foto pendiente eliminada.', 'success');
-                            updatePhotoGridVisibility();
+                            updatePhotoGridVisibility(); // Llama a la función de actualización
                         } else {
                             api.deleteGalleryPhoto(photoId).then(response => {
                                 if (response.ok) {
                                     showNotification(response.data.message, 'success');
                                     photoItem.remove();
-                                    updatePhotoGridVisibility();
+                                    updatePhotoGridVisibility(); // Llama a la función de actualización
                                 } else {
                                     showNotification(response.data.message || 'Error al eliminar la foto', 'error');
                                 }
@@ -1372,6 +1384,7 @@ export function initMainController() {
                         }
                         break;
                     }
+                    // ✅ **FIN DE LA CORRECCIÓN**
                     case 'save-username': {
                         const button = actionTarget.closest('button');
                         const input = document.getElementById('username-edit-input');
