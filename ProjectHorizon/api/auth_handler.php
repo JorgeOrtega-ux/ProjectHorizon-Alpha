@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     $action_type = $_POST['action_type'] ?? '';
 
-    if (!in_array($action_type, ['register_user_step1', 'register_user_step2', 'verify_registration_code', 'login_user', 'logout_user', 'forgot_password', 'verify_reset_code', 'reset_password', 'verify_password', 'update_password', 'delete_account', 'update_username', 'update_email'])) {
+    if (!in_array($action_type, ['register_user_step1', 'register_user_step2', 'verify_registration_code', 'login_user', 'logout_user', 'forgot_password', 'verify_reset_code', 'reset_password', 'verify_password', 'update_password', 'delete_account', 'update_username', 'update_email', 'update_profile_picture', 'delete_profile_picture'])) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Acción no válida.']);
         exit;
@@ -807,6 +807,108 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 http_response_code(500);
                 echo json_encode(['success' => false, 'message' => 'Error al actualizar el correo electrónico.']);
             }
+            break;
+
+        case 'update_profile_picture':
+            if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'message' => 'No autorizado.']);
+                exit;
+            }
+
+            if (isset($_FILES['profile_picture'])) {
+                $file = $_FILES['profile_picture'];
+                $user_uuid = $_SESSION['user_uuid'];
+                
+                // Validación del archivo
+                $allowed_mime_types = ['image/jpeg', 'image/png', 'image/gif'];
+                $max_file_size = 2 * 1024 * 1024; // 2MB
+
+                if (!in_array($file['type'], $allowed_mime_types)) {
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'message' => 'Formato de archivo no válido. Solo se permiten JPG, PNG y GIF.']);
+                    exit;
+                }
+                if ($file['size'] > $max_file_size) {
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'message' => 'El archivo es demasiado grande. El tamaño máximo es 2MB.']);
+                    exit;
+                }
+
+                // Borrar foto anterior si existe
+                $stmt_get_old = $conn->prepare("SELECT profile_picture_url FROM users WHERE uuid = ?");
+                $stmt_get_old->bind_param("s", $user_uuid);
+                $stmt_get_old->execute();
+                $result_old = $stmt_get_old->get_result()->fetch_assoc();
+                if ($result_old && !empty($result_old['profile_picture_url'])) {
+                    $old_file_path = '../' . $result_old['profile_picture_url'];
+                    if (file_exists($old_file_path)) {
+                        unlink($old_file_path);
+                    }
+                }
+                $stmt_get_old->close();
+
+                // Subir nueva foto
+                $upload_dir = '../uploads/user_profile_pictures/';
+                if (!file_exists($upload_dir)) {
+                    mkdir($upload_dir, 0777, true);
+                }
+                $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+                $new_file_name = $user_uuid . '_' . time() . '.' . $extension;
+                $destination = $upload_dir . $new_file_name;
+                
+                if (move_uploaded_file($file['tmp_name'], $destination)) {
+                    $db_path = 'uploads/user_profile_pictures/' . $new_file_name;
+                    $stmt_update = $conn->prepare("UPDATE users SET profile_picture_url = ? WHERE uuid = ?");
+                    $stmt_update->bind_param("ss", $db_path, $user_uuid);
+                    if ($stmt_update->execute()) {
+                        echo json_encode(['success' => true, 'message' => 'Foto de perfil actualizada.', 'url' => $db_path]);
+                    } else {
+                        http_response_code(500);
+                        echo json_encode(['success' => false, 'message' => 'Error al actualizar la base de datos.']);
+                    }
+                    $stmt_update->close();
+                } else {
+                    http_response_code(500);
+                    echo json_encode(['success' => false, 'message' => 'Error al guardar la imagen.']);
+                }
+            } else {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'No se ha subido ninguna imagen.']);
+            }
+            break;
+
+        case 'delete_profile_picture':
+            if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'message' => 'No autorizado.']);
+                exit;
+            }
+
+            $user_uuid = $_SESSION['user_uuid'];
+
+            $stmt_get = $conn->prepare("SELECT profile_picture_url FROM users WHERE uuid = ?");
+            $stmt_get->bind_param("s", $user_uuid);
+            $stmt_get->execute();
+            $result = $stmt_get->get_result()->fetch_assoc();
+
+            if ($result && !empty($result['profile_picture_url'])) {
+                $file_path = '../' . $result['profile_picture_url'];
+                if (file_exists($file_path)) {
+                    unlink($file_path);
+                }
+            }
+            $stmt_get->close();
+
+            $stmt_update = $conn->prepare("UPDATE users SET profile_picture_url = NULL WHERE uuid = ?");
+            $stmt_update->bind_param("s", $user_uuid);
+            if ($stmt_update->execute()) {
+                echo json_encode(['success' => true, 'message' => 'Foto de perfil eliminada.']);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error al eliminar la foto de perfil.']);
+            }
+            $stmt_update->close();
             break;
     }
 } else {

@@ -184,6 +184,10 @@
     "yourProfile": {
       "title": "Tu perfil",
       "description": "Gestiona la información de tu perfil y la configuración de tu cuenta.",
+      "pfpTitle": "Foto de perfil",
+      "pfpDescription": "Esto ayudará a tus compañeros a reconocerte.",
+      "pfpUploadBtn": "Subir foto",
+      "pfpDeleteBtn": "Eliminar",
       "usernameLabel": "Nombre de usuario",
       "emailLabel": "Correo electrónico",
       "usernamePlaceholder": "Nuevo nombre de usuario",
@@ -305,7 +309,11 @@
     "usernameUpdated": "Nombre de usuario actualizado.",
     "emailUpdated": "Correo electrónico actualizado.",
     "usernameTaken": "Ese nombre de usuario ya está en uso.",
-    "emailTaken": "Ese correo electrónico ya está en uso."
+    "emailTaken": "Ese correo electrónico ya está en uso.",
+    "pfpUpdated": "Foto de perfil actualizada.",
+    "pfpDeleted": "Foto de perfil eliminada.",
+    "pfpErrorUpload": "Error al subir la imagen.",
+    "pfpErrorDelete": "Error al eliminar la imagen."
   },
   "dialogs": {
     "clearHistoryTitle": "¿Eliminar todo el historial?",

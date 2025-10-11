@@ -1360,7 +1360,10 @@ export function initMainController() {
                                 profilePicFormData.append('action_type', 'update_profile_picture');
                                 profilePicFormData.append('uuid', uuid);
                                 profilePicFormData.append('profile_picture', profilePicInput.files[0]);
-                                api.updateProfilePicture(profilePicFormData).then(response => {
+                                
+                                // **INICIO DE LA MODIFICACIÓN**
+                                api.updateGalleryProfilePicture(profilePicFormData).then(response => {
+                                // **FIN DE LA MODIFICACIÓN**
                                     if (response.ok) {
                                         document.querySelector('.profile-picture-preview').style.backgroundImage = `url('${response.data.profile_picture_url}')`;
                                         profilePicInput.value = '';

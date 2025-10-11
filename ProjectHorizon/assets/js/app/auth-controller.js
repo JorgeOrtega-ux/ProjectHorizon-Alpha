@@ -7,7 +7,11 @@ import * as api from '../core/api-handler.js';
 
 function getInitials(name) {
     if (!name) return '';
-    return name.charAt(0).toUpperCase();
+    const words = name.split(/[\s_]+/);
+    if (words.length > 1 && words[1]) {
+        return (words[0][0] + words[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
 }
 
 function displayAuthErrors(containerId, listId, messages) {
@@ -67,14 +71,24 @@ function updateUserUI(userData) {
         authRequiredLinks.forEach(link => link.classList.remove('disabled'));
 
         const initialsSpan = profileBtn.querySelector('.profile-initials');
-        initialsSpan.textContent = getInitials(userData.username);
+        
+        // **INICIO DE LA MODIFICACIÓN**
+        if (userData.profile_picture_url) {
+            initialsSpan.textContent = '';
+            profileBtn.style.backgroundImage = `url('${window.BASE_PATH}/${userData.profile_picture_url}')`;
+            profileBtn.classList.add('profile-btn--image');
+        } else {
+            initialsSpan.textContent = getInitials(userData.username);
+            profileBtn.style.backgroundImage = 'none';
+            profileBtn.classList.remove('profile-btn--image');
+        }
+        // **FIN DE LA MODIFICACIÓN**
 
-        profileBtn.className = 'header-button profile-btn'; // Reset classes
+        profileBtn.className = profileBtn.className.replace(/profile-btn--\w+/g, '');
         profileBtn.classList.add(`profile-btn--${userData.role || 'user'}`);
         profileBtn.dataset.userRole = userData.role || 'user';
 
         if (adminPanelLink) {
-            // -- CORRECCIÓN: Se añade 'moderator' a la condición para que también vea el enlace. --
             const hasAdminAccess = ['administrator', 'founder', 'moderator'].includes(userData.role);
             adminPanelLink.style.display = hasAdminAccess ? 'flex' : 'none';
         }
@@ -87,6 +101,7 @@ function updateUserUI(userData) {
 
         if (profileBtn) {
             profileBtn.className = 'header-button profile-btn';
+            profileBtn.style.backgroundImage = 'none'; // Limpiar imagen al cerrar sesión
         }
         if (adminPanelLink) {
             adminPanelLink.style.display = 'none';
@@ -100,7 +115,6 @@ function updateUserUI(userData) {
 async function checkSessionStatus() {
     const response = await api.checkSession();
     
-    // ✅ **CORRECCIÓN: Se añade una comprobación para asegurar que 'response' no es undefined**
     if (response && response.ok && response.data.loggedin) {
         updateUserUI(response.data.user);
     } else {
@@ -146,7 +160,6 @@ async function handleLogin(form) {
         updateUserUI(response.data.user);
         showNotification(window.getTranslation('auth.loginSuccess'), 'success');
         
-        // ✅ **LÍNEA AÑADIDA: Notifica que el login fue exitoso**
         window.dispatchEvent(new CustomEvent('authSuccess'));
 
         window.dispatchEvent(new CustomEvent('navigateTo', { detail: { view: 'main', section: 'home' } }));
@@ -272,7 +285,6 @@ async function handleVerifyRegistrationCode(form) {
         updateUserUI(response.data.user);
         showNotification(window.getTranslation('auth.registerSuccess'), 'success');
 
-        // ✅ **LÍNEA AÑADIDA: Notifica que el registro fue exitoso**
         window.dispatchEvent(new CustomEvent('authSuccess'));
 
         window.dispatchEvent(new CustomEvent('navigateTo', { detail: { view: 'main', section: 'home' } }));

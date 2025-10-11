@@ -74,7 +74,6 @@ function setupMoreOptionsMenu() {
     }
 }
 
-// ✅ **INICIO DE LA CORRECCIÓN: Función extraída y exportada**
 export function createCommentElement(comment, isReply = false) {
     const commentElement = document.createElement('div');
     commentElement.className = `comment-item ${isReply ? 'comment-reply' : ''}`;
@@ -153,7 +152,6 @@ export function createCommentElement(comment, isReply = false) {
     `;
     return commentElement;
 }
-// ✅ **FIN DE LA CORRECCIÓN**
 
 export function displayComments(comments) {
     const commentsList = document.getElementById('comments-list');
@@ -314,7 +312,6 @@ export async function handleStateChange(view, section, pushState = true, data, a
             }
             break;
         case 'manageUsers':
-            // -- CORRECCIÓN: Pasamos la información de la sesión del usuario actual --
             fetchAndDisplayUsers('', false, paginationState.adminUsers, sessionResponse.data.user);
             break;
         case 'manageContent':
@@ -342,6 +339,97 @@ export async function handleStateChange(view, section, pushState = true, data, a
         case 'yourProfile': {
             if (isLoggedIn) {
                 const user = sessionResponse.data.user;
+
+                // --- INICIO DE LA LÓGICA PARA FOTO DE PERFIL ---
+                const pfpPreview = document.getElementById('profile-picture-preview');
+                const pfpInput = document.getElementById('profile-picture-input');
+                const uploadBtn = document.getElementById('upload-picture-btn');
+                const deleteBtn = document.getElementById('delete-picture-btn');
+                const saveBtn = document.getElementById('save-picture-btn');
+                let selectedFile = null;
+
+                const getInitials = (name) => {
+                    if (!name) return '';
+                    const words = name.split(/[\s_]+/);
+                    if (words.length > 1 && words[1]) {
+                        return (words[0][0] + words[1][0]).toUpperCase();
+                    }
+                    return name.substring(0, 2).toUpperCase();
+                };
+
+                const updatePfpUI = (imageUrl) => {
+                    if (imageUrl) {
+                        pfpPreview.style.backgroundImage = `url('${imageUrl}')`;
+                        pfpPreview.textContent = '';
+                        deleteBtn.style.display = 'flex';
+                    } else {
+                        pfpPreview.style.backgroundImage = 'none';
+                        pfpPreview.textContent = getInitials(user.username);
+                        deleteBtn.style.display = 'none';
+                    }
+                    uploadBtn.style.display = 'flex';
+                    saveBtn.style.display = 'none';
+                    selectedFile = null;
+                    pfpInput.value = ''; 
+                };
+                
+                updatePfpUI(user.profile_picture_url ? `${window.BASE_PATH}/${user.profile_picture_url}` : null);
+
+                uploadBtn.addEventListener('click', () => pfpInput.click());
+
+                pfpInput.addEventListener('change', (event) => {
+                    if (event.target.files && event.target.files[0]) {
+                        selectedFile = event.target.files[0];
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            pfpPreview.style.backgroundImage = `url('${e.target.result}')`;
+                            pfpPreview.textContent = '';
+                        };
+                        reader.readAsDataURL(selectedFile);
+
+                        uploadBtn.style.display = 'none';
+                        saveBtn.style.display = 'flex';
+                    }
+                });
+
+                saveBtn.addEventListener('click', async () => {
+                    if (!selectedFile) return;
+
+                    saveBtn.classList.add('loading');
+                    const formData = new FormData();
+                    formData.append('action_type', 'update_profile_picture');
+                    formData.append('profile_picture', selectedFile);
+
+                    const tokenResponse = await api.getCsrfToken();
+                    if (tokenResponse.ok) {
+                        formData.append('csrf_token', tokenResponse.data.csrf_token);
+                    }
+
+                    const response = await api.updateUserProfilePicture(formData);
+                    saveBtn.classList.remove('loading');
+
+                    if (response.ok) {
+                        showNotification(window.getTranslation('notifications.pfpUpdated'), 'success');
+                        updatePfpUI(`${window.BASE_PATH}/${response.data.url}`);
+                        await window.auth.checkSessionStatus();
+                    } else {
+                        showNotification(response.data.message || window.getTranslation('notifications.pfpErrorUpload'), 'error');
+                    }
+                });
+
+                deleteBtn.addEventListener('click', async () => {
+                    const response = await api.deleteUserProfilePicture();
+                    if (response.ok) {
+                        showNotification(window.getTranslation('notifications.pfpDeleted'), 'success');
+                        updatePfpUI(null);
+                        await window.auth.checkSessionStatus();
+                    } else {
+                        showNotification(response.data.message || window.getTranslation('notifications.pfpErrorDelete'), 'error');
+                    }
+                });
+                // --- FIN DE LA LÓGICA PARA FOTO DE PERFIL ---
+
+                // Lógica existente para nombre de usuario y email
                 const usernameDisplay = document.getElementById('username-display');
                 const emailDisplay = document.getElementById('email-display');
                 const usernameInput = document.getElementById('username-edit-input');
@@ -850,16 +938,11 @@ export async function handleStateChange(view, section, pushState = true, data, a
       case 'userSpecificFavorites':
             if (data && data.uuid) {
                 
-                // ===== INICIO DE LA CORRECCIÓN =====
-                // Nos aseguramos de que la lista de favoritos se haya cargado antes de continuar.
-                // Si la lista está vacía, la obtenemos del servidor.
                 if (appState.currentFavoritesList.length === 0 && isLoggedIn) {
                     await appState.fetchUserFavorites();
                 }
                 
-                // Ahora usamos la variable de estado actualizada que SÍ tiene los datos.
                 const userFavorites = appState.currentFavoritesList.filter(p => p.gallery_uuid === data.uuid);
-                // ===== FIN DE LA CORRECCIÓN =====
 
                 const sectionEl = document.querySelector('[data-section="userSpecificFavorites"]');
                 if (sectionEl) {
@@ -876,7 +959,6 @@ export async function handleStateChange(view, section, pushState = true, data, a
                         statusContainer.classList.remove('active');
                         title.textContent = window.getTranslation('userSpecificFavorites.titleFrom', { userName: userFavorites[0].gallery_name });
                         userFavorites.forEach(photo => {
-                            // ... (resto del código para mostrar las tarjetas, que ya es correcto)
                             const card = document.createElement('div');
                             card.className = 'card photo-card';
                             card.dataset.photoUrl = photo.photo_url;

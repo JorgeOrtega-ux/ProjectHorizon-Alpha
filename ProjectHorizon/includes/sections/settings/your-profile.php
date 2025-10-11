@@ -11,6 +11,27 @@
         </div>
 
         <div class="content-section">
+            <div class="profile-picture-container">
+                <div class="pfp-avatar-wrapper">
+                    <div id="profile-picture-preview" class="pfp-avatar"></div>
+                    <input type="file" id="profile-picture-input" accept="image/*" style="display: none;">
+                </div>
+                <div class="pfp-details">
+                    <h4 data-i18n="settings.yourProfile.pfpTitle"></h4>
+                    <p data-i18n="settings.yourProfile.pfpDescription"></p>
+                </div>
+                <div class="pfp-actions">
+                    <button type="button" class="load-more-btn" id="delete-picture-btn" data-i18n="settings.yourProfile.pfpDeleteBtn"></button>
+                    <button type="button" class="load-more-btn" id="upload-picture-btn" data-i18n="settings.yourProfile.pfpUploadBtn"></button>
+                    <button type="button" class="load-more-btn btn-primary" id="save-picture-btn" style="display: none;">
+                        <span class="button-text" data-i18n="general.save"></span>
+                        <div class="button-spinner"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-section">
             <div id="username-view-mode" class="form-group-inline">
                 <div class="form-group-text">
                     <label class="form-label" data-i18n="settings.yourProfile.usernameLabel"></label>

@@ -36,12 +36,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         header('Content-Type: application/json');
         if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true && isset($_SESSION['user_uuid'])) {
             require_once '../config/db.php';
+            
+            // **INICIO DE LA CORRECCIÓN**
             $stmt = $conn->prepare("
-                SELECT u.role, u.status, u.created_at, um.password_last_updated_at, um.username_last_updated_at, um.email_last_updated_at
+                SELECT u.role, u.status, u.created_at, u.profile_picture_url,
+                       um.password_last_updated_at, um.username_last_updated_at, um.email_last_updated_at
                 FROM users u
                 LEFT JOIN user_metadata um ON u.uuid = um.user_uuid
                 WHERE u.uuid = ?
             ");
+            // **FIN DE LA CORRECCIÓN**
+
             $stmt->bind_param("s", $_SESSION['user_uuid']);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -58,6 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 
                 $_SESSION['user_role'] = $user['role'];
 
+                // **INICIO DE LA CORRECCIÓN**
                 echo json_encode([
                     'loggedin' => true,
                     'user' => [
@@ -68,9 +74,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                         'created_at' => $user['created_at'],
                         'password_last_updated_at' => $user['password_last_updated_at'],
                         'username_last_updated_at' => $user['username_last_updated_at'],
-                        'email_last_updated_at' => $user['email_last_updated_at']
+                        'email_last_updated_at' => $user['email_last_updated_at'],
+                        'profile_picture_url' => $user['profile_picture_url']
                     ]
                 ]);
+                // **FIN DE LA CORRECCIÓN**
+
             } else {
                 // Si no se encuentra el usuario, destruye la sesión
                 session_unset();
@@ -173,7 +182,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     require_once '../config/db.php';
 
     if ($request_type === 'user_profile') {
-        // ✅ **INICIO DE LA CORRECCIÓN**
         $session_role = $_SESSION['user_role'] ?? 'user';
         if (!isset($_SESSION['loggedin']) || !in_array($session_role, ['administrator', 'founder'])) {
             http_response_code(403);
@@ -205,7 +213,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         $target_role = $profile_data['user']['role'];
 
-        // Si el perfil solicitado es de un fundador, la actividad es siempre privada.
         if ($target_role === 'founder') {
             $profile_data['comments'] = [];
             $profile_data['favorites'] = [];
@@ -276,11 +283,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
         echo json_encode($profile_data);
         exit;
-        // ✅ **FIN DE LA CORRECCIÓN**
     }
 
     if ($request_type === 'dashboard_stats') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['error' => 'Acción no autorizada.']);
@@ -289,14 +294,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
         $stats = [];
     
-        // Estadísticas clave
         $stats['total_users'] = $conn->query("SELECT COUNT(*) as count FROM users WHERE status = 'active'")->fetch_assoc()['count'];
         $stats['new_users_last_30_days'] = $conn->query("SELECT COUNT(*) as count FROM users WHERE created_at >= NOW() - INTERVAL 30 DAY")->fetch_assoc()['count'];
         $stats['total_galleries'] = $conn->query("SELECT COUNT(*) as count FROM galleries")->fetch_assoc()['count'];
         $stats['total_photos'] = $conn->query("SELECT COUNT(*) as count FROM gallery_photos")->fetch_assoc()['count'];
         $stats['pending_comments'] = $conn->query("SELECT COUNT(*) as count FROM photo_comments WHERE status = 'review'")->fetch_assoc()['count'];
     
-        // Gráficos de actividad (últimos 30 días)
         $user_growth = $conn->query("SELECT DATE(created_at) as date, COUNT(*) as count FROM users WHERE created_at >= NOW() - INTERVAL 30 DAY GROUP BY DATE(created_at) ORDER BY date ASC")->fetch_all(MYSQLI_ASSOC);
         
         $favorites_activity = $conn->query("SELECT DATE(added_at) as date, COUNT(*) as count FROM user_favorites WHERE added_at >= NOW() - INTERVAL 30 DAY GROUP BY DATE(added_at) ORDER BY date ASC")->fetch_all(MYSQLI_ASSOC);
@@ -308,7 +311,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'comments' => $comments_activity
         ];
     
-        // Contenido popular (Top 10)
         $stats['top_galleries'] = $conn->query("SELECT g.name, gm.total_interactions FROM galleries g JOIN galleries_metadata gm ON g.uuid = gm.gallery_uuid ORDER BY gm.total_interactions DESC LIMIT 10")->fetch_all(MYSQLI_ASSOC);
         $stats['top_photos'] = $conn->query("SELECT p.id, p.photo_url, g.name as gallery_name, pm.interactions FROM gallery_photos p JOIN gallery_photos_metadata pm ON p.id = pm.photo_id JOIN galleries g ON p.gallery_uuid = g.uuid ORDER BY pm.interactions DESC LIMIT 10")->fetch_all(MYSQLI_ASSOC);
     
@@ -317,7 +319,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     if ($request_type === 'admin_feedback') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['error' => 'Acción no autorizada.']);
@@ -328,7 +329,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $offset = ($page - 1) * $limit;
     
-        // --- INICIO DE LA CORRECCIÓN ---
         $stmt_feedback = $conn->prepare("
             SELECT f.uuid, f.issue_type, f.title, f.description, f.created_at, f.user_uuid, u.username
             FROM feedback f
@@ -336,7 +336,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             ORDER BY f.created_at DESC
             LIMIT ? OFFSET ?
         ");
-        // --- FIN DE LA CORRECCIÓN ---
         $stmt_feedback->bind_param("ii", $limit, $offset);
         $stmt_feedback->execute();
         $feedback_result = $stmt_feedback->get_result();
@@ -370,7 +369,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     if ($request_type === 'admin_comments') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'moderator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['error' => 'Acción no autorizada.']);
@@ -536,7 +534,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             } elseif ($item['history_type'] === 'photo') {
                 $history['photos'][] = $entry;
             } elseif ($item['history_type'] === 'search') {
-                // Para búsquedas, el 'id' es el término de búsqueda
                 $entry['term'] = $item['item_id'];
                 unset($entry['id']);
                 $history['searches'][] = $entry;
@@ -591,7 +588,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     if ($request_type === 'galleries') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         $is_admin_context = isset($_GET['context']) && $_GET['context'] === 'admin' && isset($_SESSION['loggedin']) && in_array($_SESSION['user_role'], ['administrator', 'founder']);
 
         if (isset($_GET['uuid'])) {
@@ -803,7 +799,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode($users);
 
     } elseif ($request_type === 'gallery_for_edit') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['error' => 'Acción no autorizada.']);
@@ -861,7 +856,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $action_type = $_POST['action_type'] ?? '';
 
     if ($action_type === 'batch_update_users') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
@@ -877,7 +871,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             exit;
         }
     
-        // -- CORRECCIÓN: Protección para rol Fundador --
         $placeholders = implode(',', array_fill(0, count($user_uuids), '?'));
         $types = str_repeat('s', count($user_uuids));
         $stmt_check = $conn->prepare("SELECT uuid FROM users WHERE role = 'founder' AND uuid IN ($placeholders)");
@@ -923,7 +916,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
     
     if ($action_type === 'add_user_sanction') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
@@ -942,7 +934,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             exit;
         }
 
-        // -- CORRECCIÓN: Protección para rol Fundador --
         $stmt_check = $conn->prepare("SELECT role FROM users WHERE uuid = ?");
         $stmt_check->bind_param("s", $user_uuid);
         $stmt_check->execute();
@@ -979,7 +970,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     if ($action_type === 'delete_user_sanction') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
@@ -1007,7 +997,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     if ($action_type === 'update_comment_status') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'moderator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
@@ -1036,7 +1025,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     if ($action_type === 'update_report_status') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'moderator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
@@ -1089,7 +1077,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
     
         if ($stmt->execute()) {
-            // Obtener nuevos recuentos de likes/dislikes
             $stmt_counts = $conn->prepare("
                 SELECT 
                     (SELECT COUNT(*) FROM comment_likes WHERE comment_id = ? AND vote_type = 1) as likes,
@@ -1228,18 +1215,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             exit;
         }
     
-        // Eliminar entradas duplicadas para mantener el historial limpio y ordenado
         $stmt_delete = $conn->prepare("DELETE FROM user_history WHERE user_uuid = ? AND history_type = ? AND item_id = ?");
         $stmt_delete->bind_param("sss", $user_uuid, $history_type, $item_id);
         $stmt_delete->execute();
         $stmt_delete->close();
     
-        // Insertar el nuevo registro de historial
         $stmt_insert = $conn->prepare("INSERT INTO user_history (user_uuid, history_type, item_id, metadata) VALUES (?, ?, ?, ?)");
         $stmt_insert->bind_param("ssss", $user_uuid, $history_type, $item_id, $metadata);
         
         if ($stmt_insert->execute()) {
-            // Limitar el historial a un número máximo de entradas por tipo
             $max_items = ($history_type === 'search') ? 100 : 50;
             $stmt_limit = $conn->prepare("DELETE FROM user_history WHERE user_uuid = ? AND history_type = ? AND id NOT IN (SELECT id FROM (SELECT id FROM user_history WHERE user_uuid = ? AND history_type = ? ORDER BY visited_at DESC LIMIT ?) as sub)");
             $stmt_limit->bind_param("ssssi", $user_uuid, $history_type, $user_uuid, $history_type, $max_items);
@@ -1281,9 +1265,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $other_title = filter_input(INPUT_POST, 'other_title', FILTER_SANITIZE_STRING);
         $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_STRING);
         
-        // --- INICIO DE LA CORRECCIÓN ---
         $user_uuid = (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) ? $_SESSION['user_uuid'] : null;
-        // --- FIN DE LA CORRECCIÓN ---
     
         $errors = [];
     
@@ -1358,10 +1340,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
         $conn->begin_transaction();
         try {
-            // --- INICIO DE LA CORRECCIÓN ---
             $stmt_feedback = $conn->prepare("INSERT INTO feedback (uuid, issue_type, title, description, user_uuid) VALUES (?, ?, ?, ?, ?)");
             $stmt_feedback->bind_param("sssss", $feedback_uuid, $issue_type, $title_to_insert, $description, $user_uuid);
-            // --- FIN DE LA CORRECCIÓN ---
             $stmt_feedback->execute();
             $stmt_feedback->close();
     
@@ -1425,28 +1405,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $conn->begin_transaction();
         try {
             if ($is_favorite) {
-                // Añadir a favoritos
                 $stmt = $conn->prepare("INSERT INTO user_favorites (user_uuid, photo_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE user_uuid=user_uuid");
                 $stmt->bind_param("si", $user_uuid, $photo_id);
                 $stmt->execute();
             } else {
-                // Eliminar de favoritos
                 $stmt = $conn->prepare("DELETE FROM user_favorites WHERE user_uuid = ? AND photo_id = ?");
                 $stmt->bind_param("si", $user_uuid, $photo_id);
                 $stmt->execute();
             }
             $stmt->close();
 
-            // Actualizar metadatos de la foto y galería
             $operator = $is_favorite ? '+' : '-';
             
-            // Actualizar contador de likes de la foto
             $stmt_photo_likes = $conn->prepare("UPDATE gallery_photos_metadata SET likes = GREATEST(0, likes {$operator} 1) WHERE photo_id = ?");
             $stmt_photo_likes->bind_param("i", $photo_id);
             $stmt_photo_likes->execute();
             $stmt_photo_likes->close();
             
-            // Obtener el gallery_uuid de la foto
             $stmt_get_gallery = $conn->prepare("SELECT gallery_uuid FROM gallery_photos WHERE id = ?");
             $stmt_get_gallery->bind_param("i", $photo_id);
             $stmt_get_gallery->execute();
@@ -1454,7 +1429,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             if($gallery = $result->fetch_assoc()) {
                 $gallery_uuid = $gallery['gallery_uuid'];
 
-                // Actualizar contador de likes total de la galería
                 $stmt_gallery_likes = $conn->prepare("UPDATE galleries_metadata SET total_likes = GREATEST(0, total_likes {$operator} 1) WHERE gallery_uuid = ?");
                 $stmt_gallery_likes->bind_param("s", $gallery_uuid);
                 $stmt_gallery_likes->execute();
@@ -1472,7 +1446,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['success' => false, 'message' => 'Error al actualizar favoritos.']);
         }
     } elseif ($action_type === 'change_user_role' || $action_type === 'change_user_status') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
@@ -1487,7 +1460,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             exit;
         }
         
-        // -- CORRECCIÓN: Protección para rol Fundador --
         $stmt_check = $conn->prepare("SELECT role FROM users WHERE uuid = ?");
         $stmt_check->bind_param("s", $user_uuid);
         $stmt_check->execute();
@@ -1508,7 +1480,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 echo json_encode(['success' => false, 'message' => 'Rol no válido.']);
                 exit;
             }
-            // -- CORRECCIÓN: Un admin no puede crear un fundador --
             if ($new_role === 'founder' && $_SESSION['user_role'] !== 'founder') {
                 http_response_code(403);
                 echo json_encode(['success' => false, 'message' => 'No tienes permiso para asignar el rol de Fundador.']);
@@ -1536,7 +1507,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         $stmt->close();
     } elseif ($action_type === 'verify_admin_password') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
@@ -1553,7 +1523,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['success' => false, 'message' => 'La contraseña es incorrecta.']);
         }
     } elseif ($action_type === 'change_gallery_privacy') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
@@ -1580,7 +1549,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         $stmt->close();
     } elseif ($action_type === 'change_gallery_visibility') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
@@ -1607,7 +1575,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         $stmt->close();
     } elseif ($action_type === 'update_gallery_details') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
@@ -1634,7 +1601,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt->close();
 
     } elseif ($action_type === 'create_gallery') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
@@ -1722,7 +1688,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['success' => false, 'message' => 'Error interno al crear la galería.']);
         }
     } elseif ($action_type === 'update_profile_picture') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
@@ -1757,7 +1722,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         
     } elseif ($action_type === 'upload_gallery_photos') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
@@ -1804,7 +1768,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         
     } elseif ($action_type === 'delete_gallery_photo') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
@@ -1827,7 +1790,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         $stmt->close();
     } elseif ($action_type === 'update_photo_order') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
@@ -1858,7 +1820,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['success' => false, 'message' => 'Error al actualizar el orden de las fotos.']);
         }
     } elseif ($action_type === 'delete_gallery') {
-        // -- CORRECCIÓN: Permitir acceso a fundadores --
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
             echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);

@@ -275,6 +275,28 @@ export function updateEmail(formData) {
     });
 }
 
+export function updateUserProfilePicture(formData) {
+    return fetchData(`${window.BASE_PATH}/api/auth_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+export async function deleteUserProfilePicture() {
+    const formData = new FormData();
+    formData.append('action_type', 'delete_profile_picture');
+    const tokenResponse = await getCsrfToken();
+    if (!tokenResponse.ok) {
+        return tokenResponse;
+    }
+    formData.append('csrf_token', tokenResponse.data.csrf_token);
+    return fetchData(`${window.BASE_PATH}/api/auth_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
+}
+
+
 // --- Admin Requests ---
 export function getDashboardStats() {
     return fetchData(`${window.BASE_PATH}/api/main_handler.php?request_type=dashboard_stats`);
@@ -365,7 +387,7 @@ export function createGallery(formData) {
     return postDataWithCsrf(formData);
 }
 
-export function updateProfilePicture(formData) {
+export function updateGalleryProfilePicture(formData) {
     return postDataWithCsrf(formData);
 }
 
