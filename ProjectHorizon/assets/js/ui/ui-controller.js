@@ -500,8 +500,8 @@ export async function renderPhotoView(uuid, photoId, photoList) {
 }
 
 
+// --- INICIO DE LA MODIFICACIÓN ---
 export function renderEditGalleryForm(gallery) {
-    window.pendingGalleryFiles = [];
     const container = document.getElementById('edit-gallery-form-container');
     const titleEl = document.getElementById('edit-gallery-title');
     const pathParts = window.location.pathname.split('/');
@@ -512,18 +512,6 @@ export function renderEditGalleryForm(gallery) {
     titleEl.textContent = window.getTranslation('admin.editGallery.title', { galleryName: gallery.name });
     titleEl.removeAttribute('data-i18n');
 
-    let photosHTML = '';
-    gallery.photos.forEach(photo => {
-        photosHTML += `
-        <div class="photo-item-edit" data-id="${photo.id}">
-            <img src="${window.BASE_PATH}/${photo.photo_url}" alt="Miniatura">
-            <button class="delete-photo-btn" data-action="delete-gallery-photo" data-photo-id="${photo.id}">
-                <span class="material-symbols-rounded">close</span>
-            </button>
-        </div>
-    `;
-    });
-    
     let profilePicHTML;
     if (gallery.profile_picture_url) {
         const profilePicUrl = `${window.BASE_PATH}/${gallery.profile_picture_url}`;
@@ -533,6 +521,11 @@ export function renderEditGalleryForm(gallery) {
     }
 
     const createdDate = new Date(gallery.created_at).toLocaleString();
+
+    // NOTA: Necesitarás añadir estas nuevas claves a tu archivo de traducción (admin/es-419.json)
+    // "photosSectionTitle": "Fotos en la Galería",
+    // "photosSectionDescription": "Añade, elimina y reordena las fotos de esta galería.",
+    // "managePhotosButton": "Administrar Fotos"
 
     container.innerHTML = `
     <div class="edit-section">
@@ -570,16 +563,15 @@ export function renderEditGalleryForm(gallery) {
         </div>
     </div>
 
-    <div class="edit-section">
-        <div class="edit-section-header">
-            <h4 data-i18n="admin.editGallery.photosTitle"></h4>
-            <div class="upload-new-photos-container">
-                <input type="file" id="new-photos-upload" multiple accept="image/*" style="display:none;">
-                <button class="load-more-btn" onclick="document.getElementById('new-photos-upload').click();" data-i18n="admin.editGallery.addPhotosButton"></button>
-            </div>
+    <div class="edit-section content-section-stacked">
+        <div class="item-details">
+            <h4 data-i18n="admin.editGallery.photosSectionTitle"></h4>
+            <p data-i18n="admin.editGallery.photosSectionDescription"></p>
         </div>
-        <div class="photo-grid-edit" id="gallery-photos-grid-edit">
-            ${photosHTML}
+        <div class="item-actions">
+            <button class="load-more-btn btn-primary" data-action="manage-gallery-photos" data-uuid="${uuid}">
+                <span class="button-text" data-i18n="admin.editGallery.managePhotosButton"></span>
+            </button>
         </div>
     </div>
     
@@ -714,36 +706,6 @@ export function renderEditGalleryForm(gallery) {
             });
         });
     }
-
-    const photoGrid = document.getElementById('gallery-photos-grid-edit');
-    if (photoGrid) {
-        new Sortable(photoGrid, {
-            animation: 150,
-            ghostClass: 'sortable-ghost',
-        });
-    }
-
-    const newPhotosInput = document.getElementById('new-photos-upload');
-    newPhotosInput.addEventListener('change', (event) => {
-        const files = event.target.files;
-        for (const file of files) {
-            window.pendingGalleryFiles.push(file);
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const newPhotoHTML = `
-                <div class="photo-item-edit pending-upload" data-id="">
-                    <img src="${e.target.result}" alt="Nueva foto">
-                    <button class="delete-photo-btn" data-action="delete-gallery-photo" data-photo-id="">
-                        <span class="material-symbols-rounded">close</span>
-                    </button>
-                </div>`;
-                photoGrid.insertAdjacentHTML('beforeend', newPhotoHTML);
-            };
-            reader.readAsDataURL(file);
-        }
-        newPhotosInput.value = '';
-    });
 }
 
 export function renderCreateGalleryForm() {
@@ -770,17 +732,6 @@ export function renderCreateGalleryForm() {
             <label class="form-label standalone" data-i18n="admin.editGallery.nameLabel"></label>
             <input type="text" id="gallery-name-create" class="feedback-input" placeholder="Nombre de la galería" maxlength="100">
         </div>
-    </div>
-
-    <div class="edit-section">
-        <div class="edit-section-header">
-            <h4 data-i18n="admin.editGallery.photosTitle"></h4>
-            <div class="upload-new-photos-container">
-                <input type="file" id="new-photos-upload-create" multiple accept="image/*" style="display:none;">
-                <button class="load-more-btn" onclick="document.getElementById('new-photos-upload-create').click();" data-i18n="admin.editGallery.addPhotosButton"></button>
-            </div>
-        </div>
-        <div class="photo-grid-edit" id="gallery-photos-grid-create"></div>
     </div>
     
     <div class="edit-section">
@@ -819,34 +770,8 @@ export function renderCreateGalleryForm() {
             }
         });
     }
-
-    const newPhotosInput = document.getElementById('new-photos-upload-create');
-    const photoGrid = document.getElementById('gallery-photos-grid-create');
-    if (newPhotosInput && photoGrid) {
-        
-        new Sortable(photoGrid, {
-            animation: 150,
-            ghostClass: 'sortable-ghost',
-        });
-
-        newPhotosInput.addEventListener('change', (event) => {
-            const files = event.target.files;
-            for (const file of files) {
-                window.pendingGalleryFiles.push(file);
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const newPhotoHTML = `
-                    <div class="photo-item-edit pending-upload" data-file-name="${file.name}">
-                        <img src="${e.target.result}" alt="Nueva foto">
-                    </div>`;
-                    photoGrid.insertAdjacentHTML('beforeend', newPhotoHTML);
-                };
-                reader.readAsDataURL(file);
-            }
-            newPhotosInput.value = ''; 
-        });
-    }
 }
+// --- FIN DE LA MODIFICACIÓN ---
 
 // -- CORRECCIÓN: Se añade 'sessionUser' para recibir la info del usuario logueado. --
 export function displayUsers(users, tableBody, statusContainer, append = false, sessionUser) {

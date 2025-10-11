@@ -33,6 +33,7 @@ const urlMap = {
     // --- INICIO DE LAS CORRECCIONES ---
     'admin-dashboard': 'admin/dashboard',       // <-- LÍNEA AÑADIDA PARA EL DASHBOARD
     'admin-userProfile': 'admin/user/{uuid}',   // <-- LÍNEA AÑADIDA PARA EL PERFIL DE USUARIO
+    'admin-manageGalleryPhotos': 'admin/edit-gallery/{uuid}/photos', // <-- LÍNEA AÑADIDA
     // --- FIN DE LAS CORRECCIONES ---
     
     'main-photoComments': 'gallery/{uuid}/photo/{photoId}/comments',

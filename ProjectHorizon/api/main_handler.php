@@ -114,7 +114,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'settings-history',
             'admin-manageComments',
             'admin-manageFeedback',
-            'admin-userProfile'
+            'admin-userProfile',
+            'admin-manageGalleryPhotos' // <-- AÑADIDO
         ];
         $section_key = $view . '-' . $section;
     
@@ -157,7 +158,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'admin-createGallery' => '../includes/sections/admin/create-gallery.php',
             'admin-manageComments' => '../includes/sections/admin/manage-comments.php',
             'admin-manageFeedback' => '../includes/sections/admin/manage-feedback.php',
-            'admin-userProfile' => '../includes/sections/admin/user-profile.php'
+            'admin-userProfile' => '../includes/sections/admin/user-profile.php',
+            'admin-manageGalleryPhotos' => '../includes/sections/admin/manage-gallery-photos.php' // <-- AÑADIDO
         ];
     
         if (array_key_exists($section_key, $allowed_sections)) {

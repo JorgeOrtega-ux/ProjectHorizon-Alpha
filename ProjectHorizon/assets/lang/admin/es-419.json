@@ -154,7 +154,15 @@
       "addPhotosButton": "Añadir Fotos",
       "deleteGalleryTitle": "Eliminar galería",
       "deleteGalleryDescription": "Esta acción es permanente y eliminará la galería junto con todas sus fotos.",
-      "deleteButton": "Eliminar galería"
+      "deleteButton": "Eliminar galería",
+      "photosSectionTitle": "Fotos en la Galería",
+      "photosSectionDescription": "Añade, elimina y reordena las fotos de esta galería.",
+      "managePhotosButton": "Administrar Fotos"
+    },
+    "manageGalleryPhotos": {
+      "title": "Gestionando fotos de \"{galleryName}\"",
+      "backButtonTooltip": "Volver a la edición de la galería",
+      "addPhotosButton": "Añadir Fotos"
     },
     "createGallery": {
       "title": "Crear nueva galería",
