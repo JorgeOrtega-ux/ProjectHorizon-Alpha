@@ -1296,32 +1296,40 @@ export function renderUserProfile(data) {
 
     container.innerHTML = `
         <div class="profile-grid">
-            <div class="profile-sidebar">
-                <div class="profile-card">
-                    <div class="profile-card-header">
-                        <div class="profile-card-avatar">${getInitials(user.username)}</div>
+            <div class="profile-card profile-card--header">
+                <div class="profile-card-header">
+                    <div class="profile-card-avatar">${getInitials(user.username)}</div>
+                    <div class="profile-card-main-info">
                         <h2 class="profile-card-name">${user.username}</h2>
                         <span class="status-badge status-${user.status}">${user.status}</span>
                     </div>
-                    <ul class="profile-card-info-list">
-                        <li><span class="material-symbols-rounded">mail</span> ${user.email}</li>
-                        <li><span class="material-symbols-rounded">shield</span> ${translatedRole}</li>
-                        <li><span class="material-symbols-rounded">calendar_today</span> Se unió el ${createdDate}</li>
-                    </ul>
                 </div>
-                <div class="profile-card">
-                    <h3 class="profile-section-title" data-i18n="admin.userProfile.sanctions.title"></h3>
-                    <div class="activity-list">${sanctionsHTML}</div>
+                <div class="profile-card-info-badges">
+                    <div class="info-badge">
+                        <span class="material-symbols-rounded">mail</span>
+                        <span>${user.email}</span>
+                    </div>
+                    <div class="info-badge">
+                        <span class="material-symbols-rounded">shield</span>
+                        <span>${translatedRole}</span>
+                    </div>
+                    <div class="info-badge">
+                        <span class="material-symbols-rounded">calendar_today</span>
+                        <span>Se unió el ${createdDate}</span>
+                    </div>
                 </div>
             </div>
-            <div class="profile-main-content">
-                <div class="profile-card">
-                    <h3 class="profile-section-title" data-i18n="admin.userProfile.activity.title"></h3>
-                    ${activityContentHTML}
-                </div>
+            <div class="profile-card">
+                <h3 class="profile-section-title" data-i18n="admin.userProfile.sanctions.title"></h3>
+                <div class="activity-list">${sanctionsHTML}</div>
+            </div>
+            <div class="profile-card">
+                <h3 class="profile-section-title" data-i18n="admin.userProfile.activity.title"></h3>
+                ${activityContentHTML}
             </div>
         </div>
     `;
+
 
     const titleEl = document.getElementById('user-profile-title');
     if (titleEl) {

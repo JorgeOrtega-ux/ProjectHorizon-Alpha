@@ -215,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         $target_role = $profile_data['user']['role'];
 
-        if ($target_role === 'founder') {
+        if ($target_role === 'founder' && $_SESSION['user_uuid'] !== $user_uuid) {
             $profile_data['comments'] = [];
             $profile_data['favorites'] = [];
             $profile_data['reports'] = [];
