@@ -175,35 +175,25 @@ export function displayComments(comments) {
     applyTranslations(commentsList);
 }
 
-// --- INICIO DE LA MODIFICACIÓN ---
+// --- INICIO DE LA CORRECCIÓN ---
+// Esta función ahora es mucho más simple. Solo se encarga de renderizar el estado inicial.
+// La lógica de eventos se ha movido a main-controller.js
 async function renderManagePhotosView(gallery, appState) {
     const section = document.querySelector('[data-section="manageGalleryPhotos"]');
     if (!section) return;
 
-    window.pendingGalleryFiles = []; // Reinicia los archivos pendientes
+    // Guardamos el UUID en el elemento de la sección para que main-controller pueda acceder a él.
+    section.dataset.uuid = gallery.uuid;
 
     const titleEl = section.querySelector('#manage-photos-title');
     const gridEl = section.querySelector('#manage-photos-grid');
-    const backBtn = section.querySelector('#back-to-edit-gallery-btn');
-    const addPhotosBtn = section.querySelector('[data-action="add-gallery-photos"]');
-    const addPhotosInput = section.querySelector('#add-photos-input');
-    const saveChangesBtn = section.querySelector('[data-action="save-gallery-photo-changes"]');
 
     if (titleEl) {
         titleEl.textContent = window.getTranslation('admin.manageGalleryPhotos.title', { galleryName: gallery.name });
     }
 
-    if (backBtn) {
-        // Elimina listeners anteriores para evitar duplicados
-        const newBackBtn = backBtn.cloneNode(true);
-        backBtn.parentNode.replaceChild(newBackBtn, backBtn);
-        newBackBtn.addEventListener('click', () => {
-            window.dispatchEvent(new CustomEvent('navigateTo', { detail: { view: 'admin', section: 'editGallery', data: { uuid: gallery.uuid } } }));
-        });
-    }
-
     if (gridEl) {
-        gridEl.innerHTML = ''; // Limpiar
+        gridEl.innerHTML = ''; // Limpiar grid
         gallery.photos.forEach(photo => {
             const photoItem = document.createElement('div');
             photoItem.className = 'photo-item-edit';
@@ -217,80 +207,13 @@ async function renderManagePhotosView(gallery, appState) {
             gridEl.appendChild(photoItem);
         });
         
+        // Inicializamos SortableJS para permitir reordenar arrastrando
         new Sortable(gridEl, { animation: 150, ghostClass: 'sortable-ghost' });
-    }
-
-    if (addPhotosBtn && addPhotosInput) {
-        const newAddBtn = addPhotosBtn.cloneNode(true);
-        addPhotosBtn.parentNode.replaceChild(newAddBtn, addPhotosBtn);
-        newAddBtn.addEventListener('click', () => addPhotosInput.click());
-
-        const newAddInput = addPhotosInput.cloneNode(true);
-        addPhotosInput.parentNode.replaceChild(newAddInput, addPhotosInput);
-        newAddInput.addEventListener('change', (event) => {
-            const files = event.target.files;
-            for (const file of files) {
-                window.pendingGalleryFiles.push(file);
-
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const newPhotoItem = document.createElement('div');
-                    newPhotoItem.className = 'photo-item-edit pending-upload';
-                    newPhotoItem.dataset.fileName = file.name; // Guardamos el nombre para el orden
-                    newPhotoItem.innerHTML = `<img src="${e.target.result}" alt="Nueva foto">`;
-                    gridEl.appendChild(newPhotoItem);
-                };
-                reader.readAsDataURL(file);
-            }
-            newAddInput.value = '';
-        });
-    }
-    
-    if (saveChangesBtn) {
-        const newSaveBtn = saveChangesBtn.cloneNode(true);
-        saveChangesBtn.parentNode.replaceChild(newSaveBtn, saveChangesBtn);
-        newSaveBtn.addEventListener('click', async () => {
-            newSaveBtn.classList.add('loading');
-            
-            // 1. Subir nuevas fotos si las hay
-            if (window.pendingGalleryFiles && window.pendingGalleryFiles.length > 0) {
-                const newPhotosFormData = new FormData();
-                newPhotosFormData.append('action_type', 'upload_gallery_photos');
-                newPhotosFormData.append('uuid', gallery.uuid);
-                window.pendingGalleryFiles.forEach(file => {
-                    newPhotosFormData.append('photos[]', file);
-                });
-                
-                const uploadResponse = await api.uploadGalleryPhotos(newPhotosFormData);
-                if (!uploadResponse.ok) {
-                    showNotification(uploadResponse.data.message || 'Error al subir nuevas fotos.', 'error');
-                    newSaveBtn.classList.remove('loading');
-                    return;
-                }
-                 // Recargar para obtener los nuevos IDs y reordenar todo
-                const updatedGalleryResponse = await api.getGalleryForEdit(gallery.uuid);
-                if(updatedGalleryResponse.ok) {
-                    renderManagePhotosView(updatedGalleryResponse.data, appState);
-                }
-            }
-
-            // 2. Guardar el orden de TODAS las fotos
-            const photoOrder = Array.from(gridEl.children).map(item => item.dataset.id).filter(id => id);
-            if (photoOrder.length > 0) {
-                const orderResponse = await api.updatePhotoOrder(photoOrder);
-                if (orderResponse.ok) {
-                    showNotification(orderResponse.data.message, 'success');
-                } else {
-                    showNotification(orderResponse.data.message || 'Error al guardar el orden.', 'error');
-                }
-            }
-            newSaveBtn.classList.remove('loading');
-        });
     }
 
     applyTranslations(section);
 }
-// --- FIN DE LA MODIFICACIÓN ---
+// --- FIN DE LA CORRECCIÓN ---
 
 export async function handleStateChange(view, section, pushState = true, data, appState) {
     const {
@@ -456,7 +379,7 @@ export async function handleStateChange(view, section, pushState = true, data, a
             if (data && data.uuid) {
                 const response = await api.getGalleryForEdit(data.uuid);
                 if (response.ok) {
-                    renderManagePhotosView(response.data, appState);
+                    await renderManagePhotosView(response.data, appState);
                 } else {
                     handleStateChange('main', '404', true, null, appState);
                 }

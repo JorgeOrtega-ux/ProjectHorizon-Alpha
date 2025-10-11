@@ -500,7 +500,6 @@ export async function renderPhotoView(uuid, photoId, photoList) {
 }
 
 
-// --- INICIO DE LA MODIFICACIÓN ---
 export function renderEditGalleryForm(gallery) {
     const container = document.getElementById('edit-gallery-form-container');
     const titleEl = document.getElementById('edit-gallery-title');
@@ -521,11 +520,6 @@ export function renderEditGalleryForm(gallery) {
     }
 
     const createdDate = new Date(gallery.created_at).toLocaleString();
-
-    // NOTA: Necesitarás añadir estas nuevas claves a tu archivo de traducción (admin/es-419.json)
-    // "photosSectionTitle": "Fotos en la Galería",
-    // "photosSectionDescription": "Añade, elimina y reordena las fotos de esta galería.",
-    // "managePhotosButton": "Administrar Fotos"
 
     container.innerHTML = `
     <div class="edit-section">
@@ -708,6 +702,7 @@ export function renderEditGalleryForm(gallery) {
     }
 }
 
+// --- INICIO DE LA MODIFICACIÓN ---
 export function renderCreateGalleryForm() {
     window.pendingGalleryFiles = [];
     const container = document.getElementById('create-gallery-form-container');
@@ -749,7 +744,19 @@ export function renderCreateGalleryForm() {
             </div>
         </div>
     </div>
-`;
+    
+    <div class="edit-section content-section-stacked">
+        <div class="item-details">
+            <h4 data-i18n="admin.editGallery.photosSectionTitle"></h4>
+            <p data-i18n="admin.editGallery.photosSectionDescription"></p>
+        </div>
+        <div class="item-actions">
+            <button class="load-more-btn btn-primary" disabled data-i18n-tooltip="admin.createGallery.saveFirstTooltip">
+                <span class="button-text" data-i18n="admin.editGallery.managePhotosButton"></span>
+            </button>
+        </div>
+    </div>
+    `;
     window.applyTranslations(container);
 
     const privacyToggle = container.querySelector('#gallery-privacy-create');
@@ -770,10 +777,10 @@ export function renderCreateGalleryForm() {
             }
         });
     }
+    initTooltips();
 }
 // --- FIN DE LA MODIFICACIÓN ---
 
-// -- CORRECCIÓN: Se añade 'sessionUser' para recibir la info del usuario logueado. --
 export function displayUsers(users, tableBody, statusContainer, append = false, sessionUser) {
     const tableContainer = tableBody ? tableBody.closest('.admin-table-container') : null;
 
@@ -787,11 +794,7 @@ export function displayUsers(users, tableBody, statusContainer, append = false, 
 
             const isProtected = user.role === 'founder';
             const isAdmin = user.role === 'administrator';
-
-            // -- CORRECCIÓN FINAL: La lógica ahora es correcta. --
-            // Se deshabilita si:
-            // 1. El usuario objetivo (user.role) es un fundador.
-            // 2. El usuario objetivo (user.role) es un administrador Y el usuario actual (sessionUser) NO es un fundador.
+            
             const disableActions = isProtected || (isAdmin && sessionUser?.role !== 'founder');
             const translatedRole = window.getTranslation(`admin.manageUsers.roles.${user.role}`) || user.role;
 
@@ -1071,7 +1074,6 @@ export function renderUserProfile(data) {
     const container = document.getElementById('user-profile-container');
     if (!container || !section) return;
 
-    // ✅ **INICIO DE LA CORRECCIÓN**
     const { user, comments, favorites, reports, sanctions, private: isPrivate } = data;
     section.dataset.uuid = user.uuid; 
     
@@ -1087,7 +1089,6 @@ export function renderUserProfile(data) {
     const createdDate = new Date(user.created_at).toLocaleDateString();
     const translatedRole = window.getTranslation(`admin.manageUsers.roles.${user.role}`) || user.role;
     
-    // Generación condicional del HTML para sanciones y actividad
     const sanctionsHTML = isPrivate 
         ? `<p data-i18n="admin.userProfile.privateActivity"></p>`
         : (sanctions.length > 0 ? sanctions.map(s => `
@@ -1180,7 +1181,6 @@ export function renderUserProfile(data) {
             </div>
         </div>
     `;
-    // ✅ **FIN DE LA CORRECCIÓN**
 
     const titleEl = document.getElementById('user-profile-title');
     if (titleEl) {

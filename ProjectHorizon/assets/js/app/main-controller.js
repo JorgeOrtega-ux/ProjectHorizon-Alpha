@@ -27,9 +27,7 @@ import {
     fetchAndDisplayFeedback,
     fetchAndDisplayUserProfile
 } from './view-handlers.js';
-// --- INICIO DE LA CORRECCIÓN ---
 import { handleStateChange, displayComments, createCommentElement } from './navigation-handler.js';
-// --- FIN DE LA CORRECCIÓN ---
 
 
 // --- FUNCIONES DE LA APLICACIÓN PRINCIPAL ---
@@ -88,6 +86,15 @@ function handleAgeVerification() {
 export function initMainController() {
     handleAgeVerification();
     const appState = {
+        // --- INICIO DE LA MODIFICACIÓN ---
+        // Objeto para guardar el estado de la galería que se está creando
+        newGalleryState: {
+            name: '',
+            privacy: false,
+            profilePictureFile: null,
+            pendingPhotos: []
+        },
+        // --- FIN DE LA MODIFICACIÓN ---
         currentAppView: null,
         currentAppSection: null,
         currentSortBy: 'relevant',
@@ -477,10 +484,84 @@ export function initMainController() {
     }
 
     function setupEventListeners() {
+        // --- INICIO DE LA MODIFICACIÓN ---
+        // Listener para guardar datos del formulario de crear galería mientras se escriben
+        document.addEventListener('input', (event) => {
+            if (appState.currentAppSection === 'createGallery') {
+                const nameInput = event.target.closest('#gallery-name-create');
+                if (nameInput) {
+                    appState.newGalleryState.name = nameInput.value;
+                }
+            }
+        });
+
+        // Listener global para el input de archivos (más robusto que listeners dinámicos)
+        document.addEventListener('change', (event) => {
+            const fileInput = event.target;
+            
+            // Input para la foto de perfil en "Crear Galería"
+            if (fileInput.matches('#profile-picture-upload-create')) {
+                if (fileInput.files && fileInput.files[0]) {
+                    appState.newGalleryState.profilePictureFile = fileInput.files[0];
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const preview = document.getElementById('profile-picture-preview-create');
+                        if(preview) preview.style.backgroundImage = `url('${e.target.result}')`;
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                }
+            }
+
+            // Input para añadir fotos a una galería existente o nueva
+            if (fileInput.matches('#add-photos-input')) {
+                const gridEl = document.getElementById('manage-photos-grid');
+                if (!gridEl) return;
+
+                const currentSection = document.querySelector('[data-section="manageGalleryPhotos"]');
+                const isNewGalleryMode = currentSection && currentSection.dataset.mode === 'new';
+
+                const files = event.target.files;
+                for (const file of files) {
+                    // Si estamos en modo "nueva galería", guardamos los archivos en el estado temporal
+                    if (isNewGalleryMode) {
+                        if (!appState.newGalleryState.pendingPhotos.some(f => f.name === file.name)) {
+                             appState.newGalleryState.pendingPhotos.push(file);
+                        }
+                    } else {
+                        if (!window.pendingGalleryFiles) window.pendingGalleryFiles = [];
+                        if (!window.pendingGalleryFiles.some(f => f.name === file.name)) {
+                            window.pendingGalleryFiles.push(file);
+                        }
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const newPhotoItem = document.createElement('div');
+                        newPhotoItem.className = 'photo-item-edit pending-upload';
+                        newPhotoItem.dataset.fileName = file.name; // Usado para reordenar antes de subir
+                        newPhotoItem.innerHTML = `<img src="${e.target.result}" alt="Nueva foto"><button class="delete-photo-btn" data-action="delete-gallery-photo"><span class="material-symbols-rounded">close</span></button>`;
+                        gridEl.appendChild(newPhotoItem);
+                    };
+                    reader.readAsDataURL(file);
+                }
+                fileInput.value = '';
+            }
+        });
+        // --- FIN DE LA MODIFICACIÓN ---
+
         document.addEventListener('click', async function (event) {
             const actionTarget = event.target.closest('[data-action]');
             const selectTrigger = event.target.closest('[data-action="toggle-select"]');
             const submitCommentBtn = event.target.closest('#submit-comment-btn');
+
+            // --- INICIO DE LA MODIFICACIÓN ---
+            // Guardar el estado del toggle de privacidad para la nueva galería
+            if (appState.currentAppSection === 'createGallery' && event.target.closest('#gallery-privacy-create')) {
+                const privacyToggle = event.target.closest('#gallery-privacy-create');
+                // La acción de 'toggle' se ejecuta después, así que negamos el estado actual
+                appState.newGalleryState.privacy = !privacyToggle.classList.contains('active');
+            }
+            // --- FIN DE LA MODIFICACIÓN ---
 
             if (submitCommentBtn) {
                 const commentInput = document.getElementById('comment-input');
@@ -556,7 +637,6 @@ export function initMainController() {
                 const action = actionTarget.dataset.action;
 
                 switch(action) {
-                    // ✅ **INICIO DE LA LÓGICA AÑADIDA**
                     case 'add-sanction': {
                         const userProfileSection = document.querySelector('[data-section="userProfile"]');
                         if (userProfileSection) {
@@ -592,7 +672,6 @@ export function initMainController() {
                         handleStateChange('admin', 'userProfile', true, { uuid: userUuid }, appState);
                         break;
                     }
-                    // ✅ **FIN DE LA LÓGICA AÑADIDA**
                     case 'batch-action': {
                         const selectedCheckboxes = document.querySelectorAll('#users-table tbody .user-select:checked');
                         const selectedUuids = Array.from(selectedCheckboxes).map(cb => cb.dataset.uuid);
@@ -1251,14 +1330,29 @@ export function initMainController() {
                     }
                     case 'delete-gallery-photo': {
                         const photoId = actionTarget.dataset.photoId;
-                        api.deleteGalleryPhoto(photoId).then(response => {
-                            if (response.ok) {
-                                showNotification(response.data.message, 'success');
-                                actionTarget.closest('.photo-item-edit').remove();
-                            } else {
-                                showNotification(response.data.message || 'Error al eliminar la foto', 'error');
-                            }
-                        });
+                        const currentSection = document.querySelector('[data-section="manageGalleryPhotos"]');
+                        const isNewGalleryMode = currentSection && currentSection.dataset.mode === 'new';
+
+                        // --- INICIO DE LA MODIFICACIÓN ---
+                        // Si estamos en modo "nueva galería", eliminamos del array temporal
+                        if (isNewGalleryMode) {
+                            const fileName = actionTarget.closest('.photo-item-edit').dataset.fileName;
+                            appState.newGalleryState.pendingPhotos = appState.newGalleryState.pendingPhotos.filter(
+                                file => file.name !== fileName
+                            );
+                            actionTarget.closest('.photo-item-edit').remove();
+                            showNotification('Foto pendiente eliminada.', 'success');
+                        } else { // Si no, es una galería existente y llamamos a la API
+                            api.deleteGalleryPhoto(photoId).then(response => {
+                                if (response.ok) {
+                                    showNotification(response.data.message, 'success');
+                                    actionTarget.closest('.photo-item-edit').remove();
+                                } else {
+                                    showNotification(response.data.message || 'Error al eliminar la foto', 'error');
+                                }
+                            });
+                        }
+                        // --- FIN DE LA MODIFICACIÓN ---
                         break;
                     }
                     case 'save-username': {
@@ -1331,8 +1425,9 @@ export function initMainController() {
                         }
                         break;
                     }
+                    
                     // --- INICIO DE LA MODIFICACIÓN ---
-                    case 'manage-gallery-photos': {
+                    case 'manage-gallery-photos': { // Para galerías existentes
                         const uuid = actionTarget.dataset.uuid;
                         if (uuid) {
                             navigateToUrl('admin', 'manageGalleryPhotos', { uuid });
@@ -1340,12 +1435,29 @@ export function initMainController() {
                         }
                         break;
                     }
+                    case 'manage-new-gallery-photos': { // Para la nueva galería
+                        const nameInput = document.getElementById('gallery-name-create');
+                        if (nameInput) appState.newGalleryState.name = nameInput.value;
+                        const privacyToggle = document.getElementById('gallery-privacy-create');
+                        if (privacyToggle) appState.newGalleryState.privacy = privacyToggle.classList.contains('active');
+                        
+                        navigateToUrl('admin', 'manageGalleryPhotos', { mode: 'new' });
+                        handleStateChange('admin', 'manageGalleryPhotos', true, { mode: 'new' }, appState);
+                        break;
+                    }
+                    case 'return-to-create-gallery': {
+                        navigateToUrl('admin', 'createGallery');
+                        handleStateChange('admin', 'createGallery', true, null, appState);
+                        break;
+                    }
+                    case 'save-pending-photos': {
+                        navigateToUrl('admin', 'createGallery');
+                        handleStateChange('admin', 'createGallery', true, null, appState);
+                        break;
+                    }
                     case 'create-gallery-submit': {
                         const button = actionTarget;
-                        const name = document.getElementById('gallery-name-create').value.trim();
-                        const privacyToggle = document.getElementById('gallery-privacy-create');
-                        const privacy = privacyToggle ? privacyToggle.classList.contains('active') : false;
-                        const profilePicInput = document.getElementById('profile-picture-upload-create');
+                        const name = appState.newGalleryState.name;
                         
                         if (!name) {
                             showNotification('El nombre de la galería es obligatorio.', 'error');
@@ -1357,67 +1469,93 @@ export function initMainController() {
                         const formData = new FormData();
                         formData.append('action_type', 'create_gallery');
                         formData.append('name', name);
-                        formData.append('privacy', privacy ? '1' : '0');
+                        formData.append('privacy', appState.newGalleryState.privacy ? '1' : '0');
 
-                        if (profilePicInput.files.length > 0) {
-                            formData.append('profile_picture', profilePicInput.files[0]);
+                        if (appState.newGalleryState.profilePictureFile) {
+                            formData.append('profile_picture', appState.newGalleryState.profilePictureFile);
                         }
-                        // La lógica para adjuntar fotos se elimina de este paso
+
+                        if (appState.newGalleryState.pendingPhotos.length > 0) {
+                            appState.newGalleryState.pendingPhotos.forEach(file => {
+                                formData.append('photos[]', file, file.name);
+                            });
+                            const photoOrder = appState.newGalleryState.pendingPhotos.map(file => file.name);
+                            photoOrder.forEach(name => {
+                                formData.append('photo_order[]', name);
+                            });
+                        }
 
                         const response = await api.createGallery(formData);
                         button.classList.remove('loading');
 
                         if (response.ok) {
                             showNotification(response.data.message, 'success');
-                            const newUuid = response.data.uuid;
-                            // Redirige a la nueva página de gestión de fotos
-                            navigateToUrl('admin', 'manageGalleryPhotos', { uuid: newUuid });
-                            handleStateChange('admin', 'manageGalleryPhotos', true, { uuid: newUuid }, appState);
+                            appState.newGalleryState = { name: '', privacy: false, profilePictureFile: null, pendingPhotos: [] };
+                            navigateToUrl('admin', 'manageContent');
+                            handleStateChange('admin', 'manageContent', true, null, appState);
                         } else {
                             showNotification(response.data.message || 'Error al crear la galería.', 'error');
                         }
                         break;
                     }
-                    // --- FIN DE LA MODIFICACIÓN ---
-                    case 'save-gallery-changes':
-                        {
-                            const pathParts = window.location.pathname.split('/');
-                            const uuid = pathParts[pathParts.length - 1];
-
-                            const name = document.getElementById('gallery-name-edit').value.trim();
-                            const privacyToggle = document.getElementById('gallery-privacy-edit');
-                            const privacy = privacyToggle ? privacyToggle.classList.contains('active') : false;
-
-                            const detailsFormData = new FormData();
-                            detailsFormData.append('action_type', 'update_gallery_details');
-                            detailsFormData.append('uuid', uuid);
-                            detailsFormData.append('name', name);
-                            detailsFormData.append('privacy', privacy);
-
-                            api.updateGalleryDetails(detailsFormData).then(response => {
-                                if (response.ok) {
-                                    showNotification(response.data.message, 'success');
-                                } else {
-                                    showNotification(response.data.message || 'Error al guardar los detalles.', 'error');
-                                }
-                            });
-
-                            const profilePicInput = document.getElementById('profile-picture-upload');
-                            if (profilePicInput.files.length > 0) {
-                                const profilePicFormData = new FormData();
-                                profilePicFormData.append('action_type', 'update_profile_picture');
-                                profilePicFormData.append('uuid', uuid);
-                                profilePicFormData.append('profile_picture', profilePicInput.files[0]);
-                                
-                                api.updateGalleryProfilePicture(profilePicFormData).then(response => {
-                                    if (response.ok) {
-                                        document.querySelector('.profile-picture-preview').style.backgroundImage = `url('${response.data.profile_picture_url}')`;
-                                        profilePicInput.value = '';
-                                    }
-                                });
-                            }
+                    case 'add-gallery-photos': { // Para la vista de edición de una galería existente
+                        const addPhotosInput = document.getElementById('add-photos-input');
+                        if (addPhotosInput) {
+                            addPhotosInput.click();
                         }
                         break;
+                    }
+                    case 'save-gallery-photo-changes': { // Para la vista de edición de una galería existente
+                        const button = actionTarget;
+                        button.classList.add('loading');
+                        
+                        const gridEl = document.getElementById('manage-photos-grid');
+                        const currentSection = document.querySelector('[data-section="manageGalleryPhotos"]');
+                        const galleryUuid = currentSection ? currentSection.dataset.uuid : null;
+
+                        if (!galleryUuid) {
+                            showNotification('Error: No se pudo identificar la galería.', 'error');
+                            button.classList.remove('loading');
+                            return;
+                        }
+                        
+                        if (window.pendingGalleryFiles && window.pendingGalleryFiles.length > 0) {
+                            const formData = new FormData();
+                            formData.append('action_type', 'upload_gallery_photos');
+                            formData.append('uuid', galleryUuid);
+                            window.pendingGalleryFiles.forEach(file => {
+                                formData.append('photos[]', file);
+                            });
+                    
+                            const uploadResponse = await api.uploadGalleryPhotos(formData);
+                            
+                            if (uploadResponse.ok) {
+                                showNotification(uploadResponse.data.message, 'success');
+                                window.pendingGalleryFiles = [];
+                                window.dispatchEvent(new CustomEvent('navigateTo', { detail: { view: 'admin', section: 'manageGalleryPhotos', data: { uuid: galleryUuid } } }));
+                                return;
+                            } else {
+                                showNotification(uploadResponse.data.message || 'Error al subir las nuevas fotos.', 'error');
+                                button.classList.remove('loading');
+                                return;
+                            }
+                        }
+                    
+                        const photoOrder = Array.from(gridEl.children).map(item => item.dataset.id).filter(id => id);
+                        if (photoOrder.length > 0) {
+                            const orderResponse = await api.updatePhotoOrder(photoOrder);
+                            if (orderResponse.ok) {
+                                showNotification(orderResponse.data.message, 'success');
+                            } else {
+                                showNotification(orderResponse.data.message || 'Error al guardar el orden de las fotos.', 'error');
+                            }
+                        }
+                        
+                        button.classList.remove('loading');
+                        break;
+                    }
+                    // --- FIN DE LA MODIFICACIÓN ---
+
                     case 'delete-gallery':
                         {
                             const pathParts = window.location.pathname.split('/');
@@ -1726,6 +1864,7 @@ export function initMainController() {
     const editGalleryMatch = path.match(/^admin\/edit-gallery\/([a-f0-9-]{36})$/);
     const commentsMatch = path.match(/^gallery\/([a-f0-9-]{36})\/photo\/(\d+)\/comments$/);
     const userProfileMatch = path.match(/^admin\/user\/([a-f0-9-]{36})$/);
+    const managePhotosMatch = path.match(/^admin\/edit-gallery\/([a-f0-9-]{36})\/photos$/); // --- CORRECCIÓN ---
 
     if (userProfileMatch) {
         initialRoute = { view: 'admin', section: 'userProfile' };
@@ -1739,6 +1878,9 @@ export function initMainController() {
     } else if (photoMatch) {
         initialRoute = { view: 'main', section: 'photoView' };
         initialStateData = { uuid: photoMatch[1], photoId: photoMatch[2] };
+    } else if (managePhotosMatch) { // --- CORRECCIÓN ---
+        initialRoute = { view: 'admin', section: 'manageGalleryPhotos' };
+        initialStateData = { uuid: managePhotosMatch[1] };
     } else if (editGalleryMatch) {
         initialRoute = { view: 'admin', section: 'editGallery' };
         initialStateData = { uuid: editGalleryMatch[1] };

@@ -167,7 +167,8 @@
     "createGallery": {
       "title": "Crear nueva galería",
       "backButtonTooltip": "Volver a la gestión de contenido",
-      "createButton": "Crear Galería"
+      "createButton": "Crear Galería",
+      "saveFirstTooltip": "Primero crea la galería para poder administrar las fotos"
     }
   }
 }
