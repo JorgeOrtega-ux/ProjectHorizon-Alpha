@@ -850,7 +850,12 @@ export function renderCreateGalleryForm() {
 
 // -- CORRECCIÓN: Se añade 'sessionUser' para recibir la info del usuario logueado. --
 export function displayUsers(users, tableBody, statusContainer, append = false, sessionUser) {
+    const tableContainer = tableBody ? tableBody.closest('.admin-table-container') : null;
+
     if (users.length > 0) {
+        if (tableContainer) tableContainer.classList.remove('disabled');
+        if (statusContainer) statusContainer.classList.add('disabled');
+
         users.forEach(user => {
             const row = document.createElement('tr');
             const createdDate = new Date(user.created_at).toLocaleDateString();
@@ -947,6 +952,7 @@ export function displayUsers(users, tableBody, statusContainer, append = false, 
             if (tableBody) tableBody.appendChild(row);
         });
     } else if (!append) {
+        if (tableContainer) tableContainer.classList.add('disabled');
         if (statusContainer) {
             statusContainer.classList.remove('disabled');
             statusContainer.innerHTML = `<div><h2>${window.getTranslation('general.noResultsTitle')}</h2><p>${window.getTranslation('general.noResultsMessage')}</p></div>`;
@@ -956,6 +962,9 @@ export function displayUsers(users, tableBody, statusContainer, append = false, 
 
 export function displayGalleriesAdmin(galleries, listContainer, statusContainer, append = false) {
     if (galleries.length > 0) {
+        if(listContainer) listContainer.classList.remove('disabled');
+        if(statusContainer) statusContainer.classList.add('disabled');
+        
         galleries.forEach(gallery => {
             const item = document.createElement('div');
             item.className = 'admin-list-item';
@@ -992,6 +1001,7 @@ export function displayGalleriesAdmin(galleries, listContainer, statusContainer,
             if (listContainer) listContainer.appendChild(item);
         });
     } else if (!append) {
+        if(listContainer) listContainer.classList.add('disabled');
         if (statusContainer) {
             statusContainer.classList.remove('disabled');
             statusContainer.innerHTML = `<div><h2>${window.getTranslation('general.noResultsTitle')}</h2><p>${window.getTranslation('general.noResultsMessage')}</p></div>`;
@@ -1000,7 +1010,12 @@ export function displayGalleriesAdmin(galleries, listContainer, statusContainer,
 }
 
 export function displayAdminComments(comments, tableBody, statusContainer, append = false) {
+    const tableContainer = tableBody ? tableBody.closest('.admin-table-container') : null;
+
     if (comments.length > 0) {
+        if (tableContainer) tableContainer.classList.remove('disabled');
+        if (statusContainer) statusContainer.classList.add('disabled');
+        
         comments.forEach(comment => {
             const row = document.createElement('tr');
             row.dataset.commentId = comment.id;
@@ -1080,6 +1095,7 @@ export function displayAdminComments(comments, tableBody, statusContainer, appen
             if (tableBody) tableBody.appendChild(row);
         });
     } else if (!append) {
+        if(tableContainer) tableContainer.classList.add('disabled');
         if (statusContainer) {
             statusContainer.classList.remove('disabled');
             statusContainer.innerHTML = `<div><h2>${window.getTranslation('admin.manageComments.noResultsTitle')}</h2><p>${window.getTranslation('admin.manageComments.noResultsMessage')}</p></div>`;
@@ -1088,7 +1104,12 @@ export function displayAdminComments(comments, tableBody, statusContainer, appen
 }
 
 export function displayFeedback(feedbackItems, tableBody, statusContainer, append = false) {
+    const tableContainer = tableBody ? tableBody.closest('.admin-table-container') : null;
+
     if (feedbackItems.length > 0) {
+        if (tableContainer) tableContainer.classList.remove('disabled');
+        if (statusContainer) statusContainer.classList.add('disabled');
+
         feedbackItems.forEach(item => {
             const row = document.createElement('tr');
             const createdDate = new Date(item.created_at).toLocaleString();
@@ -1112,6 +1133,7 @@ export function displayFeedback(feedbackItems, tableBody, statusContainer, appen
             if (tableBody) tableBody.appendChild(row);
         });
     } else if (!append) {
+        if(tableContainer) tableContainer.classList.add('disabled');
         if (statusContainer) {
             statusContainer.classList.remove('disabled');
             statusContainer.innerHTML = `<div><h2>${window.getTranslation('admin.manageFeedback.noResultsTitle')}</h2><p>${window.getTranslation('admin.manageFeedback.noResultsMessage')}</p></div>`;
