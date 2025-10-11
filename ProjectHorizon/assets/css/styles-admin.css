@@ -803,6 +803,19 @@
     color: var(--muted-text-color);
     border: 1px solid var(--border-color);
 }
+
+.social-links-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+    margin-top: 16px;
+}
+
+.add-social-link-btn {
+    align-self: flex-start;
+}
 /* --- FIN DE LA MODIFICACIÓN --- */
 
 /* ================================================= */

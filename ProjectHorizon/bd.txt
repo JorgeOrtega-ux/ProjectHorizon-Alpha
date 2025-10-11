@@ -130,6 +130,19 @@ CREATE TABLE `photo_comments` (
   KEY `user_uuid` (`user_uuid`),
   KEY `parent_id` (`parent_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Estructura de la tabla `gallery_social_links`
+CREATE TABLE `gallery_social_links` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `gallery_uuid` varchar(36) NOT NULL,
+  `platform` varchar(50) NOT NULL,
+  `url` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `gallery_uuid` (`gallery_uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Añadir la clave foránea para `gallery_social_links`
+ALTER TABLE `gallery_social_links`
+  ADD CONSTRAINT `gallery_social_links_ibfk_1` FOREIGN KEY (`gallery_uuid`) REFERENCES `galleries` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE;
 -- --------------------------------------------------------
 -- OTRAS TABLAS
 -- --------------------------------------------------------
