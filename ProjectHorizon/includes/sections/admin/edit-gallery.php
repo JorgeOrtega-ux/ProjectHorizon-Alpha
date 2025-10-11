@@ -10,10 +10,7 @@
                 </div>
             </div>
             <div class="content-header-right">
-                <button class="load-more-btn" data-action="save-gallery-changes">
-                    <span class="button-text" data-i18n="admin.editGallery.saveButton"></span>
-                    <div class="button-spinner"></div>
-                </button>
+            
             </div>
         </div>
     </div>

@@ -785,6 +785,24 @@
 .dark-theme .auth-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
     filter: invert(1);
 }
+
+.title-with-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.photo-count-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 12px;
+    background-color: var(--primary-bg);
+    color: var(--muted-text-color);
+    border: 1px solid var(--border-color);
+}
 /* --- FIN DE LA MODIFICACIÓN --- */
 
 /* ================================================= */

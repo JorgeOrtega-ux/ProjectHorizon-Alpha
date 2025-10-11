@@ -520,6 +520,8 @@ export function renderEditGalleryForm(gallery) {
     }
 
     const createdDate = new Date(gallery.created_at).toLocaleString();
+    const photoCount = gallery.photos ? gallery.photos.length : 0;
+    const photoCountText = photoCount === 1 ? '1 foto' : `${photoCount} fotos`;
 
     container.innerHTML = `
     <div class="edit-section">
@@ -559,7 +561,10 @@ export function renderEditGalleryForm(gallery) {
 
     <div class="edit-section content-section-stacked">
         <div class="item-details">
-            <h4 data-i18n="admin.editGallery.photosSectionTitle"></h4>
+            <div class="title-with-badge">
+                <h4 data-i18n="admin.editGallery.photosSectionTitle"></h4>
+                <span class="photo-count-badge">${photoCountText}</span>
+            </div>
             <p data-i18n="admin.editGallery.photosSectionDescription"></p>
         </div>
         <div class="item-actions">
