@@ -82,35 +82,50 @@ function handleAgeVerification() {
     }
 }
 
-// ✅ **INICIO DE LA CORRECCIÓN: FUNCIÓN MOVIDA Y MEJORADA**
-/**
- * Actualiza la visibilidad del grid de fotos y el mensaje de estado (ej. "No hay fotos").
- * Se activa cuando no hay fotos en el contenedor.
- */
 function updatePhotoGridVisibility() {
     const grid = document.getElementById('manage-photos-grid');
     if (!grid) return;
     
-    // Busca el contenedor de estado relativo al grid actual
     const statusContainer = grid.closest('.edit-gallery-container').querySelector('.status-message-container');
     if (!statusContainer) return;
     
-    // Si no hay elementos hijos en el grid (fotos)
     if (grid.children.length === 0) {
-        statusContainer.classList.remove('disabled'); // Muestra el mensaje
-        grid.classList.add('disabled'); // Oculta el grid
+        statusContainer.classList.remove('disabled');
+        grid.classList.add('disabled');
     } else {
-        statusContainer.classList.add('disabled'); // Oculta el mensaje
-        grid.classList.remove('disabled'); // Muestra el grid
+        statusContainer.classList.add('disabled');
+        grid.classList.remove('disabled');
     }
 }
-// ✅ **FIN DE LA CORRECCIÓN**
 
 
-export function initMainController() {
+export async function initMainController() {
+    // --- INICIO DE LA LÓGICA DE MODO MANTENIMIENTO ---
+    if (window.MAINTENANCE_MODE) {
+        const session = await api.checkSession();
+        const userRole = session.ok && session.data.loggedin ? session.data.user.role : 'user';
+        const allowedRoles = ['moderator', 'administrator', 'founder'];
+
+        if (!allowedRoles.includes(userRole)) {
+            const contentContainer = document.querySelector('.general-content-scrolleable');
+            if (contentContainer) {
+                contentContainer.innerHTML = `
+                    <div class="status-message-container active">
+                        <div>
+                            <h2>Estamos en mantenimiento</h2>
+                            <p>El sitio volverá a estar disponible en breve. Disculpa las molestias.</p>
+                        </div>
+                    </div>
+                `;
+            }
+            // Detiene la ejecución del resto del controlador si está en mantenimiento
+            return; 
+        }
+    }
+    // --- FIN DE LA LÓGICA DE MODO MANTENIMIENTO ---
+
     handleAgeVerification();
     const appState = {
-        // Objeto para guardar el estado de la galería que se está creando
         newGalleryState: {
             name: '',
             privacy: false,
@@ -530,7 +545,6 @@ export function initMainController() {
                 }
             }
             
-            // ✅ **INICIO DE LA CORRECCIÓN: LÓGICA DE ACTUALIZACIÓN AL SUBIR FOTOS**
             if (fileInput.matches('#add-photos-input')) {
                 const gridEl = document.getElementById('manage-photos-grid');
                 if (!gridEl) return;
@@ -558,14 +572,12 @@ export function initMainController() {
                         newPhotoItem.dataset.fileName = file.name;
                         newPhotoItem.innerHTML = `<img src="${e.target.result}" alt="Nueva foto"><button class="delete-photo-btn" data-action="delete-gallery-photo"><span class="material-symbols-rounded">close</span></button>`;
                         gridEl.appendChild(newPhotoItem);
-                        // Llama a la función de actualización después de que la imagen se haya agregado al DOM
                         updatePhotoGridVisibility(); 
                     };
                     reader.readAsDataURL(file);
                 }
-                fileInput.value = ''; // Limpia el input para permitir subir el mismo archivo de nuevo
+                fileInput.value = '';
             }
-            // ✅ **FIN DE LA CORRECCIÓN**
         });
 
         document.addEventListener('click', async function (event) {
@@ -706,7 +718,7 @@ export function initMainController() {
                         const response = await api.batchUpdateUsers(formData);
                         if (response.ok) {
                             showNotification(response.data.message, 'success');
-                            fetchAndDisplayUsers('', false, appState.paginationState.adminUsers); // Recargar la lista
+                            fetchAndDisplayUsers('', false, appState.paginationState.adminUsers);
                         } else {
                             showNotification(response.data.message || 'Error al realizar la acción en lote.', 'error');
                         }
@@ -790,7 +802,6 @@ export function initMainController() {
                             actionTarget.classList.remove('loading');
             
                             if (response.ok) {
-                                // Reload comments to show the new reply
                                 const commentsResponse = await api.getComments(photoId);
                                 if (commentsResponse.ok) {
                                     displayComments(commentsResponse.data);
@@ -814,7 +825,7 @@ export function initMainController() {
                             actionTarget.dataset.state = 'shown';
                             
                             const repliesToShow = repliesData.slice(0, 10);
-                            repliesContainer.innerHTML = ''; // Limpiar
+                            repliesContainer.innerHTML = '';
                             
                             repliesToShow.forEach(reply => {
                                 const replyElement = createCommentElement(reply, true);
@@ -906,6 +917,33 @@ export function initMainController() {
                 }
 
                 switch (action) {
+                    case 'save-general-settings': {
+                        const button = actionTarget;
+                        button.classList.add('loading');
+                        
+                        const settings = {
+                            'maintenance_mode': document.querySelector('[data-setting="maintenance-mode"]').classList.contains('active') ? '1' : '0',
+                            'allow_new_registrations': document.querySelector('[data-setting="allow-new-registrations"]').classList.contains('active') ? '1' : '0',
+                            'allowed_domains': document.getElementById('allowed-domains-textarea').value,
+                            'unlock_duration': document.getElementById('unlock-duration-input').value,
+                            'ad_probability': document.getElementById('ad-probability-input').value
+                        };
+
+                        const formData = new FormData();
+                        formData.append('action_type', 'save_general_settings');
+                        formData.append('settings', JSON.stringify(settings));
+
+                        const response = await api.postDataWithCsrf(formData);
+                        button.classList.remove('loading');
+
+                        if (response.ok) {
+                            showNotification(response.data.message, 'success');
+                            window.MAINTENANCE_MODE = settings.maintenance_mode === '1';
+                        } else {
+                            showNotification(response.data.message || 'Error al guardar la configuración.', 'error');
+                        }
+                        break;
+                    }
                     case 'return-to-edit-gallery': {
                         const section = actionTarget.closest('.section-content');
                         const uuid = section ? section.dataset.uuid : null;
@@ -1357,7 +1395,6 @@ export function initMainController() {
                         handleStateChange('admin', 'editGallery', true, { uuid }, appState);
                         break;
                     }
-                    // ✅ **INICIO DE LA CORRECCIÓN: LÓGICA DE ACTUALIZACIÓN AL BORRAR FOTOS**
                     case 'delete-gallery-photo': {
                         const photoItem = actionTarget.closest('.photo-item-edit');
                         const photoId = actionTarget.dataset.photoId;
@@ -1371,13 +1408,13 @@ export function initMainController() {
                             );
                             photoItem.remove();
                             showNotification('Foto pendiente eliminada.', 'success');
-                            updatePhotoGridVisibility(); // Llama a la función de actualización
+                            updatePhotoGridVisibility();
                         } else {
                             api.deleteGalleryPhoto(photoId).then(response => {
                                 if (response.ok) {
                                     showNotification(response.data.message, 'success');
                                     photoItem.remove();
-                                    updatePhotoGridVisibility(); // Llama a la función de actualización
+                                    updatePhotoGridVisibility();
                                 } else {
                                     showNotification(response.data.message || 'Error al eliminar la foto', 'error');
                                 }
@@ -1385,7 +1422,6 @@ export function initMainController() {
                         }
                         break;
                     }
-                    // ✅ **FIN DE LA CORRECCIÓN**
                     case 'save-username': {
                         const button = actionTarget.closest('button');
                         const input = document.getElementById('username-edit-input');
@@ -1841,7 +1877,6 @@ export function initMainController() {
         }
     }
 
-    // --- INICIALIZACIÓN ---
     setupEventListeners();
     startUnlockCountdownTimer();
 

@@ -2,8 +2,6 @@
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
-// La variable $is_logged_in ya no es necesaria para la lógica de este archivo,
-// pero la mantenemos por si se usa en otros contextos.
 $is_logged_in = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true;
 $user_role = $_SESSION['user_role'] ?? 'user';
 ?>

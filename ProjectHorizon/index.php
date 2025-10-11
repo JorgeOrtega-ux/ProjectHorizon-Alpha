@@ -1,4 +1,7 @@
-<?php require_once 'config/router.php'; ?>
+<?php 
+require_once 'config/router.php'; 
+require_once 'config/db.php'; // Asegúrate de que este archivo se incluye aquí
+?>
 <!DOCTYPE html>
 <html lang="es">
 
@@ -24,14 +27,13 @@
 
     <script>
         window.BASE_PATH = "<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'); ?>";
+        window.MAINTENANCE_MODE = <?php echo json_encode(MAINTENANCE_MODE); ?>;
     </script>
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="stylesheet" type="text/css" href="<?php echo rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'); ?>/assets/css/styles.css">
     
     <?php
-    // Carga la hoja de estilos de administración incondicionalmente.
-    // Sus estilos no afectarán a otras páginas.
     echo '<link rel="stylesheet" type="text/css" href="' . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/assets/css/styles-admin.css">';
     ?>
 </head>

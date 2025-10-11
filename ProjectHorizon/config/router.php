@@ -84,6 +84,5 @@ if ($routeConfig === null) {
 
 $CURRENT_VIEW = $routeConfig['view'];
 $CURRENT_SECTION = $routeConfig['section'];
-// También pasamos los datos (como el 'step') si existen en la configuración de la ruta
 $ROUTE_DATA = isset($routeConfig['data']) ? json_encode($routeConfig['data']) : 'null';
 ?>

@@ -1,5 +1,17 @@
 <?php
 session_start();
+require_once '../config/db.php'; // Incluye la conexión y la constante MAINTENANCE_MODE
+
+// --- VERIFICACIÓN INICIAL DE MODO MANTENIMIENTO ---
+$user_role = $_SESSION['user_role'] ?? 'user';
+$allowed_roles = ['moderator', 'administrator', 'founder'];
+
+if (MAINTENANCE_MODE && !in_array($user_role, $allowed_roles)) {
+    header('Content-Type: application/json');
+    http_response_code(503); // Service Unavailable
+    echo json_encode(['maintenance' => true, 'message' => 'El sitio está actualmente en mantenimiento. Por favor, inténtalo de nuevo más tarde.']);
+    exit;
+}
 
 // --- FUNCIONES DE UTILIDAD Y SEGURIDAD ---
 function generate_csrf_token() {
@@ -31,13 +43,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode(['csrf_token' => generate_csrf_token()]);
         exit;
     }
+    
+    // --- NUEVA ACCIÓN PARA OBTENER CONFIGURACIÓN GENERAL ---
+    if ($request_type === 'get_general_settings') {
+        header('Content-Type: application/json');
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Acción no autorizada.']);
+            exit;
+        }
+
+        $settings = [];
+        $result = $conn->query("SELECT setting_key, setting_value FROM server_settings");
+        while ($row = $result->fetch_assoc()) {
+            $settings[$row['setting_key']] = $row['setting_value'];
+        }
+        echo json_encode($settings);
+        exit;
+    }
+
 
     if ($request_type === 'check_session') {
         header('Content-Type: application/json');
         if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true && isset($_SESSION['user_uuid'])) {
-            require_once '../config/db.php';
             
-            // **INICIO DE LA CORRECCIÓN**
             $stmt = $conn->prepare("
                 SELECT u.role, u.status, u.created_at, u.profile_picture_url,
                        um.password_last_updated_at, um.username_last_updated_at, um.email_last_updated_at
@@ -45,7 +74,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 LEFT JOIN user_metadata um ON u.uuid = um.user_uuid
                 WHERE u.uuid = ?
             ");
-            // **FIN DE LA CORRECCIÓN**
 
             $stmt->bind_param("s", $_SESSION['user_uuid']);
             $stmt->execute();
@@ -63,7 +91,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 
                 $_SESSION['user_role'] = $user['role'];
 
-                // **INICIO DE LA CORRECCIÓN**
                 echo json_encode([
                     'loggedin' => true,
                     'user' => [
@@ -78,10 +105,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                         'profile_picture_url' => $user['profile_picture_url']
                     ]
                 ]);
-                // **FIN DE LA CORRECCIÓN**
 
             } else {
-                // Si no se encuentra el usuario, destruye la sesión
                 session_unset();
                 session_destroy();
                 echo json_encode(['loggedin' => false]);
@@ -115,14 +140,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'admin-manageComments',
             'admin-manageFeedback',
             'admin-userProfile',
-            'admin-manageGalleryPhotos', // <-- AÑADIDO
+            'admin-manageGalleryPhotos',
             'admin-generalSettings'
         ];
         $section_key = $view . '-' . $section;
     
         if (in_array($section_key, $protected_sections) && (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true)) {
             http_response_code(403);
-            // Redirigir a 404 para no revelar la existencia de la sección
             include '../includes/sections/main/404.php';
             exit;
         }
@@ -160,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'admin-manageComments' => '../includes/sections/admin/manage-comments.php',
             'admin-manageFeedback' => '../includes/sections/admin/manage-feedback.php',
             'admin-userProfile' => '../includes/sections/admin/user-profile.php',
-            'admin-manageGalleryPhotos' => '../includes/sections/admin/manage-gallery-photos.php', // <-- AÑADIDO
+            'admin-manageGalleryPhotos' => '../includes/sections/admin/manage-gallery-photos.php',
             'admin-generalSettings' => '../includes/sections/admin/general-settings.php'
         ];
     
@@ -183,7 +207,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     }
 
     header('Content-Type: application/json');
-    require_once '../config/db.php';
 
     if ($request_type === 'user_profile') {
         $session_role = $_SESSION['user_role'] ?? 'user';
@@ -202,7 +225,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
         $profile_data = [];
     
-        // User info
         $stmt_user = $conn->prepare("SELECT uuid, username, email, role, status, created_at FROM users WHERE uuid = ?");
         $stmt_user->bind_param("s", $user_uuid);
         $stmt_user->execute();
@@ -226,7 +248,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         } else {
             $profile_data['private'] = false;
     
-            // Comments
             $stmt_comments = $conn->prepare("
                 SELECT c.id, c.comment_text, c.status, c.created_at, p.id as photo_id, p.gallery_uuid, g.name as gallery_name 
                 FROM photo_comments c
@@ -241,7 +262,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $profile_data['comments'] = $stmt_comments->get_result()->fetch_all(MYSQLI_ASSOC);
             $stmt_comments->close();
         
-            // Favorites
             $stmt_favorites = $conn->prepare("
                 SELECT p.id as photo_id, p.photo_url, p.gallery_uuid, g.name as gallery_name 
                 FROM user_favorites uf 
@@ -256,7 +276,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $profile_data['favorites'] = $stmt_favorites->get_result()->fetch_all(MYSQLI_ASSOC);
             $stmt_favorites->close();
         
-            // Reports
             $stmt_reports = $conn->prepare("
                 SELECT cr.id, cr.reason, cr.status, cr.created_at, c.comment_text, p.id as photo_id, p.gallery_uuid 
                 FROM comment_reports cr 
@@ -271,7 +290,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $profile_data['reports'] = $stmt_reports->get_result()->fetch_all(MYSQLI_ASSOC);
             $stmt_reports->close();
         
-            // Sanctions
             $stmt_sanctions = $conn->prepare("
                 SELECT s.id, s.sanction_type, s.reason, s.expires_at, s.created_at, a.username as admin_username 
                 FROM user_sanctions s 
@@ -454,7 +472,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
         $user_uuid = $_SESSION['user_uuid'] ?? null;
     
-        // **INICIO DE LA CORRECCIÓN**
         $stmt = $conn->prepare("
             SELECT 
                 c.id, 
@@ -464,7 +481,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 c.parent_id,
                 u.username, 
                 u.role,
-                u.profile_picture_url, -- <-- AÑADIR ESTA LÍNEA
+                u.profile_picture_url,
                 (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id AND vote_type = 1) as likes,
                 (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id AND vote_type = -1) as dislikes,
                 (SELECT vote_type FROM comment_likes WHERE comment_id = c.id AND user_uuid = ?) as user_vote
@@ -473,7 +490,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             WHERE c.photo_id = ? AND c.status IN ('visible', 'review')
             ORDER BY c.created_at DESC
         ");
-        // **FIN DE LA CORRECCIÓN**
         
         $stmt->bind_param("si", $user_uuid, $photo_id);
         $stmt->execute();
@@ -622,7 +638,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 exit;
             }
 
-            // --- INICIO MODIFICACIÓN: OBTENER REDES SOCIALES ---
             $stmt_socials = $conn->prepare("SELECT platform, url FROM gallery_social_links WHERE gallery_uuid = ?");
             $stmt_socials->bind_param("s", $uuid);
             $stmt_socials->execute();
@@ -632,7 +647,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 $gallery['social_links'][$row['platform']] = $row['url'];
             }
             $stmt_socials->close();
-            // --- FIN MODIFICACIÓN ---
 
             echo json_encode($gallery);
             $stmt->close();
@@ -851,7 +865,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $photos = $photos_result->fetch_all(MYSQLI_ASSOC);
         $stmt_photos->close();
 
-        // --- INICIO MODIFICACIÓN: OBTENER REDES SOCIALES ---
         $stmt_socials = $conn->prepare("SELECT platform, url FROM gallery_social_links WHERE gallery_uuid = ?");
         $stmt_socials->bind_param("s", $uuid);
         $stmt_socials->execute();
@@ -861,7 +874,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $gallery['social_links'][$row['platform']] = $row['url'];
         }
         $stmt_socials->close();
-        // --- FIN MODIFICACIÓN ---
     
         if ($gallery) {
             $gallery['photos'] = $photos;
@@ -884,9 +896,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         exit;
     }
     
-    require_once '../config/db.php';
-
     $action_type = $_POST['action_type'] ?? '';
+    
+    // --- NUEVA ACCIÓN PARA GUARDAR CONFIGURACIÓN GENERAL ---
+    if ($action_type === 'save_general_settings') {
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
+            exit;
+        }
+
+        $settings = json_decode($_POST['settings'] ?? '{}', true);
+        if (empty($settings)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'No se recibieron datos de configuración.']);
+            exit;
+        }
+
+        $stmt = $conn->prepare("INSERT INTO server_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+        foreach ($settings as $key => $value) {
+            $stmt->bind_param("ss", $key, $value);
+            $stmt->execute();
+        }
+        $stmt->close();
+
+        echo json_encode(['success' => true, 'message' => 'Configuración guardada correctamente.']);
+        exit;
+    }
+
 
     if ($action_type === 'batch_update_users') {
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
@@ -1101,10 +1138,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             exit;
         }
     
-        if ($vote_type === 0) { // Eliminar voto
+        if ($vote_type === 0) {
             $stmt = $conn->prepare("DELETE FROM comment_likes WHERE comment_id = ? AND user_uuid = ?");
             $stmt->bind_param("is", $comment_id, $user_uuid);
-        } else { // Insertar o actualizar voto
+        } else {
             $stmt = $conn->prepare("INSERT INTO comment_likes (comment_id, user_uuid, vote_type) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE vote_type = ?");
             $stmt->bind_param("isis", $comment_id, $user_uuid, $vote_type, $vote_type);
         }
@@ -1520,7 +1557,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             }
             $stmt = $conn->prepare("UPDATE users SET role = ? WHERE uuid = ?");
             $stmt->bind_param("ss", $new_role, $user_uuid);
-        } else { // change_user_status
+        } else {
             $new_status = $_POST['status'] ?? '';
             $allowed_statuses = ['active', 'suspended', 'deleted'];
             if (!in_array($new_status, $allowed_statuses)) {
@@ -1633,7 +1670,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         $stmt->close();
     
-    // --- INICIO MODIFICACIÓN: NUEVA ACCIÓN PARA REDES SOCIALES ---
     } elseif ($action_type === 'update_gallery_socials') {
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
@@ -1652,13 +1688,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         $conn->begin_transaction();
         try {
-            // Borrar enlaces existentes
             $stmt_delete = $conn->prepare("DELETE FROM gallery_social_links WHERE gallery_uuid = ?");
             $stmt_delete->bind_param("s", $uuid);
             $stmt_delete->execute();
             $stmt_delete->close();
 
-            // Insertar nuevos enlaces
             $allowed_platforms = ['facebook', 'instagram', 'x', 'youtube', 'twitch', 'onlyfans'];
             if (!empty($socials)) {
                 $stmt_insert = $conn->prepare("INSERT INTO gallery_social_links (gallery_uuid, platform, url) VALUES (?, ?, ?)");
@@ -1679,7 +1713,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['success' => false, 'message' => 'Error al actualizar las redes sociales.']);
         }
         exit;
-    // --- FIN MODIFICACIÓN ---
 
     } elseif ($action_type === 'create_gallery') {
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
@@ -1689,7 +1722,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         $name = trim($_POST['name'] ?? '');
         $privacy = isset($_POST['privacy']) ? (int)filter_var($_POST['privacy'], FILTER_VALIDATE_BOOLEAN) : 0;
-        $socials = json_decode($_POST['socials'] ?? '[]', true); // <-- OBTENER REDES SOCIALES
+        $socials = json_decode($_POST['socials'] ?? '[]', true);
 
         if (empty($name)) {
             http_response_code(400);
@@ -1711,7 +1744,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $stmt_meta->execute();
             $stmt_meta->close();
 
-            // --- INICIO MODIFICACIÓN: INSERTAR REDES SOCIALES ---
             $allowed_platforms = ['facebook', 'instagram', 'x', 'youtube', 'twitch', 'onlyfans'];
             if (!empty($socials)) {
                 $stmt_socials = $conn->prepare("INSERT INTO gallery_social_links (gallery_uuid, platform, url) VALUES (?, ?, ?)");
@@ -1723,7 +1755,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 }
                 $stmt_socials->close();
             }
-            // --- FIN MODIFICACIÓN ---
 
             if (isset($_FILES['profile_picture'])) {
                 $upload_dir = '../uploads/profile_pictures/';

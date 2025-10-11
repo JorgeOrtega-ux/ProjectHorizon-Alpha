@@ -139,7 +139,6 @@ CREATE TABLE `gallery_social_links` (
   PRIMARY KEY (`id`),
   KEY `gallery_uuid` (`gallery_uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- Añadir la clave foránea para `gallery_social_links`
 ALTER TABLE `gallery_social_links`
   ADD CONSTRAINT `gallery_social_links_ibfk_1` FOREIGN KEY (`gallery_uuid`) REFERENCES `galleries` (`uuid`) ON DELETE CASCADE ON UPDATE CASCADE;
@@ -241,3 +240,16 @@ ALTER TABLE `comment_likes`
 ALTER TABLE `comment_reports`
   ADD CONSTRAINT `comment_reports_ibfk_1` FOREIGN KEY (`comment_id`) REFERENCES `photo_comments` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `comment_reports_ibfk_2` FOREIGN KEY (`reporter_uuid`) REFERENCES `users` (`uuid`) ON DELETE CASCADE;
+
+-- --------------------------------------------------------
+-- TABLA DE CONFIGURACIÓN DEL SERVIDOR
+-- --------------------------------------------------------
+CREATE TABLE `server_settings` (
+  `setting_key` varchar(50) NOT NULL,
+  `setting_value` varchar(255) NOT NULL,
+  PRIMARY KEY (`setting_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Valor inicial para el modo mantenimiento (desactivado por defecto)
+INSERT INTO `server_settings` (`setting_key`, `setting_value`) VALUES
+('maintenance_mode', '0');
