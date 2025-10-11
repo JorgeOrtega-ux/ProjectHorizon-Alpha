@@ -26,6 +26,7 @@ class Router {
         'admin/create-gallery' => ['view' => 'admin', 'section' => 'createGallery'],
         'admin/comments' => ['view' => 'admin', 'section' => 'manageComments'],
         'admin/feedback' => ['view' => 'admin', 'section' => 'manageFeedback'],
+        'admin/general-settings' => ['view' => 'admin', 'section' => 'generalSettings'],
         'gallery/{uuid}/photo/{photoId}/comments' => ['view' => 'main', 'section' => 'photoComments']
     ];
     public static function getRouteConfig($path) {

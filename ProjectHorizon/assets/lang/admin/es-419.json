@@ -176,6 +176,26 @@
       "saveFirstTooltip": "Primero crea la galería para poder administrar las fotos",
       "socialsSectionTitle": "Redes Sociales",
       "socialsSectionDescription": "Añade enlaces a las redes sociales de la galería (opcional)."
+    },
+    "generalSettings": {
+        "title": "Configuración General",
+        "maintenanceMode": {
+            "title": "Modo Mantenimiento",
+            "description": "Cuando está activo, los usuarios no administradores verán una página de mantenimiento."
+        },
+        "userRegistration": {
+            "title": "Registro de Nuevos Usuarios",
+            "description": "Permite o deniega la creación de nuevas cuentas en la plataforma."
+        },
+        "allowedDomains": {
+            "title": "Dominios de Correo Permitidos",
+            "description": "Lista los dominios de correo electrónico permitidos para el registro, separados por comas."
+        },
+        "adSettings": {
+            "title": "Configuración de Anuncios",
+            "unlockDuration": "Duración del desbloqueo de galerías (en minutos)",
+            "adProbability": "Probabilidad de mostrar anuncios en navegación (%)"
+        }
     }
   }
 }

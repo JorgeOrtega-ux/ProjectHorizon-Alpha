@@ -29,6 +29,7 @@ const urlMap = {
     'admin-createGallery': 'admin/create-gallery',
     'admin-manageComments': 'admin/comments',
     'admin-manageFeedback': 'admin/feedback',
+    'admin-generalSettings': 'admin/general-settings',
 
     // --- INICIO DE LAS CORRECCIONES ---
     'admin-dashboard': 'admin/dashboard',       // <-- LÍNEA AÑADIDA PARA EL DASHBOARD

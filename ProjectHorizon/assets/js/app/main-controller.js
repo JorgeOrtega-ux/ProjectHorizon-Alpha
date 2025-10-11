@@ -998,6 +998,7 @@ export function initMainController() {
                     case 'toggleSectionManageComments':
                     case 'toggleSectionManageFeedback':
                     case 'toggleSectionCreateGallery':
+                    case 'toggleSectionGeneralSettings':
                         const sectionName = action.substring("toggleSection".length);
                         const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
                         const parentMenu = actionTarget.closest('[data-menu]');
@@ -1891,6 +1892,7 @@ export function initMainController() {
         'admin/create-gallery': { view: 'admin', section: 'createGallery' },
         'admin/comments': { view: 'admin', section: 'manageComments' },
         'admin/feedback': { view: 'admin', section: 'manageFeedback' },
+        'admin/general-settings': { view: 'admin', section: 'generalSettings' },
         'gallery/{uuid}/photo/{photoId}/comments': { view: 'main', section: 'photoComments' }
     };
     let initialRoute = routes[path] || null;

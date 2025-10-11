@@ -111,6 +111,10 @@ $user_role = $_SESSION['user_role'] ?? 'user';
                     <div class="menu-link-icon"><span class="material-symbols-rounded">rate_review</span></div>
                     <div class="menu-link-text"><span data-i18n="moduleSurface.manageFeedback"></span></div>
                 </div>
+                <div class="menu-link <?php echo ($CURRENT_SECTION === 'generalSettings') ? 'active' : ''; ?>" data-action="toggleSectionGeneralSettings">
+                    <div class="menu-link-icon"><span class="material-symbols-rounded">tune</span></div>
+                    <div class="menu-link-text"><span data-i18n="moduleSurface.generalSettings"></span></div>
+                </div>
             <?php endif; ?>
         </div>
     </div>
