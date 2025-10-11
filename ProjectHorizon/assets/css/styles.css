@@ -2669,3 +2669,15 @@ h6 {
     background-position: center;
     background-repeat: no-repeat;
 }
+
+/* --- INICIO DE LA CORRECCIÓN --- */
+/* Oculta el span de las iniciales cuando hay una imagen de perfil */
+.profile-btn.profile-btn--image .profile-initials {
+    display: none;
+}
+/* --- FIN DE LA CORRECCIÓN --- */
+
+.header-button > img {
+    width: 100%;
+    height: 100%;
+}
