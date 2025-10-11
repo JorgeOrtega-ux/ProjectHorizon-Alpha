@@ -1906,6 +1906,18 @@ h6 {
     .general-content {
         border-radius: 0;
     }
+
+	.profile-banner-main {
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+	}
+
+	.profile-banner-actions {
+		flex-direction: row;
+		width: 100%;
+		justify-content: center;
+	}
 }
 
 @media (max-width: 468px) {
@@ -2666,4 +2678,93 @@ h6 {
 .header-button > img {
     width: 100%;
     height: 100%;
+}
+
+/* ================================================= */
+/* =========== ESTILOS PARA EL BANNER DE PERFIL ====== */
+/* ================================================= */
+.profile-banner-container {
+    width: 100%;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.profile-banner-main {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    width: 100%;
+}
+
+.profile-banner-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: var(--primary-bg);
+    border: 2px solid var(--border-color);
+    flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
+}
+
+.profile-banner-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.profile-banner-name {
+    font-size: 1.75rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+.profile-banner-actions {
+    flex-shrink: 0;
+}
+
+.profile-banner-stats {
+    display: flex;
+    gap: 16px;
+}
+
+.social-badge, .stat-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--muted-text-color);
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.social-badge:hover {
+    background-color: var(--hover-bg);
+    color: var(--text-color);
+}
+
+.stat-badge {
+    gap: 6px;
+}
+
+.stat-badge .material-symbols-rounded {
+    font-size: 18px;
+}
+
+.stat-value {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.profile-banner-socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }

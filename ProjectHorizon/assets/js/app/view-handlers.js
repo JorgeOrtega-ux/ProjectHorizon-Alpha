@@ -299,18 +299,43 @@ export async function fetchAndDisplayGalleryPhotos(uuid, galleryName, append = f
 
     const grid = section.querySelector('#user-photos-grid');
     const statusContainer = section.querySelector('.status-message-container');
-    const title = section.querySelector('#user-photos-title');
     const loadMoreContainer = section.querySelector('#photos-load-more-container');
+    const banner = section.querySelector('#gallery-profile-banner');
 
     if (!append) {
         state.currentPage = 1;
         state.photoList = [];
-        if (title) title.textContent = galleryName || window.getTranslation('general.loading');
+
         if (grid) grid.innerHTML = '';
         if (statusContainer) {
             statusContainer.classList.remove('disabled');
             statusContainer.innerHTML = loaderHTML;
         }
+
+        // --- INICIO DE LA MODIFICACIÓN: Lógica del Banner ---
+        if (banner) {
+            const bannerName = banner.querySelector('.profile-banner-name');
+            const bannerAvatar = banner.querySelector('.profile-banner-avatar');
+            const totalLikes = banner.querySelector('#gallery-total-likes');
+            const totalInteractions = banner.querySelector('#gallery-total-interactions');
+            
+            const galleryDetailsResponse = await api.getGalleryDetails(uuid);
+            if (galleryDetailsResponse.ok) {
+                const gallery = galleryDetailsResponse.data;
+                if (bannerName) bannerName.textContent = gallery.name;
+                if (totalLikes) totalLikes.textContent = gallery.total_likes || 0;
+                if (totalInteractions) totalInteractions.textContent = gallery.total_interactions || 0;
+
+                if (bannerAvatar) {
+                    if (gallery.profile_picture_url) {
+                        bannerAvatar.style.backgroundImage = `url('${window.BASE_PATH}/${gallery.profile_picture_url}')`;
+                    } else {
+                        bannerAvatar.style.backgroundImage = 'none';
+                    }
+                }
+            }
+        }
+        // --- FIN DE LA MODIFICACIÓN ---
     }
 
     if (state.isLoading) return;
@@ -387,6 +412,7 @@ export async function fetchAndDisplayGalleryPhotos(uuid, galleryName, append = f
         }
     }
 }
+
 
 export async function fetchAndDisplayTrends(searchTerm = '') {
     const section = document.querySelector('[data-section="trends"]');

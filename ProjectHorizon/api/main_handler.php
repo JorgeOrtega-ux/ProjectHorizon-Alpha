@@ -598,7 +598,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         if (isset($_GET['uuid'])) {
             $uuid = $_GET['uuid'];
-            $sql = "SELECT g.uuid, g.name, g.privacy, g.visibility, g.created_at, gpp.profile_picture_url, gm.last_edited
+            $sql = "SELECT g.uuid, g.name, g.privacy, g.visibility, g.created_at, gpp.profile_picture_url, gm.last_edited, gm.total_likes, gm.total_interactions
                     FROM galleries g
                     JOIN galleries_metadata gm ON g.uuid = gm.gallery_uuid
                     LEFT JOIN gallery_profile_pictures gpp ON g.uuid = gpp.gallery_uuid
