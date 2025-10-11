@@ -529,8 +529,8 @@ export function renderEditGalleryForm(gallery) {
             <div class="profile-info-wrapper">
                 ${profilePicHTML}
                 <div class="profile-text-wrapper">
-                    <div class="profile-main-text">${gallery.name}</div>
-                    <div class="profile-sub-text" data-i18n="admin.editGallery.profilePictureTitle"></div>
+                    <div class="profile-main-text" data-i18n="admin.editGallery.profilePictureTitle"></div>
+                    <div class="profile-sub-text" data-i18n="admin.editGallery.profilePictureDescription"></div>
                      <div class="profile-sub-text">${window.getTranslation('general.created')}: ${createdDate}</div>
                 </div>
             </div>
@@ -559,19 +559,27 @@ export function renderEditGalleryForm(gallery) {
         </div>
     </div>
 
-    <div class="edit-section">
-        <div id="social-links-view-mode">
-            <button type="button" class="load-more-btn" id="manage-social-links-btn">Administrar redes sociales</button>
+    <div class="edit-section content-section-stacked" id="social-links-view-section">
+        <div class="item-details">
+            <h4 data-i18n="admin.editGallery.socialsSectionTitle"></h4>
+            <p data-i18n="admin.editGallery.socialsSectionDescription"></p>
         </div>
-        <div id="social-links-edit-mode" class="form-group-inline" style="flex-direction: column; align-items: stretch; gap: 16px; display: none;">
-            <label class="form-label standalone" data-i18n="admin.editGallery.socialsLabel">Redes Sociales</label>
+        <div class="item-actions">
+            <button type="button" class="load-more-btn btn-primary" id="manage-social-links-btn" data-i18n="admin.editGallery.manageSocialsButton"></button>
+        </div>
+    </div>
+
+    <div class="edit-section" id="social-links-edit-section" style="display: none;">
+        <div class="form-group-inline" style="flex-direction: column; align-items: stretch; gap: 16px;">
+            <label class="form-label standalone" data-i18n="admin.editGallery.socialsSectionTitle"></label>
             <div id="social-links-container" class="social-links-container"></div>
             <div class="form-group-buttons" style="justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px;">
                 <button type="button" class="load-more-btn" id="cancel-socials-btn" data-i18n="general.cancel"></button>
-                 <button type="button" class="load-more-btn btn-primary" id="save-socials-btn" data-i18n="general.save"></button>
+                <button type="button" class="load-more-btn btn-primary" id="save-socials-btn" data-i18n="general.save"></button>
             </div>
         </div>
     </div>
+
     <div class="edit-section content-section-stacked">
         <div class="item-details">
             <div class="title-with-badge">
@@ -647,8 +655,8 @@ export function renderEditGalleryForm(gallery) {
     const privacyToggle = container.querySelector('#gallery-privacy-edit');
     const visibilityToggle = container.querySelector('#gallery-visibility-edit');
     const manageSocialsBtn = container.querySelector('#manage-social-links-btn');
-    const socialLinksViewMode = container.querySelector('#social-links-view-mode');
-    const socialLinksEditMode = container.querySelector('#social-links-edit-mode');
+    const socialLinksViewSection = container.querySelector('#social-links-view-section');
+    const socialLinksEditSection = container.querySelector('#social-links-edit-section');
     const socialLinksContainer = container.querySelector('#social-links-container');
     const cancelSocialsBtn = container.querySelector('#cancel-socials-btn');
 
@@ -671,15 +679,15 @@ export function renderEditGalleryForm(gallery) {
     if (manageSocialsBtn) {
         manageSocialsBtn.addEventListener('click', () => {
             renderSocialLinks();
-            socialLinksViewMode.style.display = 'none';
-            socialLinksEditMode.style.display = 'block';
+            socialLinksViewSection.style.display = 'none';
+            socialLinksEditSection.style.display = 'block';
         });
     }
 
     if (cancelSocialsBtn) {
         cancelSocialsBtn.addEventListener('click', () => {
-            socialLinksViewMode.style.display = 'block';
-            socialLinksEditMode.style.display = 'none';
+            socialLinksViewSection.style.display = 'flex';
+            socialLinksEditSection.style.display = 'none';
         });
     }
 
@@ -743,8 +751,8 @@ export function renderEditGalleryForm(gallery) {
             api.postDataWithCsrf(formData).then(response => {
                 if(response.ok) {
                     window.showNotification(response.data.message, 'success');
-                    socialLinksViewMode.style.display = 'block';
-                    socialLinksEditMode.style.display = 'none';
+                    socialLinksViewSection.style.display = 'flex';
+                    socialLinksEditSection.style.display = 'none';
                 } else {
                     window.showNotification(response.data.message || 'Error al guardar las redes sociales.', 'error');
                 }
@@ -798,6 +806,7 @@ export function renderCreateGalleryForm() {
                 <div class="profile-picture-preview" id="profile-picture-preview-create"></div>
                 <div class="profile-text-wrapper">
                     <div class="profile-main-text" data-i18n="admin.editGallery.profilePictureTitle"></div>
+                    <div class="profile-sub-text" data-i18n="admin.editGallery.profilePictureDescription"></div>
                 </div>
             </div>
             <input type="file" id="profile-picture-upload-create" accept="image/*" style="display: none;">
@@ -812,12 +821,19 @@ export function renderCreateGalleryForm() {
         </div>
     </div>
     
-    <div class="edit-section">
-        <div id="social-links-view-mode-create">
-            <button type="button" class="load-more-btn" id="manage-social-links-btn-create">Administrar redes sociales</button>
+    <div class="edit-section content-section-stacked" id="social-links-view-section-create">
+        <div class="item-details">
+            <h4 data-i18n="admin.createGallery.socialsSectionTitle"></h4>
+            <p data-i18n="admin.createGallery.socialsSectionDescription"></p>
         </div>
-        <div id="social-links-edit-mode-create" class="form-group-inline" style="flex-direction: column; align-items: stretch; gap: 16px; display: none;">
-            <label class="form-label standalone" data-i18n="admin.editGallery.socialsLabel">Redes Sociales</label>
+        <div class="item-actions">
+            <button type="button" class="load-more-btn btn-primary" id="manage-social-links-btn-create" data-i18n="admin.editGallery.manageSocialsButton"></button>
+        </div>
+    </div>
+
+    <div class="edit-section" id="social-links-edit-section-create" style="display: none;">
+        <div class="form-group-inline" style="flex-direction: column; align-items: stretch; gap: 16px;">
+            <label class="form-label standalone" data-i18n="admin.editGallery.socialsSectionTitle"></label>
             <div id="social-links-container-create" class="social-links-container"></div>
             <div class="form-group-buttons" style="justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px;">
                  <button type="button" class="load-more-btn" id="cancel-socials-btn-create" data-i18n="general.cancel"></button>
@@ -875,8 +891,8 @@ export function renderCreateGalleryForm() {
     }
     
     const manageSocialsBtnCreate = container.querySelector('#manage-social-links-btn-create');
-    const socialLinksViewModeCreate = container.querySelector('#social-links-view-mode-create');
-    const socialLinksEditModeCreate = container.querySelector('#social-links-edit-mode-create');
+    const socialLinksViewSectionCreate = container.querySelector('#social-links-view-section-create');
+    const socialLinksEditSectionCreate = container.querySelector('#social-links-edit-section-create');
     const socialLinksContainerCreate = container.querySelector('#social-links-container-create');
     const cancelSocialsBtnCreate = container.querySelector('#cancel-socials-btn-create');
 
@@ -890,15 +906,15 @@ export function renderCreateGalleryForm() {
                     <input type="url" class="feedback-input social-link-input" data-platform="${platform}" placeholder="https://...">
                 </div>
             `).join('');
-            socialLinksViewModeCreate.style.display = 'none';
-            socialLinksEditModeCreate.style.display = 'block';
+            socialLinksViewSectionCreate.style.display = 'none';
+            socialLinksEditSectionCreate.style.display = 'block';
         });
     }
 
     if (cancelSocialsBtnCreate) {
         cancelSocialsBtnCreate.addEventListener('click', () => {
-            socialLinksViewModeCreate.style.display = 'block';
-            socialLinksEditModeCreate.style.display = 'none';
+            socialLinksViewSectionCreate.style.display = 'flex';
+            socialLinksEditSectionCreate.style.display = 'none';
         });
     }
 

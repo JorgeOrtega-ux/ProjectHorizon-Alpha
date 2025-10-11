@@ -157,7 +157,10 @@
       "deleteButton": "Eliminar galería",
       "photosSectionTitle": "Fotos en la Galería",
       "photosSectionDescription": "Añade, elimina y reordena las fotos de esta galería.",
-      "managePhotosButton": "Administrar Fotos"
+      "managePhotosButton": "Administrar Fotos",
+      "socialsSectionTitle": "Redes Sociales",
+      "socialsSectionDescription": "Añade enlaces a las redes sociales para esta galería.",
+      "manageSocialsButton": "Administrar redes sociales"
     },
     "manageGalleryPhotos": {
       "title": "Gestionando fotos de \"{galleryName}\"",
@@ -170,7 +173,9 @@
       "title": "Crear nueva galería",
       "backButtonTooltip": "Volver a la gestión de contenido",
       "createButton": "Crear Galería",
-      "saveFirstTooltip": "Primero crea la galería para poder administrar las fotos"
+      "saveFirstTooltip": "Primero crea la galería para poder administrar las fotos",
+      "socialsSectionTitle": "Redes Sociales",
+      "socialsSectionDescription": "Añade enlaces a las redes sociales de la galería (opcional)."
     }
   }
 }
