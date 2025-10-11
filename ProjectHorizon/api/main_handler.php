@@ -442,7 +442,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         exit;
     }
 
-    if ($request_type === 'comments') {
+ if ($request_type === 'comments') {
         $photo_id = isset($_GET['photo_id']) ? (int)$_GET['photo_id'] : 0;
         if ($photo_id <= 0) {
             http_response_code(400);
@@ -452,6 +452,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
         $user_uuid = $_SESSION['user_uuid'] ?? null;
     
+        // **INICIO DE LA CORRECCIÓN**
         $stmt = $conn->prepare("
             SELECT 
                 c.id, 
@@ -461,6 +462,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 c.parent_id,
                 u.username, 
                 u.role,
+                u.profile_picture_url, -- <-- AÑADIR ESTA LÍNEA
                 (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id AND vote_type = 1) as likes,
                 (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.id AND vote_type = -1) as dislikes,
                 (SELECT vote_type FROM comment_likes WHERE comment_id = c.id AND user_uuid = ?) as user_vote
@@ -469,6 +471,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             WHERE c.photo_id = ? AND c.status IN ('visible', 'review')
             ORDER BY c.created_at DESC
         ");
+        // **FIN DE LA CORRECCIÓN**
+        
         $stmt->bind_param("si", $user_uuid, $photo_id);
         $stmt->execute();
         $result = $stmt->get_result();

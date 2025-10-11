@@ -11,8 +11,8 @@
             </div>
             <div class="content-header-right">
                 <input type="file" id="add-photos-input" multiple accept="image/*" style="display:none;">
-                <button class="load-more-btn" data-action="add-gallery-photos">
-                    <span class="button-text" data-i18n="admin.manageGalleryPhotos.addPhotosButton"></span>
+                <button class="header-button" data-action="add-gallery-photos" data-i18n-tooltip="admin.manageGalleryPhotos.addPhotosButton">
+                    <span class="material-symbols-rounded">add</span>
                 </button>
                 <button class="load-more-btn btn-primary" data-action="save-gallery-photo-changes">
                     <span class="button-text" data-i18n="admin.editGallery.saveButton"></span>
@@ -23,8 +23,9 @@
     </div>
     <div class="section-content-block overflow-y">
         <div class="edit-gallery-container">
+            <div class="status-message-container disabled"></div>
             <div class="photo-grid-edit" id="manage-photos-grid">
-                </div>
+            </div>
         </div>
     </div>
 </div>

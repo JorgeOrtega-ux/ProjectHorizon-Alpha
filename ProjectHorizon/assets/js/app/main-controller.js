@@ -86,7 +86,6 @@ function handleAgeVerification() {
 export function initMainController() {
     handleAgeVerification();
     const appState = {
-        // --- INICIO DE LA MODIFICACIÓN ---
         // Objeto para guardar el estado de la galería que se está creando
         newGalleryState: {
             name: '',
@@ -94,7 +93,6 @@ export function initMainController() {
             profilePictureFile: null,
             pendingPhotos: []
         },
-        // --- FIN DE LA MODIFICACIÓN ---
         currentAppView: null,
         currentAppSection: null,
         currentSortBy: 'relevant',
@@ -162,7 +160,7 @@ export function initMainController() {
         const sessionResponse = await api.checkSession();
         if (sessionResponse.ok && sessionResponse.data.loggedin) {
             const userRole = sessionResponse.data.user.role;
-            if (userRole === 'moderator' || userRole === 'administrator') {
+            if (['moderator', 'administrator', 'founder'].includes(userRole)) {
                 return false;
             }
         }
@@ -342,7 +340,7 @@ export function initMainController() {
         const sessionResponse = await api.checkSession();
         if (sessionResponse.ok && sessionResponse.data.loggedin) {
             const userRole = sessionResponse.data.user.role;
-            if (userRole === 'moderator' || userRole === 'administrator') {
+            if (['moderator', 'administrator', 'founder'].includes(userRole)) {
                 const unlockedGalleries = JSON.parse(localStorage.getItem('unlockedGalleries') || '{}');
                 unlockedGalleries[uuid] = new Date().getTime();
                 localStorage.setItem('unlockedGalleries', JSON.stringify(unlockedGalleries));
@@ -483,9 +481,22 @@ export function initMainController() {
         }
     }
 
+    function updatePhotoGridVisibility() {
+        const grid = document.getElementById('manage-photos-grid');
+        if (!grid) return;
+        
+        const statusContainer = grid.closest('.edit-gallery-container').querySelector('.status-message-container');
+        
+        if (grid.children.length === 0) {
+            statusContainer.classList.remove('disabled');
+            grid.classList.add('disabled');
+        } else {
+            statusContainer.classList.add('disabled');
+            grid.classList.remove('disabled');
+        }
+    }
+
     function setupEventListeners() {
-        // --- INICIO DE LA MODIFICACIÓN ---
-        // Listener para guardar datos del formulario de crear galería mientras se escriben
         document.addEventListener('input', (event) => {
             if (appState.currentAppSection === 'createGallery') {
                 const nameInput = event.target.closest('#gallery-name-create');
@@ -495,11 +506,9 @@ export function initMainController() {
             }
         });
 
-        // Listener global para el input de archivos (más robusto que listeners dinámicos)
         document.addEventListener('change', (event) => {
             const fileInput = event.target;
             
-            // Input para la foto de perfil en "Crear Galería"
             if (fileInput.matches('#profile-picture-upload-create')) {
                 if (fileInput.files && fileInput.files[0]) {
                     appState.newGalleryState.profilePictureFile = fileInput.files[0];
@@ -512,17 +521,17 @@ export function initMainController() {
                 }
             }
 
-            // Input para añadir fotos a una galería existente o nueva
             if (fileInput.matches('#add-photos-input')) {
                 const gridEl = document.getElementById('manage-photos-grid');
                 if (!gridEl) return;
+                
+                updatePhotoGridVisibility();
 
                 const currentSection = document.querySelector('[data-section="manageGalleryPhotos"]');
                 const isNewGalleryMode = currentSection && currentSection.dataset.mode === 'new';
 
                 const files = event.target.files;
                 for (const file of files) {
-                    // Si estamos en modo "nueva galería", guardamos los archivos en el estado temporal
                     if (isNewGalleryMode) {
                         if (!appState.newGalleryState.pendingPhotos.some(f => f.name === file.name)) {
                              appState.newGalleryState.pendingPhotos.push(file);
@@ -538,7 +547,7 @@ export function initMainController() {
                     reader.onload = (e) => {
                         const newPhotoItem = document.createElement('div');
                         newPhotoItem.className = 'photo-item-edit pending-upload';
-                        newPhotoItem.dataset.fileName = file.name; // Usado para reordenar antes de subir
+                        newPhotoItem.dataset.fileName = file.name;
                         newPhotoItem.innerHTML = `<img src="${e.target.result}" alt="Nueva foto"><button class="delete-photo-btn" data-action="delete-gallery-photo"><span class="material-symbols-rounded">close</span></button>`;
                         gridEl.appendChild(newPhotoItem);
                     };
@@ -547,21 +556,16 @@ export function initMainController() {
                 fileInput.value = '';
             }
         });
-        // --- FIN DE LA MODIFICACIÓN ---
 
         document.addEventListener('click', async function (event) {
             const actionTarget = event.target.closest('[data-action]');
             const selectTrigger = event.target.closest('[data-action="toggle-select"]');
             const submitCommentBtn = event.target.closest('#submit-comment-btn');
 
-            // --- INICIO DE LA MODIFICACIÓN ---
-            // Guardar el estado del toggle de privacidad para la nueva galería
             if (appState.currentAppSection === 'createGallery' && event.target.closest('#gallery-privacy-create')) {
                 const privacyToggle = event.target.closest('#gallery-privacy-create');
-                // La acción de 'toggle' se ejecuta después, así que negamos el estado actual
                 appState.newGalleryState.privacy = !privacyToggle.classList.contains('active');
             }
-            // --- FIN DE LA MODIFICACIÓN ---
 
             if (submitCommentBtn) {
                 const commentInput = document.getElementById('comment-input');
@@ -895,12 +899,10 @@ export function initMainController() {
                         const section = actionTarget.closest('.section-content');
                         const uuid = section ? section.dataset.uuid : null;
                         
-                        // Si encontramos el UUID, volvemos a la página de edición de esa galería.
                         if (uuid) {
                             navigateToUrl('admin', 'editGallery', { uuid });
                             handleStateChange('admin', 'editGallery', true, { uuid }, appState);
                         } else {
-                            // Si por alguna razón no se encuentra, volvemos a la lista principal de contenido.
                             navigateToUrl('admin', 'manageContent');
                             handleStateChange('admin', 'manageContent', true, null, appState);
                         }
@@ -1344,30 +1346,30 @@ export function initMainController() {
                         break;
                     }
                     case 'delete-gallery-photo': {
+                        const photoItem = actionTarget.closest('.photo-item-edit');
                         const photoId = actionTarget.dataset.photoId;
                         const currentSection = document.querySelector('[data-section="manageGalleryPhotos"]');
                         const isNewGalleryMode = currentSection && currentSection.dataset.mode === 'new';
 
-                        // --- INICIO DE LA MODIFICACIÓN ---
-                        // Si estamos en modo "nueva galería", eliminamos del array temporal
                         if (isNewGalleryMode) {
-                            const fileName = actionTarget.closest('.photo-item-edit').dataset.fileName;
+                            const fileName = photoItem.dataset.fileName;
                             appState.newGalleryState.pendingPhotos = appState.newGalleryState.pendingPhotos.filter(
                                 file => file.name !== fileName
                             );
-                            actionTarget.closest('.photo-item-edit').remove();
+                            photoItem.remove();
                             showNotification('Foto pendiente eliminada.', 'success');
-                        } else { // Si no, es una galería existente y llamamos a la API
+                            updatePhotoGridVisibility();
+                        } else {
                             api.deleteGalleryPhoto(photoId).then(response => {
                                 if (response.ok) {
                                     showNotification(response.data.message, 'success');
-                                    actionTarget.closest('.photo-item-edit').remove();
+                                    photoItem.remove();
+                                    updatePhotoGridVisibility();
                                 } else {
                                     showNotification(response.data.message || 'Error al eliminar la foto', 'error');
                                 }
                             });
                         }
-                        // --- FIN DE LA MODIFICACIÓN ---
                         break;
                     }
                     case 'save-username': {
@@ -1441,8 +1443,7 @@ export function initMainController() {
                         break;
                     }
                     
-                    // --- INICIO DE LA MODIFICACIÓN ---
-                    case 'manage-gallery-photos': { // Para galerías existentes
+                    case 'manage-gallery-photos': {
                         const uuid = actionTarget.dataset.uuid;
                         if (uuid) {
                             navigateToUrl('admin', 'manageGalleryPhotos', { uuid });
@@ -1450,7 +1451,7 @@ export function initMainController() {
                         }
                         break;
                     }
-                    case 'manage-new-gallery-photos': { // Para la nueva galería
+                    case 'manage-new-gallery-photos': {
                         const nameInput = document.getElementById('gallery-name-create');
                         if (nameInput) appState.newGalleryState.name = nameInput.value;
                         const privacyToggle = document.getElementById('gallery-privacy-create');
@@ -1513,14 +1514,14 @@ export function initMainController() {
                         }
                         break;
                     }
-                    case 'add-gallery-photos': { // Para la vista de edición de una galería existente
+                    case 'add-gallery-photos': {
                         const addPhotosInput = document.getElementById('add-photos-input');
                         if (addPhotosInput) {
                             addPhotosInput.click();
                         }
                         break;
                     }
-                    case 'save-gallery-photo-changes': { // Para la vista de edición de una galería existente
+                    case 'save-gallery-photo-changes': {
                         const button = actionTarget;
                         button.classList.add('loading');
                         
@@ -1569,8 +1570,7 @@ export function initMainController() {
                         button.classList.remove('loading');
                         break;
                     }
-                    // --- FIN DE LA MODIFICACIÓN ---
-
+                    
                     case 'delete-gallery':
                         {
                             const pathParts = window.location.pathname.split('/');
@@ -1879,7 +1879,7 @@ export function initMainController() {
     const editGalleryMatch = path.match(/^admin\/edit-gallery\/([a-f0-9-]{36})$/);
     const commentsMatch = path.match(/^gallery\/([a-f0-9-]{36})\/photo\/(\d+)\/comments$/);
     const userProfileMatch = path.match(/^admin\/user\/([a-f0-9-]{36})$/);
-    const managePhotosMatch = path.match(/^admin\/edit-gallery\/([a-f0-9-]{36})\/photos$/); // --- CORRECCIÓN ---
+    const managePhotosMatch = path.match(/^admin\/edit-gallery\/([a-f0-9-]{36})\/photos$/);
 
     if (userProfileMatch) {
         initialRoute = { view: 'admin', section: 'userProfile' };
@@ -1893,7 +1893,7 @@ export function initMainController() {
     } else if (photoMatch) {
         initialRoute = { view: 'main', section: 'photoView' };
         initialStateData = { uuid: photoMatch[1], photoId: photoMatch[2] };
-    } else if (managePhotosMatch) { // --- CORRECCIÓN ---
+    } else if (managePhotosMatch) {
         initialRoute = { view: 'admin', section: 'manageGalleryPhotos' };
         initialStateData = { uuid: managePhotosMatch[1] };
     } else if (editGalleryMatch) {

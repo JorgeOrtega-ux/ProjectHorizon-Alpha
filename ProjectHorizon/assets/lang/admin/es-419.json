@@ -162,7 +162,9 @@
     "manageGalleryPhotos": {
       "title": "Gestionando fotos de \"{galleryName}\"",
       "backButtonTooltip": "Volver a la edición de la galería",
-      "addPhotosButton": "Añadir Fotos"
+      "addPhotosButton": "Añadir Fotos",
+      "noPhotosTitle": "Esta galería no tiene fotos",
+      "noPhotosMessage": "Añade algunas fotos para empezar a gestionar el contenido."
     },
     "createGallery": {
       "title": "Crear nueva galería",

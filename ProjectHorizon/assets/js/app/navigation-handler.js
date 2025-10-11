@@ -79,7 +79,14 @@ export function createCommentElement(comment, isReply = false) {
     commentElement.className = `comment-item ${isReply ? 'comment-reply' : ''}`;
     commentElement.dataset.commentId = comment.id;
 
-    const initials = comment.username.substring(0, 2).toUpperCase();
+    let avatarHTML;
+    if (comment.profile_picture_url) {
+        avatarHTML = `<div class="comment-avatar profile-btn--image" style="background-image: url('${window.BASE_PATH}/${comment.profile_picture_url}')"></div>`;
+    } else {
+        const initials = comment.username.substring(0, 2).toUpperCase();
+        avatarHTML = `<div class="comment-avatar profile-btn--${comment.role}">${initials}</div>`;
+    }
+    
     const date = new Date(comment.created_at).toLocaleString();
 
     let commentBodyHTML = '';
@@ -138,7 +145,7 @@ export function createCommentElement(comment, isReply = false) {
 
     commentElement.innerHTML = `
         <div class="comment-avatar-container">
-            <div class="comment-avatar profile-btn--${comment.role}">${initials}</div>
+            ${avatarHTML}
         </div>
         <div class="comment-content">
             <div class="comment-header">
@@ -187,28 +194,37 @@ async function renderManagePhotosView(gallery, appState) {
 
     const titleEl = section.querySelector('#manage-photos-title');
     const gridEl = section.querySelector('#manage-photos-grid');
+    const statusContainer = section.querySelector('.status-message-container');
 
     if (titleEl) {
         titleEl.textContent = window.getTranslation('admin.manageGalleryPhotos.title', { galleryName: gallery.name });
     }
 
-    if (gridEl) {
-        gridEl.innerHTML = ''; // Limpiar grid
-        gallery.photos.forEach(photo => {
-            const photoItem = document.createElement('div');
-            photoItem.className = 'photo-item-edit';
-            photoItem.dataset.id = photo.id;
-            photoItem.innerHTML = `
-                <img src="${window.BASE_PATH}/${photo.photo_url}" alt="Miniatura">
-                <button class="delete-photo-btn" data-action="delete-gallery-photo" data-photo-id="${photo.id}">
-                    <span class="material-symbols-rounded">close</span>
-                </button>
-            `;
-            gridEl.appendChild(photoItem);
-        });
-        
-        // Inicializamos SortableJS para permitir reordenar arrastrando
-        new Sortable(gridEl, { animation: 150, ghostClass: 'sortable-ghost' });
+    if (gridEl && statusContainer) {
+        if (gallery.photos.length > 0) {
+            statusContainer.classList.add('disabled');
+            gridEl.classList.remove('disabled');
+            gridEl.innerHTML = ''; // Limpiar grid
+            gallery.photos.forEach(photo => {
+                const photoItem = document.createElement('div');
+                photoItem.className = 'photo-item-edit';
+                photoItem.dataset.id = photo.id;
+                photoItem.innerHTML = `
+                    <img src="${window.BASE_PATH}/${photo.photo_url}" alt="Miniatura">
+                    <button class="delete-photo-btn" data-action="delete-gallery-photo" data-photo-id="${photo.id}">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                `;
+                gridEl.appendChild(photoItem);
+            });
+            
+            // Inicializamos SortableJS para permitir reordenar arrastrando
+            new Sortable(gridEl, { animation: 150, ghostClass: 'sortable-ghost' });
+        } else {
+            gridEl.classList.add('disabled');
+            statusContainer.classList.remove('disabled');
+            statusContainer.innerHTML = `<div><h2 data-i18n="admin.manageGalleryPhotos.noPhotosTitle">${window.getTranslation('admin.manageGalleryPhotos.noPhotosTitle')}</h2><p data-i18n="admin.manageGalleryPhotos.noPhotosMessage">${window.getTranslation('admin.manageGalleryPhotos.noPhotosMessage')}</p></div>`;
+        }
     }
 
     applyTranslations(section);
