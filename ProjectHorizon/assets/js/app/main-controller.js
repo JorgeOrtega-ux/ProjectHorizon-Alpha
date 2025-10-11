@@ -1500,6 +1500,16 @@ export function initMainController() {
                         formData.append('name', name);
                         formData.append('privacy', appState.newGalleryState.privacy ? '1' : '0');
 
+                        const socialInputs = document.querySelectorAll('#social-links-container-create .social-link-input');
+                        const socials = Array.from(socialInputs).map(input => {
+                            const platform = input.dataset.platform || input.previousElementSibling.value.trim().toLowerCase();
+                            return {
+                                platform: platform,
+                                url: input.value.trim()
+                            }
+                        }).filter(s => s.url && s.platform);
+                        formData.append('socials', JSON.stringify(socials));
+
                         if (appState.newGalleryState.profilePictureFile) {
                             formData.append('profile_picture', appState.newGalleryState.profilePictureFile);
                         }
@@ -1869,18 +1879,19 @@ export function initMainController() {
         'help/cookie-policy': { view: 'help', section: 'cookiePolicy' },
         'help/send-feedback': { view: 'help', section: 'sendFeedback' },
         'login': { view: 'auth', section: 'login' },
-        'register': { view: 'auth', section: 'register', data: { step: 'user-info' } },
-        'register/password': { view: 'auth', section: 'register', data: { step: 'password' } },
-        'register/verify-code': { view: 'auth', section: 'register', data: { step: 'verify-code' } },
-        'forgot-password': { view: 'auth', section: 'forgotPassword', data: { step: 'enter-email' } },
-        'forgot-password/enter-code': { view: 'auth', section: 'forgotPassword', data: { step: 'enter-code' } },
-        'forgot-password/new-password': { view: 'auth', section: 'forgotPassword', data: { step: 'new-password' } },
+        'register': { view: 'auth', section: 'register', 'data': { step: 'user-info' } },
+        'register/password': { view: 'auth', section: 'register', 'data': { step: 'password' } },
+        'register/verify-code': { view: 'auth', section: 'register', 'data': { step: 'verify-code' } },
+        'forgot-password': { view: 'auth', section: 'forgotPassword', 'data': { step: 'enter-email' } },
+        'forgot-password/enter-code': { view: 'auth', section: 'forgotPassword', 'data': { step: 'enter-code' } },
+        'forgot-password/new-password': { view: 'auth', section: 'forgotPassword', 'data': { step: 'new-password' } },
         'admin/dashboard': { view: 'admin', section: 'dashboard' },
         'admin/users': { view: 'admin', section: 'manageUsers' },
         'admin/content': { view: 'admin', section: 'manageContent' },
         'admin/create-gallery': { view: 'admin', section: 'createGallery' },
         'admin/comments': { view: 'admin', section: 'manageComments' },
-        'admin/feedback': { view: 'admin', section: 'manageFeedback' }
+        'admin/feedback': { view: 'admin', section: 'manageFeedback' },
+        'gallery/{uuid}/photo/{photoId}/comments': { view: 'main', section: 'photoComments' }
     };
     let initialRoute = routes[path] || null;
     let initialStateData = initialRoute ? initialRoute.data : null;

@@ -523,20 +523,6 @@ export function renderEditGalleryForm(gallery) {
     const photoCount = gallery.photos ? gallery.photos.length : 0;
     const photoCountText = photoCount === 1 ? '1 foto' : `${photoCount} fotos`;
 
-    // --- INICIO MODIFICACIÓN: HTML PARA REDES SOCIALES ---
-    const socialPlatforms = ['facebook', 'instagram', 'x', 'youtube', 'twitch', 'onlyfans'];
-    let socialLinksHTML = '';
-    socialPlatforms.forEach(platform => {
-        const value = gallery.social_links && gallery.social_links[platform] ? gallery.social_links[platform] : '';
-        socialLinksHTML += `
-            <div class="form-group-inline">
-                <label class="form-label standalone">${platform.charAt(0).toUpperCase() + platform.slice(1)} URL</label>
-                <input type="url" class="feedback-input social-link-input" data-platform="${platform}" value="${value}" placeholder="https://...">
-            </div>
-        `;
-    });
-    // --- FIN MODIFICACIÓN ---
-
     container.innerHTML = `
     <div class="edit-section">
         <div class="profile-picture-edit-container">
@@ -574,10 +560,14 @@ export function renderEditGalleryForm(gallery) {
     </div>
 
     <div class="edit-section">
-        <div class="form-group-inline" style="flex-direction: column; align-items: stretch; gap: 16px;">
+        <div id="social-links-view-mode">
+            <button type="button" class="load-more-btn" id="manage-social-links-btn">Administrar redes sociales</button>
+        </div>
+        <div id="social-links-edit-mode" class="form-group-inline" style="flex-direction: column; align-items: stretch; gap: 16px; display: none;">
             <label class="form-label standalone" data-i18n="admin.editGallery.socialsLabel">Redes Sociales</label>
-            ${socialLinksHTML}
-            <div class="form-group-buttons" style="justify-content: flex-end;">
+            <div id="social-links-container" class="social-links-container"></div>
+            <div class="form-group-buttons" style="justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px;">
+                <button type="button" class="load-more-btn" id="cancel-socials-btn" data-i18n="general.cancel"></button>
                  <button type="button" class="load-more-btn btn-primary" id="save-socials-btn" data-i18n="general.save"></button>
             </div>
         </div>
@@ -653,9 +643,45 @@ export function renderEditGalleryForm(gallery) {
     const editBtn = container.querySelector('#edit-name-btn');
     const cancelBtn = container.querySelector('#cancel-name-btn');
     const saveBtn = container.querySelector('#save-name-btn');
-    const saveSocialsBtn = container.querySelector('#save-socials-btn'); // <-- Botón de guardar redes
+    const saveSocialsBtn = container.querySelector('#save-socials-btn');
     const privacyToggle = container.querySelector('#gallery-privacy-edit');
     const visibilityToggle = container.querySelector('#gallery-visibility-edit');
+    const manageSocialsBtn = container.querySelector('#manage-social-links-btn');
+    const socialLinksViewMode = container.querySelector('#social-links-view-mode');
+    const socialLinksEditMode = container.querySelector('#social-links-edit-mode');
+    const socialLinksContainer = container.querySelector('#social-links-container');
+    const cancelSocialsBtn = container.querySelector('#cancel-socials-btn');
+
+    const socialPlatforms = ['facebook', 'instagram', 'x', 'youtube', 'twitch', 'onlyfans'];
+
+    function renderSocialLinks() {
+        socialLinksContainer.innerHTML = '';
+        socialPlatforms.forEach(platform => {
+            const value = gallery.social_links && gallery.social_links[platform] ? gallery.social_links[platform] : '';
+            const socialLinkHTML = `
+                <div class="form-group-inline">
+                    <label class="form-label standalone">${platform.charAt(0).toUpperCase() + platform.slice(1)} URL</label>
+                    <input type="url" class="feedback-input social-link-input" data-platform="${platform}" value="${value}" placeholder="https://...">
+                </div>
+            `;
+            socialLinksContainer.innerHTML += socialLinkHTML;
+        });
+    }
+
+    if (manageSocialsBtn) {
+        manageSocialsBtn.addEventListener('click', () => {
+            renderSocialLinks();
+            socialLinksViewMode.style.display = 'none';
+            socialLinksEditMode.style.display = 'block';
+        });
+    }
+
+    if (cancelSocialsBtn) {
+        cancelSocialsBtn.addEventListener('click', () => {
+            socialLinksViewMode.style.display = 'block';
+            socialLinksEditMode.style.display = 'none';
+        });
+    }
 
     if (editBtn) {
         editBtn.addEventListener('click', () => {
@@ -697,15 +723,17 @@ export function renderEditGalleryForm(gallery) {
             nameViewMode.style.display = 'flex';
         });
     }
-
-    // --- INICIO MODIFICACIÓN: EVENTO PARA GUARDAR REDES SOCIALES ---
+    
     if (saveSocialsBtn) {
         saveSocialsBtn.addEventListener('click', () => {
             const socialInputs = container.querySelectorAll('.social-link-input');
-            const socials = Array.from(socialInputs).map(input => ({
-                platform: input.dataset.platform,
-                url: input.value.trim()
-            })).filter(s => s.url); // Filtrar vacíos
+            const socials = Array.from(socialInputs).map(input => {
+                const platform = input.dataset.platform;
+                return {
+                    platform: platform,
+                    url: input.value.trim()
+                }
+            }).filter(s => s.url && s.platform);
 
             const formData = new FormData();
             formData.append('action_type', 'update_gallery_socials');
@@ -715,13 +743,14 @@ export function renderEditGalleryForm(gallery) {
             api.postDataWithCsrf(formData).then(response => {
                 if(response.ok) {
                     window.showNotification(response.data.message, 'success');
+                    socialLinksViewMode.style.display = 'block';
+                    socialLinksEditMode.style.display = 'none';
                 } else {
                     window.showNotification(response.data.message || 'Error al guardar las redes sociales.', 'error');
                 }
             });
         });
     }
-    // --- FIN MODIFICACIÓN ---
 
 
     if (privacyToggle) {
@@ -757,24 +786,10 @@ export function renderEditGalleryForm(gallery) {
     }
 }
 
-// --- INICIO DE LA MODIFICACIÓN ---
 export function renderCreateGalleryForm() {
     window.pendingGalleryFiles = [];
     const container = document.getElementById('create-gallery-form-container');
     if (!container) return;
-
-    // --- INICIO MODIFICACIÓN: HTML PARA REDES SOCIALES ---
-    const socialPlatforms = ['facebook', 'instagram', 'x', 'youtube', 'twitch', 'onlyfans'];
-    let socialLinksHTML = '';
-    socialPlatforms.forEach(platform => {
-        socialLinksHTML += `
-            <div class="form-group-inline">
-                <label class="form-label standalone">${platform.charAt(0).toUpperCase() + platform.slice(1)} URL</label>
-                <input type="url" class="feedback-input social-link-input" data-platform="${platform}" placeholder="https://...">
-            </div>
-        `;
-    });
-    // --- FIN MODIFICACIÓN ---
 
     container.innerHTML = `
     <div class="edit-section">
@@ -796,13 +811,20 @@ export function renderCreateGalleryForm() {
             <input type="text" id="gallery-name-create" class="feedback-input" placeholder="Nombre de la galería" maxlength="100">
         </div>
     </div>
-
+    
     <div class="edit-section">
-        <div class="form-group-inline" style="flex-direction: column; align-items: stretch; gap: 16px;">
+        <div id="social-links-view-mode-create">
+            <button type="button" class="load-more-btn" id="manage-social-links-btn-create">Administrar redes sociales</button>
+        </div>
+        <div id="social-links-edit-mode-create" class="form-group-inline" style="flex-direction: column; align-items: stretch; gap: 16px; display: none;">
             <label class="form-label standalone" data-i18n="admin.editGallery.socialsLabel">Redes Sociales</label>
-            ${socialLinksHTML}
+            <div id="social-links-container-create" class="social-links-container"></div>
+            <div class="form-group-buttons" style="justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 16px;">
+                 <button type="button" class="load-more-btn" id="cancel-socials-btn-create" data-i18n="general.cancel"></button>
+            </div>
         </div>
     </div>
+
     <div class="edit-section">
         <div class="data-item">
              <div class="view-container active">
@@ -851,6 +873,35 @@ export function renderCreateGalleryForm() {
             }
         });
     }
+    
+    const manageSocialsBtnCreate = container.querySelector('#manage-social-links-btn-create');
+    const socialLinksViewModeCreate = container.querySelector('#social-links-view-mode-create');
+    const socialLinksEditModeCreate = container.querySelector('#social-links-edit-mode-create');
+    const socialLinksContainerCreate = container.querySelector('#social-links-container-create');
+    const cancelSocialsBtnCreate = container.querySelector('#cancel-socials-btn-create');
+
+    const socialPlatforms = ['facebook', 'instagram', 'x', 'youtube', 'twitch', 'onlyfans'];
+
+    if (manageSocialsBtnCreate) {
+        manageSocialsBtnCreate.addEventListener('click', () => {
+            socialLinksContainerCreate.innerHTML = socialPlatforms.map(platform => `
+                <div class="form-group-inline">
+                    <label class="form-label standalone">${platform.charAt(0).toUpperCase() + platform.slice(1)} URL</label>
+                    <input type="url" class="feedback-input social-link-input" data-platform="${platform}" placeholder="https://...">
+                </div>
+            `).join('');
+            socialLinksViewModeCreate.style.display = 'none';
+            socialLinksEditModeCreate.style.display = 'block';
+        });
+    }
+
+    if (cancelSocialsBtnCreate) {
+        cancelSocialsBtnCreate.addEventListener('click', () => {
+            socialLinksViewModeCreate.style.display = 'block';
+            socialLinksEditModeCreate.style.display = 'none';
+        });
+    }
+
     initTooltips();
 }
 // --- FIN DE LA MODIFICACIÓN ---
