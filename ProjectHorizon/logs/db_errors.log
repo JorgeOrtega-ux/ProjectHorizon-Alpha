@@ -147,3 +147,47 @@ Stack trace:
 Stack trace:
 #0 {main}
   thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 78
+[11-Oct-2025 22:06:01 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:78
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 78
+[11-Oct-2025 22:06:01 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:78
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 78
+[11-Oct-2025 22:06:01 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:78
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 78
+[11-Oct-2025 22:06:46 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:78
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 78
+[11-Oct-2025 22:06:46 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:78
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 78
+[11-Oct-2025 22:06:46 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:78
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 78
+[11-Oct-2025 22:06:47 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:78
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 78
+[11-Oct-2025 22:06:48 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:78
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 78
+[11-Oct-2025 22:06:56 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:78
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 78
+[11-Oct-2025 22:06:56 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:78
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 78
+[11-Oct-2025 22:06:56 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php:78
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\main_handler.php on line 78

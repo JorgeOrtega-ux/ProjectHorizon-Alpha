@@ -19,6 +19,7 @@ CREATE TABLE `users` (
   `role` ENUM('user','moderator','administrator','founder') NOT NULL DEFAULT 'user', -- ROL AÑADIDO
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `status` ENUM('active','suspended','deleted') NOT NULL DEFAULT 'active',
+  `profile_picture_url` VARCHAR(255) NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid` (`uuid`),
   UNIQUE KEY `username` (`username`),
@@ -240,7 +241,6 @@ ALTER TABLE `comment_likes`
 ALTER TABLE `comment_reports`
   ADD CONSTRAINT `comment_reports_ibfk_1` FOREIGN KEY (`comment_id`) REFERENCES `photo_comments` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `comment_reports_ibfk_2` FOREIGN KEY (`reporter_uuid`) REFERENCES `users` (`uuid`) ON DELETE CASCADE;
-
 -- --------------------------------------------------------
 -- TABLA DE CONFIGURACIÓN DEL SERVIDOR
 -- --------------------------------------------------------
@@ -249,7 +249,6 @@ CREATE TABLE `server_settings` (
   `setting_value` varchar(255) NOT NULL,
   PRIMARY KEY (`setting_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- Valor inicial para el modo mantenimiento (desactivado por defecto)
 INSERT INTO `server_settings` (`setting_key`, `setting_value`) VALUES
 ('maintenance_mode', '0');
