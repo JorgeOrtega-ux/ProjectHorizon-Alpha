@@ -600,7 +600,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $uuid = $_GET['uuid'];
             $sql = "SELECT g.uuid, g.name, g.privacy, g.visibility, g.created_at, gpp.profile_picture_url, gm.last_edited, gm.total_likes, gm.total_interactions
                     FROM galleries g
-                    JOIN galleries_metadata gm ON g.uuid = gm.gallery_uuid
+                    LEFT JOIN galleries_metadata gm ON g.uuid = gm.gallery_uuid
                     LEFT JOIN gallery_profile_pictures gpp ON g.uuid = gpp.gallery_uuid
                     WHERE g.uuid = ?";
             
@@ -619,6 +619,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 echo json_encode(['error' => 'Galería no encontrada o no disponible.']);
                 exit;
             }
+
+            // --- INICIO MODIFICACIÓN: OBTENER REDES SOCIALES ---
+            $stmt_socials = $conn->prepare("SELECT platform, url FROM gallery_social_links WHERE gallery_uuid = ?");
+            $stmt_socials->bind_param("s", $uuid);
+            $stmt_socials->execute();
+            $socials_result = $stmt_socials->get_result();
+            $gallery['social_links'] = [];
+            while ($row = $socials_result->fetch_assoc()) {
+                $gallery['social_links'][$row['platform']] = $row['url'];
+            }
+            $stmt_socials->close();
+            // --- FIN MODIFICACIÓN ---
+
             echo json_encode($gallery);
             $stmt->close();
             $conn->close();
@@ -835,6 +848,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $photos_result = $stmt_photos->get_result();
         $photos = $photos_result->fetch_all(MYSQLI_ASSOC);
         $stmt_photos->close();
+
+        // --- INICIO MODIFICACIÓN: OBTENER REDES SOCIALES ---
+        $stmt_socials = $conn->prepare("SELECT platform, url FROM gallery_social_links WHERE gallery_uuid = ?");
+        $stmt_socials->bind_param("s", $uuid);
+        $stmt_socials->execute();
+        $socials_result = $stmt_socials->get_result();
+        $gallery['social_links'] = [];
+        while ($row = $socials_result->fetch_assoc()) {
+            $gallery['social_links'][$row['platform']] = $row['url'];
+        }
+        $stmt_socials->close();
+        // --- FIN MODIFICACIÓN ---
     
         if ($gallery) {
             $gallery['photos'] = $photos;
@@ -1605,6 +1630,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['success' => false, 'message' => 'Error al actualizar la galería.']);
         }
         $stmt->close();
+    
+    // --- INICIO MODIFICACIÓN: NUEVA ACCIÓN PARA REDES SOCIALES ---
+    } elseif ($action_type === 'update_gallery_socials') {
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acción no autorizada.']);
+            exit;
+        }
+
+        $uuid = $_POST['uuid'] ?? '';
+        $socials = json_decode($_POST['socials'] ?? '[]', true);
+
+        if (empty($uuid)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Falta el UUID de la galería.']);
+            exit;
+        }
+
+        $conn->begin_transaction();
+        try {
+            // Borrar enlaces existentes
+            $stmt_delete = $conn->prepare("DELETE FROM gallery_social_links WHERE gallery_uuid = ?");
+            $stmt_delete->bind_param("s", $uuid);
+            $stmt_delete->execute();
+            $stmt_delete->close();
+
+            // Insertar nuevos enlaces
+            $allowed_platforms = ['facebook', 'instagram', 'x', 'youtube', 'twitch', 'onlyfans'];
+            if (!empty($socials)) {
+                $stmt_insert = $conn->prepare("INSERT INTO gallery_social_links (gallery_uuid, platform, url) VALUES (?, ?, ?)");
+                foreach ($socials as $social) {
+                    if (in_array($social['platform'], $allowed_platforms) && !empty($social['url'])) {
+                        $stmt_insert->bind_param("sss", $uuid, $social['platform'], $social['url']);
+                        $stmt_insert->execute();
+                    }
+                }
+                $stmt_insert->close();
+            }
+            
+            $conn->commit();
+            echo json_encode(['success' => true, 'message' => 'Redes sociales actualizadas.']);
+        } catch (mysqli_sql_exception $exception) {
+            $conn->rollback();
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error al actualizar las redes sociales.']);
+        }
+        exit;
+    // --- FIN MODIFICACIÓN ---
 
     } elseif ($action_type === 'create_gallery') {
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
@@ -1614,6 +1687,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         $name = trim($_POST['name'] ?? '');
         $privacy = isset($_POST['privacy']) ? (int)filter_var($_POST['privacy'], FILTER_VALIDATE_BOOLEAN) : 0;
+        $socials = json_decode($_POST['socials'] ?? '[]', true); // <-- OBTENER REDES SOCIALES
 
         if (empty($name)) {
             http_response_code(400);
@@ -1634,6 +1708,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $stmt_meta->bind_param("s", $uuid);
             $stmt_meta->execute();
             $stmt_meta->close();
+
+            // --- INICIO MODIFICACIÓN: INSERTAR REDES SOCIALES ---
+            $allowed_platforms = ['facebook', 'instagram', 'x', 'youtube', 'twitch', 'onlyfans'];
+            if (!empty($socials)) {
+                $stmt_socials = $conn->prepare("INSERT INTO gallery_social_links (gallery_uuid, platform, url) VALUES (?, ?, ?)");
+                foreach ($socials as $social) {
+                    if (in_array($social['platform'], $allowed_platforms) && !empty($social['url'])) {
+                        $stmt_socials->bind_param("sss", $uuid, $social['platform'], $social['url']);
+                        $stmt_socials->execute();
+                    }
+                }
+                $stmt_socials->close();
+            }
+            // --- FIN MODIFICACIÓN ---
 
             if (isset($_FILES['profile_picture'])) {
                 $upload_dir = '../uploads/profile_pictures/';

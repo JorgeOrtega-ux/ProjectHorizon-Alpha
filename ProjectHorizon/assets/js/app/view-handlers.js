@@ -312,10 +312,10 @@ export async function fetchAndDisplayGalleryPhotos(uuid, galleryName, append = f
             statusContainer.innerHTML = loaderHTML;
         }
 
-        // --- INICIO DE LA MODIFICACIÓN: Lógica del Banner ---
         if (banner) {
             const bannerName = banner.querySelector('.profile-banner-name');
             const bannerAvatar = banner.querySelector('.profile-banner-avatar');
+            const socialsContainer = banner.querySelector('.profile-banner-socials');
             const totalLikes = banner.querySelector('#gallery-total-likes');
             const totalInteractions = banner.querySelector('#gallery-total-interactions');
             
@@ -333,9 +333,31 @@ export async function fetchAndDisplayGalleryPhotos(uuid, galleryName, append = f
                         bannerAvatar.style.backgroundImage = 'none';
                     }
                 }
+
+                if (socialsContainer) {
+                    socialsContainer.innerHTML = '';
+                    if (gallery.social_links) {
+                        for (const platform in gallery.social_links) {
+                            let url = gallery.social_links[platform];
+                            if (url) {
+                                // --- INICIO DE LA CORRECCIÓN ---
+                                // Asegurarse de que la URL tenga un protocolo
+                                if (!/^https?:\/\//i.test(url)) {
+                                    url = 'https://' + url;
+                                }
+                                // --- FIN DE LA CORRECCIÓN ---
+                                const socialLink = document.createElement('a');
+                                socialLink.href = url;
+                                socialLink.target = '_blank';
+                                socialLink.className = 'social-badge';
+                                socialLink.innerHTML = `<span>${platform.charAt(0).toUpperCase() + platform.slice(1)}</span>`;
+                                socialsContainer.appendChild(socialLink);
+                            }
+                        }
+                    }
+                }
             }
         }
-        // --- FIN DE LA MODIFICACIÓN ---
     }
 
     if (state.isLoading) return;

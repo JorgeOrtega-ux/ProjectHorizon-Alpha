@@ -14,12 +14,7 @@
             <div class="profile-banner-info">
                 <h2 class="profile-banner-name"></h2>
                 <div class="profile-banner-socials">
-                    <a href="#" class="social-badge"><span>Facebook</span></a>
-                    <a href="#" class="social-badge"><span>Twitter</span></a>
-                    <a href="#" class="social-badge"><span>Instagram</span></a>
-                    <a href="#" class="social-badge"><span>YouTube</span></a>
-                    <a href="#" class="social-badge"><span>Twitch</span></a>
-                </div>
+                    </div>
             </div>
             <div class="profile-banner-actions">
                 <button class="load-more-btn btn-primary">Seguir</button>

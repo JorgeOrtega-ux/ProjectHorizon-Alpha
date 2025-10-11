@@ -39,7 +39,10 @@ async function fetchData(url, options = {}) {
     }
 }
 
-async function postDataWithCsrf(formData) {
+// --- INICIO DE LA CORRECCIÓN ---
+// Se ha añadido "export" para que la función esté disponible en otros archivos.
+export async function postDataWithCsrf(formData) {
+// --- FIN DE LA CORRECCIÓN ---
     const tokenResponse = await getCsrfToken();
     if (!tokenResponse.ok) {
         console.error('Error al obtener el token CSRF para la acción:', formData.get('action_type'));

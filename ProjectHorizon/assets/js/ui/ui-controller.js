@@ -523,6 +523,20 @@ export function renderEditGalleryForm(gallery) {
     const photoCount = gallery.photos ? gallery.photos.length : 0;
     const photoCountText = photoCount === 1 ? '1 foto' : `${photoCount} fotos`;
 
+    // --- INICIO MODIFICACIÓN: HTML PARA REDES SOCIALES ---
+    const socialPlatforms = ['facebook', 'instagram', 'x', 'youtube', 'twitch', 'onlyfans'];
+    let socialLinksHTML = '';
+    socialPlatforms.forEach(platform => {
+        const value = gallery.social_links && gallery.social_links[platform] ? gallery.social_links[platform] : '';
+        socialLinksHTML += `
+            <div class="form-group-inline">
+                <label class="form-label standalone">${platform.charAt(0).toUpperCase() + platform.slice(1)} URL</label>
+                <input type="url" class="feedback-input social-link-input" data-platform="${platform}" value="${value}" placeholder="https://...">
+            </div>
+        `;
+    });
+    // --- FIN MODIFICACIÓN ---
+
     container.innerHTML = `
     <div class="edit-section">
         <div class="profile-picture-edit-container">
@@ -559,6 +573,15 @@ export function renderEditGalleryForm(gallery) {
         </div>
     </div>
 
+    <div class="edit-section">
+        <div class="form-group-inline" style="flex-direction: column; align-items: stretch; gap: 16px;">
+            <label class="form-label standalone" data-i18n="admin.editGallery.socialsLabel">Redes Sociales</label>
+            ${socialLinksHTML}
+            <div class="form-group-buttons" style="justify-content: flex-end;">
+                 <button type="button" class="load-more-btn btn-primary" id="save-socials-btn" data-i18n="general.save"></button>
+            </div>
+        </div>
+    </div>
     <div class="edit-section content-section-stacked">
         <div class="item-details">
             <div class="title-with-badge">
@@ -630,6 +653,7 @@ export function renderEditGalleryForm(gallery) {
     const editBtn = container.querySelector('#edit-name-btn');
     const cancelBtn = container.querySelector('#cancel-name-btn');
     const saveBtn = container.querySelector('#save-name-btn');
+    const saveSocialsBtn = container.querySelector('#save-socials-btn'); // <-- Botón de guardar redes
     const privacyToggle = container.querySelector('#gallery-privacy-edit');
     const visibilityToggle = container.querySelector('#gallery-visibility-edit');
 
@@ -674,6 +698,32 @@ export function renderEditGalleryForm(gallery) {
         });
     }
 
+    // --- INICIO MODIFICACIÓN: EVENTO PARA GUARDAR REDES SOCIALES ---
+    if (saveSocialsBtn) {
+        saveSocialsBtn.addEventListener('click', () => {
+            const socialInputs = container.querySelectorAll('.social-link-input');
+            const socials = Array.from(socialInputs).map(input => ({
+                platform: input.dataset.platform,
+                url: input.value.trim()
+            })).filter(s => s.url); // Filtrar vacíos
+
+            const formData = new FormData();
+            formData.append('action_type', 'update_gallery_socials');
+            formData.append('uuid', uuid);
+            formData.append('socials', JSON.stringify(socials));
+
+            api.postDataWithCsrf(formData).then(response => {
+                if(response.ok) {
+                    window.showNotification(response.data.message, 'success');
+                } else {
+                    window.showNotification(response.data.message || 'Error al guardar las redes sociales.', 'error');
+                }
+            });
+        });
+    }
+    // --- FIN MODIFICACIÓN ---
+
+
     if (privacyToggle) {
         privacyToggle.addEventListener('click', () => {
             privacyToggle.classList.toggle('active');
@@ -713,6 +763,19 @@ export function renderCreateGalleryForm() {
     const container = document.getElementById('create-gallery-form-container');
     if (!container) return;
 
+    // --- INICIO MODIFICACIÓN: HTML PARA REDES SOCIALES ---
+    const socialPlatforms = ['facebook', 'instagram', 'x', 'youtube', 'twitch', 'onlyfans'];
+    let socialLinksHTML = '';
+    socialPlatforms.forEach(platform => {
+        socialLinksHTML += `
+            <div class="form-group-inline">
+                <label class="form-label standalone">${platform.charAt(0).toUpperCase() + platform.slice(1)} URL</label>
+                <input type="url" class="feedback-input social-link-input" data-platform="${platform}" placeholder="https://...">
+            </div>
+        `;
+    });
+    // --- FIN MODIFICACIÓN ---
+
     container.innerHTML = `
     <div class="edit-section">
         <div class="profile-picture-edit-container">
@@ -733,7 +796,13 @@ export function renderCreateGalleryForm() {
             <input type="text" id="gallery-name-create" class="feedback-input" placeholder="Nombre de la galería" maxlength="100">
         </div>
     </div>
-    
+
+    <div class="edit-section">
+        <div class="form-group-inline" style="flex-direction: column; align-items: stretch; gap: 16px;">
+            <label class="form-label standalone" data-i18n="admin.editGallery.socialsLabel">Redes Sociales</label>
+            ${socialLinksHTML}
+        </div>
+    </div>
     <div class="edit-section">
         <div class="data-item">
              <div class="view-container active">
