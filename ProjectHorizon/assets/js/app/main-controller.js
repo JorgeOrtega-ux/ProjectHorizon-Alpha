@@ -891,6 +891,21 @@ export function initMainController() {
                 }
 
                 switch (action) {
+                    case 'return-to-edit-gallery': {
+                        const section = actionTarget.closest('.section-content');
+                        const uuid = section ? section.dataset.uuid : null;
+                        
+                        // Si encontramos el UUID, volvemos a la página de edición de esa galería.
+                        if (uuid) {
+                            navigateToUrl('admin', 'editGallery', { uuid });
+                            handleStateChange('admin', 'editGallery', true, { uuid }, appState);
+                        } else {
+                            // Si por alguna razón no se encuentra, volvemos a la lista principal de contenido.
+                            navigateToUrl('admin', 'manageContent');
+                            handleStateChange('admin', 'manageContent', true, null, appState);
+                        }
+                        break;
+                    }
                     case 'update-password':
                         showUpdatePasswordDialog();
                         break;

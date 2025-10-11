@@ -2,7 +2,7 @@
     <div class="section-content-header">
         <div class="content-header-wrapper">
             <div class="content-header-left">
-                <div class="header-button" id="back-to-edit-gallery-btn" data-i18n-tooltip="admin.manageGalleryPhotos.backButtonTooltip">
+                <div class="header-button" data-action="return-to-edit-gallery" data-i18n-tooltip="admin.manageGalleryPhotos.backButtonTooltip">
                     <span class="material-symbols-rounded">arrow_left</span>
                 </div>
                 <div class="header-title-container">
