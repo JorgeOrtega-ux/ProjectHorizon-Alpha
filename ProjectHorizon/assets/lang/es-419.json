@@ -187,6 +187,7 @@
       "pfpTitle": "Foto de perfil",
       "pfpDescription": "Esto ayudará a tus compañeros a reconocerte.",
       "pfpUploadBtn": "Subir foto",
+      "pfpChangeBtn": "Cambiar foto",
       "pfpDeleteBtn": "Eliminar",
       "usernameLabel": "Nombre de usuario",
       "emailLabel": "Correo electrónico",

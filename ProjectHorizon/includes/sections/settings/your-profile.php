@@ -21,8 +21,10 @@
                     <p data-i18n="settings.yourProfile.pfpDescription"></p>
                 </div>
                 <div class="pfp-actions">
-                    <button type="button" class="load-more-btn" id="delete-picture-btn" data-i18n="settings.yourProfile.pfpDeleteBtn"></button>
-                    <button type="button" class="load-more-btn" id="upload-picture-btn" data-i18n="settings.yourProfile.pfpUploadBtn"></button>
+                    <button type="button" class="load-more-btn" id="upload-picture-btn" data-i18n="settings.yourProfile.pfpUploadBtn" style="display: none;"></button>
+                    <button type="button" class="load-more-btn" id="delete-picture-btn" data-i18n="settings.yourProfile.pfpDeleteBtn" style="display: none;"></button>
+                    <button type="button" class="load-more-btn" id="change-picture-btn" data-i18n="settings.yourProfile.pfpChangeBtn" style="display: none;"></button>
+                    <button type="button" class="load-more-btn" id="cancel-picture-btn" data-i18n="general.cancel" style="display: none;"></button>
                     <button type="button" class="load-more-btn btn-primary" id="save-picture-btn" style="display: none;">
                         <span class="button-text" data-i18n="general.save"></span>
                         <div class="button-spinner"></div>
