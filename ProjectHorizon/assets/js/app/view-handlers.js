@@ -18,6 +18,8 @@ import {
 const loaderHTML = '<div class="loader-container"><div class="spinner"></div></div>';
 let userGrowthChartInstance = null;
 let contentActivityChartInstance = null;
+let browserUsageChartInstance = null;
+
 
 function formatNumberWithCommas(number) {
     if (number === null || number === undefined) {
@@ -172,6 +174,55 @@ function renderContentActivityChart(data) {
     });
 }
 
+// --- INICIO DE LA MODIFICACIÓN ---
+function renderBrowserUsageChart(data) {
+    const ctx = document.getElementById('browser-usage-chart');
+    if (!ctx) return;
+
+    const colors = getChartColors();
+
+    if (browserUsageChartInstance) {
+        browserUsageChartInstance.destroy();
+    }
+
+    const labels = Object.keys(data);
+    const counts = Object.values(data);
+
+    const backgroundColors = [
+        'rgba(255, 99, 132, 0.7)',
+        'rgba(54, 162, 235, 0.7)',
+        'rgba(255, 206, 86, 0.7)',
+        'rgba(75, 192, 192, 0.7)',
+        'rgba(153, 102, 255, 0.7)',
+        'rgba(255, 159, 64, 0.7)'
+    ];
+
+    browserUsageChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Uso de Navegadores',
+                data: counts,
+                backgroundColor: backgroundColors,
+                borderColor: colors.gridColor,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        color: colors.textColor
+                    }
+                }
+            }
+        }
+    });
+}
+// --- FIN DE LA MODIFICACIÓN ---
 
 export async function fetchAndDisplayDashboard() {
     const section = document.querySelector('[data-section="dashboard"]');
@@ -213,6 +264,9 @@ export async function fetchAndDisplayDashboard() {
 
         renderUserGrowthChart(stats.charts.user_growth);
         renderContentActivityChart(stats.charts.content_activity);
+        // --- INICIO DE LA MODIFICACIÓN ---
+        renderBrowserUsageChart(stats.charts.browser_usage);
+        // --- FIN DE LA MODIFICACIÓN ---
 
     } else {
         loader.innerHTML = `<p>${window.getTranslation('general.connectionErrorMessage')}</p>`;

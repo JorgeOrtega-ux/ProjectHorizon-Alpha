@@ -66,10 +66,17 @@
             </div>
 
             <div class="dashboard-row">
+                <div class="dashboard-chart-container">
+                    <h4 data-i18n="admin.dashboard.browserUsage"></h4>
+                    <canvas id="browser-usage-chart"></canvas>
+                </div>
                 <div class="dashboard-list-container">
                     <h4 data-i18n="admin.dashboard.topGalleries"></h4>
                     <ul id="top-galleries-list" class="top-list"></ul>
                 </div>
+            </div>
+
+            <div class="dashboard-row">
                 <div class="dashboard-list-container">
                     <h4 data-i18n="admin.dashboard.topPhotos"></h4>
                     <ul id="top-photos-list" class="top-list"></ul>

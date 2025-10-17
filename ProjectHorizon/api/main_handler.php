@@ -61,6 +61,34 @@ function censorProfanity($conn, $text, $language_code) {
     return $censored_text;
 }
 
+// --- INICIO DE LA MODIFICACIÓN ---
+function parse_user_agent($user_agent) {
+    if (empty($user_agent)) {
+        return 'Desconocido';
+    }
+    if (preg_match('/(opera|opr|opios)/i', $user_agent)) {
+        return 'Opera';
+    }
+    if (preg_match('/(edg|edge|edga|edgios)/i', $user_agent)) {
+        return 'Edge';
+    }
+    if (preg_match('/(chrome|crios|crmo)/i', $user_agent)) {
+        return 'Chrome';
+    }
+    if (preg_match('/(safari)/i', $user_agent) && !preg_match('/(chrome|crios|crmo)/i', $user_agent)) {
+        return 'Safari';
+    }
+    if (preg_match('/(firefox|fxios)/i', $user_agent)) {
+        return 'Firefox';
+    }
+    if (preg_match('/(msie|trident)/i', $user_agent)) {
+        return 'Internet Explorer';
+    }
+    return 'Otro';
+}
+// --- FIN DE LA MODIFICACIÓN ---
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $request_type = isset($_GET['request_type']) ? $_GET['request_type'] : '';
 
@@ -552,6 +580,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
         $stats = [];
     
+        // --- INICIO DE LA MODIFICACIÓN ---
         $stats['total_users'] = $conn->query("SELECT COUNT(*) as count FROM users WHERE status = 'active'")->fetch_assoc()['count'];
         $stats['new_users_last_30_days'] = $conn->query("SELECT COUNT(*) as count FROM users WHERE created_at >= NOW() - INTERVAL 30 DAY")->fetch_assoc()['count'];
         $stats['total_galleries'] = $conn->query("SELECT COUNT(*) as count FROM galleries")->fetch_assoc()['count'];
@@ -563,14 +592,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $favorites_activity = $conn->query("SELECT DATE(added_at) as date, COUNT(*) as count FROM user_favorites WHERE added_at >= NOW() - INTERVAL 30 DAY GROUP BY DATE(added_at) ORDER BY date ASC")->fetch_all(MYSQLI_ASSOC);
         $comments_activity = $conn->query("SELECT DATE(created_at) as date, COUNT(*) as count FROM photo_comments WHERE created_at >= NOW() - INTERVAL 30 DAY GROUP BY DATE(created_at) ORDER BY date ASC")->fetch_all(MYSQLI_ASSOC);
 
+        // Nueva lógica para el uso de navegadores
+        $browser_usage_result = $conn->query("SELECT user_agent FROM users WHERE user_agent IS NOT NULL AND user_agent != ''");
+        $browser_counts = [];
+        while ($row = $browser_usage_result->fetch_assoc()) {
+            $browser = parse_user_agent($row['user_agent']);
+            if (!isset($browser_counts[$browser])) {
+                $browser_counts[$browser] = 0;
+            }
+            $browser_counts[$browser]++;
+        }
+        arsort($browser_counts);
+
+
         $stats['charts']['user_growth'] = $user_growth;
         $stats['charts']['content_activity'] = [
             'favorites' => $favorites_activity,
             'comments' => $comments_activity
         ];
-    
+        $stats['charts']['browser_usage'] = $browser_counts; // Añadir datos de navegadores
+
         $stats['top_galleries'] = $conn->query("SELECT g.name, gm.total_interactions FROM galleries g JOIN galleries_metadata gm ON g.uuid = gm.gallery_uuid ORDER BY gm.total_interactions DESC LIMIT 10")->fetch_all(MYSQLI_ASSOC);
         $stats['top_photos'] = $conn->query("SELECT p.id, p.photo_url, g.name as gallery_name, pm.interactions FROM gallery_photos p JOIN gallery_photos_metadata pm ON p.id = pm.photo_id JOIN galleries g ON p.gallery_uuid = g.uuid ORDER BY pm.interactions DESC LIMIT 10")->fetch_all(MYSQLI_ASSOC);
+        // --- FIN DE LA MODIFICACIÓN ---
     
         echo json_encode($stats);
         exit;
@@ -697,7 +741,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         echo json_encode($comments);
         exit;
     }
-
  if ($request_type === 'comments') {
         $photo_id = isset($_GET['photo_id']) ? (int)$_GET['photo_id'] : 0;
         if ($photo_id <= 0) {
