@@ -50,12 +50,12 @@ function getChartColors() {
     return {
         gridColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
         textColor: isDarkMode ? '#ffffff' : '#000000',
-        
+
         successBorder: isDarkMode ? '#66bb6a' : '#388e3c',
         successBackground: 'rgba(76, 175, 80, 0.2)',
 
         primaryBorder: '#007bff',
-        primaryBackground: 'rgba(0, 123, 255, 0.5)', 
+        primaryBackground: 'rgba(0, 123, 255, 0.5)',
         secondaryBorder: '#ffc107',
         secondaryBackground: 'rgba(255, 193, 7, 0.5)'
     };
@@ -110,11 +110,11 @@ function renderContentActivityChart(data) {
     if (!ctx) return;
 
     const colors = getChartColors();
-    
+
     if (contentActivityChartInstance) {
         contentActivityChartInstance.destroy();
     }
-    
+
     const allDates = [...new Set([...data.favorites.map(d => d.date), ...data.comments.map(d => d.date)])].sort();
 
     const favoritesData = allDates.map(date => {
@@ -150,12 +150,12 @@ function renderContentActivityChart(data) {
         },
         options: {
             responsive: true,
-            plugins: { 
-                legend: { 
+            plugins: {
+                legend: {
                     labels: {
                         color: colors.textColor
                     }
-                } 
+                }
             },
             scales: {
                 x: {
@@ -244,7 +244,7 @@ export async function fetchAndDisplayDashboard() {
         document.getElementById('total-galleries-value').textContent = stats.total_galleries;
         document.getElementById('total-photos-value').textContent = stats.total_photos;
         document.getElementById('pending-comments-value').textContent = stats.pending_comments;
-        
+
         const topGalleriesList = document.getElementById('top-galleries-list');
         if (stats.top_galleries.length > 0) {
             topGalleriesList.innerHTML = stats.top_galleries.map(g => `<li>${g.name} <span>(${g.total_interactions} vistas)</span></li>`).join('');
@@ -260,7 +260,7 @@ export async function fetchAndDisplayDashboard() {
         }
 
         loader.style.display = 'none';
-        content.style.display = 'flex'; 
+        content.style.display = 'flex';
 
         renderUserGrowthChart(stats.charts.user_growth);
         renderContentActivityChart(stats.charts.content_activity);
@@ -469,6 +469,8 @@ export async function fetchAndDisplayGalleryPhotos(uuid, galleryName, append = f
     const loadMoreContainer = section.querySelector('#photos-load-more-container');
     const headerInfo = section.querySelector('.gallery-header-info');
     const followButton = section.querySelector('#follow-gallery-btn');
+    const socialLinksBtn = document.getElementById('gallery-social-links-btn');
+    const socialLinksMenu = document.getElementById('gallery-social-links-menu');
 
     if (!append) {
         state.currentPage = 1;
@@ -490,7 +492,7 @@ export async function fetchAndDisplayGalleryPhotos(uuid, galleryName, append = f
             const headerAvatar = headerInfo.querySelector('.gallery-header-avatar');
             const totalLikes = headerInfo.querySelector('#gallery-total-likes');
             const totalInteractions = headerInfo.querySelector('#gallery-total-interactions');
-            
+
             const galleryDetailsResponse = await api.getGalleryDetails(uuid);
             if (galleryDetailsResponse.ok) {
                 const gallery = galleryDetailsResponse.data;
@@ -505,7 +507,7 @@ export async function fetchAndDisplayGalleryPhotos(uuid, galleryName, append = f
                         headerAvatar.style.backgroundImage = 'none';
                     }
                 }
-                
+
                 if (followButton) {
                     followButton.dataset.uuid = gallery.uuid;
                     const buttonText = followButton.querySelector('.button-text');
@@ -517,6 +519,26 @@ export async function fetchAndDisplayGalleryPhotos(uuid, galleryName, append = f
                         followButton.classList.add('btn-primary');
                         followButton.classList.remove('following');
                         buttonText.textContent = window.getTranslation('userPhotos.followButton');
+                    }
+                }
+                if (socialLinksBtn && socialLinksMenu) {
+                    if (gallery.social_links && Object.keys(gallery.social_links).length > 0) {
+                        socialLinksBtn.style.display = 'flex';
+                        const menuContent = `
+                            <div class="menu-content">
+                                <div class="menu-list">
+                                    ${Object.entries(gallery.social_links).map(([platform, url]) => `
+                                        <a href="${url.startsWith('http') ? url : 'http://' + url}" target="_blank" class="menu-link">
+                                            <div class="menu-link-icon"><span class="fab fa-${platform}"></span></div>
+                                            <div class="menu-link-text"><span>${platform.charAt(0).toUpperCase() + platform.slice(1)}</span></div>
+                                        </a>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                        socialLinksMenu.innerHTML = menuContent;
+                    } else {
+                        socialLinksBtn.style.display = 'none';
                     }
                 }
             }
@@ -550,7 +572,7 @@ export async function fetchAndDisplayGalleryPhotos(uuid, galleryName, append = f
                     card.dataset.photoUrl = video.photo_url;
                     card.dataset.photoId = video.id;
                     card.dataset.galleryUuid = video.gallery_uuid;
-            
+
                     const background = document.createElement('div');
                     background.className = 'card-background';
                     if (video.thumbnail_url) {
@@ -558,11 +580,11 @@ export async function fetchAndDisplayGalleryPhotos(uuid, galleryName, append = f
                     } else {
                         background.style.backgroundColor = '#000';
                     }
-            
+
                     const playIcon = document.createElement('div');
                     playIcon.className = 'play-icon';
                     playIcon.innerHTML = `<span class="material-symbols-rounded">play_arrow</span>`;
-            
+
                     const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${uuid}/photo/${video.id}`;
                     const menuHTML = `
                         <div class="card-actions-container">
@@ -580,11 +602,11 @@ export async function fetchAndDisplayGalleryPhotos(uuid, galleryName, append = f
                                 </div></div>
                             </div>
                         </div>`;
-            
+
                     card.appendChild(background);
                     card.appendChild(playIcon);
                     card.insertAdjacentHTML('beforeend', menuHTML);
-                    
+
                     videosContainer.appendChild(card);
                     window.updateFavoriteCardState(video.id);
                 });
@@ -598,12 +620,12 @@ export async function fetchAndDisplayGalleryPhotos(uuid, galleryName, append = f
                     card.dataset.photoUrl = photo.photo_url;
                     card.dataset.photoId = photo.id;
                     card.dataset.galleryUuid = photo.gallery_uuid;
-                    
+
                     const background = document.createElement('div');
                     background.className = 'card-background';
                     background.style.backgroundImage = `url('${window.BASE_PATH}/${photo.photo_url}')`;
                     card.appendChild(background);
-                    
+
                     const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${uuid}/photo/${photo.id}`;
                     const menuHTML = `
                         <div class="card-actions-container">
@@ -690,7 +712,7 @@ export async function fetchAndDisplayTrends(searchTerm = '') {
             statusContainer.classList.add('disabled');
             statusContainer.innerHTML = '';
         }
-        
+
         const trendingPhotos = trendingContent.filter(item => item.type === 'photo');
         const trendingVideos = trendingContent.filter(item => item.type === 'video');
 
@@ -722,17 +744,17 @@ export async function fetchAndDisplayTrends(searchTerm = '') {
                         card.dataset.photoUrl = photo.photo_url;
                         card.dataset.photoId = photo.id;
                         card.dataset.galleryUuid = photo.gallery_uuid;
-                
+
                         const background = document.createElement('div');
                         background.className = 'card-background';
                         background.style.backgroundImage = `url('${window.BASE_PATH}/${photo.photo_url}')`;
                         card.appendChild(background);
-                
+
                         const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${photo.gallery_uuid}/photo/${photo.id}`;
                         const likesText = window.getTranslation('general.likesCount', { count: formatNumberWithCommas(photo.likes) });
                         const interactionsText = window.getTranslation('general.interactionsCount', { count: formatNumberWithCommas(photo.interactions) });
                         const profilePicUrl = photo.profile_picture_url ? `${window.BASE_PATH}/${photo.profile_picture_url}` : '';
-                
+
                         const contentHTML = `
                             <div class="card-content-overlay">
                                 <div class="card-icon" style="background-image: url('${profilePicUrl}')"></div>
@@ -756,7 +778,7 @@ export async function fetchAndDisplayTrends(searchTerm = '') {
                                     </div></div>
                                 </div>
                             </div>`;
-                        
+
                         card.insertAdjacentHTML('beforeend', contentHTML);
                         if (photosGrid) photosGrid.appendChild(card);
                         window.updateFavoriteCardState(photo.id);
@@ -771,7 +793,7 @@ export async function fetchAndDisplayTrends(searchTerm = '') {
                         card.dataset.photoUrl = video.photo_url;
                         card.dataset.photoId = video.id;
                         card.dataset.galleryUuid = video.gallery_uuid;
-            
+
                         const background = document.createElement('div');
                         background.className = 'card-background';
                         if (video.thumbnail_url) {
@@ -779,19 +801,19 @@ export async function fetchAndDisplayTrends(searchTerm = '') {
                         } else {
                             background.style.backgroundColor = '#000';
                         }
-            
+
                         const playIcon = document.createElement('div');
                         playIcon.className = 'play-icon';
                         playIcon.innerHTML = `<span class="material-symbols-rounded">play_arrow</span>`;
-            
+
                         card.appendChild(background);
                         card.appendChild(playIcon);
-                        
+
                         const photoPageUrl = `${window.location.origin}${window.BASE_PATH}/gallery/${video.gallery_uuid}/photo/${video.id}`;
                         const likesText = window.getTranslation('general.likesCount', { count: formatNumberWithCommas(video.likes) });
                         const interactionsText = window.getTranslation('general.interactionsCount', { count: formatNumberWithCommas(video.interactions) });
                         const profilePicUrl = video.profile_picture_url ? `${window.BASE_PATH}/${video.profile_picture_url}` : '';
-            
+
                         const contentHTML = `
                             <div class="card-content-overlay">
                                 <div class="card-icon" style="background-image: url('${profilePicUrl}')"></div>
@@ -815,7 +837,7 @@ export async function fetchAndDisplayTrends(searchTerm = '') {
                                     </div></div>
                                 </div>
                             </div>`;
-                        
+
                         card.insertAdjacentHTML('beforeend', contentHTML);
                         if (videosGrid) videosGrid.appendChild(card);
                         window.updateFavoriteCardState(video.id);
@@ -881,7 +903,7 @@ export async function fetchAndDisplayUsers(searchTerm = '', append = false, stat
                 state.currentPage++;
             }
         }
-        
+
         applyTranslations(section);
 
     } else {
@@ -988,7 +1010,7 @@ export async function fetchAndDisplayAdminComments(searchTerm = '', filter = 'al
                 state.currentPage++;
             }
         }
-        
+
         applyTranslations(section);
 
     } else {
@@ -1013,7 +1035,7 @@ export async function fetchAndDisplayProfanityWords(languageCode = 'all', search
         if (searchTerm) {
             words = words.filter(word => word.word.toLowerCase().includes(searchTerm.toLowerCase()));
         }
-        
+
         if (words.length > 0) {
             words.forEach(word => {
                 const item = document.createElement('div');
@@ -1040,7 +1062,7 @@ export async function fetchAndDisplayProfanityWords(languageCode = 'all', search
         } else {
             listContainer.innerHTML = `<div class="status-message-container active"><div><h2>${window.getTranslation('general.noResultsTitle')}</h2><p>${window.getTranslation('general.noResultsMessage')}</p></div></div>`;
         }
-        
+
     } else {
         showNotification('Error al cargar la lista de palabras.', 'error');
         listContainer.innerHTML = `<div class="status-message-container active"><div><h2>${window.getTranslation('general.connectionErrorTitle')}</h2><p>${window.getTranslation('general.connectionErrorMessage')}</p></div></div>`;
@@ -1090,7 +1112,7 @@ export async function fetchAndDisplayFeedback(searchTerm = '', append = false, s
 
     if (response.ok) {
         const feedbackItems = response.data;
-        
+
         displayFeedback(feedbackItems, listContainer, statusContainer, append, searchTerm);
 
         if (loadMoreContainer) {
@@ -1101,7 +1123,7 @@ export async function fetchAndDisplayFeedback(searchTerm = '', append = false, s
                 state.currentPage++;
             }
         }
-        
+
         applyTranslations(section);
 
     } else {

@@ -24,6 +24,13 @@
             </div>
             <div class="content-header-right">
                 <div class="header-item">
+                    <div class="header-button" id="gallery-social-links-btn" data-action="toggle-select" data-target="gallery-social-links-menu" data-i18n-tooltip="userPhotos.socialsTooltip" style="display: none;">
+                        <span class="material-symbols-rounded">public</span>
+                    </div>
+                    <div class="module-content module-select disabled body-title" id="gallery-social-links-menu">
+                        </div>
+                </div>
+                <div class="header-item">
                     <div class="header-button" data-action="toggle-select" data-target="gallery-filter-menu" data-i18n-tooltip="userPhotos.filterTooltip">
                         <span class="material-symbols-rounded">filter_list</span>
                     </div>
