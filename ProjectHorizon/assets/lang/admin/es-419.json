@@ -263,8 +263,8 @@
         }
     },
     "verifyFounder": {
-        "title": "Verificación de Fundador Requerida",
-        "description": "Para acceder a esta sección, por favor ingresa tu contraseña de Fundador. Tu número de control es:",
+        "title": "Verificación Requerida",
+        "description": "Para acceder a esta sección, por favor ingresa tu contraseña.",
         "button": "Verificar y Continuar"
     }
   },
@@ -272,7 +272,7 @@
     "truncateDatabase": {
         "title": "Borrar todos los datos",
         "description": "Esta acción eliminará permanentemente todos los datos de contenido y de usuario. Para continuar, debes tener una copia de seguridad con menos de 2 horas de antigüedad.",
-        "passwordLabel": "Contraseña de Fundador",
+        "passwordLabel": "Ingresa tu contraseña para confirmar",
         "button": "Borrar todos los datos",
         "errorRequired": "La contraseña es obligatoria.",
         "errorDelete": "Error al borrar los datos.",
@@ -286,8 +286,17 @@
       "description": "Estás a punto de restaurar la base de datos desde el archivo <strong>{filename}</strong>. Todos los datos actuales se perderán y serán reemplazados por los datos de esta copia de seguridad. Esta acción es irreversible."
     },
     "deleteGallery": {
-      "passwordLabel": "Contraseña de Administrador",
+      "passwordLabel": "Ingresa tu contraseña para confirmar",
       "errorRequired": "La contraseña es obligatoria."
+    },
+    "changeRole": {
+      "title": "Confirmar cambio de rol",
+      "description": "Para cambiar el rol de <strong>{userName}</strong> a <strong>{newRole}</strong>, por favor ingresa tu contraseña.",
+      "passwordLabel": "Ingresa tu contraseña para confirmar",
+      "errorRequired": "La contraseña es obligatoria.",
+      "errorChangingRole": "Error al cambiar el rol.",
+      "errorVerification": "Error de verificación.",
+      "success": "Rol de usuario actualizado con éxito."
     }
   }
 }
