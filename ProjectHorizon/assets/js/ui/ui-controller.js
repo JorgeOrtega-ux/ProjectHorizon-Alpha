@@ -482,10 +482,21 @@ export async function renderPhotoView(uuid, photoId, photoList) {
     const playPauseBtn = document.querySelector('[data-action="toggle-play-pause"]');
     const playPauseIcon = playPauseBtn ? playPauseBtn.querySelector('.material-symbols-rounded') : null;
 
-    if (!photoViewerImage || !photoViewerVideo) {
-        console.error("Photo/video viewer elements not found in the DOM.");
-        return null; 
+    // --- INICIO DE LA MODIFICACIÓN ---
+    const videoWrapper = document.getElementById('video-wrapper');
+
+    if (!photoViewerImage || !photoViewerVideo || !videoWrapper) {
+        console.error("Elementos del visor de medios no encontrados en el DOM.");
+        return null;
     }
+
+    // Resetear visibilidad
+    photoViewerImage.style.display = 'none';
+    videoWrapper.style.display = 'none';
+    videoWrapper.classList.remove('loaded');
+    photoViewerVideo.style.display = 'none';
+    photoViewerVideo.src = ''; // Detiene la carga anterior
+    // --- FIN DE LA MODIFICACIÓN ---
 
     await api.incrementPhotoInteraction(photoId);
     await api.incrementGalleryInteraction(uuid);
@@ -511,22 +522,32 @@ export async function renderPhotoView(uuid, photoId, photoList) {
         await updateGalleryName(); 
 
         if (photo.type === 'video') {
-            photoViewerImage.style.display = 'none';
-            photoViewerVideo.style.display = 'block';
-            photoViewerVideo.src = `${window.BASE_PATH}/${photo.photo_url}`;
+            // --- INICIO DE LA MODIFICACIÓN ---
+            videoWrapper.style.display = 'flex'; // Mostrar el contenedor con el loader
             playPauseBtn.style.display = 'flex';
 
-            photoViewerVideo.play().catch(error => {
-                console.warn("La reproducción automática fue bloqueada:", error);
-                if (playPauseIcon) playPauseIcon.textContent = 'play_arrow';
-            });
-            if (playPauseIcon) playPauseIcon.textContent = 'pause';
+            // Función para manejar el estado de carga
+            const handleVideoLoad = () => {
+                videoWrapper.classList.add('loaded'); // Oculta el loader, muestra el video
+                photoViewerVideo.play().catch(error => {
+                    console.warn("La reproducción automática fue bloqueada:", error);
+                    if (playPauseIcon) playPauseIcon.textContent = 'play_arrow';
+                });
+                if (playPauseIcon) playPauseIcon.textContent = 'pause';
+                
+                // Limpiar el listener para evitar múltiples ejecuciones
+                photoViewerVideo.removeEventListener('loadeddata', handleVideoLoad);
+            };
+            
+            // Añadir el listener y luego establecer el src para iniciar la carga
+            photoViewerVideo.addEventListener('loadeddata', handleVideoLoad);
+            photoViewerVideo.src = `${window.BASE_PATH}/${photo.photo_url}`;
+            // --- FIN DE LA MODIFICACIÓN ---
 
         } else {
-            photoViewerVideo.style.display = 'none';
             photoViewerImage.style.display = 'block';
-            photoViewerImage.src = `${window.BASE_PATH}/${photo.photo_url}`;
             playPauseBtn.style.display = 'none';
+            photoViewerImage.src = `${window.BASE_PATH}/${photo.photo_url}`;
         }
 
         photoCounter.textContent = `${photoIndex + 1} / ${photoList.length}`;

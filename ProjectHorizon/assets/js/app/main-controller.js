@@ -213,6 +213,9 @@ export async function initMainController() {
         lastVisitedView: null,
         lastVisitedSection: null,
         lastVisitedData: null,
+        previousVisitedView: null,
+        previousVisitedSection: null,
+        previousVisitedData: null,
         currentSortBy: 'relevant',
         currentGalleryForPhotoView: null,
         currentGalleryNameForPhotoView: null,
@@ -233,6 +236,7 @@ export async function initMainController() {
         HISTORY_PROFILES_BATCH: 20,
         HISTORY_PHOTOS_BATCH: 20,
         HISTORY_SEARCHES_BATCH: 25,
+
         paginationState: {
             galleries: { currentPage: 1, isLoading: false, batchSize: 20 },
             photos: { currentPage: 1, isLoading: false, photoList: [], batchSize: 20 },
@@ -1242,25 +1246,25 @@ export async function initMainController() {
                         }
                         break;
                     }
-                 case 'restore-backup': {
-    const filename = actionTarget.dataset.filename;
-    const confirmed = await showRestoreBackupDialog(filename);
-    if (confirmed) {
-        const button = actionTarget;
-        button.classList.add('loading');
-        const response = await api.restoreBackup(filename);
-        button.classList.remove('loading');
+                    case 'restore-backup': {
+                        const filename = actionTarget.dataset.filename;
+                        const confirmed = await showRestoreBackupDialog(filename);
+                        if (confirmed) {
+                            const button = actionTarget;
+                            button.classList.add('loading');
+                            const response = await api.restoreBackup(filename);
+                            button.classList.remove('loading');
 
-        if (response.ok) {
-            showNotification(response.data.message, 'success');
-            // Opcional: Recargar la página o redirigir
-            setTimeout(() => window.location.reload(), 2000);
-        } else {
-            showNotification(response.data.message || 'Error al restaurar la copia de seguridad.', 'error');
-        }
-    }
-    break;
-}
+                            if (response.ok) {
+                                showNotification(response.data.message, 'success');
+                                // Opcional: Recargar la página o redirigir
+                                setTimeout(() => window.location.reload(), 2000);
+                            } else {
+                                showNotification(response.data.message || 'Error al restaurar la copia de seguridad.', 'error');
+                            }
+                        }
+                        break;
+                    }
                     case 'change-role-option': {
                         const userUuid = actionTarget.dataset.uuid;
                         const newRole = actionTarget.dataset.role;
@@ -1638,68 +1642,68 @@ export async function initMainController() {
             }
 
             const filterTarget = event.target.closest('[data-filter]');
-        if (filterTarget && filterTarget.closest('#gallery-filter-menu')) {
-            const filterValue = filterTarget.dataset.filter;
-            const section = document.querySelector('[data-section="galleryPhotos"]');
-            if (!section) return;
+            if (filterTarget && filterTarget.closest('#gallery-filter-menu')) {
+                const filterValue = filterTarget.dataset.filter;
+                const section = document.querySelector('[data-section="galleryPhotos"]');
+                if (!section) return;
 
-            const photosSection = section.querySelector('#photos-section');
-            const videosSection = section.querySelector('#videos-section');
-            const photosGrid = section.querySelector('#user-photos-grid');
-            const videosGrid = section.querySelector('#user-videos-container');
-            const photosTitle = photosSection.querySelector('.category-section-title');
-            const videosTitle = videosSection.querySelector('.category-section-title');
-            const statusContainer = section.querySelector('.status-message-container');
+                const photosSection = section.querySelector('#photos-section');
+                const videosSection = section.querySelector('#videos-section');
+                const photosGrid = section.querySelector('#user-photos-grid');
+                const videosGrid = section.querySelector('#user-videos-container');
+                const photosTitle = photosSection.querySelector('.category-section-title');
+                const videosTitle = videosSection.querySelector('.category-section-title');
+                const statusContainer = section.querySelector('.status-message-container');
 
-            const hasPhotos = photosGrid && photosGrid.children.length > 0;
-            const hasVideos = videosGrid && videosGrid.children.length > 0;
+                const hasPhotos = photosGrid && photosGrid.children.length > 0;
+                const hasVideos = videosGrid && videosGrid.children.length > 0;
 
-            document.querySelectorAll('#gallery-filter-menu .menu-link').forEach(link => {
-                link.classList.remove('active');
-            });
-            filterTarget.classList.add('active');
+                document.querySelectorAll('#gallery-filter-menu .menu-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                filterTarget.classList.add('active');
 
-            // Restablecer el estado de la vista
-            statusContainer.classList.add('disabled');
-            photosSection.style.display = 'none';
-            videosSection.style.display = 'none';
-            photosTitle.style.display = 'flex';
-            videosTitle.style.display = 'flex';
+                // Restablecer el estado de la vista
+                statusContainer.classList.add('disabled');
+                photosSection.style.display = 'none';
+                videosSection.style.display = 'none';
+                photosTitle.style.display = 'flex';
+                videosTitle.style.display = 'flex';
 
-            if (filterValue === 'all') {
-                if (hasPhotos) photosSection.style.display = 'block';
-                if (hasVideos) videosSection.style.display = 'block';
-                // El caso en que ambos están vacíos es manejado por la función que carga las fotos.
-            } else if (filterValue === 'photos') {
-                photosSection.style.display = 'block';
-                if (!hasPhotos) {
-                    photosTitle.style.display = 'none';
-                    photosGrid.style.display = 'none';
-                    statusContainer.innerHTML = `<div><h2 data-i18n="userPhotos.noPhotosTitle"></h2><p data-i18n="userPhotos.noPhotosMessage"></p></div>`;
-                    statusContainer.classList.remove('disabled');
-                    window.applyTranslations(statusContainer);
+                if (filterValue === 'all') {
+                    if (hasPhotos) photosSection.style.display = 'block';
+                    if (hasVideos) videosSection.style.display = 'block';
+                    // El caso en que ambos están vacíos es manejado por la función que carga las fotos.
+                } else if (filterValue === 'photos') {
+                    photosSection.style.display = 'block';
+                    if (!hasPhotos) {
+                        photosTitle.style.display = 'none';
+                        photosGrid.style.display = 'none';
+                        statusContainer.innerHTML = `<div><h2 data-i18n="userPhotos.noPhotosTitle"></h2><p data-i18n="userPhotos.noPhotosMessage"></p></div>`;
+                        statusContainer.classList.remove('disabled');
+                        window.applyTranslations(statusContainer);
+                    }
+                } else if (filterValue === 'videos') {
+                    videosSection.style.display = 'block';
+                    if (!hasVideos) {
+                        videosTitle.style.display = 'none';
+                        videosGrid.style.display = 'none';
+                        statusContainer.innerHTML = `<div><h2 data-i18n="userPhotos.noVideosTitle"></h2><p data-i18n="userPhotos.noVideosMessage"></p></div>`;
+                        statusContainer.classList.remove('disabled');
+                        window.applyTranslations(statusContainer);
+                    }
                 }
-            } else if (filterValue === 'videos') {
-                videosSection.style.display = 'block';
-                if (!hasVideos) {
-                    videosTitle.style.display = 'none';
-                    videosGrid.style.display = 'none';
-                    statusContainer.innerHTML = `<div><h2 data-i18n="userPhotos.noVideosTitle"></h2><p data-i18n="userPhotos.noVideosMessage"></p></div>`;
-                    statusContainer.classList.remove('disabled');
-                    window.applyTranslations(statusContainer);
+
+                const menu = filterTarget.closest('.module-select');
+                const trigger = document.querySelector('[data-target="gallery-filter-menu"]');
+                if (menu) {
+                    menu.classList.add('disabled');
+                    menu.classList.remove('active');
+                }
+                if (trigger) {
+                    trigger.classList.remove('active-trigger');
                 }
             }
-        
-            const menu = filterTarget.closest('.module-select');
-            const trigger = document.querySelector('[data-target="gallery-filter-menu"]');
-            if (menu) {
-                menu.classList.add('disabled');
-                menu.classList.remove('active');
-            }
-            if (trigger) {
-                trigger.classList.remove('active-trigger');
-            }
-        }
 
             if (!event.target.closest('.item-actions')) {
                 document.querySelectorAll('.module-select[id^="user-actions-menu-"]').forEach(menu => {

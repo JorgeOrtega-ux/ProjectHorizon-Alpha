@@ -10,11 +10,11 @@
                 </div>
             </div>
             <div class="content-header-center">
+                </div>
+            <div class="content-header-right">
                 <div class="header-button" data-action="toggle-play-pause" data-i18n-tooltip="photoView.playButtonTooltip" style="display: none;">
                     <span class="material-symbols-rounded">play_arrow</span>
                 </div>
-            </div>
-            <div class="content-header-right">
                 <div class="header-button" data-action="toggle-favorite" data-i18n-tooltip="photoView.favoriteButtonTooltip">
                     <span class="material-symbols-rounded">favorite</span>
                 </div>
@@ -57,7 +57,12 @@
     <div class="section-content-block overflow-y" id="photo-view-block">
         <div class="photo-viewer-container">
             <img id="photo-viewer-image" src="" alt="Vista ampliada" style="display: none;">
-            <video id="photo-viewer-video" controls style="display: none;"></video>
+            <div class="video-wrapper" id="video-wrapper" style="display: none;">
+                <div class="video-loader">
+                    <div class="spinner"></div>
+                </div>
+                <video id="photo-viewer-video" controls style="display: none;"></video>
+            </div>
         </div>
     </div>
 </div>
