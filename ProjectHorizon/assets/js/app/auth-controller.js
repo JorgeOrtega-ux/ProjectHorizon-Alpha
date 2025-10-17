@@ -1,4 +1,4 @@
-// assets/js/auth-controller.js
+// assets/js/app/auth-controller.js
 
 import { navigateToUrl } from '../core/url-manager.js';
 import { showNotification } from '../managers/notification-manager.js';
@@ -63,10 +63,8 @@ function updateUserUI(userData) {
     const authRequiredLinks = document.querySelectorAll('.auth-required');
     const isLoggedIn = !!userData;
 
-    // --- INICIO DE LA CORRECCIÓN ---
     const adminOnlyLinks = document.querySelectorAll('.admin-only');
     const moderatorOnlyLinks = document.querySelectorAll('.moderator-only');
-    // --- FIN DE LA CORRECCIÓN ---
 
     if (userData && profileBtn) {
         loggedOutContainer.classList.add('disabled');
@@ -92,8 +90,6 @@ function updateUserUI(userData) {
 
         profileBtn.dataset.userRole = userData.role || 'user';
 
-        // --- INICIO DE LA CORRECCIÓN ---
-        // Lógica mejorada para mostrar/ocultar enlaces de admin/moderador
         const hasAdminAccess = ['administrator', 'founder'].includes(userData.role);
         const hasModeratorAccess = ['administrator', 'founder', 'moderator'].includes(userData.role);
 
@@ -108,7 +104,6 @@ function updateUserUI(userData) {
         moderatorOnlyLinks.forEach(link => {
             link.classList.toggle('disabled', !hasModeratorAccess);
         });
-        // --- FIN DE LA CORRECCIÓN ---
 
     } else {
         loggedOutContainer.classList.remove('disabled');
@@ -125,37 +120,16 @@ function updateUserUI(userData) {
             if(initialsSpan) initialsSpan.textContent = '';
         }
 
-        // --- INICIO DE LA CORRECCIÓN ---
-        // Ocultar todos los enlaces de admin/moderador al cerrar sesión
         if (adminPanelLink) {
             adminPanelLink.style.display = 'none';
         }
         adminOnlyLinks.forEach(link => link.classList.add('disabled'));
         moderatorOnlyLinks.forEach(link => link.classList.add('disabled'));
-        // --- FIN DE LA CORRECCIÓN ---
     }
     
     window.dispatchEvent(new CustomEvent('authChange', { detail: { isLoggedIn } }));
     applyTranslations(document.querySelector('.header-right'));
-    applyTranslations(document.querySelector('[data-module="moduleSurface"]')); // Asegura que el menú lateral se traduce
-}
-
-
-async function checkSessionStatus() {
-    const response = await api.checkSession();
-    
-    if (response && response.ok && response.data.loggedin) {
-        updateUserUI(response.data.user);
-    } else {
-        updateUserUI(null);
-        if (response && response.data) {
-            if (response.data.status === 'suspended') {
-                showNotification(window.getTranslation('auth.errors.accountSuspended'), 'error');
-            } else if (response.data.status === 'deleted') {
-                showNotification(window.getTranslation('auth.errors.accountDeleted'), 'error');
-            }
-        }
-    }
+    applyTranslations(document.querySelector('[data-module="moduleSurface"]'));
 }
 
 async function handleLogin(form) {
@@ -459,8 +433,19 @@ async function handleLogout() {
     }
 }
 
-export function initAuthController() {
-    checkSessionStatus();
+export function initAuthController(sessionData) {
+    if (sessionData && sessionData.loggedin) {
+        updateUserUI(sessionData.user);
+    } else {
+        updateUserUI(null);
+        if (sessionData) {
+            if (sessionData.status === 'suspended') {
+                showNotification(window.getTranslation('auth.errors.accountSuspended'), 'error');
+            } else if (sessionData.status === 'deleted') {
+                showNotification(window.getTranslation('auth.errors.accountDeleted'), 'error');
+            }
+        }
+    }
 
     document.addEventListener('click', (event) => {
         const actionTarget = event.target.closest('[data-action]');
@@ -502,7 +487,6 @@ export function initAuthController() {
 
     window.auth = {
         fetchAndSetCsrfToken,
-        checkSessionStatus,
         updateUserUI
     };
 }

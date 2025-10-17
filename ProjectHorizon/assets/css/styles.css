@@ -216,7 +216,6 @@ h6 {
 }
 /* Estilos para el contenedor del menú de admin */
 .menu-content[data-menu="admin"] {
-    display: flex;
     flex-direction: column;
 }
 
@@ -659,11 +658,6 @@ h6 {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     border: 1px solid transparent;
 }
-
-.card:hover {
-    transform: translateY(-5px);
-}
-
 .card-background {
     position: absolute;
     top: 0;

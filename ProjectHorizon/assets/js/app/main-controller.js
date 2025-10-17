@@ -6,6 +6,7 @@ import { setLanguage, applyTranslations, updateLanguageSelectorUI } from '../man
 import { initTooltips } from '../managers/tooltip-manager.js';
 import { showNotification } from '../managers/notification-manager.js';
 import * as api from '../core/api-handler.js';
+import { initAuthController } from './auth-controller.js';
 import { displayFavoritePhotos, updateCardPrivacyStatus, renderPhotoView, displayHistory } from '../ui/ui-controller.js';
 import {
     showCustomConfirm,
@@ -29,7 +30,7 @@ import {
     fetchAndDisplayFeedback,
     fetchAndDisplayUserProfile,
     fetchAndDisplayProfanityWords,
-    fetchAndDisplayBackups // <--- Añade esta línea
+    fetchAndDisplayBackups
 } from './view-handlers.js';
 import { handleStateChange, displayComments, createCommentElement } from './navigation-handler.js';
 
@@ -148,10 +149,13 @@ async function saveUserPreferences() {
 }
 
 export async function initMainController() {
-    // --- INICIO DE LA LÓGICA DE MODO MANTENIMIENTO ---
+    // Realiza la única llamada a checkSession
+    const sessionDataResponse = await api.checkSession();
+    const sessionData = sessionDataResponse.ok ? sessionDataResponse.data : null;
+
+    // --- LÓGICA DE MODO MANTENIMIENTO ---
     if (window.MAINTENANCE_MODE) {
-        const session = await api.checkSession();
-        const userRole = session.ok && session.data.loggedin ? session.data.user.role : 'user';
+        const userRole = sessionData && sessionData.loggedin ? sessionData.user.role : 'user';
         const allowedRoles = ['moderator', 'administrator', 'founder'];
 
         if (!allowedRoles.includes(userRole)) {
@@ -166,15 +170,13 @@ export async function initMainController() {
                     </div>
                 `;
             }
-            // Detiene la ejecución del resto del controlador si está en mantenimiento
             return;
         }
     }
-    // --- FIN DE LA LÓGICA DE MODO MANTENIMIENTO ---
-
-    const sessionData = await api.checkSession();
-    if (sessionData.ok && sessionData.data.loggedin && sessionData.data.preferences) {
-        const prefs = sessionData.data.preferences;
+    
+    // Configura las preferencias del usuario y el idioma
+    if (sessionData && sessionData.loggedin && sessionData.preferences) {
+        const prefs = sessionData.preferences;
         localStorage.setItem('theme', prefs.theme);
         localStorage.setItem('language', prefs.language);
         localStorage.setItem('open_links_in_new_tab', prefs.open_links_in_new_tab);
@@ -182,7 +184,7 @@ export async function initMainController() {
         localStorage.setItem('enable_view_history', prefs.enable_view_history);
         localStorage.setItem('enable_search_history', prefs.enable_search_history);
     }
-
+    
     applyTheme();
 
     let currentLang = localStorage.getItem('language');
@@ -192,9 +194,16 @@ export async function initMainController() {
         else if (browserLang.startsWith('en')) currentLang = 'en-US';
         else currentLang = 'es-419';
     }
-    await setLanguage(currentLang, false);
+    
+    // Pasa el rol del usuario al gestor de idioma
+    const userRoleForLang = sessionData && sessionData.loggedin ? sessionData.user.role : 'user';
+    await setLanguage(currentLang, userRoleForLang, false);
 
     handleAgeVerification();
+    
+    // Inicializa el controlador de autenticación con los datos de la sesión
+    initAuthController(sessionData);
+
     const appState = {
         serverSettings: {
             unlock_duration: window.UNLOCK_DURATION || 60,
@@ -972,7 +981,7 @@ export async function initMainController() {
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         const preview = document.getElementById('profile-picture-preview-create');
-                        if (preview) preview.style.backgroundImage = `url('${e.target.result}')`;
+                        if(preview) preview.style.backgroundImage = `url('${e.target.result}')`;
                     };
                     reader.readAsDataURL(event.target.files[0]);
                 }
@@ -1230,6 +1239,21 @@ export async function initMainController() {
 
             if (actionTarget) {
                 const action = actionTarget.dataset.action;
+
+                if (window.matchMedia('(max-width: 468px)').matches && actionTarget.closest('[data-module="moduleSurface"] .menu-link')) {
+                    const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
+                    if (moduleSurface) {
+                        moduleSurface.classList.add('disabled');
+                    }
+                }
+
+                if (action !== 'download-photo' && !actionTarget.closest('a[target="_blank"]')) {
+                    const link = actionTarget.closest('.menu-link');
+                    if (link && link.tagName.toLowerCase() === 'a' && !link.getAttribute('href').startsWith('#')) {
+                    } else {
+                        event.preventDefault();
+                    }
+                }
 
                 switch (action) {
                     case 'create-backup': {
@@ -2544,7 +2568,7 @@ export async function initMainController() {
                     setTheme(value);
                 }
                 else if (selectId === 'language-select') {
-                    setLanguage(value);
+                    setLanguage(value, sessionData?.user?.role || 'user');
                 } else if (selectId.includes('history-select')) {
                     appState.paginationState.historyProfiles.shown = appState.HISTORY_PROFILES_BATCH;
                     appState.paginationState.historyPhotos.shown = appState.HISTORY_PHOTOS_BATCH;
@@ -2764,7 +2788,15 @@ export async function initMainController() {
 
     const path = window.location.pathname.replace(window.BASE_PATH || '', '').slice(1);
 
-    const routes = {
+    // --- INICIO DE LA CORRECCIÓN ---
+    // Se elimina el objeto `routes` y se deja solo la lógica de `preg_match`
+    // que ya estaba presente para manejar las rutas dinámicas.
+    
+    let initialRoute = null;
+    let initialStateData = null;
+
+    // Se mantiene la lógica de coincidencias para determinar la ruta inicial
+    const staticRoutes = {
         '': { view: 'main', section: 'home' },
         'trends': { view: 'main', section: 'trends' },
         'favorites': { view: 'main', section: 'favorites' },
@@ -2791,21 +2823,17 @@ export async function initMainController() {
         'admin/comments': { view: 'admin', section: 'manageComments' },
         'admin/feedback': { view: 'admin', section: 'manageFeedback' },
         'admin/site-settings': { view: 'admin', section: 'generalSettings' },
-        'admin/profanity-filter': { view: 'admin', section: 'manageProfanity' },
         'admin/backup': { view: 'admin', section: 'backup' },
         'admin/logs': { view: 'admin', section: 'manageLogs' },
-
-        'admin-dashboard': 'admin/dashboard',
-        'admin-userProfile': 'admin/user/{uuid}',
-        'admin-manageGalleryPhotos': 'admin/edit-gallery/{uuid}/photos',
-        'admin-galleryStats': 'admin/gallery/{uuid}/stats',
-        'admin-verifyFounder': 'admin/verify-founder',
-
-        'main-photoComments': 'gallery/{uuid}/photo/{photoId}/comments',
-        'main-404': '404'
+        'admin/profanity-filter': { view: 'admin', section: 'manageProfanity'},
+        'admin/verify-founder': { view: 'admin', section: 'verifyFounder'}
     };
-    let initialRoute = routes[path] || null;
-    let initialStateData = initialRoute ? initialRoute.data : null;
+
+    if (staticRoutes[path]) {
+        initialRoute = staticRoutes[path];
+        initialStateData = initialRoute.data || null;
+    }
+    // --- FIN DE LA CORRECCIÓN ---
 
     const privateGalleryMatch = path.match(/^gallery\/private\/([a-f0-9-]{36})$/);
     const galleryMatch = path.match(/^gallery\/([a-f0-9-]{36})$/);

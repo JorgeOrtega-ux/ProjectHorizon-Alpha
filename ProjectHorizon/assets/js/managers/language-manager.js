@@ -11,7 +11,7 @@ const availableLanguages = {
     'pt-BR': 'Português (Brasil)'
 };
 
-async function fetchTranslations(langCode) {
+async function fetchTranslations(langCode, userRole = 'user') {
     try {
         // 1. Cargar las traducciones principales
         const mainResponse = await fetch(`${window.BASE_PATH}/assets/lang/${langCode}.json`);
@@ -21,12 +21,10 @@ async function fetchTranslations(langCode) {
         let mainTranslations = await mainResponse.json();
 
         // 2. Comprobar si el usuario es administrador o fundador
-        const session = await api.checkSession();
-        
-        // -- CORRECCIÓN: Se añade 'founder' a la lista de roles que pueden cargar traducciones de admin. --
-        if (session.ok && session.data.loggedin && ['administrator', 'founder'].includes(session.data.user.role)) {
+        const adminRoles = ['administrator', 'founder', 'moderator'];
+        if (adminRoles.includes(userRole)) {
             try {
-                // 3. Si es admin/founder, cargar y fusionar las traducciones de administrador
+                // 3. Si es admin/founder/moderator, cargar y fusionar las traducciones de administrador
                 const adminResponse = await fetch(`${window.BASE_PATH}/assets/lang/admin/${langCode}.json`);
                 if (adminResponse.ok) {
                     const adminTranslations = await adminResponse.json();
@@ -122,12 +120,12 @@ export function updateLanguageSelectorUI(langCode) {
     }
 }
 
-export async function setLanguage(langCode, save = true) {
+export async function setLanguage(langCode, userRole, save = true) {
     if (!availableLanguages[langCode]) return;
 
     localStorage.setItem('language', langCode);
 
-    await fetchTranslations(langCode);
+    await fetchTranslations(langCode, userRole);
     updateLanguageSelectorUI(langCode);
     console.log(`Idioma establecido en: ${langCode}`);
     if (save && window.saveUserPreferences) {
