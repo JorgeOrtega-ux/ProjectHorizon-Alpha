@@ -41,35 +41,41 @@
         </div>
     </div>
     <div class="section-content-block overflow-y">
-        <div class="status-message-container disabled"></div>
         <div class="history-paused-alert disabled">
             <span class="material-symbols-rounded">pause_circle</span>
             <span data-i18n="settings.history.historyPausedAlert"></span>
         </div>
         <div id="history-container">
-            <div class="category-section" data-history-view="views">
-                <div class="category-section-title">
-                    <span class="material-symbols-rounded">person</span>
-                    <span data-i18n="settings.history.recentProfiles"></span>
+            <div data-history-view="views">
+                <div class="settings-page-container">
+                    <div class="content-section header-section">
+                        <div class="item-details">
+                            <h2 data-i18n="settings.history.recentProfiles"></h2>
+                        </div>
+                    </div>
+                    <div class="status-message-container disabled" id="history-profiles-status"></div>
+                    <div class="admin-list-container" id="history-profiles-grid"></div>
+                    <div class="load-more-container disabled" id="history-profiles-load-more"></div>
                 </div>
-                <div class="card-grid" id="history-profiles-grid"></div>
-                <div class="load-more-container disabled" id="history-profiles-load-more"></div>
-            </div>
-            <div class="category-section" data-history-view="views">
-                <div class="category-section-title">
-                    <span class="material-symbols-rounded">photo_camera</span>
-                    <span data-i18n="settings.history.recentPhotos"></span>
+                 <div class="settings-page-container">
+                    <div class="content-section header-section">
+                        <div class="item-details">
+                            <h2 data-i18n="settings.history.recentPhotos"></h2>
+                        </div>
+                    </div>
+                    <div class="status-message-container disabled" id="history-photos-status"></div>
+                    <div class="admin-list-container" id="history-photos-grid"></div>
+                    <div class="load-more-container disabled" id="history-photos-load-more"></div>
                 </div>
-                <div class="card-grid" id="history-photos-grid"></div>
-                <div class="load-more-container disabled" id="history-photos-load-more"></div>
             </div>
             <div data-history-view="searches" style="display: none;">
-                <div class="settings-page-container" style="padding: 0; max-width: none;">
+                <div class="settings-page-container">
                     <div class="content-section header-section">
                         <div class="item-details">
                             <h2 data-i18n="settings.history.recentSearches"></h2>
                         </div>
                     </div>
+                     <div class="status-message-container disabled" id="history-searches-status"></div>
                     <div class="admin-list-container" id="history-searches-list"></div>
                     <div class="load-more-container disabled" id="history-searches-load-more"></div>
                 </div>
