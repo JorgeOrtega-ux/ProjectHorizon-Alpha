@@ -291,6 +291,7 @@ export async function initMainController() {
     let selectedUser = null;
     let selectedComment = null;
     let selectedFeedback = null;
+    let selectedProfanityWord = null;
 
     function updateManageUsersHeader() {
         const actionButtonsContainer = document.getElementById('user-action-buttons');
@@ -618,6 +619,51 @@ export async function initMainController() {
             selectedFeedback.classList.remove('selected');
             selectedFeedback = null;
             updateManageFeedbackHeader();
+        }
+    }
+    
+    function updateManageProfanityHeader() {
+        const actionButtonsContainer = document.getElementById('profanity-action-buttons');
+        if (!actionButtonsContainer) return;
+
+        let buttonsHTML = '';
+
+        if (selectedProfanityWord) {
+            buttonsHTML = `
+                <button class="header-button" data-action="delete-profanity-word" data-id="${selectedProfanityWord.dataset.id}" data-i18n-tooltip="admin.generalSettings.profanityFilter.deleteTooltip">
+                    <span class="material-symbols-rounded">delete</span>
+                </button>
+            `;
+        }
+
+        actionButtonsContainer.innerHTML = buttonsHTML;
+        applyTranslations(actionButtonsContainer);
+        initTooltips();
+    }
+
+    function handleProfanityWordSelection(event) {
+        const clickedItem = event.target.closest('.admin-list-item');
+
+        if (clickedItem) {
+            if (selectedProfanityWord === clickedItem) {
+                clickedItem.classList.remove('selected');
+                selectedProfanityWord = null;
+            } else {
+                if (selectedProfanityWord) {
+                    selectedProfanityWord.classList.remove('selected');
+                }
+                clickedItem.classList.add('selected');
+                selectedProfanityWord = clickedItem;
+            }
+        }
+        updateManageProfanityHeader();
+    }
+
+    function deselectProfanityWord() {
+        if (selectedProfanityWord) {
+            selectedProfanityWord.classList.remove('selected');
+            selectedProfanityWord = null;
+            updateManageProfanityHeader();
         }
     }
 
@@ -1115,6 +1161,15 @@ export async function initMainController() {
                 }
             }
 
+            const profanityListContainer = document.getElementById('profanity-words-list');
+            if (appState.currentAppSection === 'manageProfanity' && profanityListContainer) {
+                if (profanityListContainer.contains(event.target)) {
+                    handleProfanityWordSelection(event);
+                } else {
+                    deselectProfanityWord();
+                }
+            }
+
             const actionTarget = event.target.closest('[data-action]');
             const selectTrigger = event.target.closest('[data-action="toggle-select"]');
             const submitCommentBtn = event.target.closest('#submit-comment-btn');
@@ -1353,8 +1408,8 @@ export async function initMainController() {
                             const response = await api.deleteProfanityWord(id);
                             if (response.ok) {
                                 showNotification(response.data.message, 'success');
-                                const row = button.closest('tr');
-                                if (row) row.remove();
+                                fetchAndDisplayProfanityWords(); // Refresh the list
+                                deselectProfanityWord(); // Deselect after deletion
                             } else {
                                 showNotification(response.data.message || 'Error al eliminar la palabra.', 'error');
                             }

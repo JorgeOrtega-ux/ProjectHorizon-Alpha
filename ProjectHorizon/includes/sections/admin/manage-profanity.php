@@ -18,6 +18,7 @@
                 </div>
             </div>
             <div class="content-header-right">
+                <div id="profanity-action-buttons" class="header-item"></div>
                 <div class="add-profanity-form">
                     <input type="text" id="profanity-word-input" class="feedback-input" data-i18n-placeholder="admin.generalSettings.profanityFilter.wordPlaceholder">
                     <div class="select-wrapper body-title">

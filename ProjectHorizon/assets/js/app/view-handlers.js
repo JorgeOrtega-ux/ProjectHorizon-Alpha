@@ -793,7 +793,7 @@ export async function fetchAndDisplayTrends(searchTerm = '') {
                         card.dataset.photoUrl = video.photo_url;
                         card.dataset.photoId = video.id;
                         card.dataset.galleryUuid = video.gallery_uuid;
-
+    
                         const background = document.createElement('div');
                         background.className = 'card-background';
                         if (video.thumbnail_url) {
@@ -801,11 +801,11 @@ export async function fetchAndDisplayTrends(searchTerm = '') {
                         } else {
                             background.style.backgroundColor = '#000';
                         }
-
+    
                         const playIcon = document.createElement('div');
                         playIcon.className = 'play-icon';
                         playIcon.innerHTML = `<span class="material-symbols-rounded">play_arrow</span>`;
-
+    
                         card.appendChild(background);
                         card.appendChild(playIcon);
 
@@ -1051,11 +1051,6 @@ export async function fetchAndDisplayProfanityWords(languageCode = 'all', search
                             <span class="info-badge-admin">${word.language_code}</span>
                         </div>
                     </div>
-                    <div class="admin-list-item-actions">
-                        <button class="delete-profanity-word-btn" data-action="delete-profanity-word" data-id="${word.id}" data-i18n-tooltip="admin.generalSettings.profanityFilter.deleteTooltip">
-                            <span class="material-symbols-rounded">delete</span>
-                        </button>
-                    </div>
                 `;
                 listContainer.appendChild(item);
             });
@@ -1133,6 +1128,7 @@ export async function fetchAndDisplayFeedback(searchTerm = '', append = false, s
         }
     }
 }
+
 
 export async function fetchAndDisplayUserProfile(uuid) {
     const section = document.querySelector('[data-section="userProfile"]');
