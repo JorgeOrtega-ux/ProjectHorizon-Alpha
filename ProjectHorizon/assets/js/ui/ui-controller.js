@@ -378,6 +378,9 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
                 item.dataset.uuid = profile.id;
                 const visitedDate = new Date(profile.visited_at).toLocaleString();
                 item.innerHTML = `
+                    <div class="admin-list-item-selection">
+                        <input type="checkbox" class="history-item-select" data-id="${profile.id}">
+                    </div>
                     <div class="admin-list-item-thumbnail admin-list-item-thumbnail--initials">
                         ${profile.profile_picture_url ? `<img src="${window.BASE_PATH}/${profile.profile_picture_url}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">` : getInitials(profile.name)}
                     </div>
@@ -408,6 +411,9 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
                 item.dataset.photoId = photo.id;
                 const visitedDate = new Date(photo.visited_at).toLocaleString();
                 item.innerHTML = `
+                    <div class="admin-list-item-selection">
+                        <input type="checkbox" class="history-item-select" data-id="${photo.id}">
+                    </div>
                     <div class="admin-list-item-thumbnail">
                         <img src="${window.BASE_PATH}/${photo.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">
                     </div>
@@ -441,6 +447,9 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
                 const searchedInText = window.getTranslation('general.searchedIn', { section: search.section });
                 const visitedDate = new Date(search.visited_at).toLocaleString();
                 item.innerHTML = `
+                    <div class="admin-list-item-selection">
+                        <input type="checkbox" class="history-item-select" data-id="${search.visited_at}">
+                    </div>
                     <div class="admin-list-item-thumbnail admin-list-item-thumbnail--initials">
                         <span class="material-symbols-rounded">search</span>
                     </div>
@@ -450,11 +459,6 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
                             <span class="info-badge-admin">${searchedInText}</span>
                             <span class="info-badge-admin">${visitedDate}</span>
                         </div>
-                    </div>
-                    <div class="admin-list-item-actions">
-                        <button class="header-button" data-action="delete-search-item" data-timestamp="${search.visited_at}" data-tooltip="Eliminar">
-                            <span class="material-symbols-rounded">close</span>
-                        </button>
                     </div>
                 `;
                 searchesList.appendChild(item);
@@ -471,7 +475,6 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
     window.applyTranslations(mainContainer);
     initTooltips();
 }
-
 export async function renderPhotoView(uuid, photoId, photoList) {
     const photoViewerImage = document.getElementById('photo-viewer-image');
     const photoViewerVideo = document.getElementById('photo-viewer-video');

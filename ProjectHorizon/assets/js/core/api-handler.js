@@ -167,6 +167,15 @@ export function clearHistory() {
     return postDataWithCsrf(formData);
 }
 
+// --- INICIO DE LA MODIFICACIÓN ---
+export function deleteHistoryItems(itemIds) {
+    const formData = new FormData();
+    formData.append('action_type', 'delete_history_items');
+    formData.append('item_ids', JSON.stringify(itemIds));
+    return postDataWithCsrf(formData);
+}
+// --- FIN DE LA MODIFICACIÓN ---
+
 export function getComments(photoId) {
     return fetchData(`${window.BASE_PATH}/api/main_handler.php?request_type=comments&photo_id=${photoId}`);
 }

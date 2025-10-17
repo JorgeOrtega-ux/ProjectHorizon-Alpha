@@ -10,6 +10,7 @@
                 </div>
             </div>
             <div class="content-header-right">
+                <div id="history-action-buttons" class="header-item"></div>
                 <div class="header-item" id="history-sorter">
                     <div class="select-wrapper body-title">
                         <div class="custom-select-trigger" data-action="toggle-select" data-target="history-select">

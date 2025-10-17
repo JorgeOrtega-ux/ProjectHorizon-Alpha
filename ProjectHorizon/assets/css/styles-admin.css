@@ -1047,3 +1047,9 @@
     color: var(--muted-text-color);
     border: 1px solid var(--border-color);
 }
+
+/* --- INICIO DE LA MODIFICACIÓN --- */
+.admin-list-item-selection {
+    margin-right: 12px;
+}
+/* --- FIN DE LA MODIFICACIÓN --- */

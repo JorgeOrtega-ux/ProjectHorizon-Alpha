@@ -292,6 +292,9 @@ export async function initMainController() {
     let selectedComment = null;
     let selectedFeedback = null;
     let selectedProfanityWord = null;
+    // --- INICIO DE LA MODIFICACIÓN ---
+    let selectedHistoryItems = new Set();
+    // --- FIN DE LA MODIFICACIÓN ---
 
     function updateManageUsersHeader() {
         const actionButtonsContainer = document.getElementById('user-action-buttons');
@@ -342,6 +345,57 @@ export async function initMainController() {
         applyTranslations(actionButtonsContainer);
         initTooltips();
     }
+    // --- INICIO DE LA MODIFICACIÓN ---
+    function updateHistoryHeader() {
+        const actionButtonsContainer = document.getElementById('history-action-buttons');
+        if (!actionButtonsContainer) return;
+
+        if (selectedHistoryItems.size > 0) {
+            actionButtonsContainer.innerHTML = `
+                <button class="header-button" data-action="delete-history-items" data-i18n-tooltip="settings.history.deleteTooltip">
+                    <span class="material-symbols-rounded">delete</span>
+                </button>
+            `;
+        } else {
+            actionButtonsContainer.innerHTML = '';
+        }
+        applyTranslations(actionButtonsContainer);
+        initTooltips();
+    }
+
+    function handleHistorySelection(event) {
+        const clickedItem = event.target.closest('.admin-list-item');
+        if (!clickedItem) return;
+
+        const checkbox = clickedItem.querySelector('input[type="checkbox"]');
+        if (!checkbox) return;
+
+        if (event.target !== checkbox) {
+            checkbox.checked = !checkbox.checked;
+        }
+
+        const itemId = checkbox.dataset.id;
+        if (checkbox.checked) {
+            selectedHistoryItems.add(itemId);
+            clickedItem.classList.add('selected');
+        } else {
+            selectedHistoryItems.delete(itemId);
+            clickedItem.classList.remove('selected');
+        }
+
+        updateHistoryHeader();
+    }
+
+    function deselectAllHistoryItems() {
+        document.querySelectorAll('#history-container .admin-list-item.selected').forEach(item => {
+            item.classList.remove('selected');
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            if (checkbox) checkbox.checked = false;
+        });
+        selectedHistoryItems.clear();
+        updateHistoryHeader();
+    }
+    // --- FIN DE LA MODIFICACIÓN ---
 
     function handleUserSelection(event) {
         const clickedItem = event.target.closest('.admin-list-item');
@@ -1008,6 +1062,37 @@ export async function initMainController() {
         }
     }
 
+    function setupScrollShadows() {
+        appState.activeScrollHandlers.forEach(({ element, listener }) => {
+            element.removeEventListener('scroll', listener);
+        });
+        appState.activeScrollHandlers = [];
+
+        const mainScrolleable = document.querySelector('.general-content-scrolleable');
+        const mainHeader = document.querySelector('.general-content-top');
+
+        if (mainScrolleable && mainHeader) {
+            const mainListener = () => {
+                mainHeader.classList.toggle('shadow', mainScrolleable.scrollTop > 0);
+            };
+            mainScrolleable.addEventListener('scroll', mainListener);
+            appState.activeScrollHandlers.push({ element: mainScrolleable, listener: mainListener });
+            mainListener();
+        }
+
+        const sectionScrolleable = document.querySelector('.section-content-block.overflow-y');
+        const sectionHeader = document.querySelector('.section-content-header');
+
+        if (sectionScrolleable && sectionHeader) {
+            const sectionListener = () => {
+                sectionHeader.classList.toggle('shadow', sectionScrolleable.scrollTop > 0);
+            };
+            sectionScrolleable.addEventListener('scroll', sectionListener);
+            appState.activeScrollHandlers.push({ element: sectionScrolleable, listener: sectionListener });
+            sectionListener();
+        }
+    }
+
     function setupEventListeners() {
         document.addEventListener('input', (event) => {
             if (appState.currentAppSection === 'createGallery') {
@@ -1105,6 +1190,17 @@ export async function initMainController() {
         });
 
         document.addEventListener('click', async function (event) {
+             // --- INICIO DE LA MODIFICACIÓN ---
+            const historyListContainer = document.getElementById('history-container');
+            const historyActionButtons = document.getElementById('history-action-buttons');
+            if (appState.currentAppSection === 'history' && historyListContainer) {
+                if (historyListContainer.contains(event.target)) {
+                    handleHistorySelection(event);
+                } else if (!historyActionButtons || !historyActionButtons.contains(event.target)) {
+                    deselectAllHistoryItems();
+                }
+            }
+            // --- FIN DE LA MODIFICACIÓN ---
             const listContainer = document.getElementById('admin-galleries-list');
             if (appState.currentAppSection === 'manageContent' && listContainer) {
                 if (listContainer.contains(event.target)) {
@@ -1221,7 +1317,25 @@ export async function initMainController() {
                     errorContainer.style.display = 'block';
                 }
             }
+             // --- INICIO DE LA MODIFICACIÓN ---
+            if (actionTarget && actionTarget.dataset.action === 'delete-history-items') {
+                const confirmed = await showCustomConfirm(
+                    'Eliminar elementos del historial',
+                    `¿Estás seguro de que quieres eliminar los ${selectedHistoryItems.size} elementos seleccionados? Esta acción es permanente.`
+                );
 
+                if (confirmed) {
+                    const response = await api.deleteHistoryItems(Array.from(selectedHistoryItems));
+                    if (response.ok) {
+                        showNotification('Elementos del historial eliminados.', 'success');
+                        deselectAllHistoryItems();
+                        displayHistory(appState.paginationState.historyProfiles.shown, appState.paginationState.historyPhotos.shown, appState.paginationState.historySearches.shown);
+                    } else {
+                        showNotification('Error al eliminar los elementos.', 'error');
+                    }
+                }
+            }
+            // --- FIN DE LA MODIFICACIÓN ---
             if (submitCommentBtn) {
                 const commentInput = document.getElementById('comment-input');
                 const commentText = commentInput.value.trim();
@@ -2740,7 +2854,11 @@ export async function initMainController() {
             if (event.key === 'Escape' && appState.currentAppSection === 'manageUsers') {
                 deselectUser();
             }
-
+            // --- INICIO DE LA MODIFICACIÓN ---
+            if (event.key === 'Escape' && appState.currentAppSection === 'history') {
+                deselectAllHistoryItems();
+            }
+            // --- FIN DE LA MODIFICACIÓN ---
             if (event.key === 'Enter' && input.tagName.toLowerCase() === 'input' && input.closest('.search-input-wrapper')) {
                 event.preventDefault();
 

@@ -1182,6 +1182,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
     $action_type = $_POST['action_type'] ?? '';
     
+    // --- INICIO DE LA MODIFICACIÓN ---
+    if ($action_type === 'delete_history_items') {
+        if (!isset($_SESSION['loggedin']) || !isset($_SESSION['user_uuid'])) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'No autorizado.']);
+            exit;
+        }
+        $user_uuid = $_SESSION['user_uuid'];
+        $item_ids = json_decode($_POST['item_ids'] ?? '[]', true);
+
+        if (empty($item_ids)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'No se seleccionaron elementos.']);
+            exit;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($item_ids), '?'));
+        $types = str_repeat('s', count($item_ids));
+
+        $stmt = $conn->prepare("DELETE FROM user_history WHERE user_uuid = ? AND item_id IN ($placeholders)");
+        $params = array_merge([$user_uuid], $item_ids);
+        $stmt->bind_param('s' . $types, ...$params);
+
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error al eliminar los elementos del historial.']);
+        }
+        $stmt->close();
+        exit;
+    }
+    // --- FIN DE LA MODIFICACIÓN ---
+
     if ($action_type === 'create_backup') {
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {
             http_response_code(403);
