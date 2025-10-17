@@ -21,7 +21,7 @@ if (session_status() == PHP_SESSION_NONE) {
         </div>
     </div>
 
-    <div class="menu-content <?php echo ($CURRENT_VIEW === 'settings') ? 'active' : 'disabled'; ?>" data-menu="settings">
+    <div class="menu-content overflow-y <?php echo ($CURRENT_VIEW === 'settings') ? 'active' : 'disabled'; ?>" data-menu="settings">
         <div class="menu-list">
             <div class="menu-link" data-action="toggleMainView">
                 <div class="menu-link-icon"><span class="material-symbols-rounded">arrow_back</span></div>
@@ -35,7 +35,7 @@ if (session_status() == PHP_SESSION_NONE) {
                 <div class="menu-link-icon"><span class="material-symbols-rounded">accessibility</span></div>
                 <div class="menu-link-text"><span data-i18n="moduleSurface.accessibility"></span></div>
             </div>
-            
+
             <div class="menu-link auth-required disabled <?php echo ($CURRENT_SECTION === 'loginSecurity') ? 'active' : ''; ?>" data-action="toggleSectionLoginSecurity">
                 <div class="menu-link-icon"><span class="material-symbols-rounded">security</span></div>
                 <div class="menu-link-text"><span data-i18n="moduleSurface.loginSecurity"></span></div>
@@ -48,7 +48,7 @@ if (session_status() == PHP_SESSION_NONE) {
         </div>
     </div>
 
-    <div class="menu-content <?php echo ($CURRENT_VIEW === 'help') ? 'active' : 'disabled'; ?>" data-menu="help">
+    <div class="menu-content overflow-y <?php echo ($CURRENT_VIEW === 'help') ? 'active' : 'disabled'; ?>" data-menu="help">
         <div class="menu-list">
             <div class="menu-link" data-action="toggleMainView">
                 <div class="menu-link-icon"><span class="material-symbols-rounded">arrow_back</span></div>
@@ -73,48 +73,51 @@ if (session_status() == PHP_SESSION_NONE) {
         </div>
     </div>
 
-    <div class="menu-content <?php echo ($CURRENT_VIEW === 'admin') ? 'active' : 'disabled'; ?>" data-menu="admin">
-        <div class="menu-list">
-            <div class="menu-link" data-action="toggleMainView">
-                <div class="menu-link-icon"><span class="material-symbols-rounded">arrow_back</span></div>
-                <div class="menu-link-text"><span data-i18n="moduleSurface.backToHome"></span></div>
-            </div>
+    <div class="menu-content overflow-y <?php echo ($CURRENT_VIEW === 'admin') ? 'active' : 'disabled'; ?>" data-menu="admin">
+        <div class="menu-content-top">
+            <div class="menu-list">
+                <div class="menu-link" data-action="toggleMainView">
+                    <div class="menu-link-icon"><span class="material-symbols-rounded">arrow_back</span></div>
+                    <div class="menu-link-text"><span data-i18n="moduleSurface.backToHome"></span></div>
+                </div>
 
-            <div class="menu-link admin-only disabled <?php echo ($CURRENT_SECTION === 'dashboard') ? 'active' : ''; ?>" data-action="toggleSectionDashboard">
-                <div class="menu-link-icon"><span class="material-symbols-rounded">dashboard</span></div>
-                <div class="menu-link-text"><span data-i18n="moduleSurface.dashboard"></span></div>
+                <div class="menu-link admin-only disabled <?php echo ($CURRENT_SECTION === 'dashboard') ? 'active' : ''; ?>" data-action="toggleSectionDashboard">
+                    <div class="menu-link-icon"><span class="material-symbols-rounded">dashboard</span></div>
+                    <div class="menu-link-text"><span data-i18n="moduleSurface.dashboard"></span></div>
+                </div>
+                <div class="menu-link admin-only disabled <?php echo ($CURRENT_SECTION === 'manageUsers') ? 'active' : ''; ?>" data-action="toggleSectionManageUsers">
+                    <div class="menu-link-icon"><span class="material-symbols-rounded">manage_accounts</span></div>
+                    <div class="menu-link-text"><span data-i18n="moduleSurface.manageUsers"></span></div>
+                </div>
+                <div class="menu-link admin-only disabled <?php echo ($CURRENT_SECTION === 'manageContent') ? 'active' : ''; ?>" data-action="toggleSectionManageContent">
+                    <div class="menu-link-icon"><span class="material-symbols-rounded">folder_managed</span></div>
+                    <div class="menu-link-text"><span data-i18n="moduleSurface.manageContent"></span></div>
+                </div>
+                <div class="menu-link moderator-only disabled <?php echo ($CURRENT_SECTION === 'manageComments') ? 'active' : ''; ?>" data-action="toggleSectionManageComments">
+                    <div class="menu-link-icon"><span class="material-symbols-rounded">comment</span></div>
+                    <div class="menu-link-text"><span data-i18n="moduleSurface.manageComments"></span></div>
+                </div>
+                <div class="menu-link admin-only disabled <?php echo ($CURRENT_SECTION === 'manageFeedback') ? 'active' : ''; ?>" data-action="toggleSectionManageFeedback">
+                    <div class="menu-link-icon"><span class="material-symbols-rounded">rate_review</span></div>
+                    <div class="menu-link-text"><span data-i18n="moduleSurface.manageFeedback"></span></div>
+                </div>
+                <div class="menu-link admin-only disabled <?php echo ($CURRENT_SECTION === 'manageLogs') ? 'active' : ''; ?>" data-action="toggleSectionManageLogs">
+                    <div class="menu-link-icon"><span class="material-symbols-rounded">description</span></div>
+                    <div class="menu-link-text"><span data-i18n="moduleSurface.manageLogs"></span></div>
+                </div>
             </div>
-            <div class="menu-link admin-only disabled <?php echo ($CURRENT_SECTION === 'manageUsers') ? 'active' : ''; ?>" data-action="toggleSectionManageUsers">
-                <div class="menu-link-icon"><span class="material-symbols-rounded">manage_accounts</span></div>
-                <div class="menu-link-text"><span data-i18n="moduleSurface.manageUsers"></span></div>
-            </div>
-            <div class="menu-link admin-only disabled <?php echo ($CURRENT_SECTION === 'manageContent') ? 'active' : ''; ?>" data-action="toggleSectionManageContent">
-                <div class="menu-link-icon"><span class="material-symbols-rounded">folder_managed</span></div>
-                <div class="menu-link-text"><span data-i18n="moduleSurface.manageContent"></span></div>
-            </div>
-            <div class="menu-link moderator-only disabled <?php echo ($CURRENT_SECTION === 'manageComments') ? 'active' : ''; ?>" data-action="toggleSectionManageComments">
-                <div class="menu-link-icon"><span class="material-symbols-rounded">comment</span></div>
-                <div class="menu-link-text"><span data-i18n="moduleSurface.manageComments"></span></div>
-            </div>
-            <div class="menu-link admin-only disabled <?php echo ($CURRENT_SECTION === 'manageFeedback') ? 'active' : ''; ?>" data-action="toggleSectionManageFeedback">
-                <div class="menu-link-icon"><span class="material-symbols-rounded">rate_review</span></div>
-                <div class="menu-link-text"><span data-i18n="moduleSurface.manageFeedback"></span></div>
-            </div>
-            <div class="menu-link admin-only disabled <?php echo ($CURRENT_SECTION === 'manageLogs') ? 'active' : ''; ?>" data-action="toggleSectionManageLogs">
-                <div class="menu-link-icon"><span class="material-symbols-rounded">description</span></div>
-                <div class="menu-link-text"><span data-i18n="moduleSurface.manageLogs"></span></div>
-            </div>
-            
         </div>
-        <div class="menu-list">
-             <div class="menu-link admin-only disabled <?php echo ($CURRENT_SECTION === 'backup') ? 'active' : ''; ?>" data-action="toggleSectionBackup">
-                <div class="menu-link-icon"><span class="material-symbols-rounded">backup</span></div>
-                <div class="menu-link-text"><span data-i18n="moduleSurface.backup"></span></div>
-            </div>
+        <div class="menu-content-bottom">
+            <div class="menu-list">
+                <div class="menu-link admin-only disabled <?php echo ($CURRENT_SECTION === 'backup') ? 'active' : ''; ?>" data-action="toggleSectionBackup">
+                    <div class="menu-link-icon"><span class="material-symbols-rounded">backup</span></div>
+                    <div class="menu-link-text"><span data-i18n="moduleSurface.backup"></span></div>
+                </div>
 
-            <div class="menu-link admin-only disabled <?php echo ($CURRENT_SECTION === 'generalSettings') ? 'active' : ''; ?>" data-action="toggleSectionGeneralSettings">
-                <div class="menu-link-icon"><span class="material-symbols-rounded">dns</span></div>
-                <div class="menu-link-text"><span data-i18n="moduleSurface.serverSettings"></span></div>
+                <div class="menu-link admin-only disabled <?php echo ($CURRENT_SECTION === 'generalSettings') ? 'active' : ''; ?>" data-action="toggleSectionGeneralSettings">
+                    <div class="menu-link-icon"><span class="material-symbols-rounded">dns</span></div>
+                    <div class="menu-link-text"><span data-i18n="moduleSurface.serverSettings"></span></div>
+                </div>
             </div>
         </div>
     </div>

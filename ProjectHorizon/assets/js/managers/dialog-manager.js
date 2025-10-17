@@ -783,7 +783,17 @@ export async function showRestoreBackupDialog(filename) {
         showDialog({
             iconHTML: `<div class="dialog-icon"><span class="material-symbols-rounded">warning</span></div>`,
             title: window.getTranslation('dialogs.restoreBackup.title'),
-            contentHTML: `<p>${window.getTranslation('dialogs.restoreBackup.description', { filename: filename })}</p>`,
+            contentHTML: `
+                <p>${window.getTranslation('dialogs.restoreBackup.description', { filename: filename })}</p>
+                <div class="form-field password-wrapper" style="margin-top: 16px;">
+                    <input type="password" id="admin-confirm-password" class="auth-input" placeholder=" " autocomplete="current-password">
+                    <label for="admin-confirm-password" class="auth-label">${window.getTranslation('dialogs.deleteGallery.passwordLabel')}</label>
+                    <button type="button" class="password-toggle-btn" data-action="toggle-password-visibility"><span class="material-symbols-rounded">visibility</span></button>
+                </div>
+                <div class="auth-error-message-container" id="restore-backup-error-container">
+                    <ul id="restore-backup-error-list"></ul>
+                </div>
+            `,
             buttons: [
                 {
                     text: window.getTranslation('general.cancel'),
@@ -795,9 +805,32 @@ export async function showRestoreBackupDialog(filename) {
                 {
                     text: window.getTranslation('admin.backup.restoreButton'),
                     className: 'btn-danger',
-                    onClick: ({ close }) => {
-                        close();
-                        resolve(true);
+                    onClick: async ({ close, startLoading, stopLoading, getDialogElement }) => {
+                        const password = getDialogElement().querySelector('#admin-confirm-password').value;
+                        const errorContainer = getDialogElement().querySelector('#restore-backup-error-container');
+                        const errorList = getDialogElement().querySelector('#restore-backup-error-list');
+
+                        if (!password) {
+                            errorList.innerHTML = `<li>${window.getTranslation('dialogs.deleteGallery.errorRequired')}</li>`;
+                            errorContainer.style.display = 'block';
+                            resolve(false);
+                            return;
+                        }
+
+                        errorContainer.style.display = 'none';
+                        startLoading();
+
+                        const passResponse = await api.verifyAdminPassword(password);
+                        if (passResponse.ok) {
+                            close();
+                            resolve(true);
+                        } else {
+                            errorList.innerHTML = `<li>${passResponse.data.message || window.getTranslation('dialogs.deleteGallery.errorVerification')}</li>`;
+                            errorContainer.style.display = 'block';
+                            resolve(false);
+                        }
+
+                        stopLoading();
                     }
                 }
             ]

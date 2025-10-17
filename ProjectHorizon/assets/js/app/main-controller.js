@@ -28,7 +28,8 @@ import {
     fetchAndDisplayAdminComments,
     fetchAndDisplayFeedback,
     fetchAndDisplayUserProfile,
-    fetchAndDisplayProfanityWords
+    fetchAndDisplayProfanityWords,
+    fetchAndDisplayBackups // <--- Añade esta línea
 } from './view-handlers.js';
 import { handleStateChange, displayComments, createCommentElement } from './navigation-handler.js';
 
@@ -1241,25 +1242,25 @@ export async function initMainController() {
                         }
                         break;
                     }
-                    case 'restore-backup': {
-                        const filename = actionTarget.dataset.filename;
-                        const confirmed = await showRestoreBackupDialog(filename);
-                        if (confirmed) {
-                            const button = actionTarget;
-                            button.classList.add('loading');
-                            const response = await api.restoreBackup(filename);
-                            button.classList.remove('loading');
+                 case 'restore-backup': {
+    const filename = actionTarget.dataset.filename;
+    const confirmed = await showRestoreBackupDialog(filename);
+    if (confirmed) {
+        const button = actionTarget;
+        button.classList.add('loading');
+        const response = await api.restoreBackup(filename);
+        button.classList.remove('loading');
 
-                            if (response.ok) {
-                                showNotification(response.data.message, 'success');
-                                // Opcional: Recargar la página o redirigir
-                                setTimeout(() => window.location.reload(), 2000);
-                            } else {
-                                showNotification(response.data.message || 'Error al restaurar la copia de seguridad.', 'error');
-                            }
-                        }
-                        break;
-                    }
+        if (response.ok) {
+            showNotification(response.data.message, 'success');
+            // Opcional: Recargar la página o redirigir
+            setTimeout(() => window.location.reload(), 2000);
+        } else {
+            showNotification(response.data.message || 'Error al restaurar la copia de seguridad.', 'error');
+        }
+    }
+    break;
+}
                     case 'change-role-option': {
                         const userUuid = actionTarget.dataset.uuid;
                         const newRole = actionTarget.dataset.role;

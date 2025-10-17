@@ -280,6 +280,14 @@
         "backupFound": "Copia de seguridad reciente encontrada:",
         "backupExpired": "Tu copia de seguridad más reciente ha expirado. Por favor, crea una nueva.",
         "noBackup": "No se encontraron copias de seguridad. Por favor, crea una antes de continuar."
+    },
+    "restoreBackup": {
+      "title": "Restaurar Copia de Seguridad",
+      "description": "Estás a punto de restaurar la base de datos desde el archivo <strong>{filename}</strong>. Todos los datos actuales se perderán y serán reemplazados por los datos de esta copia de seguridad. Esta acción es irreversible."
+    },
+    "deleteGallery": {
+      "passwordLabel": "Contraseña de Administrador",
+      "errorRequired": "La contraseña es obligatoria."
     }
   }
 }

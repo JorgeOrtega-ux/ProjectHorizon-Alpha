@@ -214,7 +214,18 @@ h6 {
     padding: 8px;
     z-index: 999;
 }
+/* Estilos para el contenedor del menú de admin */
+.menu-content[data-menu="admin"] {
+    display: flex;
+    flex-direction: column;
+}
 
+.menu-content-bottom {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Alinea el menu-list al final */
+}
 .module-surface .menu-content {
     width: 280px;
     height: 100%;
