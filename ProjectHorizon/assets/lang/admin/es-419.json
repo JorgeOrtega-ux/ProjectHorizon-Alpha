@@ -1,0 +1,284 @@
+{
+  "admin": {
+    "dashboard": {
+      "title": "Dashboard General",
+      "totalUsers": "Usuarios Totales",
+      "newUsers": "Nuevos Usuarios (30d)",
+      "totalGalleries": "Galerías Totales",
+      "totalPhotos": "Fotos Totales",
+      "pendingComments": "Comentarios Pendientes",
+      "userGrowth": "Crecimiento de Usuarios",
+      "contentActivity": "Actividad de Contenido",
+      "topGalleries": "Top 10 Galerías Populares",
+      "topPhotos": "Top 10 Fotos Populares"
+    },
+    "manageLogs": {
+        "title": "Administrar Logs",
+        "description": "Explora y visualiza los archivos de log del servidor.",
+        "searchPlaceholder": "Buscar por nombre de archivo...",
+        "noLogsTitle": "No se encontraron logs",
+        "noLogsMessage": "La carpeta de logs está vacía o no se pudo acceder a ella.",
+        "corruptedFile": "Archivo no válido",
+        "backButtonTooltip": "Volver a la lista de logs",
+        "viewButton": "Ver Log",
+        "viewButtonTooltip": "Ver contenido del log"
+    },
+    "backup": {
+        "title": "Copias de Seguridad",
+        "description": "Crea y gestiona las copias de seguridad de la base de datos.",
+        "createButton": "Crear nueva copia",
+        "noBackupsTitle": "No hay copias de seguridad",
+        "noBackupsMessage": "Crea tu primera copia de seguridad de la base de datos.",
+        "restoreButton": "Restaurar"
+    },
+    "manageUsers": {
+      "title": "Administrar usuarios",
+      "description": "Administra los usuarios de la aplicación.",
+      "searchPlaceholder": "Buscar por nombre de usuario o correo...",
+      "noUsersTitle": "No hay usuarios registrados",
+      "noUsersMessage": "Cuando los usuarios comiencen a registrarse, aparecerán aquí.",
+      "filterTooltip": "Filtros",
+      "filter": {
+        "sortBy": "Ordenar por",
+        "newest": "Más recientes",
+        "oldest": "Más antiguos",
+        "filterByRole": "Filtrar por rol",
+        "allRoles": "Todos los roles"
+      },
+      "table": {
+        "user": "Usuario",
+        "role": "Rol",
+        "status": "Estado",
+        "created": "Fecha de Creación",
+        "actionsTitle": "Acciones",
+        "actions": {
+          "edit": "Editar usuario",
+          "delete": "Eliminar usuario",
+          "changeRole": "Gestionar rol",
+          "suspend": "Suspender usuario",
+          "ban": "Banear usuario",
+          "manageStatus": "Gestionar estado",
+          "makeUser": "Hacer Usuario",
+          "makeModerator": "Hacer Moderador",
+          "makeAdmin": "Hacer Administrador",
+          "makeActive": "Activar",
+          "makeSuspended": "Suspender",
+          "makeDeleted": "Eliminar",
+          "viewProfile": "Ver Perfil"
+        }
+      },
+      "roles": {
+        "user": "Usuario",
+        "moderator": "Moderador",
+        "administrator": "Administrador",
+        "founder": "Fundador"
+      }
+    },
+    "userProfile": {
+      "title": "Perfil de Usuario",
+      "backButtonTooltip": "Volver a la gestión de usuarios",
+      "actionsTooltip": "Más acciones",
+      "actions": {
+        "sanction": "Sancionar Usuario"
+      },
+      "privateActivity": "La actividad de los usuarios con el rol de Fundador es privada.",
+      "sanctions": {
+        "title": "Sanciones",
+        "noSanctions": "No hay sanciones registradas para este usuario.",
+        "deleteTooltip": "Eliminar sanción"
+      },
+      "activity": {
+        "title": "Actividad Reciente",
+        "commentsTitle": "Comentarios",
+        "noComments": "Este usuario no ha realizado comentarios.",
+        "favoritesTitle": "Favoritos",
+        "noFavorites": "Este usuario no tiene fotos favoritas.",
+        "reportsTitle": "Reportes Realizados",
+        "noReports": "Este usuario no ha realizado reportes."
+      }
+    },
+    "manageContent": {
+      "title": "Administrar contenido",
+      "description": "Administra el contenido de la aplicación.",
+      "searchPlaceholder": "Buscar por nombre de galería...",
+      "createButton": "Crear galería",
+      "editTooltip": "Editar galería",
+      "viewPhotosTooltip": "Ver fotos",
+      "privacyTooltip": "Cambiar privacidad",
+      "statsTooltip": "Ver estadísticas",
+      "noGalleriesTitle": "No hay galerías",
+      "noGalleriesMessage": "Crea una nueva galería para empezar a añadir contenido."
+    },
+    "manageComments": {
+      "title": "Gestionar Comentarios",
+      "description": "Modera los comentarios de los usuarios, revisa los reportes y gestiona la visibilidad del contenido.",
+      "searchPlaceholder": "Buscar por comentario o usuario...",
+      "noCommentsTitle": "No hay comentarios",
+      "noCommentsMessage": "Cuando los usuarios empiecen a comentar, sus comentarios aparecerán aquí.",
+      "filter": {
+        "all": "Todos los comentarios",
+        "reported": "Reportados",
+        "pending": "Reportes Pendientes"
+      },
+      "table": {
+        "comment": "Comentario",
+        "user": "Usuario",
+        "photo": "Foto",
+        "reports": "Reportes",
+        "status": "Estado",
+        "date": "Fecha",
+        "actions": "Acciones",
+        "actions_tooltip": "Acciones de comentario",
+        "states": {
+          "visible": "Visible",
+          "review": "En Revisión",
+          "deleted": "Eliminado"
+        },
+        "actions": {
+          "review": "Marcar para revisión",
+          "delete": "Eliminar comentario",
+          "makeVisible": "Hacer visible",
+          "restore": "Restaurar comentario",
+          "confirmDelete": "¿Estás seguro de que quieres eliminar este comentario permanentemente?",
+          "confirmDeleteTitle": "Eliminar Comentario Permanentemente"
+        }
+      }
+    },
+    "manageFeedback": {
+      "title": "Gestionar Feedback",
+      "description": "Revisa y gestiona los comentarios y sugerencias enviadas por los usuarios.",
+      "searchPlaceholder": "Buscar en descripciones...",
+      "noFeedbackTitle": "No hay feedback",
+      "noFeedbackMessage": "Cuando los usuarios envíen comentarios, aparecerán aquí.",
+      "table": {
+        "type": "Tipo",
+        "title": "Título",
+        "description": "Descripción",
+        "user": "Usuario",
+        "attachments": "Adjuntos",
+        "date": "Fecha"
+      },
+      "types": {
+        "suggestion": "Sugerencia",
+        "problem": "Problema",
+        "other": "Otro"
+      }
+    },
+    "editGallery": {
+      "title": "Editando \"{galleryName}\"",
+      "backButtonTooltip": "Volver a la gestión de contenido",
+      "saveButton": "Guardar Cambios",
+      "detailsTitle": "Detalles de la Galería",
+      "nameLabel": "Nombre",
+      "privacyLabel": "Galería Privada",
+      "privacyDescription": "Si está activado, los usuarios necesitarán ver anuncios para desbloquear y ver esta galería.",
+      "visibilityLabel": "Visibilidad de la galería",
+      "visibilityDescription": "Si está desactivado, la galería no aparecerá en las búsquedas ni en la página principal, pero seguirá siendo accesible por enlace directo.",
+      "profilePictureTitle": "Foto de Perfil",
+      "profilePictureDescription": "Esta se mostrará como la imagen principal de la galería.",
+      "changeButton": "Cambiar",
+      "photosTitle": "Contenido en la Galería",
+      "addPhotosTitle": "Añadir Nuevo Contenido",
+      "addPhotosButton": "Añadir Fotos/Videos",
+      "deleteGalleryTitle": "Eliminar galería",
+      "deleteGalleryDescription": "Esta acción es permanente y eliminará la galería junto con todas sus fotos y videos.",
+      "deleteButton": "Eliminar galería",
+      "photosSectionTitle": "Fotos y Videos en la Galería",
+      "photosSectionDescription": "Añade, elimina y reordena las fotos y videos de esta galería.",
+      "managePhotosButton": "Administrar Contenido",
+      "socialsSectionTitle": "Redes Sociales",
+      "socialsSectionDescription": "Añade enlaces a las redes sociales para esta galería.",
+      "manageSocialsButton": "Administrar redes sociales"
+    },
+    "manageGalleryPhotos": {
+      "title": "Gestionando contenido de \"{galleryName}\"",
+      "backButtonTooltip": "Volver a la edición de la galería",
+      "addPhotosButton": "Añadir Fotos/Videos",
+      "noPhotosTitle": "Esta galería no tiene contenido",
+      "noPhotosMessage": "Añade algunas fotos o videos para empezar a gestionar el contenido."
+    },
+    "createGallery": {
+      "title": "Crear nueva galería",
+      "backButtonTooltip": "Volver a la gestión de contenido",
+      "createButton": "Crear Galería",
+      "saveFirstTooltip": "Primero crea la galería para poder administrar el contenido",
+      "socialsSectionTitle": "Redes Sociales",
+      "socialsSectionDescription": "Añade enlaces a las redes sociales de la galería (opcional)."
+    },
+    "galleryStats": {
+      "title": "Estadísticas de \"{galleryName}\"",
+      "backButtonTooltip": "Volver a la gestión de contenido",
+      "totalStats": "Estadísticas Totales",
+      "totalLikes": "Total de Me Gusta",
+      "totalInteractions": "Total de Interacciones",
+      "individualStats": "Estadísticas por Foto/Video",
+      "photo": "Contenido",
+      "likes": "Me Gusta",
+      "interactions": "Interacciones"
+    },
+    "generalSettings": {
+        "title": "Configuración del Servidor",
+        "description": "Ajusta la configuración global y las funciones principales del servidor.",
+        "maintenanceMode": {
+            "title": "Modo Mantenimiento",
+            "description": "Cuando está activo, los usuarios no administradores verán una página de mantenimiento."
+        },
+        "userRegistration": {
+            "title": "Registro de Nuevos Usuarios",
+            "description": "Permite o deniega la creación de nuevas cuentas en la plataforma."
+        },
+        "adSettings": {
+            "title": "Configuración de Anuncios",
+            "unlockDuration": "Duración del desbloqueo de galerías (en minutos)",
+            "unlockDurationDescription": "Define por cuánto tiempo un usuario puede ver una galería privada después de ver un anuncio.",
+            "adProbability": "Probabilidad de mostrar anuncios en navegación (%)",
+            "adProbabilityDescription": "Define la frecuencia con la que los usuarios verán anuncios al navegar entre galerías o fotos."
+        },
+        "profanityFilter": {
+            "title": "Filtro de Malas Palabras",
+            "description": "Gestiona la lista de palabras que se censurarán automáticamente en los comentarios.",
+            "manageButton": "Administrar Palabras",
+            "wordPlaceholder": "Escribe una palabra...",
+            "languagePlaceholder": "Selecciona un idioma",
+            "addButton": "Añadir",
+            "tableWord": "Palabra",
+            "tableLanguage": "Idioma",
+            "tableActions": "Acciones",
+            "deleteTooltip": "Eliminar palabra"
+        },
+        "dangerZone": {
+            "title": "Zona de Peligro",
+            "description": "Esta acción eliminará permanentemente todos los datos de contenido y de usuario (excepto los usuarios fundadores) de la base de datos. Esta acción no se puede deshacer.",
+            "button": "Borrar todos los datos"
+        }
+    },
+    "manageProfanity": {
+        "title": "Administrar Filtro de Palabras",
+        "backButtonTooltip": "Volver a Configuración General",
+        "searchPlaceholder": "Buscar palabra...",
+        "addButton": "Añadir Palabra",
+        "filter": {
+            "all": "Todos los idiomas"
+        }
+    },
+    "verifyFounder": {
+        "title": "Verificación de Fundador Requerida",
+        "description": "Para acceder a esta sección, por favor ingresa tu contraseña de Fundador. Tu número de control es:",
+        "button": "Verificar y Continuar"
+    }
+  },
+  "dialogs": {
+    "truncateDatabase": {
+        "title": "Borrar todos los datos",
+        "description": "Esta acción eliminará permanentemente todos los datos de contenido y de usuario. Para continuar, debes tener una copia de seguridad con menos de 2 horas de antigüedad.",
+        "passwordLabel": "Contraseña de Fundador",
+        "button": "Borrar todos los datos",
+        "errorRequired": "La contraseña es obligatoria.",
+        "errorDelete": "Error al borrar los datos.",
+        "errorVerification": "Error de verificación.",
+        "backupFound": "Copia de seguridad reciente encontrada:",
+        "backupExpired": "Tu copia de seguridad más reciente ha expirado. Por favor, crea una nueva.",
+        "noBackup": "No se encontraron copias de seguridad. Por favor, crea una antes de continuar."
+    }
+  }
+}
