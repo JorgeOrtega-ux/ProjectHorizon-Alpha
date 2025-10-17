@@ -124,11 +124,15 @@
     "copyLink": "Copiar el enlace",
     "download": "Descargar"
   },
-  "userPhotos": {
+"userPhotos": {
     "backButtonTooltip": "Volver",
     "title": "Fotos de Usuario",
     "emptyGalleryTitle": "Galería vacía",
     "emptyGalleryMessage": "Este usuario aún no ha subido ninguna foto a esta galería.",
+    "noPhotosTitle": "No hay fotos que mostrar",
+    "noPhotosMessage": "Esta galería no contiene ninguna foto.",
+    "noVideosTitle": "No hay videos que mostrar",
+    "noVideosMessage": "Esta galería no contiene ningún video.",
     "showMore": "Mostrar más",
     "followButton": "Seguir",
     "unfollowButton": "Dejar de seguir",

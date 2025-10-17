@@ -98,7 +98,7 @@ function handleAgeVerification() {
                 overlay.parentNode.removeChild(overlay);
             }
         });
-        
+
         declineBtn.addEventListener('click', () => {
             // Podrías redirigir a otra página o simplemente no hacer nada.
         });
@@ -121,8 +121,8 @@ function updatePhotoGridVisibility() {
     if (videosSection) {
         videosSection.style.display = hasVideos ? 'block' : 'none';
     }
-    
-    if(mainStatusContainer){
+
+    if (mainStatusContainer) {
         if (hasPhotos || hasVideos) {
             mainStatusContainer.classList.add('disabled');
         } else {
@@ -166,13 +166,13 @@ export async function initMainController() {
                 `;
             }
             // Detiene la ejecución del resto del controlador si está en mantenimiento
-            return; 
+            return;
         }
     }
     // --- FIN DE LA LÓGICA DE MODO MANTENIMIENTO ---
 
     const sessionData = await api.checkSession();
-    if(sessionData.ok && sessionData.data.loggedin && sessionData.data.preferences) {
+    if (sessionData.ok && sessionData.data.loggedin && sessionData.data.preferences) {
         const prefs = sessionData.data.preferences;
         localStorage.setItem('theme', prefs.theme);
         localStorage.setItem('language', prefs.language);
@@ -183,7 +183,7 @@ export async function initMainController() {
     }
 
     applyTheme();
-    
+
     let currentLang = localStorage.getItem('language');
     if (!currentLang) {
         const browserLang = navigator.language || navigator.userLanguage;
@@ -195,7 +195,7 @@ export async function initMainController() {
 
     handleAgeVerification();
     const appState = {
-        serverSettings: { 
+        serverSettings: {
             unlock_duration: window.UNLOCK_DURATION || 60,
             ad_probability: window.AD_PROBABILITY || '15_cooldown'
         },
@@ -278,19 +278,19 @@ export async function initMainController() {
     let selectedComment = null;
     let selectedFeedback = null;
 
-function updateManageUsersHeader() {
-    const actionButtonsContainer = document.getElementById('user-action-buttons');
-    if (!actionButtonsContainer) return;
+    function updateManageUsersHeader() {
+        const actionButtonsContainer = document.getElementById('user-action-buttons');
+        if (!actionButtonsContainer) return;
 
-    let buttonsHTML = '';
+        let buttonsHTML = '';
 
-    if (selectedUser) {
-        const uuid = selectedUser.dataset.uuid;
-        const userName = selectedUser.dataset.name;
-        const userRole = selectedUser.dataset.role;
-        const isProtected = userRole === 'founder';
-        
-        buttonsHTML = `
+        if (selectedUser) {
+            const uuid = selectedUser.dataset.uuid;
+            const userName = selectedUser.dataset.name;
+            const userRole = selectedUser.dataset.role;
+            const isProtected = userRole === 'founder';
+
+            buttonsHTML = `
             <button class="header-button" data-action="view-user-profile" data-uuid="${uuid}" data-i18n-tooltip="admin.manageUsers.table.actions.viewProfile">
                 <span class="material-symbols-rounded">visibility</span>
             </button>
@@ -321,12 +321,12 @@ function updateManageUsersHeader() {
                 </div>
             </div>
         `;
+        }
+
+        actionButtonsContainer.innerHTML = buttonsHTML;
+        applyTranslations(actionButtonsContainer);
+        initTooltips();
     }
-    
-    actionButtonsContainer.innerHTML = buttonsHTML;
-    applyTranslations(actionButtonsContainer);
-    initTooltips();
-}
 
     function handleUserSelection(event) {
         const clickedItem = event.target.closest('.admin-list-item');
@@ -345,7 +345,7 @@ function updateManageUsersHeader() {
         }
         updateManageUsersHeader();
     }
-    
+
     function deselectUser() {
         if (selectedUser) {
             selectedUser.classList.remove('selected');
@@ -379,7 +379,7 @@ function updateManageUsersHeader() {
                 </button>
             ` + buttonsHTML;
         }
-        
+
         headerRight.innerHTML = buttonsHTML;
         applyTranslations(headerRight);
         initTooltips();
@@ -402,7 +402,7 @@ function updateManageUsersHeader() {
         }
         updateManageContentHeader();
     }
-    
+
     function deselectGallery() {
         if (selectedGallery) {
             selectedGallery.classList.remove('selected');
@@ -414,9 +414,9 @@ function updateManageUsersHeader() {
     function updateManageLogsHeader() {
         const headerRight = document.querySelector('[data-section="manageLogs"] .content-header-right');
         if (!headerRight) return;
-    
+
         let buttonsHTML = '';
-    
+
         if (selectedLog) {
             const filename = selectedLog.dataset.filename;
             buttonsHTML = `
@@ -425,15 +425,15 @@ function updateManageUsersHeader() {
                 </button>
             `;
         }
-    
+
         headerRight.innerHTML = buttonsHTML;
         applyTranslations(headerRight);
         initTooltips();
     }
-    
+
     function handleLogSelection(event) {
         const clickedItem = event.target.closest('.admin-list-item');
-    
+
         if (clickedItem) {
             if (selectedLog === clickedItem) {
                 clickedItem.classList.remove('selected');
@@ -448,7 +448,7 @@ function updateManageUsersHeader() {
         }
         updateManageLogsHeader();
     }
-    
+
     function deselectLog() {
         if (selectedLog) {
             selectedLog.classList.remove('selected');
@@ -460,14 +460,14 @@ function updateManageUsersHeader() {
     function updateManageBackupsHeader() {
         const headerRight = document.querySelector('[data-section="backup"] .content-header-right');
         if (!headerRight) return;
-    
+
         let buttonsHTML = `
             <button class="load-more-btn btn-primary" data-action="create-backup">
                 <span class="button-text" data-i18n="admin.backup.createButton"></span>
                 <div class="button-spinner"></div>
             </button>
         `;
-    
+
         if (selectedBackup) {
             const filename = selectedBackup.dataset.filename;
             buttonsHTML = `
@@ -476,15 +476,15 @@ function updateManageUsersHeader() {
                 </button>
             ` + buttonsHTML;
         }
-    
+
         headerRight.innerHTML = buttonsHTML;
         applyTranslations(headerRight);
         initTooltips();
     }
-    
+
     function handleBackupSelection(event) {
         const clickedItem = event.target.closest('.admin-list-item');
-    
+
         if (clickedItem) {
             if (selectedBackup === clickedItem) {
                 clickedItem.classList.remove('selected');
@@ -499,7 +499,7 @@ function updateManageUsersHeader() {
         }
         updateManageBackupsHeader();
     }
-    
+
     function deselectBackup() {
         if (selectedBackup) {
             selectedBackup.classList.remove('selected');
@@ -619,15 +619,15 @@ function updateManageUsersHeader() {
         if (appState.adCooldownActive) {
             return false;
         }
-    
+
         const adSetting = appState.serverSettings.ad_probability;
         const [probStr] = adSetting.split('_');
         const probability = parseInt(probStr, 10);
-    
+
         if (isNaN(probability) || probability === 0) {
             return false;
         }
-    
+
         const randomChance = Math.random() * 100;
         return randomChance < probability;
     }
@@ -643,19 +643,19 @@ function updateManageUsersHeader() {
                 key: 'longer_message_duration'
             }
         };
-    
+
         function updateToggleUI(setting) {
             if (setting.element) {
                 const isActive = localStorage.getItem(setting.key) === 'true';
                 setting.element.classList.toggle('active', isActive);
             }
         }
-    
+
         for (const id in settingsToggles) {
             const setting = settingsToggles[id];
             if (setting.element) {
                 updateToggleUI(setting);
-    
+
                 setting.element.addEventListener('click', () => {
                     const currentValue = localStorage.getItem(setting.key) === 'true';
                     const newValue = !currentValue;
@@ -666,7 +666,7 @@ function updateManageUsersHeader() {
             }
         }
     }
-    
+
     function initHistoryPrivacySettings() {
         const settingsToggles = {
             'enable-view-history': {
@@ -678,19 +678,19 @@ function updateManageUsersHeader() {
                 key: 'enable_search_history'
             }
         };
-    
+
         function updateToggleUI(setting) {
             if (setting.element) {
                 const isActive = localStorage.getItem(setting.key) !== 'false';
                 setting.element.classList.toggle('active', isActive);
             }
         }
-    
+
         for (const id in settingsToggles) {
             const setting = settingsToggles[id];
             if (setting.element) {
                 updateToggleUI(setting);
-    
+
                 setting.element.addEventListener('click', () => {
                     const currentValue = localStorage.getItem(setting.key) !== 'false';
                     const newValue = !currentValue;
@@ -700,21 +700,21 @@ function updateManageUsersHeader() {
                 });
             }
         }
-    
+
         const clearHistoryBtn = document.querySelector('[data-action="clear-history"]');
         if (clearHistoryBtn) {
             clearHistoryBtn.addEventListener('click', async () => {
                 const history = await api.getHistory();
                 const totalItems = history.profiles.length + history.photos.length + history.searches.length;
-    
+
                 if (totalItems === 0) {
                     showNotification(window.getTranslation('notifications.historyEmpty'));
                     return;
                 }
-    
+
                 const message = window.getTranslation('dialogs.clearHistoryMessage');
                 const confirmed = await showCustomConfirm(window.getTranslation('dialogs.clearHistoryTitle'), message);
-    
+
                 if (confirmed) {
                     const response = await api.clearHistory();
                     if (response.ok) {
@@ -948,240 +948,240 @@ function updateManageUsersHeader() {
         }
     }
 
-function setupEventListeners() {
-    document.addEventListener('input', (event) => {
-        if (appState.currentAppSection === 'createGallery') {
-            const nameInput = event.target.closest('#gallery-name-create');
-            if (nameInput) {
-                appState.newGalleryState.name = nameInput.value;
-            }
-        }
-    });
-
-    document.addEventListener('change', (event) => {
-        const fileInput = event.target;
-        
-        if (fileInput.matches('#profile-picture-upload-create')) {
-            if (fileInput.files && fileInput.files[0]) {
-                appState.newGalleryState.profilePictureFile = fileInput.files[0];
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const preview = document.getElementById('profile-picture-preview-create');
-                    if(preview) preview.style.backgroundImage = `url('${e.target.result}')`;
-                };
-                reader.readAsDataURL(event.target.files[0]);
-            }
-        }
-        
-        if (fileInput.matches('#add-photos-input')) {
-            const photosGridEl = document.getElementById('manage-photos-grid');
-            const videosGridEl = document.getElementById('manage-videos-grid');
-            const mainStatusContainer = document.getElementById('manage-content-status-container');
-    
-            if (!photosGridEl || !videosGridEl) return;
-            
-            if(mainStatusContainer) {
-                mainStatusContainer.classList.add('disabled');
-            }
-    
-            const currentSection = document.querySelector('[data-section="manageGalleryPhotos"]');
-            const isNewGalleryMode = currentSection && currentSection.dataset.mode === 'new';
-    
-            const files = Array.from(event.target.files);
-            
-            for (const file of files) {
-                if (isNewGalleryMode) {
-                    if (!appState.newGalleryState.pendingPhotos.some(f => f.name === file.name)) {
-                         appState.newGalleryState.pendingPhotos.push(file);
-                    }
-                } else {
-                    if (!window.pendingGalleryFiles) window.pendingGalleryFiles = [];
-                    if (!window.pendingGalleryFiles.some(f => f.name === file.name)) {
-                        window.pendingGalleryFiles.push(file);
-                    }
+    function setupEventListeners() {
+        document.addEventListener('input', (event) => {
+            if (appState.currentAppSection === 'createGallery') {
+                const nameInput = event.target.closest('#gallery-name-create');
+                if (nameInput) {
+                    appState.newGalleryState.name = nameInput.value;
                 }
-    
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const newContentItem = document.createElement('div');
-                    newContentItem.className = 'photo-item-edit pending-upload';
-                    newContentItem.dataset.fileName = file.name;
-    
-                    const isVideo = file.type.startsWith('video/');
-                    
-                    let thumbnailHTML = `<img src="${e.target.result}" alt="Nueva previsualización">`;
-                    if (isVideo) {
-                        thumbnailHTML = `
+            }
+        });
+
+        document.addEventListener('change', (event) => {
+            const fileInput = event.target;
+
+            if (fileInput.matches('#profile-picture-upload-create')) {
+                if (fileInput.files && fileInput.files[0]) {
+                    appState.newGalleryState.profilePictureFile = fileInput.files[0];
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const preview = document.getElementById('profile-picture-preview-create');
+                        if (preview) preview.style.backgroundImage = `url('${e.target.result}')`;
+                    };
+                    reader.readAsDataURL(event.target.files[0]);
+                }
+            }
+
+            if (fileInput.matches('#add-photos-input')) {
+                const photosGridEl = document.getElementById('manage-photos-grid');
+                const videosGridEl = document.getElementById('manage-videos-grid');
+                const mainStatusContainer = document.getElementById('manage-content-status-container');
+
+                if (!photosGridEl || !videosGridEl) return;
+
+                if (mainStatusContainer) {
+                    mainStatusContainer.classList.add('disabled');
+                }
+
+                const currentSection = document.querySelector('[data-section="manageGalleryPhotos"]');
+                const isNewGalleryMode = currentSection && currentSection.dataset.mode === 'new';
+
+                const files = Array.from(event.target.files);
+
+                for (const file of files) {
+                    if (isNewGalleryMode) {
+                        if (!appState.newGalleryState.pendingPhotos.some(f => f.name === file.name)) {
+                            appState.newGalleryState.pendingPhotos.push(file);
+                        }
+                    } else {
+                        if (!window.pendingGalleryFiles) window.pendingGalleryFiles = [];
+                        if (!window.pendingGalleryFiles.some(f => f.name === file.name)) {
+                            window.pendingGalleryFiles.push(file);
+                        }
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const newContentItem = document.createElement('div');
+                        newContentItem.className = 'photo-item-edit pending-upload';
+                        newContentItem.dataset.fileName = file.name;
+
+                        const isVideo = file.type.startsWith('video/');
+
+                        let thumbnailHTML = `<img src="${e.target.result}" alt="Nueva previsualización">`;
+                        if (isVideo) {
+                            thumbnailHTML = `
                             <img src="${e.target.result}" alt="Nueva previsualización de video">
                             <div class="play-icon-overlay"><span class="material-symbols-rounded">play_arrow</span></div>
                         `;
-                    }
-    
-                    newContentItem.innerHTML = `
+                        }
+
+                        newContentItem.innerHTML = `
                         ${thumbnailHTML}
                         <button class="delete-photo-btn" data-action="delete-gallery-photo">
                             <span class="material-symbols-rounded">close</span>
                         </button>
                     `;
-    
-                    if (isVideo) {
-                        videosGridEl.appendChild(newContentItem);
-                        document.getElementById('videos-management-section').style.display = 'block';
-                    } else {
-                        photosGridEl.appendChild(newContentItem);
-                        document.getElementById('photos-management-section').style.display = 'block';
-                    }
-                    
-                    if (photosGridEl.children.length > 0 && videosGridEl.children.length > 0) {
-                        const separator = document.querySelector('.photo-video-separator');
-                        if (separator) separator.style.display = 'block';
-                    }
-                };
-                
-                reader.readAsDataURL(file);
+
+                        if (isVideo) {
+                            videosGridEl.appendChild(newContentItem);
+                            document.getElementById('videos-management-section').style.display = 'block';
+                        } else {
+                            photosGridEl.appendChild(newContentItem);
+                            document.getElementById('photos-management-section').style.display = 'block';
+                        }
+
+                        if (photosGridEl.children.length > 0 && videosGridEl.children.length > 0) {
+                            const separator = document.querySelector('.photo-video-separator');
+                            if (separator) separator.style.display = 'block';
+                        }
+                    };
+
+                    reader.readAsDataURL(file);
+                }
+                fileInput.value = '';
             }
-            fileInput.value = '';
-        }
-    });
+        });
 
-    document.addEventListener('click', async function (event) {
-        const listContainer = document.getElementById('admin-galleries-list');
-        if (appState.currentAppSection === 'manageContent' && listContainer) {
-            if (listContainer.contains(event.target)) {
-                 handleGallerySelection(event);
-            } else {
-                deselectGallery();
+        document.addEventListener('click', async function (event) {
+            const listContainer = document.getElementById('admin-galleries-list');
+            if (appState.currentAppSection === 'manageContent' && listContainer) {
+                if (listContainer.contains(event.target)) {
+                    handleGallerySelection(event);
+                } else {
+                    deselectGallery();
+                }
             }
-        }
 
-        const usersListContainer = document.getElementById('admin-users-list');
-        const actionButtonsContainer = document.getElementById('user-action-buttons');
+            const usersListContainer = document.getElementById('admin-users-list');
+            const actionButtonsContainer = document.getElementById('user-action-buttons');
 
-        if (appState.currentAppSection === 'manageUsers' && usersListContainer) {
-            if (usersListContainer.contains(event.target)) {
-                 handleUserSelection(event);
-            } else if (!actionButtonsContainer || !actionButtonsContainer.contains(event.target)) {
-                deselectUser();
+            if (appState.currentAppSection === 'manageUsers' && usersListContainer) {
+                if (usersListContainer.contains(event.target)) {
+                    handleUserSelection(event);
+                } else if (!actionButtonsContainer || !actionButtonsContainer.contains(event.target)) {
+                    deselectUser();
+                }
             }
-        }
 
-        const logsListContainer = document.getElementById('logs-list');
-        if (appState.currentAppSection === 'manageLogs' && logsListContainer) {
-            if (logsListContainer.contains(event.target)) {
-                 handleLogSelection(event);
-            } else {
-                deselectLog();
+            const logsListContainer = document.getElementById('logs-list');
+            if (appState.currentAppSection === 'manageLogs' && logsListContainer) {
+                if (logsListContainer.contains(event.target)) {
+                    handleLogSelection(event);
+                } else {
+                    deselectLog();
+                }
             }
-        }
-        
-        const backupsListContainer = document.getElementById('backups-list');
-        if (appState.currentAppSection === 'backup' && backupsListContainer) {
-            if (backupsListContainer.contains(event.target)) {
-                 handleBackupSelection(event);
-            } else {
-                deselectBackup();
+
+            const backupsListContainer = document.getElementById('backups-list');
+            if (appState.currentAppSection === 'backup' && backupsListContainer) {
+                if (backupsListContainer.contains(event.target)) {
+                    handleBackupSelection(event);
+                } else {
+                    deselectBackup();
+                }
             }
-        }
 
-        const commentsListContainer = document.getElementById('admin-comments-list');
-        if (appState.currentAppSection === 'manageComments' && commentsListContainer) {
-            if (commentsListContainer.contains(event.target)) {
-                handleCommentSelection(event);
-            } else {
-                deselectComment();
+            const commentsListContainer = document.getElementById('admin-comments-list');
+            if (appState.currentAppSection === 'manageComments' && commentsListContainer) {
+                if (commentsListContainer.contains(event.target)) {
+                    handleCommentSelection(event);
+                } else {
+                    deselectComment();
+                }
             }
-        }
 
-        const feedbackListContainer = document.getElementById('admin-feedback-list');
-        if (appState.currentAppSection === 'manageFeedback' && feedbackListContainer) {
-            if (feedbackListContainer.contains(event.target)) {
-                handleFeedbackSelection(event);
-            } else {
-                deselectFeedback();
+            const feedbackListContainer = document.getElementById('admin-feedback-list');
+            if (appState.currentAppSection === 'manageFeedback' && feedbackListContainer) {
+                if (feedbackListContainer.contains(event.target)) {
+                    handleFeedbackSelection(event);
+                } else {
+                    deselectFeedback();
+                }
             }
-        }
-		
-        const actionTarget = event.target.closest('[data-action]');
-        const selectTrigger = event.target.closest('[data-action="toggle-select"]');
-        const submitCommentBtn = event.target.closest('#submit-comment-btn');
-        
-        const generalSettingsToggle = event.target.closest('[data-section="generalSettings"] .toggle-switch');
-        if (generalSettingsToggle) {
-            generalSettingsToggle.classList.toggle('active');
-        }
 
-        if (appState.currentAppSection === 'createGallery' && event.target.closest('#gallery-privacy-create')) {
-            const privacyToggle = event.target.closest('#gallery-privacy-create');
-            appState.newGalleryState.privacy = !privacyToggle.classList.contains('active');
-        }
-        
-        if (appState.currentAppSection === 'createGallery' && event.target.closest('#gallery-visibility-create')) {
-            const visibilityToggle = event.target.closest('#gallery-visibility-create');
-            appState.newGalleryState.visibility = !visibilityToggle.classList.contains('active');
-        }
+            const actionTarget = event.target.closest('[data-action]');
+            const selectTrigger = event.target.closest('[data-action="toggle-select"]');
+            const submitCommentBtn = event.target.closest('#submit-comment-btn');
 
-        if (actionTarget && actionTarget.dataset.action === 'submit-founder-verification') {
-            const button = actionTarget;
-            const passwordInput = document.getElementById('founder-password');
-            const password = passwordInput.value;
-            const errorContainer = document.getElementById('verify-founder-error-container');
-            const errorList = document.getElementById('verify-founder-error-list');
-    
-            if (!password) {
-                errorList.innerHTML = `<li>${window.getTranslation('auth.errors.passwordRequired')}</li>`;
-                errorContainer.style.display = 'block';
-                return;
+            const generalSettingsToggle = event.target.closest('[data-section="generalSettings"] .toggle-switch');
+            if (generalSettingsToggle) {
+                generalSettingsToggle.classList.toggle('active');
             }
-    
-            errorContainer.style.display = 'none';
-            button.classList.add('loading');
-    
-            const formData = new FormData();
-            formData.append('action_type', 'verify_founder_password');
-            formData.append('password', password);
-    
-            const response = await api.verifyFounderPassword(formData);
-    
-            button.classList.remove('loading');
-    
-            if (response.ok) {
-                navigateToUrl('admin', 'generalSettings');
-                handleStateChange('admin', 'generalSettings', true, null, appState);
-            } else {
-                errorList.innerHTML = `<li>${response.data.message || 'Error de verificación'}</li>`;
-                errorContainer.style.display = 'block';
+
+            if (appState.currentAppSection === 'createGallery' && event.target.closest('#gallery-privacy-create')) {
+                const privacyToggle = event.target.closest('#gallery-privacy-create');
+                appState.newGalleryState.privacy = !privacyToggle.classList.contains('active');
             }
-        }
 
-        if (submitCommentBtn) {
-            const commentInput = document.getElementById('comment-input');
-            const commentText = commentInput.value.trim();
-            const photoId = appState.currentPhotoData.id;
+            if (appState.currentAppSection === 'createGallery' && event.target.closest('#gallery-visibility-create')) {
+                const visibilityToggle = event.target.closest('#gallery-visibility-create');
+                appState.newGalleryState.visibility = !visibilityToggle.classList.contains('active');
+            }
 
-            if (commentText && photoId) {
-                submitCommentBtn.classList.add('loading');
-                const response = await api.addComment(photoId, commentText);
-                submitCommentBtn.classList.remove('loading');
+            if (actionTarget && actionTarget.dataset.action === 'submit-founder-verification') {
+                const button = actionTarget;
+                const passwordInput = document.getElementById('founder-password');
+                const password = passwordInput.value;
+                const errorContainer = document.getElementById('verify-founder-error-container');
+                const errorList = document.getElementById('verify-founder-error-list');
+
+                if (!password) {
+                    errorList.innerHTML = `<li>${window.getTranslation('auth.errors.passwordRequired')}</li>`;
+                    errorContainer.style.display = 'block';
+                    return;
+                }
+
+                errorContainer.style.display = 'none';
+                button.classList.add('loading');
+
+                const formData = new FormData();
+                formData.append('action_type', 'verify_founder_password');
+                formData.append('password', password);
+
+                const response = await api.verifyFounderPassword(formData);
+
+                button.classList.remove('loading');
 
                 if (response.ok) {
-                    const commentsList = document.getElementById('comments-list');
-                    const noCommentsMsg = commentsList.querySelector('p');
-                    if (noCommentsMsg) {
-                        noCommentsMsg.remove();
-                    }
+                    navigateToUrl('admin', 'generalSettings');
+                    handleStateChange('admin', 'generalSettings', true, null, appState);
+                } else {
+                    errorList.innerHTML = `<li>${response.data.message || 'Error de verificación'}</li>`;
+                    errorContainer.style.display = 'block';
+                }
+            }
 
-                    const newComment = response.data.comment;
-                    const commentElement = document.createElement('div');
-                    commentElement.className = 'comment-item';
-                    commentElement.dataset.commentId = newComment.id; 
-                    const initials = newComment.username.substring(0, 2).toUpperCase();
-                    const date = new Date(newComment.created_at).toLocaleString();
+            if (submitCommentBtn) {
+                const commentInput = document.getElementById('comment-input');
+                const commentText = commentInput.value.trim();
+                const photoId = appState.currentPhotoData.id;
 
-                    const fullText = newComment.comment_text;
-                    const isLong = fullText.length > 250;
-                    const shortText = isLong ? fullText.substring(0, 250) + '...' : fullText;
+                if (commentText && photoId) {
+                    submitCommentBtn.classList.add('loading');
+                    const response = await api.addComment(photoId, commentText);
+                    submitCommentBtn.classList.remove('loading');
 
-                    commentElement.innerHTML = `
+                    if (response.ok) {
+                        const commentsList = document.getElementById('comments-list');
+                        const noCommentsMsg = commentsList.querySelector('p');
+                        if (noCommentsMsg) {
+                            noCommentsMsg.remove();
+                        }
+
+                        const newComment = response.data.comment;
+                        const commentElement = document.createElement('div');
+                        commentElement.className = 'comment-item';
+                        commentElement.dataset.commentId = newComment.id;
+                        const initials = newComment.username.substring(0, 2).toUpperCase();
+                        const date = new Date(newComment.created_at).toLocaleString();
+
+                        const fullText = newComment.comment_text;
+                        const isLong = fullText.length > 250;
+                        const shortText = isLong ? fullText.substring(0, 250) + '...' : fullText;
+
+                        commentElement.innerHTML = `
                         <div class="comment-avatar-container">
                             <div class="comment-avatar profile-btn--${newComment.role}">${initials}</div>
                         </div>
@@ -1215,447 +1215,478 @@ function setupEventListeners() {
                             <div class="replies-container"></div>
                         </div>
                     `;
-                    commentsList.prepend(commentElement);
-                    commentInput.value = '';
-                } else {
-                    showNotification(response.data.message || 'Error al publicar el comentario.', 'error');
+                        commentsList.prepend(commentElement);
+                        commentInput.value = '';
+                    } else {
+                        showNotification(response.data.message || 'Error al publicar el comentario.', 'error');
+                    }
                 }
             }
-        }
 
-        if (actionTarget) {
-            const action = actionTarget.dataset.action;
+            if (actionTarget) {
+                const action = actionTarget.dataset.action;
 
-            switch(action) {
-                case 'create-backup': {
-                    const button = actionTarget;
-                    button.classList.add('loading');
-                    const response = await api.createBackup();
-                    button.classList.remove('loading');
-
-                    if (response.ok) {
-                        showNotification(response.data.message, 'success');
-                        fetchAndDisplayBackups();
-                    } else {
-                        showNotification(response.data.message || 'Error al crear la copia de seguridad.', 'error');
-                    }
-                    break;
-                }
-                case 'restore-backup': {
-                    const filename = actionTarget.dataset.filename;
-                    const confirmed = await showRestoreBackupDialog(filename);
-                    if (confirmed) {
+                switch (action) {
+                    case 'create-backup': {
                         const button = actionTarget;
                         button.classList.add('loading');
-                        const response = await api.restoreBackup(filename);
+                        const response = await api.createBackup();
                         button.classList.remove('loading');
 
                         if (response.ok) {
                             showNotification(response.data.message, 'success');
-                            // Opcional: Recargar la página o redirigir
-                            setTimeout(() => window.location.reload(), 2000);
+                            fetchAndDisplayBackups();
                         } else {
-                            showNotification(response.data.message || 'Error al restaurar la copia de seguridad.', 'error');
+                            showNotification(response.data.message || 'Error al crear la copia de seguridad.', 'error');
                         }
+                        break;
                     }
-                    break;
-                }
-                case 'change-role-option': {
-                    const userUuid = actionTarget.dataset.uuid;
-                    const newRole = actionTarget.dataset.role;
-                    const userName = actionTarget.dataset.username;
-                    const menuContainer = actionTarget.closest('.module-select');
-                
-                    if (menuContainer) {
-                        menuContainer.classList.add('disabled');
-                        menuContainer.classList.remove('active');
-                        const trigger = document.querySelector(`[data-target="${menuContainer.id}"]`);
-                        if(trigger) trigger.classList.remove('active-trigger');
-                    }
-                    
-                    showChangeRoleDialog(userUuid, newRole, userName);
-                    break;
-                }
-                case 'view-log': {
-                    const filename = actionTarget.dataset.filename;
-                    if (filename) {
-                        navigateToUrl('admin', 'viewLog', {
-                            filename
-                        });
-                        handleStateChange('admin', 'viewLog', true, {
-                            filename
-                        }, appState);
-                    }
-                    break;
-                }
-                case 'add-profanity-word': {
-                    const button = actionTarget;
-                    const wordInput = document.getElementById('profanity-word-input');
-                    const langSelect = document.querySelector('#profanity-language-select .menu-link.active');
+                    case 'restore-backup': {
+                        const filename = actionTarget.dataset.filename;
+                        const confirmed = await showRestoreBackupDialog(filename);
+                        if (confirmed) {
+                            const button = actionTarget;
+                            button.classList.add('loading');
+                            const response = await api.restoreBackup(filename);
+                            button.classList.remove('loading');
 
-                    const word = wordInput.value.trim();
-                    const lang = langSelect ? langSelect.dataset.value : null;
-
-                    if (!word || !lang) {
-                        showNotification('Por favor, ingresa una palabra y selecciona un idioma.', 'error');
-                        return;
+                            if (response.ok) {
+                                showNotification(response.data.message, 'success');
+                                // Opcional: Recargar la página o redirigir
+                                setTimeout(() => window.location.reload(), 2000);
+                            } else {
+                                showNotification(response.data.message || 'Error al restaurar la copia de seguridad.', 'error');
+                            }
+                        }
+                        break;
                     }
+                    case 'change-role-option': {
+                        const userUuid = actionTarget.dataset.uuid;
+                        const newRole = actionTarget.dataset.role;
+                        const userName = actionTarget.dataset.username;
+                        const menuContainer = actionTarget.closest('.module-select');
 
-                    button.classList.add('loading');
-                    const response = await api.addProfanityWord(word, lang);
-                    button.classList.remove('loading');
+                        if (menuContainer) {
+                            menuContainer.classList.add('disabled');
+                            menuContainer.classList.remove('active');
+                            const trigger = document.querySelector(`[data-target="${menuContainer.id}"]`);
+                            if (trigger) trigger.classList.remove('active-trigger');
+                        }
 
-                    if (response.ok) {
-                        showNotification(response.data.message, response.data.no_change ? '' : 'success');
-                        wordInput.value = '';
-                        // Recargar la lista para mostrar la nueva palabra
-                        fetchAndDisplayProfanityWords();
-                    } else {
-                        showNotification(response.data.message || 'Error al añadir la palabra.', 'error');
+                        showChangeRoleDialog(userUuid, newRole, userName);
+                        break;
                     }
-                    break;
-                }
-                case 'delete-profanity-word': {
-                    const button = actionTarget;
-                    const id = button.dataset.id;
-                    const confirmed = await showCustomConfirm('¿Eliminar Palabra?', '¿Estás seguro de que quieres eliminar esta palabra del filtro?');
-                    
-                    if(confirmed) {
-                        const response = await api.deleteProfanityWord(id);
+                    case 'view-log': {
+                        const filename = actionTarget.dataset.filename;
+                        if (filename) {
+                            navigateToUrl('admin', 'viewLog', {
+                                filename
+                            });
+                            handleStateChange('admin', 'viewLog', true, {
+                                filename
+                            }, appState);
+                        }
+                        break;
+                    }
+                    case 'add-profanity-word': {
+                        const button = actionTarget;
+                        const wordInput = document.getElementById('profanity-word-input');
+                        const langSelect = document.querySelector('#profanity-language-select .menu-link.active');
+
+                        const word = wordInput.value.trim();
+                        const lang = langSelect ? langSelect.dataset.value : null;
+
+                        if (!word || !lang) {
+                            showNotification('Por favor, ingresa una palabra y selecciona un idioma.', 'error');
+                            return;
+                        }
+
+                        button.classList.add('loading');
+                        const response = await api.addProfanityWord(word, lang);
+                        button.classList.remove('loading');
+
                         if (response.ok) {
-                            showNotification(response.data.message, 'success');
-                            const row = button.closest('tr');
-                            if(row) row.remove();
+                            showNotification(response.data.message, response.data.no_change ? '' : 'success');
+                            wordInput.value = '';
+                            // Recargar la lista para mostrar la nueva palabra
+                            fetchAndDisplayProfanityWords();
                         } else {
-                            showNotification(response.data.message || 'Error al eliminar la palabra.', 'error');
+                            showNotification(response.data.message || 'Error al añadir la palabra.', 'error');
                         }
+                        break;
                     }
-                    break;
-                }
-                case 'truncate-database':
-                    showTruncateDatabaseDialog();
-                    break;
-                case 'toggle-play-pause': {
-                    const video = document.getElementById('photo-viewer-video');
-                    const icon = actionTarget.querySelector('.material-symbols-rounded');
-                    if (video && icon) {
-                        if (video.paused) {
-                            video.play();
-                            icon.textContent = 'pause';
-                            actionTarget.setAttribute('data-i18n-tooltip', 'photoView.pauseButtonTooltip');
-                        } else {
-                            video.pause();
-                            icon.textContent = 'play_arrow';
-                            actionTarget.setAttribute('data-i18n-tooltip', 'photoView.playButtonTooltip');
+                    case 'delete-profanity-word': {
+                        const button = actionTarget;
+                        const id = button.dataset.id;
+                        const confirmed = await showCustomConfirm('¿Eliminar Palabra?', '¿Estás seguro de que quieres eliminar esta palabra del filtro?');
+
+                        if (confirmed) {
+                            const response = await api.deleteProfanityWord(id);
+                            if (response.ok) {
+                                showNotification(response.data.message, 'success');
+                                const row = button.closest('tr');
+                                if (row) row.remove();
+                            } else {
+                                showNotification(response.data.message || 'Error al eliminar la palabra.', 'error');
+                            }
                         }
-                        window.applyTranslations(actionTarget.parentElement);
+                        break;
                     }
-                    break;
-                }
-                case 'toggle-follow': {
-                    const sessionResponse = await api.checkSession();
-                    if (!sessionResponse.ok || !sessionResponse.data.loggedin) {
-                        window.dispatchEvent(new CustomEvent('navigateTo', { detail: { view: 'auth', section: 'login' } }));
-                        return;
-                    }
-                    const button = actionTarget;
-                    const buttonText = button.querySelector('.button-text');
-                    const uuid = button.dataset.uuid;
-                    const isFollowing = !button.classList.contains('btn-primary');
-        
-                    button.classList.add('loading');
-        
-                    const response = await api.toggleFollow(uuid, isFollowing);
-        
-                    button.classList.remove('loading');
-        
-                    if (response.ok) {
-                        button.classList.toggle('btn-primary');
-                        if (isFollowing) {
-                            buttonText.textContent = window.getTranslation('userPhotos.followButton');
-                        } else {
-                            buttonText.textContent = window.getTranslation('userPhotos.unfollowButton');
+                    case 'truncate-database':
+                        showTruncateDatabaseDialog();
+                        break;
+                    case 'toggle-play-pause': {
+                        const video = document.getElementById('photo-viewer-video');
+                        const icon = actionTarget.querySelector('.material-symbols-rounded');
+                        if (video && icon) {
+                            if (video.paused) {
+                                video.play();
+                                icon.textContent = 'pause';
+                                actionTarget.setAttribute('data-i18n-tooltip', 'photoView.pauseButtonTooltip');
+                            } else {
+                                video.pause();
+                                icon.textContent = 'play_arrow';
+                                actionTarget.setAttribute('data-i18n-tooltip', 'photoView.playButtonTooltip');
+                            }
+                            window.applyTranslations(actionTarget.parentElement);
                         }
-                    } else {
-                        showNotification('Error al procesar la solicitud.', 'error');
+                        break;
                     }
-                    break;
-                }
-                case 'view-gallery-stats': {
-                    const uuid = actionTarget.dataset.uuid;
-                    navigateToUrl('admin', 'galleryStats', { uuid });
-                    handleStateChange('admin', 'galleryStats', true, { uuid }, appState);
-                    break;
-                }
-                case 'save-gallery-stats': {
-                    const button = actionTarget;
-                    const container = document.getElementById('gallery-stats-container');
-                    const uuid = document.querySelector('[data-section="galleryStats"]').dataset.uuid;
-                    if (!container || !uuid) return;
+                    case 'toggle-follow': {
+                        const sessionResponse = await api.checkSession();
+                        if (!sessionResponse.ok || !sessionResponse.data.loggedin) {
+                            window.dispatchEvent(new CustomEvent('navigateTo', { detail: { view: 'auth', section: 'login' } }));
+                            return;
+                        }
+                        const button = actionTarget;
+                        const buttonText = button.querySelector('.button-text');
+                        const uuid = button.dataset.uuid;
+                        const isFollowing = !button.classList.contains('btn-primary');
 
-                    button.classList.add('loading');
-                    
-                    const statsData = {
-                        total_likes: parseInt(container.querySelector('#total-likes-input').value.replace(/,/g, ''), 10),
-                        total_interactions: parseInt(container.querySelector('#total-interactions-input').value.replace(/,/g, ''), 10),
-                        photos: []
-                    };
+                        button.classList.add('loading');
 
-                    container.querySelectorAll('#photo-stats-table tbody tr').forEach(row => {
-                        statsData.photos.push({
-                            id: parseInt(row.querySelector('[data-stat="likes"]').dataset.photoid, 10),
-                            likes: parseInt(row.querySelector('[data-stat="likes"]').value.replace(/,/g, ''), 10),
-                            interactions: parseInt(row.querySelector('[data-stat="interactions"]').value.replace(/,/g, ''), 10)
-                        });
-                    });
-                    
-                    const response = await api.updateGalleryStats(uuid, statsData);
-                    button.classList.remove('loading');
+                        const response = await api.toggleFollow(uuid, isFollowing);
 
-                    if (response.ok) {
-                        showNotification(response.data.message, 'success');
-                    } else {
-                        showNotification(response.data.message || 'Error al guardar las estadísticas.', 'error');
-                    }
-                    break;
-                }
-                case 'add-sanction': {
-                    const userUuid = actionTarget.dataset.uuid;
-                    const userName = actionTarget.dataset.username;
-                    if (userUuid && userName) {
-                        showSanctionDialog(userUuid, userName);
-                    }
-                    break;
-                }
-                case 'delete-sanction': {
-                    const sanctionId = actionTarget.dataset.sanctionId;
-                    const confirmed = await showCustomConfirm('¿Eliminar Sanción?', 'Esta acción eliminará permanentemente el registro de esta sanción. ¿Estás seguro?');
-                    if (confirmed) {
-                        const response = await api.deleteUserSanction(sanctionId);
+                        button.classList.remove('loading');
+
                         if (response.ok) {
-                            showNotification(response.data.message, 'success');
-                            const userProfileSection = document.querySelector('[data-section="userProfile"]');
-                            const userUuid = userProfileSection?.dataset.uuid;
-                            if (userUuid) {
-                                fetchAndDisplayUserProfile(userUuid);
+                            button.classList.toggle('btn-primary');
+                            if (isFollowing) {
+                                buttonText.textContent = window.getTranslation('userPhotos.followButton');
+                            } else {
+                                buttonText.textContent = window.getTranslation('userPhotos.unfollowButton');
                             }
                         } else {
-                            showNotification(response.data.message || 'Error al eliminar la sanción.', 'error');
+                            showNotification('Error al procesar la solicitud.', 'error');
                         }
+                        break;
                     }
-                    break;
-                }
-                case 'view-user-profile': {
-                    const userUuid = actionTarget.dataset.uuid;
-                    navigateToUrl('admin', 'userProfile', { uuid: userUuid });
-                    handleStateChange('admin', 'userProfile', true, { uuid: userUuid }, appState);
-                    break;
-                }
-                case 'batch-action': {
-                    const selectedCheckboxes = document.querySelectorAll('#users-table tbody .user-select:checked');
-                    const selectedUuids = Array.from(selectedCheckboxes).map(cb => cb.dataset.uuid);
-            
-                    if (selectedUuids.length === 0) {
-                        showNotification('Por favor, selecciona al menos un usuario.', 'error');
-                        return;
+                    case 'view-gallery-stats': {
+                        const uuid = actionTarget.dataset.uuid;
+                        navigateToUrl('admin', 'galleryStats', { uuid });
+                        handleStateChange('admin', 'galleryStats', true, { uuid }, appState);
+                        break;
                     }
-            
-                    const batchAction = document.getElementById('batch-action-select').value;
-            
-                    const formData = new FormData();
-                    formData.append('action_type', 'batch_update_users');
-                    formData.append('uuids', JSON.stringify(selectedUuids));
-                    formData.append('batch_action', batchAction);
-            
-                    const response = await api.batchUpdateUsers(formData);
-                    if (response.ok) {
-                        showNotification(response.data.message, 'success');
-                        fetchAndDisplayUsers('', false, appState.paginationState.adminUsers);
-                    } else {
-                        showNotification(response.data.message || 'Error al realizar la acción en lote.', 'error');
-                    }
-                    break;
-                }
-                case 'like-comment':
-                case 'dislike-comment': {
-                    const commentItem = actionTarget.closest('.comment-item');
-                    const commentId = commentItem.dataset.commentId;
-                    const isLike = action === 'like-comment';
-                    
-                    const currentVoteIsActive = actionTarget.classList.contains('active');
-                    const voteType = currentVoteIsActive ? 0 : (isLike ? 1 : -1);
-        
-                    const response = await api.likeComment(commentId, voteType);
-        
-                    if (response.ok) {
-                        commentItem.querySelector('.like-count').textContent = response.data.likes;
-                        commentItem.querySelector('.dislike-count').textContent = response.data.dislikes;
-        
-                        const likeBtn = commentItem.querySelector('.like-btn');
-                        const dislikeBtn = commentItem.querySelector('.dislike-btn');
-        
-                        likeBtn.classList.remove('active');
-                        dislikeBtn.classList.remove('active');
-        
-                        if (voteType === 1) {
-                            likeBtn.classList.add('active');
-                        } else if (voteType === -1) {
-                            dislikeBtn.classList.add('active');
+                    case 'save-gallery-stats': {
+                        const button = actionTarget;
+                        const container = document.getElementById('gallery-stats-container');
+                        const uuid = document.querySelector('[data-section="galleryStats"]').dataset.uuid;
+                        if (!container || !uuid) return;
+
+                        button.classList.add('loading');
+
+                        const statsData = {
+                            total_likes: parseInt(container.querySelector('#total-likes-input').value.replace(/,/g, ''), 10),
+                            total_interactions: parseInt(container.querySelector('#total-interactions-input').value.replace(/,/g, ''), 10),
+                            photos: []
+                        };
+
+                        container.querySelectorAll('#photo-stats-table tbody tr').forEach(row => {
+                            statsData.photos.push({
+                                id: parseInt(row.querySelector('[data-stat="likes"]').dataset.photoid, 10),
+                                likes: parseInt(row.querySelector('[data-stat="likes"]').value.replace(/,/g, ''), 10),
+                                interactions: parseInt(row.querySelector('[data-stat="interactions"]').value.replace(/,/g, ''), 10)
+                            });
+                        });
+
+                        const response = await api.updateGalleryStats(uuid, statsData);
+                        button.classList.remove('loading');
+
+                        if (response.ok) {
+                            showNotification(response.data.message, 'success');
+                        } else {
+                            showNotification(response.data.message || 'Error al guardar las estadísticas.', 'error');
                         }
-                    } else {
-                        showNotification(response.data.message || 'Error al procesar el voto.', 'error');
+                        break;
                     }
-                    break;
-                }
-                case 'report-comment': {
-                    const commentItem = actionTarget.closest('.comment-item');
-                    const commentId = commentItem.dataset.commentId;
-                    const reported = await showReportCommentDialog(commentId);
-                    if (reported) {
-                        actionTarget.disabled = true;
-                        actionTarget.style.opacity = '0.5';
+                    case 'add-sanction': {
+                        const userUuid = actionTarget.dataset.uuid;
+                        const userName = actionTarget.dataset.username;
+                        if (userUuid && userName) {
+                            showSanctionDialog(userUuid, userName);
+                        }
+                        break;
                     }
-                    break;
-                }
-                case 'reply-comment': {
-                    const commentItem = actionTarget.closest('.comment-item');
-                    const commentId = commentItem.dataset.commentId;
-                    const repliesContainer = commentItem.querySelector('.replies-container');
-                    let replyForm = repliesContainer.querySelector('.comment-form-container');
-        
-                    if (!replyForm) {
-                        replyForm = document.createElement('div');
-                        replyForm.className = 'comment-form-container reply-form-container';
-                        replyForm.innerHTML = `
+                    case 'delete-sanction': {
+                        const sanctionId = actionTarget.dataset.sanctionId;
+                        const confirmed = await showCustomConfirm('¿Eliminar Sanción?', 'Esta acción eliminará permanentemente el registro de esta sanción. ¿Estás seguro?');
+                        if (confirmed) {
+                            const response = await api.deleteUserSanction(sanctionId);
+                            if (response.ok) {
+                                showNotification(response.data.message, 'success');
+                                const userProfileSection = document.querySelector('[data-section="userProfile"]');
+                                const userUuid = userProfileSection?.dataset.uuid;
+                                if (userUuid) {
+                                    fetchAndDisplayUserProfile(userUuid);
+                                }
+                            } else {
+                                showNotification(response.data.message || 'Error al eliminar la sanción.', 'error');
+                            }
+                        }
+                        break;
+                    }
+                    case 'view-user-profile': {
+                        const userUuid = actionTarget.dataset.uuid;
+                        navigateToUrl('admin', 'userProfile', { uuid: userUuid });
+                        handleStateChange('admin', 'userProfile', true, { uuid: userUuid }, appState);
+                        break;
+                    }
+                    case 'batch-action': {
+                        const selectedCheckboxes = document.querySelectorAll('#users-table tbody .user-select:checked');
+                        const selectedUuids = Array.from(selectedCheckboxes).map(cb => cb.dataset.uuid);
+
+                        if (selectedUuids.length === 0) {
+                            showNotification('Por favor, selecciona al menos un usuario.', 'error');
+                            return;
+                        }
+
+                        const batchAction = document.getElementById('batch-action-select').value;
+
+                        const formData = new FormData();
+                        formData.append('action_type', 'batch_update_users');
+                        formData.append('uuids', JSON.stringify(selectedUuids));
+                        formData.append('batch_action', batchAction);
+
+                        const response = await api.batchUpdateUsers(formData);
+                        if (response.ok) {
+                            showNotification(response.data.message, 'success');
+                            fetchAndDisplayUsers('', false, appState.paginationState.adminUsers);
+                        } else {
+                            showNotification(response.data.message || 'Error al realizar la acción en lote.', 'error');
+                        }
+                        break;
+                    }
+                    case 'like-comment':
+                    case 'dislike-comment': {
+                        const commentItem = actionTarget.closest('.comment-item');
+                        const commentId = commentItem.dataset.commentId;
+                        const isLike = action === 'like-comment';
+
+                        const currentVoteIsActive = actionTarget.classList.contains('active');
+                        const voteType = currentVoteIsActive ? 0 : (isLike ? 1 : -1);
+
+                        const response = await api.likeComment(commentId, voteType);
+
+                        if (response.ok) {
+                            commentItem.querySelector('.like-count').textContent = response.data.likes;
+                            commentItem.querySelector('.dislike-count').textContent = response.data.dislikes;
+
+                            const likeBtn = commentItem.querySelector('.like-btn');
+                            const dislikeBtn = commentItem.querySelector('.dislike-btn');
+
+                            likeBtn.classList.remove('active');
+                            dislikeBtn.classList.remove('active');
+
+                            if (voteType === 1) {
+                                likeBtn.classList.add('active');
+                            } else if (voteType === -1) {
+                                dislikeBtn.classList.add('active');
+                            }
+                        } else {
+                            showNotification(response.data.message || 'Error al procesar el voto.', 'error');
+                        }
+                        break;
+                    }
+                    case 'report-comment': {
+                        const commentItem = actionTarget.closest('.comment-item');
+                        const commentId = commentItem.dataset.commentId;
+                        const reported = await showReportCommentDialog(commentId);
+                        if (reported) {
+                            actionTarget.disabled = true;
+                            actionTarget.style.opacity = '0.5';
+                        }
+                        break;
+                    }
+                    case 'reply-comment': {
+                        const commentItem = actionTarget.closest('.comment-item');
+                        const commentId = commentItem.dataset.commentId;
+                        const repliesContainer = commentItem.querySelector('.replies-container');
+                        let replyForm = repliesContainer.querySelector('.comment-form-container');
+
+                        if (!replyForm) {
+                            replyForm = document.createElement('div');
+                            replyForm.className = 'comment-form-container reply-form-container';
+                            replyForm.innerHTML = `
                             <textarea class="feedback-textarea" rows="2" maxlength="500" placeholder="Escribe una respuesta..."></textarea>
                             <button class="load-more-btn" data-action="submit-reply" data-parent-id="${commentId}">
                                 <span class="button-text">Responder</span>
                                 <div class="button-spinner"></div>
                             </button>
                         `;
-                        repliesContainer.prepend(replyForm);
-                        replyForm.querySelector('textarea').focus();
-                    } else {
-                        replyForm.remove();
+                            repliesContainer.prepend(replyForm);
+                            replyForm.querySelector('textarea').focus();
+                        } else {
+                            replyForm.remove();
+                        }
+                        break;
                     }
-                    break;
-                }
-        
-                case 'submit-reply': {
-                    const parentId = actionTarget.dataset.parentId;
-                    const replyForm = actionTarget.closest('.reply-form-container');
-                    const textarea = replyForm.querySelector('textarea');
-                    const replyText = textarea.value.trim();
-                    const photoId = appState.currentPhotoData.id;
-        
-                    if (replyText) {
-                        actionTarget.classList.add('loading');
-                        const response = await api.addComment(photoId, replyText, parentId);
-                        actionTarget.classList.remove('loading');
-        
-                        if (response.ok) {
-                            const commentsResponse = await api.getComments(photoId);
-                            if (commentsResponse.ok) {
-                                displayComments(commentsResponse.data);
+
+                    case 'submit-reply': {
+                        const parentId = actionTarget.dataset.parentId;
+                        const replyForm = actionTarget.closest('.reply-form-container');
+                        const textarea = replyForm.querySelector('textarea');
+                        const replyText = textarea.value.trim();
+                        const photoId = appState.currentPhotoData.id;
+
+                        if (replyText) {
+                            actionTarget.classList.add('loading');
+                            const response = await api.addComment(photoId, replyText, parentId);
+                            actionTarget.classList.remove('loading');
+
+                            if (response.ok) {
+                                const commentsResponse = await api.getComments(photoId);
+                                if (commentsResponse.ok) {
+                                    displayComments(commentsResponse.data);
+                                }
+                            } else {
+                                showNotification(response.data.message || 'Error al publicar la respuesta.', 'error');
                             }
-                        } else {
-                            showNotification(response.data.message || 'Error al publicar la respuesta.', 'error');
                         }
+                        break;
                     }
-                    break;
-                }
-                
-                case 'toggle-replies': {
-                    const commentItem = actionTarget.closest('.comment-item');
-                    const repliesContainer = commentItem.querySelector('.replies-container');
-                    const repliesData = JSON.parse(commentItem.dataset.replies || '[]');
-                    const totalReplies = parseInt(actionTarget.dataset.totalReplies, 10);
-                    const state = actionTarget.dataset.state;
 
-                    if (state === 'hidden') {
-                        repliesContainer.style.display = 'flex';
-                        actionTarget.dataset.state = 'shown';
-                        
-                        const repliesToShow = repliesData.slice(0, 10);
-                        repliesContainer.innerHTML = '';
-                        
-                        repliesToShow.forEach(reply => {
-                            const replyElement = createCommentElement(reply, true);
-                            repliesContainer.appendChild(replyElement);
-                        });
+                    case 'toggle-replies': {
+                        const commentItem = actionTarget.closest('.comment-item');
+                        const repliesContainer = commentItem.querySelector('.replies-container');
+                        const repliesData = JSON.parse(commentItem.dataset.replies || '[]');
+                        const totalReplies = parseInt(actionTarget.dataset.totalReplies, 10);
+                        const state = actionTarget.dataset.state;
 
-                        if (totalReplies > 10) {
-                            actionTarget.textContent = 'Mostrar más respuestas';
-                            actionTarget.dataset.shownCount = 10;
-                        } else {
-                            actionTarget.textContent = 'Ocultar respuestas';
-                        }
+                        if (state === 'hidden') {
+                            repliesContainer.style.display = 'flex';
+                            actionTarget.dataset.state = 'shown';
 
-                    } else if (state === 'shown') {
-                        const shownCount = parseInt(actionTarget.dataset.shownCount || '10', 10);
-                        
-                        if (shownCount < totalReplies) {
-                            const newCount = Math.min(shownCount + 10, totalReplies);
-                            const newReplies = repliesData.slice(shownCount, newCount);
+                            const repliesToShow = repliesData.slice(0, 10);
+                            repliesContainer.innerHTML = '';
 
-                            newReplies.forEach(reply => {
+                            repliesToShow.forEach(reply => {
                                 const replyElement = createCommentElement(reply, true);
                                 repliesContainer.appendChild(replyElement);
                             });
-                            
-                            actionTarget.dataset.shownCount = newCount;
 
-                            if (newCount === totalReplies) {
+                            if (totalReplies > 10) {
+                                actionTarget.textContent = 'Mostrar más respuestas';
+                                actionTarget.dataset.shownCount = 10;
+                            } else {
                                 actionTarget.textContent = 'Ocultar respuestas';
                             }
 
-                        } else {
-                            repliesContainer.style.display = 'none';
-                            repliesContainer.innerHTML = '';
-                            actionTarget.dataset.state = 'hidden';
-                            actionTarget.textContent = `Ver ${totalReplies} ${totalReplies > 1 ? 'respuestas' : 'respuesta'}`;
+                        } else if (state === 'shown') {
+                            const shownCount = parseInt(actionTarget.dataset.shownCount || '10', 10);
+
+                            if (shownCount < totalReplies) {
+                                const newCount = Math.min(shownCount + 10, totalReplies);
+                                const newReplies = repliesData.slice(shownCount, newCount);
+
+                                newReplies.forEach(reply => {
+                                    const replyElement = createCommentElement(reply, true);
+                                    repliesContainer.appendChild(replyElement);
+                                });
+
+                                actionTarget.dataset.shownCount = newCount;
+
+                                if (newCount === totalReplies) {
+                                    actionTarget.textContent = 'Ocultar respuestas';
+                                }
+
+                            } else {
+                                repliesContainer.style.display = 'none';
+                                repliesContainer.innerHTML = '';
+                                actionTarget.dataset.state = 'hidden';
+                                actionTarget.textContent = `Ver ${totalReplies} ${totalReplies > 1 ? 'respuestas' : 'respuesta'}`;
+                            }
                         }
+                        break;
                     }
-                    break;
                 }
             }
-        }
 
-        const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
-        if (moduleSurface && !moduleSurface.classList.contains('disabled')) {
-            if (!actionTarget?.matches('[data-action="toggleModuleSurface"]') && !event.target.closest('[data-module="moduleSurface"]')) {
-                moduleSurface.classList.add('disabled');
+            const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
+            if (moduleSurface && !moduleSurface.classList.contains('disabled')) {
+                if (!actionTarget?.matches('[data-action="toggleModuleSurface"]') && !event.target.closest('[data-module="moduleSurface"]')) {
+                    moduleSurface.classList.add('disabled');
+                }
             }
-        }
 
-        if (!selectTrigger) {
-            document.querySelectorAll('.module-select:not(.photo-context-menu).active').forEach(menu => {
-                menu.classList.remove('active');
-                menu.classList.add('disabled');
-            });
-            document.querySelectorAll('.active-trigger').forEach(trigger => trigger.classList.remove('active-trigger'));
-        }
-        
-        const filterTarget = event.target.closest('[data-filter]');
+            if (!selectTrigger) {
+                document.querySelectorAll('.module-select:not(.photo-context-menu).active').forEach(menu => {
+                    menu.classList.remove('active');
+                    menu.classList.add('disabled');
+                });
+                document.querySelectorAll('.active-trigger').forEach(trigger => trigger.classList.remove('active-trigger'));
+            }
+
+            const filterTarget = event.target.closest('[data-filter]');
         if (filterTarget && filterTarget.closest('#gallery-filter-menu')) {
             const filterValue = filterTarget.dataset.filter;
-            const photosSection = document.getElementById('photos-section');
-            const videosSection = document.getElementById('videos-section');
-        
+            const section = document.querySelector('[data-section="galleryPhotos"]');
+            if (!section) return;
+
+            const photosSection = section.querySelector('#photos-section');
+            const videosSection = section.querySelector('#videos-section');
+            const photosGrid = section.querySelector('#user-photos-grid');
+            const videosGrid = section.querySelector('#user-videos-container');
+            const photosTitle = photosSection.querySelector('.category-section-title');
+            const videosTitle = videosSection.querySelector('.category-section-title');
+            const statusContainer = section.querySelector('.status-message-container');
+
+            const hasPhotos = photosGrid && photosGrid.children.length > 0;
+            const hasVideos = videosGrid && videosGrid.children.length > 0;
+
             document.querySelectorAll('#gallery-filter-menu .menu-link').forEach(link => {
                 link.classList.remove('active');
             });
             filterTarget.classList.add('active');
-        
+
+            // Restablecer el estado de la vista
+            statusContainer.classList.add('disabled');
+            photosSection.style.display = 'none';
+            videosSection.style.display = 'none';
+            photosTitle.style.display = 'flex';
+            videosTitle.style.display = 'flex';
+
             if (filterValue === 'all') {
-                if (photosSection) photosSection.style.display = 'block';
-                if (videosSection) videosSection.style.display = 'block';
+                if (hasPhotos) photosSection.style.display = 'block';
+                if (hasVideos) videosSection.style.display = 'block';
+                // El caso en que ambos están vacíos es manejado por la función que carga las fotos.
             } else if (filterValue === 'photos') {
-                if (photosSection) photosSection.style.display = 'block';
-                if (videosSection) videosSection.style.display = 'none';
+                photosSection.style.display = 'block';
+                if (!hasPhotos) {
+                    photosTitle.style.display = 'none';
+                    photosGrid.style.display = 'none';
+                    statusContainer.innerHTML = `<div><h2 data-i18n="userPhotos.noPhotosTitle"></h2><p data-i18n="userPhotos.noPhotosMessage"></p></div>`;
+                    statusContainer.classList.remove('disabled');
+                    window.applyTranslations(statusContainer);
+                }
             } else if (filterValue === 'videos') {
-                if (photosSection) photosSection.style.display = 'none';
-                if (videosSection) videosSection.style.display = 'block';
+                videosSection.style.display = 'block';
+                if (!hasVideos) {
+                    videosTitle.style.display = 'none';
+                    videosGrid.style.display = 'none';
+                    statusContainer.innerHTML = `<div><h2 data-i18n="userPhotos.noVideosTitle"></h2><p data-i18n="userPhotos.noVideosMessage"></p></div>`;
+                    statusContainer.classList.remove('disabled');
+                    window.applyTranslations(statusContainer);
+                }
             }
         
             const menu = filterTarget.closest('.module-select');
@@ -1669,1007 +1700,1009 @@ function setupEventListeners() {
             }
         }
 
-        if (!event.target.closest('.item-actions')) {
-            document.querySelectorAll('.module-select[id^="user-actions-menu-"]').forEach(menu => {
-                menu.classList.add('disabled');
-            });
-        }
-
-        if (!event.target.closest('.card-actions-container')) {
-            document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
-                menu.classList.remove('active');
-                menu.classList.add('disabled');
-                menu.closest('.card-actions-container').classList.remove('force-visible');
-            });
-        }
-
-        if (actionTarget) {
-            const action = actionTarget.dataset.action;
-
-            if (window.matchMedia('(max-width: 468px)').matches && actionTarget.closest('[data-module="moduleSurface"] .menu-link')) {
-                const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
-                if (moduleSurface) {
-                    moduleSurface.classList.add('disabled');
-                }
+            if (!event.target.closest('.item-actions')) {
+                document.querySelectorAll('.module-select[id^="user-actions-menu-"]').forEach(menu => {
+                    menu.classList.add('disabled');
+                });
             }
 
-            if (action !== 'download-photo' && !actionTarget.closest('a[target="_blank"]')) {
-                const link = actionTarget.closest('.menu-link');
-                if (link && link.tagName.toLowerCase() === 'a' && !link.getAttribute('href').startsWith('#')) {
-                } else {
-                    event.preventDefault();
-                }
+            if (!event.target.closest('.card-actions-container')) {
+                document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
+                    menu.classList.remove('active');
+                    menu.classList.add('disabled');
+                    menu.closest('.card-actions-container').classList.remove('force-visible');
+                });
             }
 
-            switch (action) {
-                case 'save-general-settings': {
-                    const button = actionTarget;
-                    button.classList.add('loading');
-                
-                    const maintenanceToggle = document.querySelector('[data-setting="maintenance-mode"]');
-                    const registrationToggle = document.querySelector('[data-setting="allow-new-registrations"]');
-                    const unlockDurationSelect = document.querySelector('#unlock-duration-select .menu-link.active');
-                    const adProbabilitySelect = document.querySelector('#ad-probability-select .menu-link.active');
-                
-                    if (maintenanceToggle.classList.contains('active')) {
-                        registrationToggle.classList.remove('active');
-                    }
-                
-                    const settings = {
-                        'maintenance_mode': maintenanceToggle.classList.contains('active') ? '1' : '0',
-                        'allow_new_registrations': registrationToggle.classList.contains('active') ? '1' : '0',
-                        'unlock_duration': unlockDurationSelect ? unlockDurationSelect.dataset.value : '60',
-                        'ad_probability': adProbabilitySelect ? adProbabilitySelect.dataset.value : '15_cooldown'
-                    };
-                
-                    const formData = new FormData();
-                    formData.append('action_type', 'save_general_settings');
-                    formData.append('settings', JSON.stringify(settings));
-                
-                    const response = await api.postDataWithCsrf(formData);
-                    button.classList.remove('loading');
-                
-                    if (response.ok) {
-                        showNotification(response.data.message, 'success');
-                        window.MAINTENANCE_MODE = settings.maintenance_mode === '1';
-                        appState.serverSettings.unlock_duration = parseInt(settings.unlock_duration, 10);
-                        const [prob, cooldown] = settings.ad_probability.split('_');
-                        appState.serverSettings.ad_probability = parseInt(prob, 10);
-                        appState.serverSettings.ad_cooldown = cooldown === 'cooldown';
-                    } else {
-                        showNotification(response.data.message || 'Error al guardar la configuración.', 'error');
-                    }
-                    break;
-                }
-                case 'return-to-edit-gallery': {
-                    const section = actionTarget.closest('.section-content');
-                    const uuid = section ? section.dataset.uuid : null;
-                    
-                    if (uuid) {
-                        navigateToUrl('admin', 'editGallery', { uuid });
-                        handleStateChange('admin', 'editGallery', true, { uuid }, appState);
-                    } else {
-                        navigateToUrl('admin', 'manageContent');
-                        handleStateChange('admin', 'manageContent', true, null, appState);
-                    }
-                    break;
-                }
-                case 'update-password':
-                    showUpdatePasswordDialog();
-                    break;
-                case 'delete-account':
-                    showDeleteAccountDialog();
-                    break;
-                case 'toggleModuleSurface':
+            if (actionTarget) {
+                const action = actionTarget.dataset.action;
+
+                if (window.matchMedia('(max-width: 468px)').matches && actionTarget.closest('[data-module="moduleSurface"] .menu-link')) {
                     const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
-                    if (moduleSurface) moduleSurface.classList.toggle('disabled');
-                    break;
-                case 'toggleAuth':
-                    if (appState.currentAppView === 'auth' && appState.currentAppSection === 'login') return;
-                    navigateToUrl('auth', 'login');
-                    handleStateChange('auth', 'login', true, null, appState);
-                    break;
-                case 'toggleSettings':
-                    {
-                        const sessionResponse = await api.checkSession();
-                        if (sessionResponse.ok && sessionResponse.data.loggedin) {
-                            if (appState.currentAppView === 'settings' && appState.currentAppSection === 'yourProfile') return;
-                            navigateToUrl('settings', 'yourProfile');
-                            handleStateChange('settings', 'yourProfile', true, null, appState);
-                        } else {
-                            if (appState.currentAppView === 'settings' && appState.currentAppSection === 'accessibility') return;
-                            navigateToUrl('settings', 'accessibility');
-                            handleStateChange('settings', 'accessibility', true, null, appState);
-                        }
+                    if (moduleSurface) {
+                        moduleSurface.classList.add('disabled');
                     }
-                    break;
-                case 'toggleHelp':
-                    if (appState.currentAppView === 'help' && appState.currentAppSection === 'privacyPolicy') return;
-                    navigateToUrl('help', 'privacyPolicy');
-                    handleStateChange('help', 'privacyPolicy', true, null, appState);
-                    break;
-                case 'toggleMainView':
-                    if (appState.currentAppView === 'main' && appState.currentAppSection === 'home') return;
-                    navigateToUrl('main', 'home');
-                    handleStateChange('main', 'home', true, null, appState);
-                    break;
-                case 'toggleAdminPanel': {
-                    const profileBtn = document.querySelector('.profile-btn');
-                    const userRole = profileBtn ? profileBtn.dataset.userRole : 'user';
-
-                    if (userRole === 'moderator') {
-                        if (appState.currentAppView === 'admin' && appState.currentAppSection === 'manageComments') return;
-                        navigateToUrl('admin', 'manageComments');
-                        handleStateChange('admin', 'manageComments', true, null, appState);
-                    } else {
-                        if (appState.currentAppView === 'admin' && appState.currentAppSection === 'dashboard') return;
-                        navigateToUrl('admin', 'dashboard');
-                        handleStateChange('admin', 'dashboard', true, null, appState);
-                    }
-                    break;
                 }
-                case 'toggleSectionRegister':
-                    if (appState.currentAppView === 'auth' && appState.currentAppSection === 'register') return;
-                    navigateToUrl('auth', 'register', { step: 'user-info' });
-                    handleStateChange('auth', 'register', true, { step: 'user-info' }, appState);
-                    break;
-                case 'toggleSectionHome':
-                case 'toggleSectionTrends':
-                case 'toggleSectionFavorites':
-                case 'toggleSectionYourProfile':
-                case 'toggleSectionAccessibility':
-                case 'toggleSectionLoginSecurity':
-                case 'toggleSectionHistoryPrivacy':
-                case 'toggleSectionHistory':
-                case 'toggleSectionPrivacyPolicy':
-                case 'toggleSectionTermsConditions':
-                case 'toggleSectionCookiePolicy':
-                case 'toggleSectionSendFeedback':
-                case 'toggleSectionLogin':
-                case 'toggleSectionForgotPassword':
-                case 'toggleSectionDashboard':
-                case 'toggleSectionManageUsers':
-                case 'toggleSectionManageContent':
-                case 'toggleSectionManageComments':
-                case 'toggleSectionManageFeedback':
-                case 'toggleSectionCreateGallery':
-                case 'toggleSectionGeneralSettings':
-                case 'toggleSectionManageProfanity':
-                case 'toggleSectionGalleryStats':
-                case 'toggleSectionManageLogs':
-                case 'toggleSectionBackup':
-                    const sectionName = action.substring("toggleSection".length);
-                    const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
-                    const parentMenu = actionTarget.closest('[data-menu]');
-                    let targetView = parentMenu ? parentMenu.dataset.menu : appState.currentAppView;
-                    if (action === 'toggleSectionLogin' || action === 'toggleSectionForgotPassword') {
-                        targetView = 'auth';
-                    }
-                    if (action === 'toggleSectionGeneralSettings' || action === 'toggleSectionManageProfanity' || action === 'toggleSectionManageLogs' || action === 'toggleSectionBackup') {
-                        targetView = 'admin';
-                    }
-                    if (appState.currentAppView === targetView && appState.currentAppSection === targetSection) return;
-                    navigateToUrl(targetView, targetSection);
-                    handleStateChange(targetView, targetSection, true, null, appState);
-                    break;
-                case 'load-more-users':
-                    const homeSearch = document.querySelector('.search-input-text input');
-                    fetchAndDisplayGalleries(appState.currentSortBy, homeSearch ? homeSearch.value.trim() : '', true, appState.paginationState.galleries);
-                    break;
-                case 'load-more-photos':
-                    if (appState.currentGalleryForPhotoView && appState.currentGalleryNameForPhotoView) {
-                        fetchAndDisplayGalleryPhotos(appState.currentGalleryForPhotoView, appState.currentGalleryNameForPhotoView, true, appState.paginationState.photos);
-                    }
-                    break;
-                case 'load-more-admin-users':
-                    const adminSearch = document.querySelector('#admin-user-search');
-                    fetchAndDisplayUsers(adminSearch ? adminSearch.value.trim() : '', true, appState.paginationState.adminUsers);
-                    break;
-                case 'load-more-admin-galleries':
-                    const adminGallerySearch = document.querySelector('#admin-gallery-search');
-                    fetchAndDisplayGalleriesAdmin(adminGallerySearch ? adminGallerySearch.value.trim() : '', true, appState.paginationState.adminGalleries);
-                    break;
-                case 'load-more-admin-comments':
-                    const adminCommentSearch = document.querySelector('#admin-comment-search');
-                    const adminCommentFilter = document.querySelector('#comments-filter-select .menu-link.active')?.dataset.value || 'all';
-                    fetchAndDisplayAdminComments(adminCommentSearch ? adminCommentSearch.value.trim() : '', adminCommentFilter, true, appState.paginationState.adminComments);
-                    break;
-                case 'load-more-admin-feedback':
-                    const adminFeedbackSearch = document.querySelector('#admin-feedback-search');
-                    fetchAndDisplayFeedback(adminFeedbackSearch ? adminFeedbackSearch.value.trim() : '', true, appState.paginationState.adminFeedback);
-                    break;
-                case 'load-more-history-profiles':
-                    appState.paginationState.historyProfiles.shown += appState.HISTORY_PROFILES_BATCH;
-                    displayHistory(appState.paginationState.historyProfiles.shown, appState.paginationState.historyPhotos.shown, appState.paginationState.historySearches.shown);
-                    break;
-                case 'load-more-history-photos':
-                    appState.paginationState.historyPhotos.shown += appState.HISTORY_PHOTOS_BATCH;
-                    displayHistory(appState.paginationState.historyProfiles.shown, appState.paginationState.historyPhotos.shown, appState.paginationState.historySearches.shown);
-                    break;
-                case 'load-more-history-searches':
-                    appState.paginationState.historySearches.shown += appState.HISTORY_SEARCHES_BATCH;
-                    displayHistory(appState.paginationState.historyProfiles.shown, appState.paginationState.historyPhotos.shown, appState.paginationState.historySearches.shown);
-                    break;
-                case 'returnToPreviousView':
-                    if (appState.lastVisitedView && appState.lastVisitedSection) {
-                        navigateToUrl(appState.lastVisitedView, appState.lastVisitedSection, appState.lastVisitedData);
-                        handleStateChange(appState.lastVisitedView, appState.lastVisitedSection, true, appState.lastVisitedData, appState);
+
+                if (action !== 'download-photo' && !actionTarget.closest('a[target="_blank"]')) {
+                    const link = actionTarget.closest('.menu-link');
+                    if (link && link.tagName.toLowerCase() === 'a' && !link.getAttribute('href').startsWith('#')) {
                     } else {
-                        // Fallback por si no hay historial
+                        event.preventDefault();
+                    }
+                }
+
+                switch (action) {
+                    case 'save-general-settings': {
+                        const button = actionTarget;
+                        button.classList.add('loading');
+
+                        const maintenanceToggle = document.querySelector('[data-setting="maintenance-mode"]');
+                        const registrationToggle = document.querySelector('[data-setting="allow-new-registrations"]');
+                        const unlockDurationSelect = document.querySelector('#unlock-duration-select .menu-link.active');
+                        const adProbabilitySelect = document.querySelector('#ad-probability-select .menu-link.active');
+
+                        if (maintenanceToggle.classList.contains('active')) {
+                            registrationToggle.classList.remove('active');
+                        }
+
+                        const settings = {
+                            'maintenance_mode': maintenanceToggle.classList.contains('active') ? '1' : '0',
+                            'allow_new_registrations': registrationToggle.classList.contains('active') ? '1' : '0',
+                            'unlock_duration': unlockDurationSelect ? unlockDurationSelect.dataset.value : '60',
+                            'ad_probability': adProbabilitySelect ? adProbabilitySelect.dataset.value : '15_cooldown'
+                        };
+
+
+
+                        const formData = new FormData();
+                        formData.append('action_type', 'save_general_settings');
+                        formData.append('settings', JSON.stringify(settings));
+
+                        const response = await api.postDataWithCsrf(formData);
+                        button.classList.remove('loading');
+
+                        if (response.ok) {
+                            showNotification(response.data.message, 'success');
+                            window.MAINTENANCE_MODE = settings.maintenance_mode === '1';
+                            appState.serverSettings.unlock_duration = parseInt(settings.unlock_duration, 10);
+                            const [prob, cooldown] = settings.ad_probability.split('_');
+                            appState.serverSettings.ad_probability = parseInt(prob, 10);
+                            appState.serverSettings.ad_cooldown = cooldown === 'cooldown';
+                        } else {
+                            showNotification(response.data.message || 'Error al guardar la configuración.', 'error');
+                        }
+                        break;
+                    }
+                    case 'return-to-edit-gallery': {
+                        const section = actionTarget.closest('.section-content');
+                        const uuid = section ? section.dataset.uuid : null;
+
+                        if (uuid) {
+                            navigateToUrl('admin', 'editGallery', { uuid });
+                            handleStateChange('admin', 'editGallery', true, { uuid }, appState);
+                        } else {
+                            navigateToUrl('admin', 'manageContent');
+                            handleStateChange('admin', 'manageContent', true, null, appState);
+                        }
+                        break;
+                    }
+                    case 'update-password':
+                        showUpdatePasswordDialog();
+                        break;
+                    case 'delete-account':
+                        showDeleteAccountDialog();
+                        break;
+                    case 'toggleModuleSurface':
+                        const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
+                        if (moduleSurface) moduleSurface.classList.toggle('disabled');
+                        break;
+                    case 'toggleAuth':
+                        if (appState.currentAppView === 'auth' && appState.currentAppSection === 'login') return;
+                        navigateToUrl('auth', 'login');
+                        handleStateChange('auth', 'login', true, null, appState);
+                        break;
+                    case 'toggleSettings':
+                        {
+                            const sessionResponse = await api.checkSession();
+                            if (sessionResponse.ok && sessionResponse.data.loggedin) {
+                                if (appState.currentAppView === 'settings' && appState.currentAppSection === 'yourProfile') return;
+                                navigateToUrl('settings', 'yourProfile');
+                                handleStateChange('settings', 'yourProfile', true, null, appState);
+                            } else {
+                                if (appState.currentAppView === 'settings' && appState.currentAppSection === 'accessibility') return;
+                                navigateToUrl('settings', 'accessibility');
+                                handleStateChange('settings', 'accessibility', true, null, appState);
+                            }
+                        }
+                        break;
+                    case 'toggleHelp':
+                        if (appState.currentAppView === 'help' && appState.currentAppSection === 'privacyPolicy') return;
+                        navigateToUrl('help', 'privacyPolicy');
+                        handleStateChange('help', 'privacyPolicy', true, null, appState);
+                        break;
+                    case 'toggleMainView':
+                        if (appState.currentAppView === 'main' && appState.currentAppSection === 'home') return;
                         navigateToUrl('main', 'home');
                         handleStateChange('main', 'home', true, null, appState);
-                    }
-                    break;
-                case 'returnToHome':
-                    navigateToUrl('main', 'home');
-                    handleStateChange('main', 'home', true, null, appState);
-                    break;
-                case 'returnToFavorites':
-                    navigateToUrl('main', 'favorites');
-                    handleStateChange('main', 'favorites', true, null, appState);
-                    break;
-                case 'toggle-favorite':
-                    if (appState.currentPhotoData) toggleFavorite(appState.currentPhotoData);
-                    break;
-                case 'toggle-photo-comments':
-                    if (appState.currentPhotoData) {
-                        const { gallery_uuid, id } = appState.currentPhotoData;
-                        navigateToUrl('main', 'photoComments', { uuid: gallery_uuid, photoId: id });
-                        handleStateChange('main', 'photoComments', true, { uuid: gallery_uuid, photoId: id }, appState);
-                    }
-                    break;
-                case 'toggle-favorite-card':
-                    const photoIdFav = actionTarget.dataset.photoId;
-                    const allPhotos = [...appState.currentFavoritesList, ...appState.paginationState.photos.photoList, ...appState.currentTrendingPhotosList, ...appState.currentHistoryPhotosList];
-                    const photoDataFav = allPhotos.find(p => p.id == photoIdFav);
+                        break;
+                    case 'toggleAdminPanel': {
+                        const profileBtn = document.querySelector('.profile-btn');
+                        const userRole = profileBtn ? profileBtn.dataset.userRole : 'user';
 
-                    if (photoDataFav) {
-                        const fullPhotoData = {
-                            id: photoDataFav.id,
-                            gallery_uuid: photoDataFav.gallery_uuid || appState.currentGalleryForPhotoView,
-                            photo_url: photoDataFav.photo_url,
-                            gallery_name: photoDataFav.gallery_name || appState.currentGalleryNameForPhotoView,
-                            profile_picture_url: photoDataFav.profile_picture_url
-                        };
-                        await toggleFavorite(fullPhotoData);
-                        const activeSection = document.querySelector('.general-content-scrolleable > div')?.dataset.section;
-
-                        if (activeSection === 'userSpecificFavorites') {
-                            handleStateChange('main', 'userSpecificFavorites', true, { uuid: document.querySelector('[data-section="userSpecificFavorites"]').dataset.uuid }, appState);
-                        } else if (activeSection === 'favorites') {
-                            const session = await api.checkSession();
-                            if (session.ok && session.data.loggedin) {
-                                await fetchUserFavorites();
-
-                                const searchInput = document.getElementById('favorites-search-input');
-                                let searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
-                                let favoritesToDisplay = appState.currentFavoritesList;
-
-                                if (searchTerm) {
-                                    favoritesToDisplay = favoritesToDisplay.filter(photo =>
-                                        photo.gallery_name.toLowerCase().includes(searchTerm)
-                                    );
-                                }
-                                displayFavoritePhotos(favoritesToDisplay, appState.currentFavoritesSortBy, true);
-                            }
-                        }
-                    }
-                    break;
-                case 'toggle-comment-length':
-                    const commentTextElement = actionTarget.previousElementSibling;
-                    const isExpanded = commentTextElement.classList.toggle('expanded');
-                    
-                    if (isExpanded) {
-                        commentTextElement.textContent = commentTextElement.dataset.fullText;
-                        actionTarget.textContent = window.getTranslation('photoView.comments.showLess');
-                    } else {
-                        commentTextElement.textContent = commentTextElement.dataset.fullText.substring(0, 250) + '...';
-                        actionTarget.textContent = window.getTranslation('photoView.comments.showMore');
-                    }
-                    break;
-                case 'previous-photo':
-                case 'next-photo':
-                    if (!actionTarget.classList.contains('disabled-nav')) {
-                        const listToUse = appState.currentPhotoViewList;
-                        const currentId = appState.currentPhotoData ? appState.currentPhotoData.id : null;
-                        if (!currentId || listToUse.length === 0) return;
-                
-                        const currentIndex = listToUse.findIndex(p => p.id == currentId);
-                        if (currentIndex !== -1) {
-                            let nextIndex = (action === 'next-photo') ? currentIndex + 1 : currentIndex - 1;
-                            if (nextIndex >= 0 && nextIndex < listToUse.length) {
-                                const nextPhoto = listToUse[nextIndex];
-                                
-                                const showAdFlag = await shouldShowAd();
-                                const adSetting = appState.serverSettings.ad_probability;
-                                const usesCooldown = adSetting.includes('_cooldown');
-                
-                                if (showAdFlag) {
-                                    appState.adContext = 'navigation';
-                                    appState.photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id } };
-                                    handleStateChange('main', 'adView', true, null, appState);
-                                    if (usesCooldown) {
-                                        appState.adCooldownActive = true;
-                                    }
-                                } else {
-                                    appState.adCooldownActive = false;
-                                    
-                                    const url = generateUrl('main', 'photoView', { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id });
-                                    history.pushState({ view: 'main', section: 'photoView', data: { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id } }, document.title, url);
-                
-                                    appState.currentPhotoData = await renderPhotoView(nextPhoto.gallery_uuid, nextPhoto.id, listToUse);
-                                    if (appState.currentPhotoData) {
-                                        window.addToHistory('photo', appState.currentPhotoData);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    break;
-                case 'toggle-photo-menu':
-                    const currentContainer = actionTarget.closest('.card-actions-container');
-                    const currentMenu = currentContainer.querySelector('.photo-context-menu');
-                    const isOpening = currentMenu.classList.contains('disabled');
-
-                    document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
-                        if (menu !== currentMenu) {
-                            menu.classList.remove('active');
-                            menu.classList.add('disabled');
-                            menu.closest('.card-actions-container').classList.remove('force-visible');
-                        }
-                    });
-
-                    currentMenu.classList.toggle('disabled', !isOpening);
-                    currentMenu.classList.toggle('active', isOpening);
-                    currentContainer.classList.toggle('force-visible', isOpening);
-                    break;
-                case 'copy-link':
-                    const cardForCopy = actionTarget.closest('.card');
-                    const urlToCopy = `${window.location.origin}${window.BASE_PATH}/gallery/${cardForCopy.dataset.galleryUuid}/photo/${cardForCopy.dataset.photoId}`;
-                    copyTextToClipboard(urlToCopy).then(() => {
-                        showNotification(window.getTranslation('notifications.linkCopied'));
-                        actionTarget.closest('.photo-context-menu').classList.add('disabled');
-                        actionTarget.closest('.card-actions-container').classList.remove('force-visible');
-                    }).catch(err => {
-                        showNotification(window.getTranslation('notifications.errorCopyingLink'), 'error');
-                        console.error('Failed to copy: ', err);
-                    });
-                    break;
-                case 'download-photo':
-                    const cardForDownload = actionTarget.closest('.card.photo-card');
-                    if (cardForDownload && cardForDownload.dataset.photoUrl) {
-                        downloadPhoto(cardForDownload.dataset.photoUrl);
-                    }
-                    break;
-                case 'watch-ad-to-unlock':
-                    handleStateChange('main', 'adView', true, null, appState);
-                    break;
-                case 'delete-search-item':
-                    const timestamp = actionTarget.dataset.timestamp;
-                    if (timestamp) {
-                        removeSearchFromHistory(timestamp);
-                    }
-                    break;
-                case 'toggle-photo-options-menu':
-                    const menu = document.querySelector('.photo-options-menu');
-                    if (menu) {
-                        menu.classList.toggle('disabled');
-                    }
-                    break;
-                case 'rotate-photo-left':
-                    rotatePhoto('left');
-                    break;
-                case 'rotate-photo-right':
-                    rotatePhoto('right');
-                    break;
-                case 'download-photo-view':
-                    if (appState.currentPhotoData && appState.currentPhotoData.photo_url) {
-                        downloadPhoto(appState.currentPhotoData.photo_url);
-                    }
-                    break;
-                case 'toggle-password-visibility':
-                    const wrapper = actionTarget.closest('.password-wrapper');
-                    const input = wrapper.querySelector('.auth-input');
-                    const icon = actionTarget.querySelector('.material-symbols-rounded');
-                    if (input.type === 'password') {
-                        input.type = 'text';
-                        icon.textContent = 'visibility_off';
-                    } else {
-                        input.type = 'password';
-                        icon.textContent = 'visibility';
-                    }
-                    break;
-                case 'toggle-user-actions': {
-                    const row = actionTarget.closest('tr');
-                    const menu = row.querySelector('.module-select');
-                    menu.classList.toggle('disabled');
-                    break;
-                }
-                case 'toggle-comment-actions': {
-                    const row = actionTarget.closest('tr');
-                    const menu = row.querySelector('.module-select');
-                    menu.classList.toggle('disabled');
-                    break;
-                }
-                case 'show-role-menu': {
-                    const menuContainer = actionTarget.closest('.module-select');
-                    menuContainer.querySelector('[data-menu-type="main-actions"]').style.display = 'none';
-                    menuContainer.querySelector('[data-menu-type="role-actions"]').style.display = 'block';
-                    break;
-                }
-                case 'hide-role-menu': {
-                    const menuContainer = actionTarget.closest('.module-select');
-                    menuContainer.querySelector('[data-menu-type="main-actions"]').style.display = 'block';
-                    menuContainer.querySelector('[data-menu-type="role-actions"]').style.display = 'none';
-                    break;
-                }
-                case 'show-status-menu': {
-                    const menuContainer = actionTarget.closest('.module-select');
-                    menuContainer.querySelector('[data-menu-type="main-actions"]').style.display = 'none';
-                    menuContainer.querySelector('[data-menu-type="status-actions"]').style.display = 'block';
-                    break;
-                }
-                case 'hide-status-menu': {
-                    const menuContainer = actionTarget.closest('.module-select');
-                    menuContainer.querySelector('[data-menu-type="main-actions"]').style.display = 'block';
-                    menuContainer.querySelector('[data-menu-type="role-actions"]').style.display = 'none';
-                    break;
-                }
-                case 'change-status': {
-                    const userUuid = actionTarget.dataset.uuid;
-                    const newStatus = actionTarget.dataset.status;
-                    const menuContainer = actionTarget.closest('.module-select');
-
-                    if (menuContainer) {
-                        menuContainer.classList.add('disabled');
-                    }
-
-                    api.changeUserStatus(userUuid, newStatus).then(response => {
-                        if (response.ok) {
-                            showNotification('Estado de usuario actualizado', 'success');
-                            const adminSearch = document.querySelector('#admin-user-search');
-                            fetchAndDisplayUsers(adminSearch ? adminSearch.value.trim() : '', false, appState.paginationState.adminUsers);
+                        if (userRole === 'moderator') {
+                            if (appState.currentAppView === 'admin' && appState.currentAppSection === 'manageComments') return;
+                            navigateToUrl('admin', 'manageComments');
+                            handleStateChange('admin', 'manageComments', true, null, appState);
                         } else {
-                            showNotification('Error al cambiar el estado', 'error');
+                            if (appState.currentAppView === 'admin' && appState.currentAppSection === 'dashboard') return;
+                            navigateToUrl('admin', 'dashboard');
+                            handleStateChange('admin', 'dashboard', true, null, appState);
                         }
-                    });
-                    break;
-                }
-                case 'set-comment-status': {
-                    const commentId = actionTarget.dataset.id;
-                    const status = actionTarget.dataset.status;
-                    const response = await api.updateCommentStatus(commentId, status);
-                    if (response.ok) {
-                        showNotification(response.data.message, 'success');
+                        break;
+                    }
+                    case 'toggleSectionRegister':
+                        if (appState.currentAppView === 'auth' && appState.currentAppSection === 'register') return;
+                        navigateToUrl('auth', 'register', { step: 'user-info' });
+                        handleStateChange('auth', 'register', true, { step: 'user-info' }, appState);
+                        break;
+                    case 'toggleSectionHome':
+                    case 'toggleSectionTrends':
+                    case 'toggleSectionFavorites':
+                    case 'toggleSectionYourProfile':
+                    case 'toggleSectionAccessibility':
+                    case 'toggleSectionLoginSecurity':
+                    case 'toggleSectionHistoryPrivacy':
+                    case 'toggleSectionHistory':
+                    case 'toggleSectionPrivacyPolicy':
+                    case 'toggleSectionTermsConditions':
+                    case 'toggleSectionCookiePolicy':
+                    case 'toggleSectionSendFeedback':
+                    case 'toggleSectionLogin':
+                    case 'toggleSectionForgotPassword':
+                    case 'toggleSectionDashboard':
+                    case 'toggleSectionManageUsers':
+                    case 'toggleSectionManageContent':
+                    case 'toggleSectionManageComments':
+                    case 'toggleSectionManageFeedback':
+                    case 'toggleSectionCreateGallery':
+                    case 'toggleSectionGeneralSettings':
+                    case 'toggleSectionManageProfanity':
+                    case 'toggleSectionGalleryStats':
+                    case 'toggleSectionManageLogs':
+                    case 'toggleSectionBackup':
+                        const sectionName = action.substring("toggleSection".length);
+                        const targetSection = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
+                        const parentMenu = actionTarget.closest('[data-menu]');
+                        let targetView = parentMenu ? parentMenu.dataset.menu : appState.currentAppView;
+                        if (action === 'toggleSectionLogin' || action === 'toggleSectionForgotPassword') {
+                            targetView = 'auth';
+                        }
+                        if (action === 'toggleSectionGeneralSettings' || action === 'toggleSectionManageProfanity' || action === 'toggleSectionManageLogs' || action === 'toggleSectionBackup') {
+                            targetView = 'admin';
+                        }
+                        if (appState.currentAppView === targetView && appState.currentAppSection === targetSection) return;
+                        navigateToUrl(targetView, targetSection);
+                        handleStateChange(targetView, targetSection, true, null, appState);
+                        break;
+                    case 'load-more-users':
+                        const homeSearch = document.querySelector('.search-input-text input');
+                        fetchAndDisplayGalleries(appState.currentSortBy, homeSearch ? homeSearch.value.trim() : '', true, appState.paginationState.galleries);
+                        break;
+                    case 'load-more-photos':
+                        if (appState.currentGalleryForPhotoView && appState.currentGalleryNameForPhotoView) {
+                            fetchAndDisplayGalleryPhotos(appState.currentGalleryForPhotoView, appState.currentGalleryNameForPhotoView, true, appState.paginationState.photos);
+                        }
+                        break;
+                    case 'load-more-admin-users':
+                        const adminSearch = document.querySelector('#admin-user-search');
+                        fetchAndDisplayUsers(adminSearch ? adminSearch.value.trim() : '', true, appState.paginationState.adminUsers);
+                        break;
+                    case 'load-more-admin-galleries':
+                        const adminGallerySearch = document.querySelector('#admin-gallery-search');
+                        fetchAndDisplayGalleriesAdmin(adminGallerySearch ? adminGallerySearch.value.trim() : '', true, appState.paginationState.adminGalleries);
+                        break;
+                    case 'load-more-admin-comments':
                         const adminCommentSearch = document.querySelector('#admin-comment-search');
                         const adminCommentFilter = document.querySelector('#comments-filter-select .menu-link.active')?.dataset.value || 'all';
-                        fetchAndDisplayAdminComments(adminCommentSearch ? adminCommentSearch.value.trim() : '', adminCommentFilter, false, appState.paginationState.adminComments);
-                    } else {
-                        showNotification(response.data.message || 'Error al actualizar el estado.', 'error');
-                    }
-                    break;
-                }
-                case 'review-reports': {
-                    const commentId = actionTarget.dataset.id;
-                    const response = await api.updateReportStatus(commentId, 'reviewed');
-                    if (response.ok) {
-                        showNotification(response.data.message, 'success');
-                         const adminCommentSearch = document.querySelector('#admin-comment-search');
-                        const adminCommentFilter = document.querySelector('#comments-filter-select .menu-link.active')?.dataset.value || 'all';
-                        fetchAndDisplayAdminComments(adminCommentSearch ? adminCommentSearch.value.trim() : '', adminCommentFilter, false, appState.paginationState.adminComments);
-                    } else {
-                        showNotification(response.data.message || 'Error al actualizar los reportes.', 'error');
-                    }
-                    break;
-                }
-                case 'view-gallery-photos-admin': {
-                    const uuid = actionTarget.dataset.uuid;
-                    const name = actionTarget.dataset.name;
-                    navigateToUrl('main', 'galleryPhotos', { uuid });
-                    handleStateChange('main', 'galleryPhotos', true, { uuid, galleryName: name }, appState);
-                    break;
-                }
-                case 'edit-gallery': {
-                    const uuid = actionTarget.dataset.uuid;
-                    navigateToUrl('admin', 'editGallery', { uuid });
-                    handleStateChange('admin', 'editGallery', true, { uuid }, appState);
-                    break;
-                }
-                case 'delete-gallery-photo': {
-                    const photoItem = actionTarget.closest('.photo-item-edit');
-                    const photoId = actionTarget.dataset.photoId;
-                    const currentSection = document.querySelector('[data-section="manageGalleryPhotos"]');
-                    const isNewGalleryMode = currentSection && currentSection.dataset.mode === 'new';
+                        fetchAndDisplayAdminComments(adminCommentSearch ? adminCommentSearch.value.trim() : '', adminCommentFilter, true, appState.paginationState.adminComments);
+                        break;
+                    case 'load-more-admin-feedback':
+                        const adminFeedbackSearch = document.querySelector('#admin-feedback-search');
+                        fetchAndDisplayFeedback(adminFeedbackSearch ? adminFeedbackSearch.value.trim() : '', true, appState.paginationState.adminFeedback);
+                        break;
+                    case 'load-more-history-profiles':
+                        appState.paginationState.historyProfiles.shown += appState.HISTORY_PROFILES_BATCH;
+                        displayHistory(appState.paginationState.historyProfiles.shown, appState.paginationState.historyPhotos.shown, appState.paginationState.historySearches.shown);
+                        break;
+                    case 'load-more-history-photos':
+                        appState.paginationState.historyPhotos.shown += appState.HISTORY_PHOTOS_BATCH;
+                        displayHistory(appState.paginationState.historyProfiles.shown, appState.paginationState.historyPhotos.shown, appState.paginationState.historySearches.shown);
+                        break;
+                    case 'load-more-history-searches':
+                        appState.paginationState.historySearches.shown += appState.HISTORY_SEARCHES_BATCH;
+                        displayHistory(appState.paginationState.historyProfiles.shown, appState.paginationState.historyPhotos.shown, appState.paginationState.historySearches.shown);
+                        break;
+                    case 'returnToPreviousView':
+                        if (appState.lastVisitedView && appState.lastVisitedSection) {
+                            navigateToUrl(appState.lastVisitedView, appState.lastVisitedSection, appState.lastVisitedData);
+                            handleStateChange(appState.lastVisitedView, appState.lastVisitedSection, true, appState.lastVisitedData, appState);
+                        } else {
+                            // Fallback por si no hay historial
+                            navigateToUrl('main', 'home');
+                            handleStateChange('main', 'home', true, null, appState);
+                        }
+                        break;
+                    case 'returnToHome':
+                        navigateToUrl('main', 'home');
+                        handleStateChange('main', 'home', true, null, appState);
+                        break;
+                    case 'returnToFavorites':
+                        navigateToUrl('main', 'favorites');
+                        handleStateChange('main', 'favorites', true, null, appState);
+                        break;
+                    case 'toggle-favorite':
+                        if (appState.currentPhotoData) toggleFavorite(appState.currentPhotoData);
+                        break;
+                    case 'toggle-photo-comments':
+                        if (appState.currentPhotoData) {
+                            const { gallery_uuid, id } = appState.currentPhotoData;
+                            navigateToUrl('main', 'photoComments', { uuid: gallery_uuid, photoId: id });
+                            handleStateChange('main', 'photoComments', true, { uuid: gallery_uuid, photoId: id }, appState);
+                        }
+                        break;
+                    case 'toggle-favorite-card':
+                        const photoIdFav = actionTarget.dataset.photoId;
+                        const allPhotos = [...appState.currentFavoritesList, ...appState.paginationState.photos.photoList, ...appState.currentTrendingPhotosList, ...appState.currentHistoryPhotosList];
+                        const photoDataFav = allPhotos.find(p => p.id == photoIdFav);
 
-                    if (isNewGalleryMode) {
-                        const fileName = photoItem.dataset.fileName;
-                        appState.newGalleryState.pendingPhotos = appState.newGalleryState.pendingPhotos.filter(
-                            file => file.name !== fileName
-                        );
-                        photoItem.remove();
-                        showNotification('Foto pendiente eliminada.', 'success');
-                        updatePhotoGridVisibility();
-                    } else {
-                        api.deleteGalleryPhoto(photoId).then(response => {
-                            if (response.ok) {
-                                showNotification(response.data.message, 'success');
-                                photoItem.remove();
-                                updatePhotoGridVisibility();
-                            } else {
-                                showNotification(response.data.message || 'Error al eliminar la foto', 'error');
+                        if (photoDataFav) {
+                            const fullPhotoData = {
+                                id: photoDataFav.id,
+                                gallery_uuid: photoDataFav.gallery_uuid || appState.currentGalleryForPhotoView,
+                                photo_url: photoDataFav.photo_url,
+                                gallery_name: photoDataFav.gallery_name || appState.currentGalleryNameForPhotoView,
+                                profile_picture_url: photoDataFav.profile_picture_url
+                            };
+                            await toggleFavorite(fullPhotoData);
+                            const activeSection = document.querySelector('.general-content-scrolleable > div')?.dataset.section;
+
+                            if (activeSection === 'userSpecificFavorites') {
+                                handleStateChange('main', 'userSpecificFavorites', true, { uuid: document.querySelector('[data-section="userSpecificFavorites"]').dataset.uuid }, appState);
+                            } else if (activeSection === 'favorites') {
+                                const session = await api.checkSession();
+                                if (session.ok && session.data.loggedin) {
+                                    await fetchUserFavorites();
+
+                                    const searchInput = document.getElementById('favorites-search-input');
+                                    let searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+                                    let favoritesToDisplay = appState.currentFavoritesList;
+
+                                    if (searchTerm) {
+                                        favoritesToDisplay = favoritesToDisplay.filter(photo =>
+                                            photo.gallery_name.toLowerCase().includes(searchTerm)
+                                        );
+                                    }
+                                    displayFavoritePhotos(favoritesToDisplay, appState.currentFavoritesSortBy, true);
+                                }
+                            }
+                        }
+                        break;
+                    case 'toggle-comment-length':
+                        const commentTextElement = actionTarget.previousElementSibling;
+                        const isExpanded = commentTextElement.classList.toggle('expanded');
+
+                        if (isExpanded) {
+                            commentTextElement.textContent = commentTextElement.dataset.fullText;
+                            actionTarget.textContent = window.getTranslation('photoView.comments.showLess');
+                        } else {
+                            commentTextElement.textContent = commentTextElement.dataset.fullText.substring(0, 250) + '...';
+                            actionTarget.textContent = window.getTranslation('photoView.comments.showMore');
+                        }
+                        break;
+                    case 'previous-photo':
+                    case 'next-photo':
+                        if (!actionTarget.classList.contains('disabled-nav')) {
+                            const listToUse = appState.currentPhotoViewList;
+                            const currentId = appState.currentPhotoData ? appState.currentPhotoData.id : null;
+                            if (!currentId || listToUse.length === 0) return;
+
+                            const currentIndex = listToUse.findIndex(p => p.id == currentId);
+                            if (currentIndex !== -1) {
+                                let nextIndex = (action === 'next-photo') ? currentIndex + 1 : currentIndex - 1;
+                                if (nextIndex >= 0 && nextIndex < listToUse.length) {
+                                    const nextPhoto = listToUse[nextIndex];
+
+                                    const showAdFlag = await shouldShowAd();
+                                    const adSetting = appState.serverSettings.ad_probability;
+                                    const usesCooldown = adSetting.includes('_cooldown');
+
+                                    if (showAdFlag) {
+                                        appState.adContext = 'navigation';
+                                        appState.photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id } };
+                                        handleStateChange('main', 'adView', true, null, appState);
+                                        if (usesCooldown) {
+                                            appState.adCooldownActive = true;
+                                        }
+                                    } else {
+                                        appState.adCooldownActive = false;
+
+                                        const url = generateUrl('main', 'photoView', { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id });
+                                        history.pushState({ view: 'main', section: 'photoView', data: { uuid: nextPhoto.gallery_uuid, photoId: nextPhoto.id } }, document.title, url);
+
+                                        appState.currentPhotoData = await renderPhotoView(nextPhoto.gallery_uuid, nextPhoto.id, listToUse);
+                                        if (appState.currentPhotoData) {
+                                            window.addToHistory('photo', appState.currentPhotoData);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    case 'toggle-photo-menu':
+                        const currentContainer = actionTarget.closest('.card-actions-container');
+                        const currentMenu = currentContainer.querySelector('.photo-context-menu');
+                        const isOpening = currentMenu.classList.contains('disabled');
+
+                        document.querySelectorAll('.photo-context-menu.active').forEach(menu => {
+                            if (menu !== currentMenu) {
+                                menu.classList.remove('active');
+                                menu.classList.add('disabled');
+                                menu.closest('.card-actions-container').classList.remove('force-visible');
                             }
                         });
-                    }
-                    break;
-                }
-                case 'save-username': {
-                    const button = actionTarget.closest('button');
-                    const input = document.getElementById('username-edit-input');
-                    const newUsername = input.value.trim();
 
-                    button.classList.add('loading');
-                    const formData = new FormData();
-                    formData.append('action_type', 'update_username');
-                    formData.append('username', newUsername);
-                    const tokenResponse = await api.getCsrfToken();
-                    if (tokenResponse.ok) {
-                        formData.append('csrf_token', tokenResponse.data.csrf_token);
-                    }
-
-                    const response = await api.updateUsername(formData);
-                    button.classList.remove('loading');
-
-                    if (response.ok) {
-                        if (!response.data.no_change) {
-                            showNotification(window.getTranslation('notifications.usernameUpdated'), 'success');
-                        }
-                        document.getElementById('username-display').textContent = newUsername;
-                        document.getElementById('username-edit-mode').style.display = 'none';
-                        document.getElementById('username-view-mode').style.display = 'flex';
-                        await window.auth.checkSessionStatus();
-                    } else {
-                        let message = response.data.message;
-                        if (message === 'username_taken') {
-                            message = window.getTranslation('notifications.usernameTaken');
-                        }
-                        document.getElementById('username-error-list').innerHTML = `<li>${message}</li>`;
-                        document.getElementById('username-error-container').style.display = 'block';
-                    }
-                    break;
-                }
-                case 'save-email': {
-                    const button = actionTarget.closest('button');
-                    const input = document.getElementById('email-edit-input');
-                    const newEmail = input.value.trim();
-
-                    button.classList.add('loading');
-                    const formData = new FormData();
-                    formData.append('action_type', 'update_email');
-                    formData.append('email', newEmail);
-                    const tokenResponse = await api.getCsrfToken();
-                    if (tokenResponse.ok) {
-                        formData.append('csrf_token', tokenResponse.data.csrf_token);
-                    }
-
-                    const response = await api.updateEmail(formData);
-                    button.classList.remove('loading');
-
-                    if (response.ok) {
-                        if (!response.data.no_change) {
-                            showNotification(window.getTranslation('notifications.emailUpdated'), 'success');
-                        }
-                        document.getElementById('email-display').textContent = newEmail;
-                        document.getElementById('email-edit-mode').style.display = 'none';
-                        document.getElementById('email-view-mode').style.display = 'flex';
-                        await window.auth.checkSessionStatus();
-                    } else {
-                        let message = response.data.message;
-                        if (message === 'email_taken') {
-                            message = window.getTranslation('notifications.emailTaken');
-                        }
-                        document.getElementById('email-error-list').innerHTML = `<li>${message}</li>`;
-                        document.getElementById('email-error-container').style.display = 'block';
-                    }
-                    break;
-                }
-                
-                case 'manage-gallery-photos': {
-                    const uuid = actionTarget.dataset.uuid;
-                    if (uuid) {
-                        navigateToUrl('admin', 'manageGalleryPhotos', { uuid });
-                        handleStateChange('admin', 'manageGalleryPhotos', true, { uuid }, appState);
-                    }
-                    break;
-                }
-                case 'manage-new-gallery-photos': {
-                    const nameInput = document.getElementById('gallery-name-create');
-                    if (nameInput) appState.newGalleryState.name = nameInput.value;
-                    const privacyToggle = document.getElementById('gallery-privacy-create');
-                    if (privacyToggle) appState.newGalleryState.privacy = privacyToggle.classList.contains('active');
-                    
-                    navigateToUrl('admin', 'manageGalleryPhotos', { mode: 'new' });
-                    handleStateChange('admin', 'manageGalleryPhotos', true, { mode: 'new' }, appState);
-                    break;
-                }
-                case 'return-to-create-gallery': {
-                    navigateToUrl('admin', 'createGallery');
-                    handleStateChange('admin', 'createGallery', true, null, appState);
-                    break;
-                }
-                case 'save-pending-photos': {
-                    navigateToUrl('admin', 'createGallery');
-                    handleStateChange('admin', 'createGallery', true, null, appState);
-                    break;
-                }
-                case 'create-gallery-submit': {
-                    const button = actionTarget;
-                    const name = appState.newGalleryState.name;
-                    
-                    if (!name) {
-                        showNotification('El nombre de la galería es obligatorio.', 'error');
-                        return;
-                    }
-                    
-                    button.classList.add('loading');
-                    
-                    const formData = new FormData();
-                    formData.append('action_type', 'create_gallery');
-                    formData.append('name', name);
-                    
-                    const privacyToggle = document.getElementById('gallery-privacy-create');
-                    appState.newGalleryState.privacy = privacyToggle ? privacyToggle.classList.contains('active') : false;
-                    formData.append('privacy', appState.newGalleryState.privacy ? '1' : '0');
-
-                    const visibilityToggle = document.getElementById('gallery-visibility-create');
-                    appState.newGalleryState.visibility = visibilityToggle ? visibilityToggle.classList.contains('active') : true;
-                    formData.append('visibility', appState.newGalleryState.visibility ? 'visible' : 'hidden');
-
-                    const socialInputs = document.querySelectorAll('#social-links-container-create .social-link-input');
-                    const socials = Array.from(socialInputs).map(input => {
-                        const platform = input.dataset.platform || input.previousElementSibling.value.trim().toLowerCase();
-                        return {
-                            platform: platform,
-                            url: input.value.trim()
-                        }
-                    }).filter(s => s.url && s.platform);
-                    formData.append('socials', JSON.stringify(socials));
-
-                    if (appState.newGalleryState.profilePictureFile) {
-                        formData.append('profile_picture', appState.newGalleryState.profilePictureFile);
-                    }
-
-                    if (appState.newGalleryState.pendingPhotos.length > 0) {
-                        appState.newGalleryState.pendingPhotos.forEach(file => {
-                            formData.append('photos[]', file, file.name);
+                        currentMenu.classList.toggle('disabled', !isOpening);
+                        currentMenu.classList.toggle('active', isOpening);
+                        currentContainer.classList.toggle('force-visible', isOpening);
+                        break;
+                    case 'copy-link':
+                        const cardForCopy = actionTarget.closest('.card');
+                        const urlToCopy = `${window.location.origin}${window.BASE_PATH}/gallery/${cardForCopy.dataset.galleryUuid}/photo/${cardForCopy.dataset.photoId}`;
+                        copyTextToClipboard(urlToCopy).then(() => {
+                            showNotification(window.getTranslation('notifications.linkCopied'));
+                            actionTarget.closest('.photo-context-menu').classList.add('disabled');
+                            actionTarget.closest('.card-actions-container').classList.remove('force-visible');
+                        }).catch(err => {
+                            showNotification(window.getTranslation('notifications.errorCopyingLink'), 'error');
+                            console.error('Failed to copy: ', err);
                         });
-                        const photoOrder = appState.newGalleryState.pendingPhotos.map(file => file.name);
-                        photoOrder.forEach(name => {
-                            formData.append('photo_order[]', name);
+                        break;
+                    case 'download-photo':
+                        const cardForDownload = actionTarget.closest('.card.photo-card');
+                        if (cardForDownload && cardForDownload.dataset.photoUrl) {
+                            downloadPhoto(cardForDownload.dataset.photoUrl);
+                        }
+                        break;
+                    case 'watch-ad-to-unlock':
+                        handleStateChange('main', 'adView', true, null, appState);
+                        break;
+                    case 'delete-search-item':
+                        const timestamp = actionTarget.dataset.timestamp;
+                        if (timestamp) {
+                            removeSearchFromHistory(timestamp);
+                        }
+                        break;
+                    case 'toggle-photo-options-menu':
+                        const menu = document.querySelector('.photo-options-menu');
+                        if (menu) {
+                            menu.classList.toggle('disabled');
+                        }
+                        break;
+                    case 'rotate-photo-left':
+                        rotatePhoto('left');
+                        break;
+                    case 'rotate-photo-right':
+                        rotatePhoto('right');
+                        break;
+                    case 'download-photo-view':
+                        if (appState.currentPhotoData && appState.currentPhotoData.photo_url) {
+                            downloadPhoto(appState.currentPhotoData.photo_url);
+                        }
+                        break;
+                    case 'toggle-password-visibility':
+                        const wrapper = actionTarget.closest('.password-wrapper');
+                        const input = wrapper.querySelector('.auth-input');
+                        const icon = actionTarget.querySelector('.material-symbols-rounded');
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            icon.textContent = 'visibility_off';
+                        } else {
+                            input.type = 'password';
+                            icon.textContent = 'visibility';
+                        }
+                        break;
+                    case 'toggle-user-actions': {
+                        const row = actionTarget.closest('tr');
+                        const menu = row.querySelector('.module-select');
+                        menu.classList.toggle('disabled');
+                        break;
+                    }
+                    case 'toggle-comment-actions': {
+                        const row = actionTarget.closest('tr');
+                        const menu = row.querySelector('.module-select');
+                        menu.classList.toggle('disabled');
+                        break;
+                    }
+                    case 'show-role-menu': {
+                        const menuContainer = actionTarget.closest('.module-select');
+                        menuContainer.querySelector('[data-menu-type="main-actions"]').style.display = 'none';
+                        menuContainer.querySelector('[data-menu-type="role-actions"]').style.display = 'block';
+                        break;
+                    }
+                    case 'hide-role-menu': {
+                        const menuContainer = actionTarget.closest('.module-select');
+                        menuContainer.querySelector('[data-menu-type="main-actions"]').style.display = 'block';
+                        menuContainer.querySelector('[data-menu-type="role-actions"]').style.display = 'none';
+                        break;
+                    }
+                    case 'show-status-menu': {
+                        const menuContainer = actionTarget.closest('.module-select');
+                        menuContainer.querySelector('[data-menu-type="main-actions"]').style.display = 'none';
+                        menuContainer.querySelector('[data-menu-type="status-actions"]').style.display = 'block';
+                        break;
+                    }
+                    case 'hide-status-menu': {
+                        const menuContainer = actionTarget.closest('.module-select');
+                        menuContainer.querySelector('[data-menu-type="main-actions"]').style.display = 'block';
+                        menuContainer.querySelector('[data-menu-type="role-actions"]').style.display = 'none';
+                        break;
+                    }
+                    case 'change-status': {
+                        const userUuid = actionTarget.dataset.uuid;
+                        const newStatus = actionTarget.dataset.status;
+                        const menuContainer = actionTarget.closest('.module-select');
+
+                        if (menuContainer) {
+                            menuContainer.classList.add('disabled');
+                        }
+
+                        api.changeUserStatus(userUuid, newStatus).then(response => {
+                            if (response.ok) {
+                                showNotification('Estado de usuario actualizado', 'success');
+                                const adminSearch = document.querySelector('#admin-user-search');
+                                fetchAndDisplayUsers(adminSearch ? adminSearch.value.trim() : '', false, appState.paginationState.adminUsers);
+                            } else {
+                                showNotification('Error al cambiar el estado', 'error');
+                            }
                         });
+                        break;
                     }
+                    case 'set-comment-status': {
+                        const commentId = actionTarget.dataset.id;
+                        const status = actionTarget.dataset.status;
+                        const response = await api.updateCommentStatus(commentId, status);
+                        if (response.ok) {
+                            showNotification(response.data.message, 'success');
+                            const adminCommentSearch = document.querySelector('#admin-comment-search');
+                            const adminCommentFilter = document.querySelector('#comments-filter-select .menu-link.active')?.dataset.value || 'all';
+                            fetchAndDisplayAdminComments(adminCommentSearch ? adminCommentSearch.value.trim() : '', adminCommentFilter, false, appState.paginationState.adminComments);
+                        } else {
+                            showNotification(response.data.message || 'Error al actualizar el estado.', 'error');
+                        }
+                        break;
+                    }
+                    case 'review-reports': {
+                        const commentId = actionTarget.dataset.id;
+                        const response = await api.updateReportStatus(commentId, 'reviewed');
+                        if (response.ok) {
+                            showNotification(response.data.message, 'success');
+                            const adminCommentSearch = document.querySelector('#admin-comment-search');
+                            const adminCommentFilter = document.querySelector('#comments-filter-select .menu-link.active')?.dataset.value || 'all';
+                            fetchAndDisplayAdminComments(adminCommentSearch ? adminCommentSearch.value.trim() : '', adminCommentFilter, false, appState.paginationState.adminComments);
+                        } else {
+                            showNotification(response.data.message || 'Error al actualizar los reportes.', 'error');
+                        }
+                        break;
+                    }
+                    case 'view-gallery-photos-admin': {
+                        const uuid = actionTarget.dataset.uuid;
+                        const name = actionTarget.dataset.name;
+                        navigateToUrl('main', 'galleryPhotos', { uuid });
+                        handleStateChange('main', 'galleryPhotos', true, { uuid, galleryName: name }, appState);
+                        break;
+                    }
+                    case 'edit-gallery': {
+                        const uuid = actionTarget.dataset.uuid;
+                        navigateToUrl('admin', 'editGallery', { uuid });
+                        handleStateChange('admin', 'editGallery', true, { uuid }, appState);
+                        break;
+                    }
+                    case 'delete-gallery-photo': {
+                        const photoItem = actionTarget.closest('.photo-item-edit');
+                        const photoId = actionTarget.dataset.photoId;
+                        const currentSection = document.querySelector('[data-section="manageGalleryPhotos"]');
+                        const isNewGalleryMode = currentSection && currentSection.dataset.mode === 'new';
 
-                    const response = await api.createGallery(formData);
-                    button.classList.remove('loading');
+                        if (isNewGalleryMode) {
+                            const fileName = photoItem.dataset.fileName;
+                            appState.newGalleryState.pendingPhotos = appState.newGalleryState.pendingPhotos.filter(
+                                file => file.name !== fileName
+                            );
+                            photoItem.remove();
+                            showNotification('Foto pendiente eliminada.', 'success');
+                            updatePhotoGridVisibility();
+                        } else {
+                            api.deleteGalleryPhoto(photoId).then(response => {
+                                if (response.ok) {
+                                    showNotification(response.data.message, 'success');
+                                    photoItem.remove();
+                                    updatePhotoGridVisibility();
+                                } else {
+                                    showNotification(response.data.message || 'Error al eliminar la foto', 'error');
+                                }
+                            });
+                        }
+                        break;
+                    }
+                    case 'save-username': {
+                        const button = actionTarget.closest('button');
+                        const input = document.getElementById('username-edit-input');
+                        const newUsername = input.value.trim();
 
-                    if (response.ok) {
-                        showNotification(response.data.message, 'success');
-                        appState.newGalleryState = { name: '', privacy: false, visibility: true, profilePictureFile: null, pendingPhotos: [] };
-                        navigateToUrl('admin', 'manageContent');
-                        handleStateChange('admin', 'manageContent', true, null, appState);
-                    } else {
-                        showNotification(response.data.message || 'Error al crear la galería.', 'error');
-                    }
-                    break;
-                }
-                case 'add-gallery-photos': {
-                    const addPhotosInput = document.getElementById('add-photos-input');
-                    if (addPhotosInput) {
-                        addPhotosInput.click();
-                    }
-                    break;
-                }
-                case 'save-gallery-photo-changes': {
-                    const button = actionTarget;
-                    button.classList.add('loading');
-                
-                    const photosGridEl = document.getElementById('manage-photos-grid');
-                    const videosGridEl = document.getElementById('manage-videos-grid');
-                    const currentSection = document.querySelector('[data-section="manageGalleryPhotos"]');
-                    const galleryUuid = currentSection ? currentSection.dataset.uuid : null;
-                
-                    if (!galleryUuid) {
-                        showNotification('Error: No se pudo identificar la galería.', 'error');
+                        button.classList.add('loading');
+                        const formData = new FormData();
+                        formData.append('action_type', 'update_username');
+                        formData.append('username', newUsername);
+                        const tokenResponse = await api.getCsrfToken();
+                        if (tokenResponse.ok) {
+                            formData.append('csrf_token', tokenResponse.data.csrf_token);
+                        }
+
+                        const response = await api.updateUsername(formData);
                         button.classList.remove('loading');
-                        return;
+
+                        if (response.ok) {
+                            if (!response.data.no_change) {
+                                showNotification(window.getTranslation('notifications.usernameUpdated'), 'success');
+                            }
+                            document.getElementById('username-display').textContent = newUsername;
+                            document.getElementById('username-edit-mode').style.display = 'none';
+                            document.getElementById('username-view-mode').style.display = 'flex';
+                            await window.auth.checkSessionStatus();
+                        } else {
+                            let message = response.data.message;
+                            if (message === 'username_taken') {
+                                message = window.getTranslation('notifications.usernameTaken');
+                            }
+                            document.getElementById('username-error-list').innerHTML = `<li>${message}</li>`;
+                            document.getElementById('username-error-container').style.display = 'block';
+                        }
+                        break;
                     }
-                
-                    if (window.pendingGalleryFiles && window.pendingGalleryFiles.length > 0) {
-                        const uploadFormData = new FormData();
-                        uploadFormData.append('action_type', 'upload_gallery_photos');
-                        uploadFormData.append('uuid', galleryUuid);
-                        window.pendingGalleryFiles.forEach(file => {
-                            uploadFormData.append('photos[]', file);
-                        });
-                
-                        const uploadResponse = await api.uploadGalleryPhotos(uploadFormData);
-                
-                        if (!uploadResponse.ok) {
-                            showNotification(uploadResponse.data.message || 'Error al subir los nuevos archivos.', 'error');
+                    case 'save-email': {
+                        const button = actionTarget.closest('button');
+                        const input = document.getElementById('email-edit-input');
+                        const newEmail = input.value.trim();
+
+                        button.classList.add('loading');
+                        const formData = new FormData();
+                        formData.append('action_type', 'update_email');
+                        formData.append('email', newEmail);
+                        const tokenResponse = await api.getCsrfToken();
+                        if (tokenResponse.ok) {
+                            formData.append('csrf_token', tokenResponse.data.csrf_token);
+                        }
+
+                        const response = await api.updateEmail(formData);
+                        button.classList.remove('loading');
+
+                        if (response.ok) {
+                            if (!response.data.no_change) {
+                                showNotification(window.getTranslation('notifications.emailUpdated'), 'success');
+                            }
+                            document.getElementById('email-display').textContent = newEmail;
+                            document.getElementById('email-edit-mode').style.display = 'none';
+                            document.getElementById('email-view-mode').style.display = 'flex';
+                            await window.auth.checkSessionStatus();
+                        } else {
+                            let message = response.data.message;
+                            if (message === 'email_taken') {
+                                message = window.getTranslation('notifications.emailTaken');
+                            }
+                            document.getElementById('email-error-list').innerHTML = `<li>${message}</li>`;
+                            document.getElementById('email-error-container').style.display = 'block';
+                        }
+                        break;
+                    }
+
+                    case 'manage-gallery-photos': {
+                        const uuid = actionTarget.dataset.uuid;
+                        if (uuid) {
+                            navigateToUrl('admin', 'manageGalleryPhotos', { uuid });
+                            handleStateChange('admin', 'manageGalleryPhotos', true, { uuid }, appState);
+                        }
+                        break;
+                    }
+                    case 'manage-new-gallery-photos': {
+                        const nameInput = document.getElementById('gallery-name-create');
+                        if (nameInput) appState.newGalleryState.name = nameInput.value;
+                        const privacyToggle = document.getElementById('gallery-privacy-create');
+                        if (privacyToggle) appState.newGalleryState.privacy = privacyToggle.classList.contains('active');
+
+                        navigateToUrl('admin', 'manageGalleryPhotos', { mode: 'new' });
+                        handleStateChange('admin', 'manageGalleryPhotos', true, { mode: 'new' }, appState);
+                        break;
+                    }
+                    case 'return-to-create-gallery': {
+                        navigateToUrl('admin', 'createGallery');
+                        handleStateChange('admin', 'createGallery', true, null, appState);
+                        break;
+                    }
+                    case 'save-pending-photos': {
+                        navigateToUrl('admin', 'createGallery');
+                        handleStateChange('admin', 'createGallery', true, null, appState);
+                        break;
+                    }
+                    case 'create-gallery-submit': {
+                        const button = actionTarget;
+                        const name = appState.newGalleryState.name;
+
+                        if (!name) {
+                            showNotification('El nombre de la galería es obligatorio.', 'error');
+                            return;
+                        }
+
+                        button.classList.add('loading');
+
+                        const formData = new FormData();
+                        formData.append('action_type', 'create_gallery');
+                        formData.append('name', name);
+
+                        const privacyToggle = document.getElementById('gallery-privacy-create');
+                        appState.newGalleryState.privacy = privacyToggle ? privacyToggle.classList.contains('active') : false;
+                        formData.append('privacy', appState.newGalleryState.privacy ? '1' : '0');
+
+                        const visibilityToggle = document.getElementById('gallery-visibility-create');
+                        appState.newGalleryState.visibility = visibilityToggle ? visibilityToggle.classList.contains('active') : true;
+                        formData.append('visibility', appState.newGalleryState.visibility ? 'visible' : 'hidden');
+
+                        const socialInputs = document.querySelectorAll('#social-links-container-create .social-link-input');
+                        const socials = Array.from(socialInputs).map(input => {
+                            const platform = input.dataset.platform || input.previousElementSibling.value.trim().toLowerCase();
+                            return {
+                                platform: platform,
+                                url: input.value.trim()
+                            }
+                        }).filter(s => s.url && s.platform);
+                        formData.append('socials', JSON.stringify(socials));
+
+                        if (appState.newGalleryState.profilePictureFile) {
+                            formData.append('profile_picture', appState.newGalleryState.profilePictureFile);
+                        }
+
+                        if (appState.newGalleryState.pendingPhotos.length > 0) {
+                            appState.newGalleryState.pendingPhotos.forEach(file => {
+                                formData.append('photos[]', file, file.name);
+                            });
+                            const photoOrder = appState.newGalleryState.pendingPhotos.map(file => file.name);
+                            photoOrder.forEach(name => {
+                                formData.append('photo_order[]', name);
+                            });
+                        }
+
+                        const response = await api.createGallery(formData);
+                        button.classList.remove('loading');
+
+                        if (response.ok) {
+                            showNotification(response.data.message, 'success');
+                            appState.newGalleryState = { name: '', privacy: false, visibility: true, profilePictureFile: null, pendingPhotos: [] };
+                            navigateToUrl('admin', 'manageContent');
+                            handleStateChange('admin', 'manageContent', true, null, appState);
+                        } else {
+                            showNotification(response.data.message || 'Error al crear la galería.', 'error');
+                        }
+                        break;
+                    }
+                    case 'add-gallery-photos': {
+                        const addPhotosInput = document.getElementById('add-photos-input');
+                        if (addPhotosInput) {
+                            addPhotosInput.click();
+                        }
+                        break;
+                    }
+                    case 'save-gallery-photo-changes': {
+                        const button = actionTarget;
+                        button.classList.add('loading');
+
+                        const photosGridEl = document.getElementById('manage-photos-grid');
+                        const videosGridEl = document.getElementById('manage-videos-grid');
+                        const currentSection = document.querySelector('[data-section="manageGalleryPhotos"]');
+                        const galleryUuid = currentSection ? currentSection.dataset.uuid : null;
+
+                        if (!galleryUuid) {
+                            showNotification('Error: No se pudo identificar la galería.', 'error');
                             button.classList.remove('loading');
                             return;
                         }
-                        
-                        window.pendingGalleryFiles = [];
-                        showNotification(uploadResponse.data.message, 'success');
-                        await handleStateChange('admin', 'manageGalleryPhotos', false, { uuid: galleryUuid }, appState);
+
+                        if (window.pendingGalleryFiles && window.pendingGalleryFiles.length > 0) {
+                            const uploadFormData = new FormData();
+                            uploadFormData.append('action_type', 'upload_gallery_photos');
+                            uploadFormData.append('uuid', galleryUuid);
+                            window.pendingGalleryFiles.forEach(file => {
+                                uploadFormData.append('photos[]', file);
+                            });
+
+                            const uploadResponse = await api.uploadGalleryPhotos(uploadFormData);
+
+                            if (!uploadResponse.ok) {
+                                showNotification(uploadResponse.data.message || 'Error al subir los nuevos archivos.', 'error');
+                                button.classList.remove('loading');
+                                return;
+                            }
+
+                            window.pendingGalleryFiles = [];
+                            showNotification(uploadResponse.data.message, 'success');
+                            await handleStateChange('admin', 'manageGalleryPhotos', false, { uuid: galleryUuid }, appState);
+                            button.classList.remove('loading');
+                            return;
+                        }
+
+                        const photoOrder = Array.from(photosGridEl.children).map(item => item.dataset.id).filter(id => id);
+                        const videoOrder = Array.from(videosGridEl.children).map(item => item.dataset.id).filter(id => id);
+
+                        const orderFormData = new FormData();
+                        orderFormData.append('action_type', 'update_photo_order');
+                        orderFormData.append('photo_order', JSON.stringify(photoOrder));
+                        orderFormData.append('video_order', JSON.stringify(videoOrder));
+
+                        const orderResponse = await api.postDataWithCsrf(orderFormData);
+
+                        if (orderResponse.ok) {
+                            showNotification(orderResponse.data.message, 'success');
+                        } else {
+                            showNotification(orderResponse.data.message || 'Error al guardar el orden del contenido.', 'error');
+                        }
+
                         button.classList.remove('loading');
-                        return;
+                        break;
                     }
-                
-                    const photoOrder = Array.from(photosGridEl.children).map(item => item.dataset.id).filter(id => id);
-                    const videoOrder = Array.from(videosGridEl.children).map(item => item.dataset.id).filter(id => id);
-                
-                    const orderFormData = new FormData();
-                    orderFormData.append('action_type', 'update_photo_order');
-                    orderFormData.append('photo_order', JSON.stringify(photoOrder));
-                    orderFormData.append('video_order', JSON.stringify(videoOrder));
-                
-                    const orderResponse = await api.postDataWithCsrf(orderFormData);
-                    
-                    if (orderResponse.ok) {
-                        showNotification(orderResponse.data.message, 'success');
-                    } else {
-                        showNotification(orderResponse.data.message || 'Error al guardar el orden del contenido.', 'error');
-                    }
-                
-                    button.classList.remove('loading');
-                    break;
-                }
-                case 'delete-gallery':
-                    {
-                        const pathParts = window.location.pathname.split('/');
-                        const uuid = pathParts[pathParts.length - 1];
-                        const galleryName = document.getElementById('gallery-name-display').textContent;
-                        showDeleteGalleryDialog(uuid, galleryName);
-                    }
-                    break;
-            }
-        }
-
-        if (selectTrigger) {
-            const targetId = selectTrigger.dataset.target;
-            const targetSelect = document.getElementById(targetId);
-            const wasActive = selectTrigger.classList.contains('active-trigger');
-
-            document.querySelectorAll('.active-trigger').forEach(t => {
-                if (t !== selectTrigger) t.classList.remove('active-trigger');
-            });
-            document.querySelectorAll('.module-select').forEach(s => {
-                if (s.id !== targetId) {
-                    s.classList.add('disabled');
-                    s.classList.remove('active');
-                }
-            });
-
-            selectTrigger.classList.toggle('active-trigger');
-            if (targetSelect) {
-                targetSelect.classList.toggle('disabled');
-                targetSelect.classList.toggle('active');
-            }
-        }
-
-        const selectedOption = event.target.closest('.module-select .menu-link');
-        if (selectedOption) {
-            const value = selectedOption.dataset.value;
-            if (value === undefined || value === null) return;
-
-            const selectContainer = selectedOption.closest('.module-select');
-            const selectId = selectContainer.id;
-
-            if (selectId.includes('relevance-select')) {
-                if (value !== appState.currentSortBy) {
-                    appState.currentSortBy = value;
-                    const homeSearch = document.querySelector('.search-input-text input');
-                    fetchAndDisplayGalleries(appState.currentSortBy, homeSearch ? homeSearch.value.trim() : '', false, appState.paginationState.galleries);
-                    updateSelectActiveState('relevance-select', appState.currentSortBy);
+                    case 'delete-gallery':
+                        {
+                            const pathParts = window.location.pathname.split('/');
+                            const uuid = pathParts[pathParts.length - 1];
+                            const galleryName = document.getElementById('gallery-name-display').textContent;
+                            showDeleteGalleryDialog(uuid, galleryName);
+                        }
+                        break;
                 }
             }
-            else if (selectId.includes('favorites-sort-select')) {
-                if (value !== appState.currentFavoritesSortBy) {
-                    appState.currentFavoritesSortBy = value;
-                    let favorites = appState.currentFavoritesList;
-                    const searchInput = document.getElementById('favorites-search-input');
-                    const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
-                    if (searchTerm) {
-                        favorites = favorites.filter(photo =>
-                            photo.gallery_name.toLowerCase().includes(searchTerm)
-                        );
-                    }
+            if (selectTrigger) {
+                const targetId = selectTrigger.dataset.target;
+                const targetSelect = document.getElementById(targetId);
+                const wasActive = selectTrigger.classList.contains('active-trigger');
 
-                    if (value === 'newest') {
-                        favorites.sort((a, b) => new Date(b.added_at) - new Date(a.added_at));
-                    } else if (value === 'oldest') {
-                        favorites.sort((a, b) => new Date(a.added_at) - new Date(b.added_at));
-                    }
-
-                    displayFavoritePhotos(favorites, appState.currentFavoritesSortBy, true);
-                    updateSelectActiveState('favorites-sort-select', appState.currentFavoritesSortBy);
-                }
-            }
-            else if (selectId.includes('comments-filter-select')) {
-                const adminCommentSearch = document.querySelector('#admin-comment-search');
-                fetchAndDisplayAdminComments(adminCommentSearch ? adminCommentSearch.value.trim() : '', value, false, appState.paginationState.adminComments);
-                updateSelectActiveState('comments-filter-select', value);
-            }
-            else if (selectId === 'theme-select') {
-                setTheme(value);
-            }
-            else if (selectId === 'language-select') {
-                setLanguage(value);
-            } else if (selectId.includes('history-select')) {
-                appState.paginationState.historyProfiles.shown = appState.HISTORY_PROFILES_BATCH;
-                appState.paginationState.historyPhotos.shown = appState.HISTORY_PHOTOS_BATCH;
-                appState.paginationState.historySearches.shown = appState.HISTORY_SEARCHES_BATCH;
-                document.querySelectorAll('[data-history-view]').forEach(view => {
-                    view.style.display = view.dataset.historyView === value ? '' : 'none';
+                document.querySelectorAll('.active-trigger').forEach(t => {
+                    if (t !== selectTrigger) t.classList.remove('active-trigger');
                 });
-                updateSelectActiveState('history-select', value);
-                displayHistory(appState.paginationState.historyProfiles.shown, appState.paginationState.historyPhotos.shown, appState.paginationState.historySearches.shown);
-            } else if (selectId === 'feedback-issue-type-select') {
-                updateSelectActiveState('feedback-issue-type-select', value);
-                const otherTitleGroup = document.getElementById('feedback-other-title-group');
-                if (otherTitleGroup) {
-                    otherTitleGroup.classList.toggle('disabled', value !== 'other');
+                document.querySelectorAll('.module-select').forEach(s => {
+                    if (s.id !== targetId) {
+                        s.classList.add('disabled');
+                        s.classList.remove('active');
+                    }
+                });
+
+                selectTrigger.classList.toggle('active-trigger');
+                if (targetSelect) {
+                    targetSelect.classList.toggle('disabled');
+                    targetSelect.classList.toggle('active');
                 }
             }
-            else if (selectId === 'profanity-language-select') {
-                updateSelectActiveState('profanity-language-select', value);
-            } else if (selectId === 'profanity-filter-select') {
-                fetchAndDisplayProfanityWords(value);
-                updateSelectActiveState('profanity-filter-select', value);
+
+            const selectedOption = event.target.closest('.module-select .menu-link');
+            if (selectedOption) {
+                const value = selectedOption.dataset.value;
+                if (value === undefined || value === null) return;
+
+                const selectContainer = selectedOption.closest('.module-select');
+                const selectId = selectContainer.id;
+
+                if (selectId.includes('relevance-select')) {
+                    if (value !== appState.currentSortBy) {
+                        appState.currentSortBy = value;
+                        const homeSearch = document.querySelector('.search-input-text input');
+                        fetchAndDisplayGalleries(appState.currentSortBy, homeSearch ? homeSearch.value.trim() : '', false, appState.paginationState.galleries);
+                        updateSelectActiveState('relevance-select', appState.currentSortBy);
+                    }
+                }
+                else if (selectId.includes('favorites-sort-select')) {
+                    if (value !== appState.currentFavoritesSortBy) {
+                        appState.currentFavoritesSortBy = value;
+                        let favorites = appState.currentFavoritesList;
+                        const searchInput = document.getElementById('favorites-search-input');
+                        const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+                        if (searchTerm) {
+                            favorites = favorites.filter(photo =>
+                                photo.gallery_name.toLowerCase().includes(searchTerm)
+                            );
+                        }
+
+                        if (value === 'newest') {
+                            favorites.sort((a, b) => new Date(b.added_at) - new Date(a.added_at));
+                        } else if (value === 'oldest') {
+                            favorites.sort((a, b) => new Date(a.added_at) - new Date(b.added_at));
+                        }
+
+                        displayFavoritePhotos(favorites, appState.currentFavoritesSortBy, true);
+                        updateSelectActiveState('favorites-sort-select', appState.currentFavoritesSortBy);
+                    }
+                }
+                else if (selectId.includes('comments-filter-select')) {
+                    const adminCommentSearch = document.querySelector('#admin-comment-search');
+                    fetchAndDisplayAdminComments(adminCommentSearch ? adminCommentSearch.value.trim() : '', value, false, appState.paginationState.adminComments);
+                    updateSelectActiveState('comments-filter-select', value);
+                }
+                else if (selectId === 'theme-select') {
+                    setTheme(value);
+                }
+                else if (selectId === 'language-select') {
+                    setLanguage(value);
+                } else if (selectId.includes('history-select')) {
+                    appState.paginationState.historyProfiles.shown = appState.HISTORY_PROFILES_BATCH;
+                    appState.paginationState.historyPhotos.shown = appState.HISTORY_PHOTOS_BATCH;
+                    appState.paginationState.historySearches.shown = appState.HISTORY_SEARCHES_BATCH;
+                    document.querySelectorAll('[data-history-view]').forEach(view => {
+                        view.style.display = view.dataset.historyView === value ? '' : 'none';
+                    });
+                    updateSelectActiveState('history-select', value);
+                    displayHistory(appState.paginationState.historyProfiles.shown, appState.paginationState.historyPhotos.shown, appState.paginationState.historySearches.shown);
+                } else if (selectId === 'feedback-issue-type-select') {
+                    updateSelectActiveState('feedback-issue-type-select', value);
+                    const otherTitleGroup = document.getElementById('feedback-other-title-group');
+                    if (otherTitleGroup) {
+                        otherTitleGroup.classList.toggle('disabled', value !== 'other');
+                    }
+                }
+                else if (selectId === 'profanity-language-select') {
+                    updateSelectActiveState('profanity-language-select', value);
+                } else if (selectId === 'profanity-filter-select') {
+                    fetchAndDisplayProfanityWords(value);
+                    updateSelectActiveState('profanity-filter-select', value);
+                }
+                else if (selectId === 'unlock-duration-select' || selectId === 'ad-probability-select') {
+                    const triggerText = selectedOption.closest('.select-wrapper').querySelector('.select-trigger-text');
+                    const selectedText = selectedOption.querySelector('.menu-link-text span').textContent;
+                    triggerText.textContent = selectedText;
+
+                    selectContainer.querySelectorAll('.menu-link').forEach(link => link.classList.remove('active'));
+                    selectedOption.classList.add('active');
+                }
+
+                document.querySelectorAll('.module-select').forEach(menu => {
+                    menu.classList.add('disabled');
+                    menu.classList.remove('active');
+                });
+                document.querySelectorAll('.active-trigger').forEach(trigger => trigger.classList.remove('active-trigger'));
             }
-            else if (selectId === 'unlock-duration-select' || selectId === 'ad-probability-select') {
-                const triggerText = selectedOption.closest('.select-wrapper').querySelector('.select-trigger-text');
-                const selectedText = selectedOption.querySelector('.menu-link-text span').textContent;
-                triggerText.textContent = selectedText;
-                
-                selectContainer.querySelectorAll('.menu-link').forEach(link => link.classList.remove('active'));
-                selectedOption.classList.add('active');
-            }
 
-            document.querySelectorAll('.module-select').forEach(menu => {
-                menu.classList.add('disabled');
-                menu.classList.remove('active');
-            });
-            document.querySelectorAll('.active-trigger').forEach(trigger => trigger.classList.remove('active-trigger'));
-        }
+            if (!actionTarget) {
+                const userCardFavorite = event.target.closest('#favorites-grid-view-by-user .user-card');
+                if (userCardFavorite) {
+                    const uuid = userCardFavorite.dataset.uuid;
+                    navigateToUrl('main', 'userSpecificFavorites', { uuid: uuid });
+                    handleStateChange('main', 'userSpecificFavorites', true, { uuid: uuid }, appState);
+                    return;
+                }
 
-        if (!actionTarget) {
-            const userCardFavorite = event.target.closest('#favorites-grid-view-by-user .user-card');
-            if (userCardFavorite) {
-                const uuid = userCardFavorite.dataset.uuid;
-                navigateToUrl('main', 'userSpecificFavorites', { uuid: uuid });
-                handleStateChange('main', 'userSpecificFavorites', true, { uuid: uuid }, appState);
-                return;
-            }
+                const galleryElement = event.target.closest('.card:not(.photo-card):not(.user-card)');
+                if (galleryElement && galleryElement.dataset.uuid) {
+                    const uuid = galleryElement.dataset.uuid;
+                    const name = galleryElement.dataset.name;
+                    const isPrivate = galleryElement.dataset.privacy == '1';
 
-            const galleryElement = event.target.closest('.card:not(.photo-card):not(.user-card)');
-            if (galleryElement && galleryElement.dataset.uuid) {
-                const uuid = galleryElement.dataset.uuid;
-                const name = galleryElement.dataset.name;
-                const isPrivate = galleryElement.dataset.privacy == '1';
+                    api.incrementGalleryInteraction(uuid);
 
-                api.incrementGalleryInteraction(uuid);
+                    if (isPrivate) {
+                        navigateToUrl('main', 'privateGalleryProxy', { uuid: uuid });
+                        handleStateChange('main', 'privateGalleryProxy', true, { uuid: uuid, galleryName: name }, appState);
+                    } else {
+                        const showAdFlag = await shouldShowAd();
+                        const adSetting = appState.serverSettings.ad_probability;
+                        const usesCooldown = adSetting.includes('_cooldown');
 
-                if (isPrivate) {
-                    navigateToUrl('main', 'privateGalleryProxy', { uuid: uuid });
-                    handleStateChange('main', 'privateGalleryProxy', true, { uuid: uuid, galleryName: name }, appState);
-                } else {
+                        if (showAdFlag) {
+                            appState.adContext = 'navigation';
+                            appState.galleryAfterAd = { view: 'main', section: 'galleryPhotos', data: { uuid: uuid, galleryName: name } };
+                            handleStateChange('main', 'adView', true, null, appState);
+                            if (usesCooldown) {
+                                appState.adCooldownActive = true;
+                            }
+                        } else {
+                            appState.adCooldownActive = false;
+                            navigateToUrl('main', 'galleryPhotos', { uuid: uuid });
+                            handleStateChange('main', 'galleryPhotos', true, { uuid: uuid, galleryName: name }, appState);
+                        }
+                    }
+                    return;
+                }
+
+                const photoCard = event.target.closest('.card.photo-card, .card.video-card');
+                if (photoCard) {
+                    const galleryUuid = photoCard.dataset.galleryUuid || appState.currentGalleryForPhotoView;
+                    const photoId = photoCard.dataset.photoId;
+
                     const showAdFlag = await shouldShowAd();
                     const adSetting = appState.serverSettings.ad_probability;
                     const usesCooldown = adSetting.includes('_cooldown');
 
                     if (showAdFlag) {
                         appState.adContext = 'navigation';
-                        appState.galleryAfterAd = { view: 'main', section: 'galleryPhotos', data: { uuid: uuid, galleryName: name } };
+                        appState.photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: galleryUuid, photoId: photoId } };
                         handleStateChange('main', 'adView', true, null, appState);
                         if (usesCooldown) {
                             appState.adCooldownActive = true;
                         }
                     } else {
                         appState.adCooldownActive = false;
-                        navigateToUrl('main', 'galleryPhotos', { uuid: uuid });
-                        handleStateChange('main', 'galleryPhotos', true, { uuid: uuid, galleryName: name }, appState);
+                        navigateToUrl('main', 'photoView', { uuid: galleryUuid, photoId: photoId });
+                        handleStateChange('main', 'photoView', true, { uuid: galleryUuid, photoId: photoId }, appState);
                     }
+                    return;
                 }
-                return;
             }
 
-            const photoCard = event.target.closest('.card.photo-card, .card.video-card');
-            if (photoCard) {
-                const galleryUuid = photoCard.dataset.galleryUuid || appState.currentGalleryForPhotoView;
-                const photoId = photoCard.dataset.photoId;
-                
-                const showAdFlag = await shouldShowAd();
-                const adSetting = appState.serverSettings.ad_probability;
-                const usesCooldown = adSetting.includes('_cooldown');
-
-                if (showAdFlag) {
-                    appState.adContext = 'navigation';
-                    appState.photoAfterAd = { view: 'main', section: 'photoView', data: { uuid: galleryUuid, photoId: photoId } };
-                    handleStateChange('main', 'adView', true, null, appState);
-                    if (usesCooldown) {
-                        appState.adCooldownActive = true;
-                    }
-                } else {
-                    appState.adCooldownActive = false;
-                    navigateToUrl('main', 'photoView', { uuid: galleryUuid, photoId: photoId });
-                    handleStateChange('main', 'photoView', true, { uuid: galleryUuid, photoId: photoId }, appState);
-                }
-                return;
-            }
-        }
-
-    });
-
-    document.addEventListener('keydown', function (event) {
-        const input = event.target;
-
-        if (event.key === 'Escape' && appState.currentAppSection === 'manageContent') {
-            deselectGallery();
-        }
-
-        if (event.key === 'Escape' && appState.currentAppSection === 'manageUsers') {
-            deselectUser();
-        }
-
-        if (event.key === 'Enter' && input.tagName.toLowerCase() === 'input' && input.closest('.search-input-wrapper')) {
-            event.preventDefault();
-
-            let searchTerm = input.value.trim();
-            if (searchTerm.length > 64) {
-                searchTerm = searchTerm.substring(0, 64);
-            }
-            const section = input.closest('.section-content')?.dataset.section;
-
-            if (section === 'home') {
-                fetchAndDisplayGalleries(appState.currentSortBy, searchTerm, false, appState.paginationState.galleries);
-            } else if (section === 'trends') {
-                fetchAndDisplayTrends(searchTerm).then(photos => appState.currentTrendingPhotosList = photos);
-            } else if (section === 'favorites') {
-                let favorites = appState.currentFavoritesList;
-                if (searchTerm) {
-                    favorites = favorites.filter(photo =>
-                        photo.gallery_name.toLowerCase().includes(searchTerm)
-                    );
-                }
-                displayFavoritePhotos(favorites, appState.currentFavoritesSortBy, true);
-            } else if (section === 'manageUsers') {
-                fetchAndDisplayUsers(searchTerm, false, appState.paginationState.adminUsers);
-            } else if (section === 'manageContent') {
-                fetchAndDisplayGalleriesAdmin(searchTerm, false, appState.paginationState.adminGalleries);
-            } else if (section === 'manageComments') {
-                const adminCommentFilter = document.querySelector('#comments-filter-select .menu-link.active')?.dataset.value || 'all';
-                fetchAndDisplayAdminComments(searchTerm, adminCommentFilter, false, appState.paginationState.adminComments);
-            } else if (section === 'manageFeedback') {
-                fetchAndDisplayFeedback(searchTerm, false, appState.paginationState.adminFeedback);
-            }
-        }
-
-        const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
-        if (event.key === 'Escape' && moduleSurface && !moduleSurface.classList.contains('disabled')) {
-            moduleSurface.classList.add('disabled');
-        }
-    });
-
-    window.addEventListener('authSuccess', () => {
-        fetchUserFavorites();
-        api.getHistory().then(history => {
-            console.log("Historial cargado tras login:", history);
         });
-    });
-}
+
+        document.addEventListener('keydown', function (event) {
+            const input = event.target;
+
+            if (event.key === 'Escape' && appState.currentAppSection === 'manageContent') {
+                deselectGallery();
+            }
+
+            if (event.key === 'Escape' && appState.currentAppSection === 'manageUsers') {
+                deselectUser();
+            }
+
+            if (event.key === 'Enter' && input.tagName.toLowerCase() === 'input' && input.closest('.search-input-wrapper')) {
+                event.preventDefault();
+
+                let searchTerm = input.value.trim();
+                if (searchTerm.length > 64) {
+                    searchTerm = searchTerm.substring(0, 64);
+                }
+                const section = input.closest('.section-content')?.dataset.section;
+
+                if (section === 'home') {
+                    fetchAndDisplayGalleries(appState.currentSortBy, searchTerm, false, appState.paginationState.galleries);
+                } else if (section === 'trends') {
+                    fetchAndDisplayTrends(searchTerm).then(photos => appState.currentTrendingPhotosList = photos);
+                } else if (section === 'favorites') {
+                    let favorites = appState.currentFavoritesList;
+                    if (searchTerm) {
+                        favorites = favorites.filter(photo =>
+                            photo.gallery_name.toLowerCase().includes(searchTerm)
+                        );
+                    }
+                    displayFavoritePhotos(favorites, appState.currentFavoritesSortBy, true);
+                } else if (section === 'manageUsers') {
+                    fetchAndDisplayUsers(searchTerm, false, appState.paginationState.adminUsers);
+                } else if (section === 'manageContent') {
+                    fetchAndDisplayGalleriesAdmin(searchTerm, false, appState.paginationState.adminGalleries);
+                } else if (section === 'manageComments') {
+                    const adminCommentFilter = document.querySelector('#comments-filter-select .menu-link.active')?.dataset.value || 'all';
+                    fetchAndDisplayAdminComments(searchTerm, adminCommentFilter, false, appState.paginationState.adminComments);
+                } else if (section === 'manageFeedback') {
+                    fetchAndDisplayFeedback(searchTerm, false, appState.paginationState.adminFeedback);
+                }
+            }
+
+            const moduleSurface = document.querySelector('[data-module="moduleSurface"]');
+            if (event.key === 'Escape' && moduleSurface && !moduleSurface.classList.contains('disabled')) {
+                moduleSurface.classList.add('disabled');
+            }
+        });
+
+        window.addEventListener('authSuccess', () => {
+            fetchUserFavorites();
+            api.getHistory().then(history => {
+                console.log("Historial cargado tras login:", history);
+            });
+        });
+    }
 
     function setupScrollShadows() {
         appState.activeScrollHandlers.forEach(({ element, listener }) => {
@@ -2762,7 +2795,7 @@ function setupEventListeners() {
         'admin-manageGalleryPhotos': 'admin/edit-gallery/{uuid}/photos',
         'admin-galleryStats': 'admin/gallery/{uuid}/stats',
         'admin-verifyFounder': 'admin/verify-founder',
-        
+
         'main-photoComments': 'gallery/{uuid}/photo/{photoId}/comments',
         'main-404': '404'
     };
