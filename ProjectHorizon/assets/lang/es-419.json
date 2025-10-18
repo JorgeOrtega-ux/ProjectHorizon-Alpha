@@ -124,7 +124,7 @@
     "copyLink": "Copiar el enlace",
     "download": "Descargar"
   },
-"userPhotos": {
+  "userPhotos": {
     "backButtonTooltip": "Volver",
     "title": "Fotos de Usuario",
     "emptyGalleryTitle": "Galería vacía",
@@ -249,17 +249,17 @@
       }
     },
     "loginSecurity": {
-"title": "Inicio de sesión y seguridad",
-    "description": "Administra tu contraseña y la configuración de seguridad de tu cuenta.",
-    "passwordTitle": "Contraseña",
-    "passwordLastUpdated": "Última actualización de tu contraseña: {date}",
-    "passwordLastUpdatedNever": "Nunca has cambiado tu contraseña.",
-    "updateButton": "Actualizar",
-    "twoFactorAuthTitle": "Autenticación de dos factores (2FA)",
-    "twoFactorAuthDescription": "Añade una capa extra de seguridad a tu cuenta. Se te enviará un código a tu correo electrónico cada vez que inicies sesión.",
-    "deleteAccountTitle": "Eliminar tu cuenta",
-    "deleteAccountDescription": "Si eliminas tu cuenta creada el {date}, ya no podrás acceder a tu contenido ni iniciar sesión en Project Horizon. Esta acción es permanente.",
-    "deleteAccountButton": "Eliminar cuenta"
+      "title": "Inicio de sesión y seguridad",
+      "description": "Administra tu contraseña y la configuración de seguridad de tu cuenta.",
+      "passwordTitle": "Contraseña",
+      "passwordLastUpdated": "Última actualización de tu contraseña: {date}",
+      "passwordLastUpdatedNever": "Nunca has cambiado tu contraseña.",
+      "updateButton": "Actualizar",
+      "twoFactorAuthTitle": "Autenticación de dos factores (2FA)",
+      "twoFactorAuthDescription": "Añade una capa extra de seguridad a tu cuenta. Se te enviará un código a tu correo electrónico cada vez que inicies sesión.",
+      "deleteAccountTitle": "Eliminar tu cuenta",
+      "deleteAccountDescription": "Si eliminas tu cuenta creada el {date}, ya no podrás acceder a tu contenido ni iniciar sesión en Project Horizon. Esta acción es permanente.",
+      "deleteAccountButton": "Eliminar cuenta"
     },
     "historyPrivacy": {
       "title": "Historial y Privacidad",
@@ -361,10 +361,10 @@
     "deleteGalleryTitle": "Eliminar \"{galleryName}\"",
     "deleteGalleryMessage": "Esta acción eliminará permanentemente la galería y todo su contenido. Esta acción no se puede deshacer. Para confirmar, por favor ingresa tu contraseña de administrador.",
     "restoreBackup": {
-        "title": "Restaurar Copia de Seguridad",
-        "description": "Estás a punto de restaurar la base de datos desde el archivo <strong>{filename}</strong>. Todos los datos actuales se perderán y serán reemplazados por los datos de esta copia de seguridad. Esta acción es irreversible.",
-        "success": "Copia de seguridad restaurada con éxito.",
-        "error": "Error al restaurar la copia de seguridad."
+      "title": "Restaurar Copia de Seguridad",
+      "description": "Estás a punto de restaurar la base de datos desde el archivo <strong>{filename}</strong>. Todos los datos actuales se perderán y serán reemplazados por los datos de esta copia de seguridad. Esta acción es irreversible.",
+      "success": "Copia de seguridad restaurada con éxito.",
+      "error": "Error al restaurar la copia de seguridad."
     },
     "reportComment": {
       "title": "Reportar Comentario",

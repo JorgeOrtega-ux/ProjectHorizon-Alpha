@@ -851,6 +851,72 @@ export async function showRestoreBackupDialog(filename) {
         });
     });
 }
+// --- INICIO DE LA MODIFICACIÓN ---
+export function showVerifyPasswordFor2FADialog() {
+    return new Promise(async (resolve) => {
+        const tokenResponse = await api.getCsrfToken();
+        if (!tokenResponse.ok) {
+            resolve(false);
+            return;
+        }
+
+        showDialog({
+            title: window.getTranslation('dialogs.verifyIdentity.title'),
+            contentHTML: `
+                <p>${window.getTranslation('dialogs.verifyIdentity.description')}</p>
+                <input type="hidden" name="csrf_token" value="${tokenResponse.data.csrf_token}">
+                <div class="form-field password-wrapper" style="margin-top: 16px;">
+                    <input type="password" id="verify-2fa-password" class="auth-input" placeholder=" " autocomplete="current-password">
+                    <label for="verify-2fa-password" class="auth-label">${window.getTranslation('dialogs.verifyIdentity.passwordLabel')}</label>
+                    <button type="button" class="password-toggle-btn" data-action="toggle-password-visibility"><span class="material-symbols-rounded">visibility</span></button>
+                </div>
+                <div class="auth-error-message-container" id="verify-2fa-error-container" style="display: none;">
+                    <ul id="verify-2fa-error-list"></ul>
+                </div>
+            `,
+            buttons: [
+                { text: window.getTranslation('general.cancel'), onClick: ({ close }) => { close(); resolve(false); } },
+                {
+                    text: window.getTranslation('general.confirm'),
+                    className: 'btn-primary',
+                    onClick: async ({ close, startLoading, stopLoading, getDialogElement }) => {
+                        const password = getDialogElement().querySelector('#verify-2fa-password').value;
+                        const csrfToken = getDialogElement().querySelector('input[name="csrf_token"]').value;
+                        const errorContainer = getDialogElement().querySelector('#verify-2fa-error-container');
+                        const errorList = getDialogElement().querySelector('#verify-2fa-error-list');
+
+                        if (!password) {
+                            errorList.innerHTML = `<li>${window.getTranslation('dialogs.verifyIdentity.errorRequired')}</li>`;
+                            errorContainer.style.display = 'block';
+                            return;
+                        }
+
+                        errorContainer.style.display = 'none';
+
+                        const formData = new FormData();
+                        formData.append('action_type', 'verify_password');
+                        formData.append('password', password);
+                        formData.append('csrf_token', csrfToken);
+
+                        startLoading();
+                        const response = await api.verifyPassword(formData);
+                        stopLoading();
+
+                        if (response.ok && response.data.success) {
+                            close();
+                            resolve(true);
+                        } else {
+                            errorList.innerHTML = `<li>${response.data.message || window.getTranslation('dialogs.verifyIdentity.errorIncorrect')}</li>`;
+                            errorContainer.style.display = 'block';
+                            resolve(false);
+                        }
+                    }
+                }
+            ]
+        });
+    });
+}
+// --- FIN DE LA MODIFICACIÓN ---
 
 export function initDialogManager() {
     console.log("Dialog Manager Initialized.");

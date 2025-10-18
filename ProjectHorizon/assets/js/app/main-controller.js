@@ -17,7 +17,8 @@ import {
     showReportCommentDialog,
     showSanctionDialog,
     showTruncateDatabaseDialog,
-    showRestoreBackupDialog
+    showRestoreBackupDialog,
+    showVerifyPasswordFor2FADialog
 } from '../managers/dialog-manager.js';
 import {
     fetchAndDisplayDashboard,
@@ -836,31 +837,31 @@ export async function initMainController() {
     }
 
     function initLoginSecuritySettings() {
-    const twoFactorToggle = document.querySelector('[data-setting="two-factor-auth"]');
-    if (twoFactorToggle) {
-        // Inicializa el estado visual del botón según la configuración del usuario
-        api.checkSession().then(response => {
-            if (response.ok && response.data.loggedin) {
-                twoFactorToggle.classList.toggle('active', response.data.user.two_factor_enabled);
-            }
-        });
-
-        // Agrega el evento de clic que faltaba
-        twoFactorToggle.addEventListener('click', async () => {
-            const isActive = twoFactorToggle.classList.contains('active');
-            const enable = !isActive;
-
-            const response = await api.toggleTwoFactorAuth(enable);
-
-            if (response.ok) {
-                twoFactorToggle.classList.toggle('active', enable);
-                showNotification('Configuración de 2FA actualizada', 'success');
-            } else {
-                showNotification('Error al actualizar la configuración de 2FA', 'error');
-            }
-        });
+        const twoFactorToggle = document.querySelector('[data-setting="two-factor-auth"]');
+        if (twoFactorToggle) {
+            api.checkSession().then(response => {
+                if (response.ok && response.data.loggedin) {
+                    twoFactorToggle.classList.toggle('active', response.data.user.two_factor_enabled);
+                }
+            });
+    
+            twoFactorToggle.addEventListener('click', async () => {
+                const isActive = twoFactorToggle.classList.contains('active');
+                const enable = !isActive;
+    
+                const passwordVerified = await showVerifyPasswordFor2FADialog();
+                if (passwordVerified) {
+                    const response = await api.toggleTwoFactorAuth(enable);
+                    if (response.ok) {
+                        twoFactorToggle.classList.toggle('active', enable);
+                        showNotification('Configuración de 2FA actualizada', 'success');
+                    } else {
+                        showNotification(response.data.message || 'Error al actualizar la configuración de 2FA', 'error');
+                    }
+                }
+            });
+        }
     }
-}
 
     async function fetchUserFavorites() {
         const response = await api.getFavorites();
@@ -961,8 +962,8 @@ export async function initMainController() {
             return false;
         }
         const now = new Date().getTime();
-        const unlockDurationMillis = appState.serverSettings.unlock_duration * 60 * 1000;
-        return (now - unlockedGalleries[uuid]) < unlockDurationMillis;
+        const unlockDurationMinutes = appState.serverSettings.unlock_duration * 60 * 1000;
+        return (now - unlockedGalleries[uuid]) < unlockDurationMinutes;
     }
 
     function rotatePhoto(direction) {
