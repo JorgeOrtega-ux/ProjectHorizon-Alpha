@@ -11,33 +11,13 @@ const availableLanguages = {
     'pt-BR': 'Português (Brasil)'
 };
 
-async function fetchTranslations(langCode, userRole = 'user') {
+async function fetchTranslations(langCode) {
     try {
-        // 1. Cargar las traducciones principales
-        const mainResponse = await fetch(`${window.BASE_PATH}/assets/lang/${langCode}.json`);
-        if (!mainResponse.ok) {
-            throw new Error(`Could not load main ${langCode}.json`);
+        const response = await fetch(`${window.BASE_PATH}/assets/lang/${langCode}.json`);
+        if (!response.ok) {
+            throw new Error(`Could not load ${langCode}.json`);
         }
-        let mainTranslations = await mainResponse.json();
-
-        // 2. Comprobar si el usuario es administrador o fundador
-        const adminRoles = ['administrator', 'founder', 'moderator'];
-        if (adminRoles.includes(userRole)) {
-            try {
-                // 3. Si es admin/founder/moderator, cargar y fusionar las traducciones de administrador
-                const adminResponse = await fetch(`${window.BASE_PATH}/assets/lang/admin/${langCode}.json`);
-                if (adminResponse.ok) {
-                    const adminTranslations = await adminResponse.json();
-                    // Fusionar traducciones, las de admin tienen prioridad
-                    mainTranslations = { ...mainTranslations, ...adminTranslations };
-                }
-            } catch (adminError) {
-                console.warn("Could not load admin translations, continuing with main translations:", adminError);
-            }
-        }
-
-        translations = mainTranslations;
-
+        translations = await response.json();
     } catch (error) {
         console.error("Failed to fetch translations:", error);
         translations = {};

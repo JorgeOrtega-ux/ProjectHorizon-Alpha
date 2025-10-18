@@ -108,12 +108,20 @@ export async function showCustomConfirm(title, message) {
 
 export async function showReportCommentDialog(commentId) {
     return new Promise((resolve) => {
-        // Define las claves estáticas para las razones del reporte.
-        const reportReasonKeys = ['spam', 'hate_speech', 'harassment', 'false_info', 'inappropriate', 'other'];
+        // Define las claves y sus iconos correspondientes.
+        const reportReasons = {
+            'spam': 'campaign',
+            'hate_speech': 'record_voice_over',
+            'harassment': 'personal_injury',
+            'false_info': 'help_outline',
+            'inappropriate': 'gavel',
+            'other': 'more_horiz'
+        };
 
-        // Construye el HTML del menú desplegable usando atributos data-i18n para cada opción.
-        const optionsHTML = reportReasonKeys.map(key => `
+        // Construye el HTML del menú desplegable usando los iconos definidos.
+        const optionsHTML = Object.entries(reportReasons).map(([key, icon]) => `
             <div class="menu-link" data-value="${key}">
+                <div class="menu-link-icon"><span class="material-symbols-rounded">${icon}</span></div>
                 <div class="menu-link-text">
                     <span data-i18n="dialogs.reportComment.reasons.${key}"></span>
                 </div>
@@ -126,6 +134,9 @@ export async function showReportCommentDialog(commentId) {
                 <p data-i18n="dialogs.reportComment.description"></p>
                 <div class="select-wrapper body-title" style="margin-top: 16px;">
                     <div class="custom-select-trigger" data-action="toggle-select" data-target="report-reason-select">
+                        <div class="select-trigger-icon">
+                            <span class="material-symbols-rounded">flag</span>
+                        </div>
                         <span class="select-trigger-text" data-i18n="dialogs.reportComment.selectReason"></span>
                         <div class="select-trigger-icon select-trigger-arrow">
                             <span class="material-symbols-rounded">expand_more</span>
@@ -181,8 +192,6 @@ export async function showReportCommentDialog(commentId) {
                 }
             ],
             onOpen: (dialogBox) => {
-                // El manejador de eventos global en main-controller.js se encargará de abrir/cerrar el menú.
-                // Solo necesitamos manejar la selección de una opción aquí.
                 const options = dialogBox.querySelectorAll('#report-reason-select .menu-link');
                 const triggerText = dialogBox.querySelector('.select-trigger-text');
                 const selectMenu = dialogBox.querySelector('#report-reason-select');
@@ -191,9 +200,11 @@ export async function showReportCommentDialog(commentId) {
                     option.addEventListener('click', () => {
                         options.forEach(opt => opt.classList.remove('active'));
                         option.classList.add('active');
-                        triggerText.textContent = option.textContent.trim();
+                        // --- INICIO DE LA CORRECCIÓN ---
+                        // Se selecciona solo el texto de la razón, ignorando el icono.
+                        triggerText.textContent = option.querySelector('.menu-link-text span').textContent.trim();
+                        // --- FIN DE LA CORRECCIÓN ---
                         
-                        // Cierra el menú después de seleccionar una opción.
                         selectMenu.classList.add('disabled');
                         selectMenu.classList.remove('active');
                         const trigger = dialogBox.querySelector('[data-target="report-reason-select"]');
