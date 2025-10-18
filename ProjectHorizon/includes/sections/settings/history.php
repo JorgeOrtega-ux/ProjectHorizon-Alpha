@@ -51,22 +51,12 @@
                 <div class="settings-page-container">
                     <div class="content-section header-section">
                         <div class="item-details">
-                            <h2 data-i18n="settings.history.recentProfiles"></h2>
+                            <h2 data-i18n="settings.history.filterRecentViews"></h2>
                         </div>
                     </div>
-                    <div class="status-message-container disabled" id="history-profiles-status"></div>
-                    <div class="admin-list-container" id="history-profiles-grid"></div>
-                    <div class="load-more-container disabled" id="history-profiles-load-more"></div>
-                </div>
-                 <div class="settings-page-container">
-                    <div class="content-section header-section">
-                        <div class="item-details">
-                            <h2 data-i18n="settings.history.recentPhotos"></h2>
-                        </div>
-                    </div>
-                    <div class="status-message-container disabled" id="history-photos-status"></div>
-                    <div class="admin-list-container" id="history-photos-grid"></div>
-                    <div class="load-more-container disabled" id="history-photos-load-more"></div>
+                    <div class="status-message-container disabled" id="history-views-status"></div>
+                    <div class="admin-list-container" id="history-views-grid"></div>
+                    <div class="load-more-container disabled" id="history-views-load-more"></div>
                 </div>
             </div>
             <div data-history-view="searches" style="display: none;">

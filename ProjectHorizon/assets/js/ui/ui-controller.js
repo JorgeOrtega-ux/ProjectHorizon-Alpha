@@ -337,19 +337,16 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
     const mainContainer = document.querySelector('[data-section="history"]');
     if (!mainContainer) return;
 
-    const profilesGrid = mainContainer.querySelector('#history-profiles-grid');
-    const photosGrid = mainContainer.querySelector('#history-photos-grid');
+    const viewsGrid = mainContainer.querySelector('#history-views-grid');
     const searchesList = mainContainer.querySelector('#history-searches-list');
     
-    const profilesStatus = mainContainer.querySelector('#history-profiles-status');
-    const photosStatus = mainContainer.querySelector('#history-photos-status');
+    const viewsStatus = mainContainer.querySelector('#history-views-status');
     const searchesStatus = mainContainer.querySelector('#history-searches-status');
 
     const pausedAlert = mainContainer.querySelector('.history-paused-alert');
     const historySelect = mainContainer.querySelector('#history-select');
 
-    const profilesLoadMore = mainContainer.querySelector('#history-profiles-load-more');
-    const photosLoadMore = mainContainer.querySelector('#history-photos-load-more');
+    const viewsLoadMore = mainContainer.querySelector('#history-views-load-more');
     const searchesLoadMore = mainContainer.querySelector('#history-searches-load-more');
 
     const currentView = historySelect ? (historySelect.querySelector('.menu-link.active')?.dataset.value || 'views') : 'views';
@@ -357,10 +354,10 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
     const isSearchHistoryPaused = localStorage.getItem('enable-search-history') === 'false';
 
     // Limpiar todo
-    [profilesGrid, photosGrid, searchesList, profilesLoadMore, photosLoadMore, searchesLoadMore].forEach(el => {
+    [viewsGrid, searchesList, viewsLoadMore, searchesLoadMore].forEach(el => {
         if (el) el.innerHTML = '';
     });
-    [profilesStatus, photosStatus, searchesStatus, pausedAlert, profilesLoadMore, photosLoadMore, searchesLoadMore].forEach(el => {
+    [viewsStatus, searchesStatus, pausedAlert, viewsLoadMore, searchesLoadMore].forEach(el => {
         if (el) el.classList.add('disabled');
     });
 
@@ -369,64 +366,58 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
             pausedAlert.classList.remove('disabled');
         }
 
-        // Renderizar perfiles
-        if (history.profiles.length > 0) {
-            const profilesToShow = history.profiles.slice(0, historyProfilesShown);
-            profilesToShow.forEach(profile => {
-                const item = document.createElement('div');
-                item.className = 'admin-list-item';
-                item.dataset.id = profile.id; 
-                const visitedDate = new Date(profile.visited_at).toLocaleString();
-                item.innerHTML = `
-                    <div class="admin-list-item-thumbnail admin-list-item-thumbnail--initials">
-                        ${profile.profile_picture_url ? `<img src="${window.BASE_PATH}/${profile.profile_picture_url}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">` : getInitials(profile.name)}
-                    </div>
-                    <div class="admin-list-item-details">
-                        <div class="admin-list-item-title">${profile.name}</div>
-                        <div class="admin-list-item-meta-badges">
-                            <span class="info-badge-admin">${window.getTranslation('general.viewed', { date: visitedDate })}</span>
-                        </div>
-                    </div>
-                `;
-                profilesGrid.appendChild(item);
-            });
-            if (history.profiles.length > historyProfilesShown) {
-                profilesLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-profiles" data-i18n="settings.history.showMore"></button>`;
-                profilesLoadMore.classList.remove('disabled');
-            }
-        } else {
-            profilesStatus.innerHTML = `<div><h2>${window.getTranslation('settings.history.noActivityTitle')}</h2><p>${window.getTranslation('settings.history.noActivityMessage')}</p></div>`;
-            profilesStatus.classList.remove('disabled');
-        }
+        const combinedViews = [
+            ...history.profiles.map(p => ({ ...p, type: 'profile' })),
+            ...history.photos.map(p => ({ ...p, type: 'photo' }))
+        ];
 
-        // Renderizar fotos
-        if (history.photos.length > 0) {
-            const photosToShow = history.photos.slice(0, historyPhotosShown);
-            photosToShow.forEach(photo => {
-                const item = document.createElement('div');
-                item.className = 'admin-list-item';
-                item.dataset.id = photo.id;
-                const visitedDate = new Date(photo.visited_at).toLocaleString();
-                item.innerHTML = `
-                    <div class="admin-list-item-thumbnail">
-                        <img src="${window.BASE_PATH}/${photo.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">
+        combinedViews.sort((a, b) => new Date(b.visited_at) - new Date(a.visited_at));
+
+        if (combinedViews.length > 0) {
+            let lastDate = null;
+            const viewsToShow = combinedViews.slice(0, historyProfilesShown); // Usamos una sola variable para el paginado
+            viewsToShow.forEach(item => {
+                const visitedDate = new Date(item.visited_at);
+                const itemDate = visitedDate.toLocaleDateString();
+
+                if (itemDate !== lastDate) {
+                    const dateSeparator = document.createElement('div');
+                    dateSeparator.className = 'content-section-title'; // Puedes crear un estilo específico para esto
+                    dateSeparator.textContent = itemDate;
+                    viewsGrid.appendChild(dateSeparator);
+                    lastDate = itemDate;
+                }
+
+                const itemElement = document.createElement('div');
+                itemElement.className = 'admin-list-item';
+                itemElement.dataset.id = item.id;
+
+                const badgeText = item.type === 'profile' ? 'Perfil' : 'Foto';
+                const itemName = item.type === 'profile' ? item.name : item.gallery_name;
+                const thumbnailUrl = item.type === 'profile' ? item.profile_picture_url : item.photo_url;
+
+                itemElement.innerHTML = `
+                    <div class="admin-list-item-thumbnail admin-list-item-thumbnail--initials">
+                        ${thumbnailUrl ? `<img src="${window.BASE_PATH}/${thumbnailUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">` : getInitials(itemName)}
                     </div>
                     <div class="admin-list-item-details">
-                        <div class="admin-list-item-title">${photo.gallery_name}</div>
-                         <div class="admin-list-item-meta-badges">
-                            <span class="info-badge-admin">${window.getTranslation('general.viewed', { date: visitedDate })}</span>
+                        <div class="admin-list-item-title">${itemName}</div>
+                        <div class="admin-list-item-meta-badges">
+                            <span class="info-badge-admin">${badgeText}</span>
+                            <span class="info-badge-admin">${window.getTranslation('general.viewed', { date: visitedDate.toLocaleString() })}</span>
                         </div>
                     </div>
                 `;
-                photosGrid.appendChild(item);
+                viewsGrid.appendChild(itemElement);
             });
-            if (history.photos.length > historyPhotosShown) {
-                photosLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-photos" data-i18n="settings.history.showMore"></button>`;
-                photosLoadMore.classList.remove('disabled');
+
+            if (combinedViews.length > historyProfilesShown) {
+                viewsLoadMore.innerHTML = `<button class="load-more-btn" data-action="load-more-history-views" data-i18n="settings.history.showMore"></button>`;
+                viewsLoadMore.classList.remove('disabled');
             }
         } else {
-            photosStatus.innerHTML = `<div><h2>${window.getTranslation('settings.history.noActivityTitle')}</h2><p>${window.getTranslation('settings.history.noActivityMessage')}</p></div>`;
-            photosStatus.classList.remove('disabled');
+            viewsStatus.innerHTML = `<div><h2>${window.getTranslation('settings.history.noActivityTitle')}</h2><p>${window.getTranslation('settings.history.noActivityMessage')}</p></div>`;
+            viewsStatus.classList.remove('disabled');
         }
 
     } else if (currentView === 'searches') {
@@ -467,7 +458,6 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
     window.applyTranslations(mainContainer);
     initTooltips();
 }
-
 export async function renderPhotoView(uuid, photoId, photoList) {
     const photoViewerImage = document.getElementById('photo-viewer-image');
     const photoViewerVideo = document.getElementById('photo-viewer-video');

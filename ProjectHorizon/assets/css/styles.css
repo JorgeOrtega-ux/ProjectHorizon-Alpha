@@ -2862,3 +2862,12 @@ h6 {
     font-family: 'Font Awesome 5 Brands';
     font-weight: 400;
 }
+.date-separator {
+    width: 100%;
+    padding: 8px 12px;
+    margin: 16px 0 8px 0;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--muted-text-color);
+    border-bottom: 1px solid var(--border-color);
+}
