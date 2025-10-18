@@ -465,7 +465,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt_check->close();
             break;
             
-        case 'toggle_2fa':
+    case 'toggle_2fa':
             if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
                 http_response_code(401);
                 echo json_encode(['success' => false, 'message' => 'No autorizado.']);

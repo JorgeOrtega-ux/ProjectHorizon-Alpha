@@ -835,32 +835,20 @@ export async function initMainController() {
         }
     }
 
-    // jorgeortega-ux/projecthorizon-alpha/ProjectHorizon-Alpha-fc87067100b15bb29529a9a66448679038ab9eac/ProjectHorizon/assets/js/app/main-controller.js
-function initLoginSecuritySettings() {
+    function initLoginSecuritySettings() {
     const twoFactorToggle = document.querySelector('[data-setting="two-factor-auth"]');
     if (twoFactorToggle) {
-        // Initialize UI based on user preference (needs to be fetched first)
+        // Inicializa el estado visual del botón según la configuración del usuario
         api.checkSession().then(response => {
             if (response.ok && response.data.loggedin) {
                 twoFactorToggle.classList.toggle('active', response.data.user.two_factor_enabled);
             }
         });
 
+        // Agrega el evento de clic que faltaba
         twoFactorToggle.addEventListener('click', async () => {
             const isActive = twoFactorToggle.classList.contains('active');
             const enable = !isActive;
-
-            // Se necesita el token CSRF para la petición a auth_handler.php
-            const tokenResponse = await api.getCsrfToken();
-            if (!tokenResponse.ok) {
-                showNotification('Error de seguridad. Inténtalo de nuevo.', 'error');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('action_type', 'toggle_2fa');
-            formData.append('enable', enable);
-            formData.append('csrf_token', tokenResponse.data.csrf_token);
 
             const response = await api.toggleTwoFactorAuth(enable);
 
