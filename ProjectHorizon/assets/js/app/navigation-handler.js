@@ -425,6 +425,11 @@ export async function handleStateChange(view, section, pushState = true, data, a
                 fetchAndDisplayCommentReports(data.commentId);
             }
             break;
+        case 'viewCommentReports':
+            if (data && data.commentId) {
+                fetchAndDisplayCommentReports(data.commentId);
+            }
+            break;
         case 'manageFeedback':
             fetchAndDisplayFeedback('', false, paginationState.adminFeedback);
             break;

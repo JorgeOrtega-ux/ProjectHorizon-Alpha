@@ -2620,6 +2620,14 @@ export async function initMainController() {
                         }
                         break;
                     }
+                    case 'view-comment-reports': {
+                    const commentId = actionTarget.dataset.id;
+                    if (commentId) {
+                        navigateToUrl('admin', 'viewCommentReports', { commentId });
+                        handleStateChange('admin', 'viewCommentReports', true, { commentId }, appState);
+                    }
+                    break;
+                }
                     case 'add-gallery-photos': {
                         const addPhotosInput = document.getElementById('add-photos-input');
                         if (addPhotosInput) {

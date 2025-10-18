@@ -955,3 +955,61 @@ export async function fetchAndDisplayUserProfile(uuid) {
         displayFetchError('[data-section="userProfile"]', 'general.connectionErrorTitle', 'general.connectionErrorMessage');
     }
 }
+export async function fetchAndDisplayCommentReports(commentId) {
+    const section = document.querySelector('[data-section="viewCommentReports"]');
+    if (!section) return;
+
+    const container = section.querySelector('#view-reports-container');
+    const titleEl = section.querySelector('#view-reports-title');
+    container.innerHTML = loaderHTML;
+
+    const response = await api.getCommentReports(commentId);
+
+    if (response.ok) {
+        const data = response.data;
+        titleEl.textContent = `Reportes para el Comentario #${data.comment.id}`;
+
+        const commentHTML = `
+            <div class="profile-card">
+                <div class="activity-item">
+                    <div class="activity-item-icon"><span class="material-symbols-rounded">chat_bubble</span></div>
+                    <div class="activity-item-content">
+                        <p><strong>Comentario Original:</strong></p>
+                        <p>"${data.comment.comment_text}"</p>
+                        <div class="activity-item-meta">
+                            <span>Por: <strong>${data.comment.username}</strong></span> - 
+                            <span>${new Date(data.comment.created_at).toLocaleString()}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const reportsHTML = data.reports.length > 0 ? data.reports.map(report => `
+            <div class="activity-item">
+                <div class="activity-item-icon"><span class="material-symbols-rounded">flag</span></div>
+                <div class="activity-item-content">
+                    <p><strong>Motivo:</strong> ${window.getTranslation('dialogs.reportComment.reasons.' + report.reason) || report.reason}</p>
+                    <div class="activity-item-meta">
+                        <span>Reportado por: <strong>${report.reporter_username}</strong></span> - 
+                        <span>${new Date(report.created_at).toLocaleString()}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('') : '<p>No hay reportes para este comentario.</p>';
+
+        container.innerHTML = `
+            <div class="profile-grid">
+                ${commentHTML}
+                <div class="profile-card">
+                    <h3 class="profile-section-title">Detalles de Reportes</h3>
+                    <div class="activity-list">${reportsHTML}</div>
+                </div>
+            </div>
+        `;
+
+    } else {
+        container.innerHTML = `<p>${window.getTranslation('general.connectionErrorMessage')}</p>`;
+    }
+    applyTranslations(section);
+}

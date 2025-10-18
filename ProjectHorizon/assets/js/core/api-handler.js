@@ -531,4 +531,6 @@ export function deleteProfanityWord(id) {
     formData.append('action_type', 'delete_profanity_word');
     formData.append('id', id);
     return postDataWithCsrf(formData);
+}export function getCommentReports(commentId) {
+    return fetchData(`${window.BASE_PATH}/api/main_handler.php?request_type=comment_reports&comment_id=${commentId}`);
 }

@@ -208,3 +208,6 @@ Stack trace:
 Stack trace:
 #0 {main}
   thrown in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 356
+[18-Oct-2025 23:28:01 Europe/Berlin] PHP Warning:  Undefined variable $CURRENT_SECTION in E:\xampp\htdocs\ProjectHorizon\includes\sections\main\404.php on line 1
+[18-Oct-2025 23:28:45 Europe/Berlin] PHP Warning:  Undefined variable $CURRENT_SECTION in E:\xampp\htdocs\ProjectHorizon\includes\sections\main\404.php on line 1
+[18-Oct-2025 23:29:13 Europe/Berlin] PHP Warning:  Undefined variable $CURRENT_SECTION in E:\xampp\htdocs\ProjectHorizon\includes\sections\main\404.php on line 1
