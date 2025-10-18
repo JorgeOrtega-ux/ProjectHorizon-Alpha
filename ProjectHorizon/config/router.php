@@ -29,7 +29,8 @@ class Router {
         'admin/gallery-stats' => ['view' => 'admin', 'section' => 'galleryStats'],
         'admin/logs' => ['view' => 'admin', 'section' => 'manageLogs'],
         'admin/backup' => ['view' => 'admin', 'section' => 'backup'],
-        'gallery/{uuid}/photo/{photoId}/comments' => ['view' => 'main', 'section' => 'photoComments']
+        'gallery/{uuid}/photo/{photoId}/comments' => ['view' => 'main', 'section' => 'photoComments'],
+        'admin/view-comment-reports/{commentId}' => ['view' => 'admin', 'section' => 'viewCommentReports']
     ];
     public static function getRouteConfig($path) {
         if (array_key_exists($path, self::$routes)) {

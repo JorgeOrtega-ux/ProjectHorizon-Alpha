@@ -571,11 +571,21 @@ export async function initMainController() {
     function updateManageCommentsHeader() {
         const actionButtonsContainer = document.getElementById('comment-action-buttons');
         if (!actionButtonsContainer) return;
-
+    
         let buttonsHTML = '';
-
+    
         if (selectedComment) {
-            buttonsHTML = `
+            const hasReports = parseInt(selectedComment.dataset.reports, 10) > 0;
+    
+            if (hasReports) {
+                buttonsHTML += `
+                    <button class="header-button" data-action="view-comment-reports" data-id="${selectedComment.dataset.id}" data-i18n-tooltip="admin.manageComments.table.actions.viewReports">
+                        <span class="material-symbols-rounded">flag</span>
+                    </button>
+                `;
+            }
+    
+            buttonsHTML += `
                 <button class="header-button" data-action="set-comment-status" data-id="${selectedComment.dataset.id}" data-status="visible" data-i18n-tooltip="admin.manageComments.table.actions.makeVisible">
                     <span class="material-symbols-rounded">check_circle</span>
                 </button>
@@ -587,7 +597,7 @@ export async function initMainController() {
                 </button>
             `;
         }
-
+    
         actionButtonsContainer.innerHTML = buttonsHTML;
         applyTranslations(actionButtonsContainer);
         initTooltips();

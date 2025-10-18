@@ -39,6 +39,7 @@ const urlMap = {
     'admin-manageLogs': 'admin/logs',
     'admin-viewLog': 'admin/logs/view/{filename}',
     'main-photoComments': 'gallery/{uuid}/photo/{photoId}/comments',
+    'admin-viewCommentReports': 'admin/view-comment-reports/{commentId}',
     'main-404': '404'
 };
 

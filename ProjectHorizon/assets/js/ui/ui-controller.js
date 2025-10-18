@@ -365,7 +365,7 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
         const combinedViews = [
             ...history.profiles.map(p => ({ ...p, type: 'profile' })),
             ...history.photos.map(p => ({ ...p, type: 'photo' }))
-        ].sort((a, b) => new Date(b.visited_at) - new Date(a.visited_at));
+        ].sort((a, b) => new Date(b.visited_at) - new Date(a, b));
 
         if (combinedViews.length > 0) {
             if (isViewHistoryPaused) pausedAlert.classList.remove('disabled');
@@ -1126,33 +1126,18 @@ export function displayAdminComments(comments, listContainer, statusContainer, a
     if (comments.length > 0) {
         listContainer.classList.remove('disabled');
         statusContainer.classList.add('disabled');
-        
+
         comments.forEach(comment => {
             const item = document.createElement('div');
             item.className = 'admin-list-item';
             item.dataset.id = comment.id;
+            item.dataset.reports = comment.report_count || 0;
 
             const createdDate = new Date(comment.created_at).toLocaleString();
             const truncatedComment = comment.comment_text.length > 100 ? comment.comment_text.substring(0, 100) + '...' : comment.comment_text;
 
             const reportStatus = comment.pending_reports > 0 ? 'pending' : (comment.report_count > 0 ? 'reviewed' : 'active');
             const reportText = `${comment.report_count} (${comment.pending_reports} ${window.getTranslation('admin.manageComments.filter.pending')})`;
-
-            let reportsHTML = '';
-            if(comment.reports && comment.reports.length > 0) {
-                reportsHTML = `
-                    <div class="reports-details-container" style="display: none;">
-                        <hr>
-                        <h5>Reportes:</h5>
-                        ${comment.reports.map(report => `
-                            <div class="report-detail">
-                                <strong>${report.reporter_username}</strong> reportó por: <em>${report.reason}</em>
-                                <small>${new Date(report.report_date).toLocaleString()}</small>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            }
 
             item.innerHTML = `
                 <div class="admin-list-item-thumbnail">
@@ -1165,24 +1150,11 @@ export function displayAdminComments(comments, listContainer, statusContainer, a
                         <span class="status-badge status-report-${reportStatus}">${reportText}</span>
                         <span class="status-badge status-comment-${comment.status}">${comment.status}</span>
                         <span class="info-badge-admin">${createdDate}</span>
-                        ${comment.reports && comment.reports.length > 0 ? '<button class="toggle-reports-btn">Ver Reportes</button>' : ''}
                     </div>
-                    ${reportsHTML}
                 </div>
             `;
             listContainer.appendChild(item);
         });
-
-        listContainer.querySelectorAll('.toggle-reports-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const details = e.target.closest('.admin-list-item-details').querySelector('.reports-details-container');
-                if (details) {
-                    details.style.display = details.style.display === 'none' ? 'block' : 'none';
-                    e.target.textContent = details.style.display === 'none' ? 'Ver Reportes' : 'Ocultar Reportes';
-                }
-            });
-        });
-
     } else if (!append) {
         listContainer.classList.add('disabled');
         statusContainer.classList.remove('disabled');

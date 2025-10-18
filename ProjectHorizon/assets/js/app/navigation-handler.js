@@ -304,7 +304,7 @@ export async function handleStateChange(view, section, pushState = true, data, a
         'admin-manageUsers', 'admin-manageContent', 'admin-editGallery', 'admin-createGallery', 'settings-historyPrivacy',
         'settings-history', 'admin-manageComments', 'admin-manageFeedback', 'admin-userProfile', 'admin-manageGalleryPhotos',
         'admin-generalSettings', 'admin-galleryStats', 'admin-verifyFounder', 'admin-manageProfanity', 'admin-manageLogs', 'admin-viewLog',
-        'admin-backup'
+        'admin-backup', 'admin-viewCommentReports'
     ];
     const section_key = view + '-' + section;
 
@@ -326,7 +326,7 @@ export async function handleStateChange(view, section, pushState = true, data, a
             return;
         }
 
-        if (userRole === 'moderator' && section !== 'manageComments') {
+        if (userRole === 'moderator' && section !== 'manageComments' && section !== 'viewCommentReports') {
             handleStateChange('main', '404', true, null, appState);
             return;
         }
@@ -419,6 +419,11 @@ export async function handleStateChange(view, section, pushState = true, data, a
             break;
         case 'manageComments':
             fetchAndDisplayAdminComments('', 'all', false, paginationState.adminComments);
+            break;
+        case 'viewCommentReports':
+            if (data && data.commentId) {
+                fetchAndDisplayCommentReports(data.commentId);
+            }
             break;
         case 'manageFeedback':
             fetchAndDisplayFeedback('', false, paginationState.adminFeedback);
