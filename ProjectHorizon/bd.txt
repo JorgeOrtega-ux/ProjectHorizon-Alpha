@@ -20,14 +20,13 @@ CREATE TABLE `users` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `status` ENUM('active','suspended','deleted') NOT NULL DEFAULT 'active',
   `profile_picture_url` VARCHAR(255) NULL DEFAULT NULL,
-  `control_number` VARCHAR(12) NULL DEFAULT NULL,
   `ip_address` VARCHAR(45) NULL DEFAULT NULL,
   `user_agent` TEXT NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid` (`uuid`),
   UNIQUE KEY `username` (`username`),
-  UNIQUE KEY `email` (`email`),
-  UNIQUE KEY `control_number` (`control_number`)
+  
+UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 -- Estructura de la tabla `user_metadata`
 CREATE TABLE `user_metadata` (
@@ -207,7 +206,7 @@ CREATE TABLE `feedback_attachments` (
 CREATE TABLE `security_logs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_identifier` varchar(255) NOT NULL,
-  `action_type` enum('login_fail','reset_fail','reset_request') NOT NULL,
+  `action_type` enum('login_fail', 'reset_fail', 'reset_request', 'verify_fail') NOT NULL;
   `ip_address` varchar(45) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
@@ -245,7 +244,6 @@ CREATE TABLE `profanity_filter` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `word_language_unique` (`word`, `language_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- --------------------------------------------------------
 -- INSERCIÓN DE PALABRAS PARA EL FILTRO DE LENGUAJE SOEZ
 -- --------------------------------------------------------

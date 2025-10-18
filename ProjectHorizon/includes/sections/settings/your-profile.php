@@ -89,17 +89,5 @@ $is_staff = isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true && is
                 </div>
             </div>
         </div>
-
-        <div class="content-section <?php echo $is_staff ? 'staff-only' : ''; ?>" id="control-number-section" style="display: none;">
-            <div class="item-icon">
-                <span class="material-symbols-rounded">key</span>
-            </div>
-            <div class="item-details">
-                <h4 data-i18n="settings.yourProfile.controlNumberTitle"></h4>
-                <p data-i18n="settings.yourProfile.controlNumberDescription"></p>
-            </div>
-            <div class="item-actions" id="control-number-actions">
-                </div>
-        </div>
-        </div>
+    </div>
 </div>

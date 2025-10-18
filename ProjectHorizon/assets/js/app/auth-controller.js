@@ -170,8 +170,7 @@ async function handleLogin(form) {
         const errorResult = response.data;
         let errorMessage = errorResult.message;
         if (response.status === 429) {
-            const minutes = errorMessage.match(/\d+/)?.[0] || 'unos';
-            errorMessage = window.getTranslation('auth.errors.tooManyRequests', { minutes });
+            errorMessage = response.data.message; // El mensaje ya viene formateado desde el backend
         } else {
             const translationKey = `auth.errors.${errorMessage}`;
             const translated = window.getTranslation(translationKey);
@@ -324,8 +323,7 @@ async function handleForgotPassword(form) {
     } else {
         let errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
         if (response.status === 429) {
-            const minutes = errorMessage.match(/\d+/)?.[0] || 'unos';
-            errorMessage = window.getTranslation('auth.errors.tooManyCodeRequests', { minutes });
+            errorMessage = response.data.message;
         }
         displayAuthErrors('forgot-error-container', 'forgot-error-list', errorMessage);
         fetchAndSetCsrfToken('forgot-password-form');
@@ -400,8 +398,7 @@ async function handleUpdatePasswordFromReset(form) {
     } else {
         let errorMessage = response.data?.message || window.getTranslation('general.connectionErrorMessage');
         if (response.status === 429) {
-            const minutes = errorMessage.match(/\d+/)?.[0] || 'unos';
-            errorMessage = window.getTranslation('auth.errors.tooManyRequests', { minutes });
+            errorMessage = response.data.message;
         }
         displayAuthErrors('forgot-error-container', 'forgot-error-list', errorMessage);
         fetchAndSetCsrfToken('forgot-password-form');
@@ -432,6 +429,59 @@ async function handleLogout() {
         console.error('Error logging out:', response.data);
     }
 }
+
+/**
+ * --- EJEMPLO DE IMPLEMENTACIÓN PARA AJUSTES ---
+ * Las siguientes funciones son un ejemplo de cómo podrías manejar
+ * la actualización de contraseña y la eliminación de la cuenta desde la
+ * página de ajustes, incluyendo el manejo de errores de límite de intentos.
+ * Deberás integrarlas y adaptarlas a tu manejador de eventos de la UI de ajustes.
+ */
+
+// async function handleUpdatePassword(currentPassword, newPassword) {
+//     const formData = new FormData();
+//     formData.append('action_type', 'verify_password');
+//     formData.append('password', currentPassword);
+//     // Asegúrate de añadir el token CSRF al formulario o a formData
+//     // formData.append('csrf_token', tu_token_csrf);
+// 
+//     const response = await api.verifyPassword(formData); // Asumiendo que existe en api-handler.js
+// 
+//     if (response.ok) {
+//         // La contraseña actual es correcta, ahora actualizamos a la nueva
+//         const updateFormData = new FormData();
+//         updateFormData.append('action_type', 'update_password');
+//         updateFormData.append('new_password', newPassword);
+//         // updateFormData.append('csrf_token', tu_token_csrf);
+//         
+//         const updateResponse = await api.updatePassword(updateFormData); // Asumiendo que existe
+//         if(updateResponse.ok) {
+//             showNotification('Contraseña actualizada con éxito.', 'success');
+//         } else {
+//             showNotification(updateResponse.data.message, 'error');
+//         }
+//     } else {
+//         // Error al verificar, podría ser 401 (incorrecta) o 429 (bloqueado)
+//         showNotification(response.data.message, 'error');
+//     }
+// }
+// 
+// async function handleDeleteAccount(currentPassword) {
+//     const formData = new FormData();
+//     formData.append('action_type', 'delete_account');
+//     formData.append('password', currentPassword);
+//     // formData.append('csrf_token', tu_token_csrf);
+// 
+//     const response = await api.deleteAccount(formData); // Asumiendo que existe
+// 
+//     if (response.ok) {
+//         showNotification('Cuenta eliminada con éxito.', 'success');
+//         updateUserUI(null); // Actualiza la UI para el usuario deslogueado
+//         window.dispatchEvent(new CustomEvent('navigateTo', { detail: { view: 'main', section: 'home' } }));
+//     } else {
+//         showNotification(response.data.message, 'error');
+//     }
+// }
 
 export function initAuthController(sessionData) {
     if (sessionData && sessionData.loggedin) {
@@ -482,6 +532,14 @@ export function initAuthController(sessionData) {
             case 'logout':
                 handleLogout();
                 break;
+            
+            // Aquí puedes añadir los casos para las acciones de la página de ajustes
+            // case 'update-password':
+            //     // Lógica para mostrar un diálogo, pedir contraseñas y llamar a handleUpdatePassword
+            //     break;
+            // case 'delete-account':
+            //     // Lógica para mostrar un diálogo, pedir contraseña y llamar a handleDeleteAccount
+            //     break;
         }
     });
 

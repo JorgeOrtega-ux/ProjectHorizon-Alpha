@@ -43,8 +43,20 @@ function handle_security_event($conn, $identifier, $action, &$custom_message = '
     $lockout_duration = 300; // 5 minutos
     $max_attempts = 5;
 
-    if ($action === 'log_attempt' || $action === 'log_reset_fail') {
-        $log_action_type = ($action === 'log_attempt') ? 'login_fail' : 'reset_fail';
+    // Mapeo de acciones de log a tipos de acción en la BD
+    $log_action_map = [
+        'log_attempt' => 'login_fail',
+        'log_reset_fail' => 'reset_fail',
+        'log_verify_fail' => 'verify_fail',
+        'log_password_change_fail' => 'password_change_fail' // Añadido para el cambio de contraseña
+    ];
+
+    // Lista de todos los tipos de intentos fallidos para revisar
+    $failure_types_for_check = "'login_fail', 'reset_fail', 'verify_fail', 'password_change_fail'";
+
+    // Lógica para registrar cualquier tipo de intento fallido
+    if (array_key_exists($action, $log_action_map)) {
+        $log_action_type = $log_action_map[$action];
         $stmt = $conn->prepare("INSERT INTO security_logs (user_identifier, action_type, ip_address) VALUES (?, ?, ?)");
         $ip = $_SERVER['REMOTE_ADDR'];
         $stmt->bind_param("sss", $identifier, $log_action_type, $ip);
@@ -53,16 +65,18 @@ function handle_security_event($conn, $identifier, $action, &$custom_message = '
         return;
     }
 
+    // Lógica para limpiar todos los tipos de intentos
     if ($action === 'clear_all') {
-        $stmt = $conn->prepare("DELETE FROM security_logs WHERE user_identifier = ? AND (action_type = 'login_fail' OR action_type = 'reset_fail')");
+        $stmt = $conn->prepare("DELETE FROM security_logs WHERE user_identifier = ? AND action_type IN ($failure_types_for_check)");
         $stmt->bind_param("s", $identifier);
         $stmt->execute();
         $stmt->close();
         return;
     }
 
+    // Lógica para revisar el bloqueo de todos los tipos de intentos
     if ($action === 'check_lock') {
-        $stmt = $conn->prepare("SELECT COUNT(*) as attempt_count, MAX(created_at) as last_attempt_at FROM security_logs WHERE user_identifier = ? AND (action_type = 'login_fail' OR action_type = 'reset_fail') AND created_at > (NOW() - INTERVAL ? SECOND)");
+        $stmt = $conn->prepare("SELECT COUNT(*) as attempt_count, MAX(created_at) as last_attempt_at FROM security_logs WHERE user_identifier = ? AND action_type IN ($failure_types_for_check) AND created_at > (NOW() - INTERVAL ? SECOND)");
         $stmt->bind_param("si", $identifier, $lockout_duration);
         $stmt->execute();
         $result = $stmt->get_result()->fetch_assoc();
@@ -536,21 +550,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode(['success' => false, 'message' => 'No autorizado.']);
                 exit;
             }
-
+        
             $password = $_POST['password'] ?? '';
             $user_uuid = $_SESSION['user_uuid'];
-
+            $user_identifier = $_SESSION['email']; // Usar email como identificador para el log
+        
+            $lock_message = '';
+            if (handle_security_event($conn, $user_identifier, 'check_lock', $lock_message)) {
+                http_response_code(429);
+                echo json_encode(['success' => false, 'message' => $lock_message]);
+                exit;
+            }
+        
             $stmt = $conn->prepare("SELECT password_hash FROM users WHERE uuid = ?");
             $stmt->bind_param("s", $user_uuid);
             $stmt->execute();
             $result = $stmt->get_result();
-
+        
             if ($user = $result->fetch_assoc()) {
                 if (password_verify($password, $user['password_hash'])) {
+                    handle_security_event($conn, $user_identifier, 'clear_all');
                     echo json_encode(['success' => true]);
                 } else {
-                    http_response_code(401);
-                    echo json_encode(['success' => false, 'message' => 'La contraseña actual es incorrecta.']);
+                    handle_security_event($conn, $user_identifier, 'log_password_change_fail');
+                    $lock_message = '';
+                    if (handle_security_event($conn, $user_identifier, 'check_lock', $lock_message)) {
+                        http_response_code(429);
+                        echo json_encode(['success' => false, 'message' => $lock_message]);
+                    } else {
+                        http_response_code(401);
+                        echo json_encode(['success' => false, 'message' => 'La contraseña actual es incorrecta.']);
+                    }
                 }
             } else {
                 http_response_code(404);
@@ -603,17 +633,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 echo json_encode(['success' => false, 'message' => 'No autorizado.']);
                 exit;
             }
-
+        
             $password = $_POST['password'] ?? '';
             $user_uuid = $_SESSION['user_uuid'];
-
+            $user_identifier = $_SESSION['email'];
+        
+            $lock_message = '';
+            if (handle_security_event($conn, $user_identifier, 'check_lock', $lock_message)) {
+                http_response_code(429);
+                echo json_encode(['success' => false, 'message' => $lock_message]);
+                exit;
+            }
+        
             $stmt = $conn->prepare("SELECT password_hash FROM users WHERE uuid = ?");
             $stmt->bind_param("s", $user_uuid);
             $stmt->execute();
             $result = $stmt->get_result();
-
+        
             if ($user = $result->fetch_assoc()) {
                 if (password_verify($password, $user['password_hash'])) {
+                    handle_security_event($conn, $user_identifier, 'clear_all');
                     $stmt_delete = $conn->prepare("UPDATE users SET status = 'deleted' WHERE uuid = ?");
                     $stmt_delete->bind_param("s", $user_uuid);
                     if ($stmt_delete->execute()) {
@@ -626,8 +665,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     $stmt_delete->close();
                 } else {
-                    http_response_code(401);
-                    echo json_encode(['success' => false, 'message' => 'La contraseña es incorrecta.']);
+                    handle_security_event($conn, $user_identifier, 'log_verify_fail');
+                    $lock_message = '';
+                    if (handle_security_event($conn, $user_identifier, 'check_lock', $lock_message)) {
+                        http_response_code(429);
+                        echo json_encode(['success' => false, 'message' => $lock_message]);
+                    } else {
+                        http_response_code(401);
+                        echo json_encode(['success' => false, 'message' => 'La contraseña es incorrecta.']);
+                    }
                 }
             } else {
                 http_response_code(404);

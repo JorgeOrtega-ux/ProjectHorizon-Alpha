@@ -300,7 +300,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             }
 
             $stmt = $conn->prepare("
-                SELECT u.role, u.status, u.created_at, u.profile_picture_url, u.control_number,
+                SELECT u.role, u.status, u.created_at, u.profile_picture_url,
                        um.password_last_updated_at, um.username_last_updated_at, um.email_last_updated_at,
                        p.theme, p.language, p.open_links_in_new_tab, p.longer_message_duration, p.enable_view_history, p.enable_search_history
                 FROM users u
@@ -336,8 +336,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                         'password_last_updated_at' => $user['password_last_updated_at'],
                         'username_last_updated_at' => $user['username_last_updated_at'],
                         'email_last_updated_at' => $user['email_last_updated_at'],
-                        'profile_picture_url' => $user['profile_picture_url'],
-                        'control_number' => $user['control_number']
+                        'profile_picture_url' => $user['profile_picture_url']
                     ],
                     'preferences' => [
                         'theme' => $user['theme'],
@@ -1420,51 +1419,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             echo json_encode(['success' => false, 'message' => 'Error al eliminar la palabra.']);
         }
         $stmt->close();
-        exit;
-    }
-
-    if ($action_type === 'generate_control_number') {
-        if (!isset($_SESSION['loggedin']) || !isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['moderator', 'administrator', 'founder'])) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'No tienes permiso para realizar esta acción.']);
-            exit;
-        }
-
-        $user_uuid = $_SESSION['user_uuid'];
-
-        $stmt_check = $conn->prepare("SELECT control_number FROM users WHERE uuid = ?");
-        $stmt_check->bind_param("s", $user_uuid);
-        $stmt_check->execute();
-        $user = $stmt_check->get_result()->fetch_assoc();
-        $stmt_check->close();
-
-        if ($user && !empty($user['control_number'])) {
-            http_response_code(409); // Conflict
-            echo json_encode(['success' => false, 'message' => 'Ya tienes un número de control asignado.']);
-            exit;
-        }
-
-        $control_number = null;
-        do {
-            $control_number = strtoupper(bin2hex(random_bytes(6)));
-            $stmt_check_unique = $conn->prepare("SELECT id FROM users WHERE control_number = ?");
-            $stmt_check_unique->bind_param("s", $control_number);
-            $stmt_check_unique->execute();
-            $stmt_check_unique->store_result();
-            $is_unique = $stmt_check_unique->num_rows === 0;
-            $stmt_check_unique->close();
-        } while (!$is_unique);
-
-        $stmt_update = $conn->prepare("UPDATE users SET control_number = ? WHERE uuid = ?");
-        $stmt_update->bind_param("ss", $control_number, $user_uuid);
-
-        if ($stmt_update->execute()) {
-            echo json_encode(['success' => true, 'control_number' => $control_number]);
-        } else {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Error al guardar el número de control.']);
-        }
-        $stmt_update->close();
         exit;
     }
 
