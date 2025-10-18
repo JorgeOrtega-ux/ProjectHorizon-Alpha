@@ -2,9 +2,6 @@
 // Duración de la cookie de sesión en segundos (1 día)
 $lifetime = 60 * 60 * 24;
 
-// Duración de la cookie de sesión en segundos (1 día)
-$lifetime = 60 * 60 * 24;
-
 session_set_cookie_params($lifetime);
 session_start();
 require_once '../config/db.php'; // Incluye la conexión y las constantes
@@ -68,7 +65,6 @@ function censorProfanity($conn, $text, $language_code) {
     return $censored_text;
 }
 
-// --- INICIO DE LA MODIFICACIÓN ---
 function parse_user_agent($user_agent) {
     if (empty($user_agent)) {
         return 'Desconocido';
@@ -93,8 +89,6 @@ function parse_user_agent($user_agent) {
     }
     return 'Otro';
 }
-// --- FIN DE LA MODIFICACIÓN ---
-
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $request_type = isset($_GET['request_type']) ? $_GET['request_type'] : '';
@@ -587,7 +581,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
         $stats = [];
     
-        // --- INICIO DE LA MODIFICACIÓN ---
         $stats['total_users'] = $conn->query("SELECT COUNT(*) as count FROM users WHERE status = 'active'")->fetch_assoc()['count'];
         $stats['new_users_last_30_days'] = $conn->query("SELECT COUNT(*) as count FROM users WHERE created_at >= NOW() - INTERVAL 30 DAY")->fetch_assoc()['count'];
         $stats['total_galleries'] = $conn->query("SELECT COUNT(*) as count FROM galleries")->fetch_assoc()['count'];
@@ -599,7 +592,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $favorites_activity = $conn->query("SELECT DATE(added_at) as date, COUNT(*) as count FROM user_favorites WHERE added_at >= NOW() - INTERVAL 30 DAY GROUP BY DATE(added_at) ORDER BY date ASC")->fetch_all(MYSQLI_ASSOC);
         $comments_activity = $conn->query("SELECT DATE(created_at) as date, COUNT(*) as count FROM photo_comments WHERE created_at >= NOW() - INTERVAL 30 DAY GROUP BY DATE(created_at) ORDER BY date ASC")->fetch_all(MYSQLI_ASSOC);
 
-        // Nueva lógica para el uso de navegadores
         $browser_usage_result = $conn->query("SELECT user_agent FROM users WHERE user_agent IS NOT NULL AND user_agent != ''");
         $browser_counts = [];
         while ($row = $browser_usage_result->fetch_assoc()) {
@@ -611,17 +603,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         arsort($browser_counts);
 
-
         $stats['charts']['user_growth'] = $user_growth;
         $stats['charts']['content_activity'] = [
             'favorites' => $favorites_activity,
             'comments' => $comments_activity
         ];
-        $stats['charts']['browser_usage'] = $browser_counts; // Añadir datos de navegadores
+        $stats['charts']['browser_usage'] = $browser_counts;
 
         $stats['top_galleries'] = $conn->query("SELECT g.name, gm.total_interactions FROM galleries g JOIN galleries_metadata gm ON g.uuid = gm.gallery_uuid ORDER BY gm.total_interactions DESC LIMIT 10")->fetch_all(MYSQLI_ASSOC);
         $stats['top_photos'] = $conn->query("SELECT p.id, p.photo_url, g.name as gallery_name, pm.interactions FROM gallery_photos p JOIN gallery_photos_metadata pm ON p.id = pm.photo_id JOIN galleries g ON p.gallery_uuid = g.uuid ORDER BY pm.interactions DESC LIMIT 10")->fetch_all(MYSQLI_ASSOC);
-        // --- FIN DE LA MODIFICACIÓN ---
     
         echo json_encode($stats);
         exit;
@@ -822,7 +812,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
     
         $user_uuid = $_SESSION['user_uuid'];
-        $stmt = $conn->prepare("SELECT history_type, item_id, metadata, visited_at FROM user_history WHERE user_uuid = ? ORDER BY visited_at DESC");
+        $stmt = $conn->prepare("SELECT id, history_type, item_id, metadata, visited_at FROM user_history WHERE user_uuid = ? ORDER BY visited_at DESC");
         $stmt->bind_param("s", $user_uuid);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -837,15 +827,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
         foreach ($history_items as $item) {
             $metadata = json_decode($item['metadata'], true);
-            $entry = array_merge(['id' => $item['item_id'], 'visited_at' => $item['visited_at']], $metadata);
+            $entry = array_merge(['id' => $item['id'], 'visited_at' => $item['visited_at']], $metadata);
             
             if ($item['history_type'] === 'profile') {
+                $entry['item_id'] = $item['item_id'];
                 $history['profiles'][] = $entry;
             } elseif ($item['history_type'] === 'photo') {
+                $entry['item_id'] = $item['item_id'];
                 $history['photos'][] = $entry;
             } elseif ($item['history_type'] === 'search') {
                 $entry['term'] = $item['item_id'];
-                unset($entry['id']);
                 $history['searches'][] = $entry;
             }
         }
@@ -1189,7 +1180,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
     $action_type = $_POST['action_type'] ?? '';
     
-    // --- INICIO DE LA MODIFICACIÓN ---
     if ($action_type === 'delete_history_items') {
         if (!isset($_SESSION['loggedin']) || !isset($_SESSION['user_uuid'])) {
             http_response_code(403);
@@ -1198,20 +1188,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
         $user_uuid = $_SESSION['user_uuid'];
         $item_ids = json_decode($_POST['item_ids'] ?? '[]', true);
-
+    
         if (empty($item_ids)) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'No se seleccionaron elementos.']);
             exit;
         }
-
+    
         $placeholders = implode(',', array_fill(0, count($item_ids), '?'));
-        $types = str_repeat('s', count($item_ids));
-
-        $stmt = $conn->prepare("DELETE FROM user_history WHERE user_uuid = ? AND item_id IN ($placeholders)");
+        $types = str_repeat('i', count($item_ids));
+    
+        $stmt = $conn->prepare("DELETE FROM user_history WHERE user_uuid = ? AND id IN ($placeholders)");
         $params = array_merge([$user_uuid], $item_ids);
         $stmt->bind_param('s' . $types, ...$params);
-
+    
         if ($stmt->execute()) {
             echo json_encode(['success' => true]);
         } else {
@@ -1221,7 +1211,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $stmt->close();
         exit;
     }
-    // --- FIN DE LA MODIFICACIÓN ---
 
     if ($action_type === 'create_backup') {
         if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'founder'])) {

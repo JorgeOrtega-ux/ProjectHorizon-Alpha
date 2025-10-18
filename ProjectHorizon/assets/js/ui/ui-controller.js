@@ -375,7 +375,7 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
             profilesToShow.forEach(profile => {
                 const item = document.createElement('div');
                 item.className = 'admin-list-item';
-                item.dataset.id = profile.id;
+                item.dataset.id = profile.id; 
                 const visitedDate = new Date(profile.visited_at).toLocaleString();
                 item.innerHTML = `
                     <div class="admin-list-item-thumbnail admin-list-item-thumbnail--initials">
@@ -438,7 +438,7 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
             searchesToShow.forEach(search => {
                 const item = document.createElement('div');
                 item.className = 'admin-list-item';
-                item.dataset.id = search.visited_at;
+                item.dataset.id = search.id; // Usar el ID de la base de datos
                 const searchedInText = window.getTranslation('general.searchedIn', { section: search.section });
                 const visitedDate = new Date(search.visited_at).toLocaleString();
                 item.innerHTML = `
@@ -467,6 +467,7 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
     window.applyTranslations(mainContainer);
     initTooltips();
 }
+
 export async function renderPhotoView(uuid, photoId, photoList) {
     const photoViewerImage = document.getElementById('photo-viewer-image');
     const photoViewerVideo = document.getElementById('photo-viewer-video');
@@ -476,8 +477,6 @@ export async function renderPhotoView(uuid, photoId, photoList) {
     const nextButton = document.querySelector('[data-action="next-photo"]');
     const playPauseBtn = document.querySelector('[data-action="toggle-play-pause"]');
     const playPauseIcon = playPauseBtn ? playPauseBtn.querySelector('.material-symbols-rounded') : null;
-
-    // --- INICIO DE LA MODIFICACIÓN ---
     const videoWrapper = document.getElementById('video-wrapper');
 
     if (!photoViewerImage || !photoViewerVideo || !videoWrapper) {
@@ -485,13 +484,11 @@ export async function renderPhotoView(uuid, photoId, photoList) {
         return null;
     }
 
-    // Resetear visibilidad
     photoViewerImage.style.display = 'none';
     videoWrapper.style.display = 'none';
     videoWrapper.classList.remove('loaded');
     photoViewerVideo.style.display = 'none';
-    photoViewerVideo.src = ''; // Detiene la carga anterior
-    // --- FIN DE LA MODIFICACIÓN ---
+    photoViewerVideo.src = '';
 
     await api.incrementPhotoInteraction(photoId);
     await api.incrementGalleryInteraction(uuid);
@@ -517,27 +514,22 @@ export async function renderPhotoView(uuid, photoId, photoList) {
         await updateGalleryName(); 
 
         if (photo.type === 'video') {
-            // --- INICIO DE LA MODIFICACIÓN ---
-            videoWrapper.style.display = 'flex'; // Mostrar el contenedor con el loader
+            videoWrapper.style.display = 'flex';
             playPauseBtn.style.display = 'flex';
 
-            // Función para manejar el estado de carga
             const handleVideoLoad = () => {
-                videoWrapper.classList.add('loaded'); // Oculta el loader, muestra el video
+                videoWrapper.classList.add('loaded');
                 photoViewerVideo.play().catch(error => {
                     console.warn("La reproducción automática fue bloqueada:", error);
                     if (playPauseIcon) playPauseIcon.textContent = 'play_arrow';
                 });
                 if (playPauseIcon) playPauseIcon.textContent = 'pause';
                 
-                // Limpiar el listener para evitar múltiples ejecuciones
                 photoViewerVideo.removeEventListener('loadeddata', handleVideoLoad);
             };
             
-            // Añadir el listener y luego establecer el src para iniciar la carga
             photoViewerVideo.addEventListener('loadeddata', handleVideoLoad);
             photoViewerVideo.src = `${window.BASE_PATH}/${photo.photo_url}`;
-            // --- FIN DE LA MODIFICACIÓN ---
 
         } else {
             photoViewerImage.style.display = 'block';
@@ -1095,7 +1087,6 @@ export function displayGalleriesAdmin(galleries, listContainer, statusContainer,
             
             const createdDate = new Date(gallery.created_at).toLocaleDateString();
             
-            // --- INICIO DE LA MODIFICACIÓN ---
             const detailsAndActions = `
                 <div class="admin-list-item-details">
                     <div class="admin-list-item-title">${gallery.name}</div>
@@ -1105,7 +1096,6 @@ export function displayGalleriesAdmin(galleries, listContainer, statusContainer,
                     </div>
                 </div>
             `;
-            // --- FIN DE LA MODIFICACIÓN ---
 
             item.appendChild(thumbnail);
             item.innerHTML += detailsAndActions;
