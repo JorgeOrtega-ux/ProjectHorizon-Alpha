@@ -104,18 +104,26 @@ export async function showCustomConfirm(title, message) {
  * @param {number} commentId - El ID del comentario a reportar.
  * @returns {Promise<boolean>} - Promesa que se resuelve a `true` si el reporte fue exitoso, `false` en caso contrario.
  */
+// assets/js/managers/dialog-manager.js
+
 export async function showReportCommentDialog(commentId) {
     return new Promise((resolve) => {
-        const reportReasons = window.getTranslation('dialogs.reportComment.reasons');
-        let optionsHTML = '';
-        for (const key in reportReasons) {
-            optionsHTML += `<div class="menu-link" data-value="${key}"><div class="menu-link-text"><span>${reportReasons[key]}</span></div></div>`;
-        }
+        // Define las claves estáticas para las razones del reporte.
+        const reportReasonKeys = ['spam', 'hate_speech', 'harassment', 'false_info', 'inappropriate', 'other'];
+
+        // Construye el HTML del menú desplegable usando atributos data-i18n para cada opción.
+        const optionsHTML = reportReasonKeys.map(key => `
+            <div class="menu-link" data-value="${key}">
+                <div class="menu-link-text">
+                    <span data-i18n="dialogs.reportComment.reasons.${key}"></span>
+                </div>
+            </div>
+        `).join('');
 
         showDialog({
             title: window.getTranslation('dialogs.reportComment.title'),
             contentHTML: `
-                <p>${window.getTranslation('dialogs.reportComment.description')}</p>
+                <p data-i18n="dialogs.reportComment.description"></p>
                 <div class="select-wrapper body-title" style="margin-top: 16px;">
                     <div class="custom-select-trigger" data-action="toggle-select" data-target="report-reason-select">
                         <span class="select-trigger-text" data-i18n="dialogs.reportComment.selectReason"></span>
@@ -173,17 +181,23 @@ export async function showReportCommentDialog(commentId) {
                 }
             ],
             onOpen: (dialogBox) => {
-                const options = dialogBox.querySelectorAll('.menu-link');
+                // El manejador de eventos global en main-controller.js se encargará de abrir/cerrar el menú.
+                // Solo necesitamos manejar la selección de una opción aquí.
+                const options = dialogBox.querySelectorAll('#report-reason-select .menu-link');
                 const triggerText = dialogBox.querySelector('.select-trigger-text');
-                const selectMenu = dialogBox.querySelector('.module-select');
+                const selectMenu = dialogBox.querySelector('#report-reason-select');
 
                 options.forEach(option => {
                     option.addEventListener('click', () => {
                         options.forEach(opt => opt.classList.remove('active'));
                         option.classList.add('active');
-                        triggerText.textContent = option.textContent;
+                        triggerText.textContent = option.textContent.trim();
+                        
+                        // Cierra el menú después de seleccionar una opción.
                         selectMenu.classList.add('disabled');
                         selectMenu.classList.remove('active');
+                        const trigger = dialogBox.querySelector('[data-target="report-reason-select"]');
+                        if (trigger) trigger.classList.remove('active-trigger');
                     });
                 });
             }

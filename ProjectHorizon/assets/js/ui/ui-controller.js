@@ -413,7 +413,6 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
             }
         } else {
             if (isViewHistoryPaused) {
-                if(viewsHeader) viewsHeader.style.display = 'none';
                 viewsStatus.innerHTML = `<div><h2>${window.getTranslation('settings.history.viewsPausedTitle')}</h2><p>${window.getTranslation('settings.history.viewsPausedMessage')}</p></div>`;
             } else {
                 viewsStatus.innerHTML = `<div><h2>${window.getTranslation('settings.history.noActivityTitle')}</h2><p>${window.getTranslation('settings.history.noActivityMessage')}</p></div>`;
@@ -426,13 +425,12 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
             if (isSearchHistoryPaused) {
                 pausedAlert.classList.remove('disabled');
             }
-            let lastDate = null; // <- Lógica de fecha añadida aquí
+            let lastDate = null;
             const searchesToShow = history.searches.slice(0, historySearchesShown);
             searchesToShow.forEach(search => {
                 const visitedDate = new Date(search.visited_at);
                 const itemDate = visitedDate.toLocaleDateString();
 
-                // --- INICIO DE LA MODIFICACIÓN ---
                 if (itemDate !== lastDate) {
                     const dateSeparator = document.createElement('div');
                     dateSeparator.className = 'content-section-title';
@@ -440,7 +438,6 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
                     searchesList.appendChild(dateSeparator);
                     lastDate = itemDate;
                 }
-                // --- FIN DE LA MODIFICACIÓN ---
 
                 const item = document.createElement('div');
                 item.className = 'admin-list-item';
@@ -467,7 +464,6 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
             }
         } else {
             if (isSearchHistoryPaused) {
-                if(searchesHeader) searchesHeader.style.display = 'none';
                 searchesStatus.innerHTML = `<div><h2>${window.getTranslation('settings.history.searchesPausedTitle')}</h2><p>${window.getTranslation('settings.history.searchesPausedMessage')}</p></div>`;
             } else {
                 searchesStatus.innerHTML = `<div><h2>${window.getTranslation('settings.history.noSearchesTitle')}</h2><p>${window.getTranslation('settings.history.noSearchesMessage')}</p></div>`;
