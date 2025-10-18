@@ -837,23 +837,28 @@ export async function initMainController() {
     }
 
     function initLoginSecuritySettings() {
-        const twoFactorToggle = document.querySelector('[data-setting="two-factor-auth"]');
-        if (twoFactorToggle) {
+        const twoFactorButton = document.querySelector('[data-action="toggle-2fa"]');
+        if (twoFactorButton) {
             api.checkSession().then(response => {
                 if (response.ok && response.data.loggedin) {
-                    twoFactorToggle.classList.toggle('active', response.data.user.two_factor_enabled);
+                    const is2faEnabled = response.data.user.two_factor_enabled;
+                    twoFactorButton.textContent = is2faEnabled ? 'Deshabilitar' : 'Habilitar';
+                    twoFactorButton.dataset.enabled = is2faEnabled;
                 }
             });
     
-            twoFactorToggle.addEventListener('click', async () => {
-                const isActive = twoFactorToggle.classList.contains('active');
-                const enable = !isActive;
+            twoFactorButton.addEventListener('click', async () => {
+                const isEnabled = twoFactorButton.dataset.enabled === 'true';
+                const enable = !isEnabled;
     
                 const passwordVerified = await showVerifyPasswordFor2FADialog();
                 if (passwordVerified) {
+                    twoFactorButton.classList.add('loading');
                     const response = await api.toggleTwoFactorAuth(enable);
+                    twoFactorButton.classList.remove('loading');
                     if (response.ok) {
-                        twoFactorToggle.classList.toggle('active', enable);
+                        twoFactorButton.textContent = enable ? 'Deshabilitar' : 'Habilitar';
+                        twoFactorButton.dataset.enabled = enable;
                         showNotification('Configuración de 2FA actualizada', 'success');
                     } else {
                         showNotification(response.data.message || 'Error al actualizar la configuración de 2FA', 'error');
