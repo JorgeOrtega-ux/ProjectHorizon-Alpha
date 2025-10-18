@@ -337,52 +337,48 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
     const mainContainer = document.querySelector('[data-section="history"]');
     if (!mainContainer) return;
 
+    // --- Obtener todos los elementos del DOM ---
+    const viewsContainer = mainContainer.querySelector('[data-history-view="views"]');
+    const searchesContainer = mainContainer.querySelector('[data-history-view="searches"]');
     const viewsGrid = mainContainer.querySelector('#history-views-grid');
     const searchesList = mainContainer.querySelector('#history-searches-list');
-    
     const viewsStatus = mainContainer.querySelector('#history-views-status');
     const searchesStatus = mainContainer.querySelector('#history-searches-status');
-
     const pausedAlert = mainContainer.querySelector('.history-paused-alert');
     const historySelect = mainContainer.querySelector('#history-select');
-
     const viewsLoadMore = mainContainer.querySelector('#history-views-load-more');
     const searchesLoadMore = mainContainer.querySelector('#history-searches-load-more');
+    const viewsHeader = viewsContainer.querySelector('.header-section');
+    const searchesHeader = searchesContainer.querySelector('.header-section');
 
+    // --- Determinar el estado actual ---
     const currentView = historySelect ? (historySelect.querySelector('.menu-link.active')?.dataset.value || 'views') : 'views';
-    const isViewHistoryPaused = localStorage.getItem('enable-view-history') === 'false';
-    const isSearchHistoryPaused = localStorage.getItem('enable-search-history') === 'false';
+    const isViewHistoryPaused = localStorage.getItem('enable_view_history') === 'false';
+    const isSearchHistoryPaused = localStorage.getItem('enable_search_history') === 'false';
 
-    // Limpiar todo
-    [viewsGrid, searchesList, viewsLoadMore, searchesLoadMore].forEach(el => {
-        if (el) el.innerHTML = '';
-    });
-    [viewsStatus, searchesStatus, pausedAlert, viewsLoadMore, searchesLoadMore].forEach(el => {
-        if (el) el.classList.add('disabled');
-    });
+    // --- Resetear la UI ---
+    [viewsGrid, searchesList, viewsLoadMore, searchesLoadMore].forEach(el => el && (el.innerHTML = ''));
+    [viewsStatus, searchesStatus, pausedAlert, viewsLoadMore, searchesLoadMore].forEach(el => el && el.classList.add('disabled'));
+    [viewsHeader, searchesHeader].forEach(el => el && (el.style.display = 'block'));
 
     if (currentView === 'views') {
-        if (isViewHistoryPaused) {
-            pausedAlert.classList.remove('disabled');
-        }
-
         const combinedViews = [
             ...history.profiles.map(p => ({ ...p, type: 'profile' })),
             ...history.photos.map(p => ({ ...p, type: 'photo' }))
-        ];
-
-        combinedViews.sort((a, b) => new Date(b.visited_at) - new Date(a.visited_at));
+        ].sort((a, b) => new Date(b.visited_at) - new Date(a.visited_at));
 
         if (combinedViews.length > 0) {
+            if (isViewHistoryPaused) pausedAlert.classList.remove('disabled');
+
             let lastDate = null;
-            const viewsToShow = combinedViews.slice(0, historyProfilesShown); // Usamos una sola variable para el paginado
+            const viewsToShow = combinedViews.slice(0, historyProfilesShown);
             viewsToShow.forEach(item => {
                 const visitedDate = new Date(item.visited_at);
                 const itemDate = visitedDate.toLocaleDateString();
 
                 if (itemDate !== lastDate) {
                     const dateSeparator = document.createElement('div');
-                    dateSeparator.className = 'content-section-title'; 
+                    dateSeparator.className = 'content-section-title';
                     dateSeparator.innerHTML = `<span class="material-symbols-rounded">history</span><span>${itemDate}</span>`;
                     viewsGrid.appendChild(dateSeparator);
                     lastDate = itemDate;
@@ -416,22 +412,41 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
                 viewsLoadMore.classList.remove('disabled');
             }
         } else {
-            viewsStatus.innerHTML = `<div><h2>${window.getTranslation('settings.history.noActivityTitle')}</h2><p>${window.getTranslation('settings.history.noActivityMessage')}</p></div>`;
+            if (isViewHistoryPaused) {
+                if(viewsHeader) viewsHeader.style.display = 'none';
+                viewsStatus.innerHTML = `<div><h2>${window.getTranslation('settings.history.viewsPausedTitle')}</h2><p>${window.getTranslation('settings.history.viewsPausedMessage')}</p></div>`;
+            } else {
+                viewsStatus.innerHTML = `<div><h2>${window.getTranslation('settings.history.noActivityTitle')}</h2><p>${window.getTranslation('settings.history.noActivityMessage')}</p></div>`;
+            }
             viewsStatus.classList.remove('disabled');
         }
 
     } else if (currentView === 'searches') {
-        if (isSearchHistoryPaused) {
-            pausedAlert.classList.remove('disabled');
-        }
         if (history.searches.length > 0) {
+            if (isSearchHistoryPaused) {
+                pausedAlert.classList.remove('disabled');
+            }
+            let lastDate = null; // <- Lógica de fecha añadida aquí
             const searchesToShow = history.searches.slice(0, historySearchesShown);
             searchesToShow.forEach(search => {
+                const visitedDate = new Date(search.visited_at);
+                const itemDate = visitedDate.toLocaleDateString();
+
+                // --- INICIO DE LA MODIFICACIÓN ---
+                if (itemDate !== lastDate) {
+                    const dateSeparator = document.createElement('div');
+                    dateSeparator.className = 'content-section-title';
+                    dateSeparator.innerHTML = `<span class="material-symbols-rounded">history</span><span>${itemDate}</span>`;
+                    searchesList.appendChild(dateSeparator);
+                    lastDate = itemDate;
+                }
+                // --- FIN DE LA MODIFICACIÓN ---
+
                 const item = document.createElement('div');
                 item.className = 'admin-list-item';
-                item.dataset.id = search.id; // Usar el ID de la base de datos
+                item.dataset.id = search.id;
                 const searchedInText = window.getTranslation('general.searchedIn', { section: search.section });
-                const visitedDate = new Date(search.visited_at).toLocaleString();
+
                 item.innerHTML = `
                     <div class="admin-list-item-thumbnail admin-list-item-thumbnail--initials">
                         <span class="material-symbols-rounded">search</span>
@@ -440,7 +455,7 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
                         <div class="admin-list-item-title">"${search.term}"</div>
                         <div class="admin-list-item-meta-badges">
                             <span class="info-badge-admin">${searchedInText}</span>
-                            <span class="info-badge-admin">${visitedDate}</span>
+                            <span class="info-badge-admin">${visitedDate.toLocaleString()}</span>
                         </div>
                     </div>
                 `;
@@ -451,10 +466,16 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
                 searchesLoadMore.classList.remove('disabled');
             }
         } else {
-            searchesStatus.innerHTML = `<div><h2>${window.getTranslation('settings.history.noSearchesTitle')}</h2><p>${window.getTranslation('settings.history.noSearchesMessage')}</p></div>`;
+            if (isSearchHistoryPaused) {
+                if(searchesHeader) searchesHeader.style.display = 'none';
+                searchesStatus.innerHTML = `<div><h2>${window.getTranslation('settings.history.searchesPausedTitle')}</h2><p>${window.getTranslation('settings.history.searchesPausedMessage')}</p></div>`;
+            } else {
+                searchesStatus.innerHTML = `<div><h2>${window.getTranslation('settings.history.noSearchesTitle')}</h2><p>${window.getTranslation('settings.history.noSearchesMessage')}</p></div>`;
+            }
             searchesStatus.classList.remove('disabled');
         }
     }
+
     window.applyTranslations(mainContainer);
     initTooltips();
 }
