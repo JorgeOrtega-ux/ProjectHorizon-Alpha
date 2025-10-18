@@ -1,6 +1,6 @@
 <?php
-// Duración de la cookie de sesión en segundos (1 día)
-$lifetime = 60 * 60 * 24;
+// Duración de la cookie de sesión en segundos (30 días)
+$lifetime = 60 * 60 * 24 * 30;
 
 session_set_cookie_params($lifetime);
 session_start();

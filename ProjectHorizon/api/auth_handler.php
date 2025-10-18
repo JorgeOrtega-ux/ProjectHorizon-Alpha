@@ -1,7 +1,8 @@
 <?php
 
 // Duración de la cookie de sesión en segundos (1 día)
-$lifetime = 60 * 60 * 24;
+// Duración de la cookie de sesión en segundos (30 días)
+$lifetime = 60 * 60 * 24 * 30;
 
 session_set_cookie_params($lifetime);
 session_start();
@@ -43,16 +44,20 @@ function handle_security_event($conn, $identifier, $action, &$custom_message = '
     $lockout_duration = 300; // 5 minutos
     $max_attempts = 5;
 
+    // --- INICIO DE LA CORRECCIÓN ---
     // Mapeo de acciones de log a tipos de acción en la BD
     $log_action_map = [
         'log_attempt' => 'login_fail',
         'log_reset_fail' => 'reset_fail',
         'log_verify_fail' => 'verify_fail',
-        'log_password_change_fail' => 'password_change_fail' // Añadido para el cambio de contraseña
+        'log_password_change_fail' => 'password_change_fail',
+        'log_delete_fail' => 'delete_fail' // <--- AÑADIDO: Nuevo tipo de error para eliminación de cuenta
     ];
 
     // Lista de todos los tipos de intentos fallidos para revisar
-    $failure_types_for_check = "'login_fail', 'reset_fail', 'verify_fail', 'password_change_fail'";
+    $failure_types_for_check = "'login_fail', 'reset_fail', 'verify_fail', 'password_change_fail', 'delete_fail'"; // <--- AÑADIDO: 'delete_fail'
+    // --- FIN DE LA CORRECCIÓN ---
+
 
     // Lógica para registrar cualquier tipo de intento fallido
     if (array_key_exists($action, $log_action_map)) {
@@ -665,7 +670,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     $stmt_delete->close();
                 } else {
-                    handle_security_event($conn, $user_identifier, 'log_verify_fail');
+                    // --- INICIO DE LA CORRECCIÓN ---
+                    handle_security_event($conn, $user_identifier, 'log_delete_fail'); // <--- AÑADIDO: Registrar intento de eliminación fallido
+                    // --- FIN DE LA CORRECCIÓN ---
                     $lock_message = '';
                     if (handle_security_event($conn, $user_identifier, 'check_lock', $lock_message)) {
                         http_response_code(429);

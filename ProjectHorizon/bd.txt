@@ -206,7 +206,7 @@ CREATE TABLE `feedback_attachments` (
 CREATE TABLE `security_logs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_identifier` varchar(255) NOT NULL,
-  `action_type` enum('login_fail','reset_fail','reset_request','verify_fail','password_change_fail') NOT NULL;
+  `action_type` enum('login_fail', 'reset_fail', 'reset_request', 'verify_fail', 'password_change_fail', 'delete_fail') NOT NULL;
   `ip_address` varchar(45) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
