@@ -292,9 +292,7 @@ export async function initMainController() {
     let selectedComment = null;
     let selectedFeedback = null;
     let selectedProfanityWord = null;
-    // --- INICIO DE LA MODIFICACIÓN ---
     let selectedHistoryItems = new Set();
-    // --- FIN DE LA MODIFICACIÓN ---
 
     function updateManageUsersHeader() {
         const actionButtonsContainer = document.getElementById('user-action-buttons');
@@ -345,7 +343,7 @@ export async function initMainController() {
         applyTranslations(actionButtonsContainer);
         initTooltips();
     }
-    // --- INICIO DE LA MODIFICACIÓN ---
+
     function updateHistoryHeader() {
         const actionButtonsContainer = document.getElementById('history-action-buttons');
         if (!actionButtonsContainer) return;
@@ -367,20 +365,15 @@ export async function initMainController() {
         const clickedItem = event.target.closest('.admin-list-item');
         if (!clickedItem) return;
 
-        const checkbox = clickedItem.querySelector('input[type="checkbox"]');
-        if (!checkbox) return;
+        const itemId = clickedItem.dataset.id;
+        if (!itemId) return;
 
-        if (event.target !== checkbox) {
-            checkbox.checked = !checkbox.checked;
-        }
-
-        const itemId = checkbox.dataset.id;
-        if (checkbox.checked) {
-            selectedHistoryItems.add(itemId);
-            clickedItem.classList.add('selected');
-        } else {
+        if (clickedItem.classList.contains('selected')) {
             selectedHistoryItems.delete(itemId);
             clickedItem.classList.remove('selected');
+        } else {
+            selectedHistoryItems.add(itemId);
+            clickedItem.classList.add('selected');
         }
 
         updateHistoryHeader();
@@ -389,13 +382,10 @@ export async function initMainController() {
     function deselectAllHistoryItems() {
         document.querySelectorAll('#history-container .admin-list-item.selected').forEach(item => {
             item.classList.remove('selected');
-            const checkbox = item.querySelector('input[type="checkbox"]');
-            if (checkbox) checkbox.checked = false;
         });
         selectedHistoryItems.clear();
         updateHistoryHeader();
     }
-    // --- FIN DE LA MODIFICACIÓN ---
 
     function handleUserSelection(event) {
         const clickedItem = event.target.closest('.admin-list-item');
@@ -1114,7 +1104,7 @@ export async function initMainController() {
                         const preview = document.getElementById('profile-picture-preview-create');
                         if(preview) preview.style.backgroundImage = `url('${e.target.result}')`;
                     };
-                    reader.readAsDataURL(event.target.files[0]);
+                    reader.readAsDataURL(fileInput.files[0]);
                 }
             }
 
@@ -1190,7 +1180,6 @@ export async function initMainController() {
         });
 
         document.addEventListener('click', async function (event) {
-             // --- INICIO DE LA MODIFICACIÓN ---
             const historyListContainer = document.getElementById('history-container');
             const historyActionButtons = document.getElementById('history-action-buttons');
             if (appState.currentAppSection === 'history' && historyListContainer) {
@@ -1200,7 +1189,6 @@ export async function initMainController() {
                     deselectAllHistoryItems();
                 }
             }
-            // --- FIN DE LA MODIFICACIÓN ---
             const listContainer = document.getElementById('admin-galleries-list');
             if (appState.currentAppSection === 'manageContent' && listContainer) {
                 if (listContainer.contains(event.target)) {
@@ -1317,7 +1305,6 @@ export async function initMainController() {
                     errorContainer.style.display = 'block';
                 }
             }
-             // --- INICIO DE LA MODIFICACIÓN ---
             if (actionTarget && actionTarget.dataset.action === 'delete-history-items') {
                 const confirmed = await showCustomConfirm(
                     'Eliminar elementos del historial',
@@ -1335,7 +1322,6 @@ export async function initMainController() {
                     }
                 }
             }
-            // --- FIN DE LA MODIFICACIÓN ---
             if (submitCommentBtn) {
                 const commentInput = document.getElementById('comment-input');
                 const commentText = commentInput.value.trim();
@@ -2854,11 +2840,9 @@ export async function initMainController() {
             if (event.key === 'Escape' && appState.currentAppSection === 'manageUsers') {
                 deselectUser();
             }
-            // --- INICIO DE LA MODIFICACIÓN ---
             if (event.key === 'Escape' && appState.currentAppSection === 'history') {
                 deselectAllHistoryItems();
             }
-            // --- FIN DE LA MODIFICACIÓN ---
             if (event.key === 'Enter' && input.tagName.toLowerCase() === 'input' && input.closest('.search-input-wrapper')) {
                 event.preventDefault();
 

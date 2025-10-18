@@ -375,12 +375,9 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
             profilesToShow.forEach(profile => {
                 const item = document.createElement('div');
                 item.className = 'admin-list-item';
-                item.dataset.uuid = profile.id;
+                item.dataset.id = profile.id;
                 const visitedDate = new Date(profile.visited_at).toLocaleString();
                 item.innerHTML = `
-                    <div class="admin-list-item-selection">
-                        <input type="checkbox" class="history-item-select" data-id="${profile.id}">
-                    </div>
                     <div class="admin-list-item-thumbnail admin-list-item-thumbnail--initials">
                         ${profile.profile_picture_url ? `<img src="${window.BASE_PATH}/${profile.profile_picture_url}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">` : getInitials(profile.name)}
                     </div>
@@ -408,12 +405,9 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
             photosToShow.forEach(photo => {
                 const item = document.createElement('div');
                 item.className = 'admin-list-item';
-                item.dataset.photoId = photo.id;
+                item.dataset.id = photo.id;
                 const visitedDate = new Date(photo.visited_at).toLocaleString();
                 item.innerHTML = `
-                    <div class="admin-list-item-selection">
-                        <input type="checkbox" class="history-item-select" data-id="${photo.id}">
-                    </div>
                     <div class="admin-list-item-thumbnail">
                         <img src="${window.BASE_PATH}/${photo.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">
                     </div>
@@ -444,12 +438,10 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
             searchesToShow.forEach(search => {
                 const item = document.createElement('div');
                 item.className = 'admin-list-item';
+                item.dataset.id = search.visited_at;
                 const searchedInText = window.getTranslation('general.searchedIn', { section: search.section });
                 const visitedDate = new Date(search.visited_at).toLocaleString();
                 item.innerHTML = `
-                    <div class="admin-list-item-selection">
-                        <input type="checkbox" class="history-item-select" data-id="${search.visited_at}">
-                    </div>
                     <div class="admin-list-item-thumbnail admin-list-item-thumbnail--initials">
                         <span class="material-symbols-rounded">search</span>
                     </div>

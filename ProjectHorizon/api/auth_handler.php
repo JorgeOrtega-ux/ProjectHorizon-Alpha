@@ -1,4 +1,9 @@
 <?php
+
+// Duración de la cookie de sesión en segundos (1 día)
+$lifetime = 60 * 60 * 24;
+
+session_set_cookie_params($lifetime);
 session_start();
 
 require_once '../config/db.php';
