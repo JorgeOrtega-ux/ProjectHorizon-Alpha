@@ -204,3 +204,7 @@ Stack trace:
 Stack trace:
 #0 {main}
   thrown in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 356
+[18-Oct-2025 06:08:41 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function bind_param() on bool in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php:356
+Stack trace:
+#0 {main}
+  thrown in E:\xampp\htdocs\ProjectHorizon\api\auth_handler.php on line 356

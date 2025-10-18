@@ -352,7 +352,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            $stmt = $conn->prepare("SELECT uuid, username, email, password_hash, role, status, control_number FROM users WHERE email = ?");
+           $stmt = $conn->prepare("SELECT uuid, username, email, password_hash, role, status FROM users WHERE email = ?");
             $stmt->bind_param("s", $email);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -377,7 +377,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['username'] = $user['username'];
                     $_SESSION['email'] = $user['email'];
                     $_SESSION['user_role'] = $user['role'];
-                    $_SESSION['user_control_number'] = $user['control_number'];
 
                     echo json_encode([
                         'success' => true,

@@ -308,6 +308,12 @@ export async function showUpdatePasswordDialog() {
                     const password = getDialogElement().querySelector('#current-password').value;
                     const csrfToken = getDialogElement().querySelector('input[name="csrf_token"]').value;
 
+                    if (!password.trim()) {
+                        getDialogElement().querySelector('#password-error-list').innerHTML = `<li>${window.getTranslation('auth.errors.passwordRequired')}</li>`;
+                        getDialogElement().querySelector('#password-error-container').style.display = 'block';
+                        return; 
+                    }
+
                     const formData = new FormData();
                     formData.append('action_type', 'verify_password');
                     formData.append('password', password);
@@ -371,12 +377,16 @@ export async function showDeleteAccountDialog() {
                 onClick: async ({ close, startLoading, stopLoading, getDialogElement }) => {
                     const password = getDialogElement().querySelector('#delete-confirm-password').value;
                     const csrfToken = getDialogElement().querySelector('input[name="csrf_token"]').value;
+                    const errorContainer = getDialogElement().querySelector('#delete-error-container');
+                    const errorList = getDialogElement().querySelector('#delete-error-list');
 
                     if (!password) {
-                        getDialogElement().querySelector('#delete-error-list').innerHTML = `<li>${window.getTranslation('auth.errors.passwordRequired')}</li>`;
-                        getDialogElement().querySelector('#delete-error-container').style.display = 'block';
+                        errorList.innerHTML = `<li>${window.getTranslation('auth.errors.passwordRequired')}</li>`;
+                        errorContainer.style.display = 'block';
                         return;
                     }
+                    
+                    errorContainer.style.display = 'none';
 
                     const formData = new FormData();
                     formData.append('action_type', 'delete_account');
@@ -393,8 +403,8 @@ export async function showDeleteAccountDialog() {
                         close();
                         window.dispatchEvent(new CustomEvent('navigateTo', { detail: { view: 'main', section: 'home' } }));
                     } else {
-                        getDialogElement().querySelector('#delete-error-list').innerHTML = `<li>${response.data.message}</li>`;
-                        getDialogElement().querySelector('#delete-error-container').style.display = 'block';
+                        errorList.innerHTML = `<li>${response.data.message}</li>`;
+                        errorContainer.style.display = 'block';
                         const newTokenResponse = await api.getCsrfToken();
                         if (newTokenResponse.ok) {
                             getDialogElement().querySelector('input[name="csrf_token"]').value = newTokenResponse.data.csrf_token;
@@ -435,12 +445,16 @@ export async function showVerifyPasswordForEmailChangeDialog() {
                 onClick: async ({ close, startLoading, stopLoading, getDialogElement }) => {
                     const password = getDialogElement().querySelector('#verify-email-change-password').value;
                     const csrfToken = getDialogElement().querySelector('input[name="csrf_token"]').value;
-
+                    const errorContainer = getDialogElement().querySelector('#verify-email-change-error-container');
+                    const errorList = getDialogElement().querySelector('#verify-email-change-error-list');
+                    
                     if (!password) {
-                        getDialogElement().querySelector('#verify-email-change-error-list').innerHTML = `<li>${window.getTranslation('dialogs.verifyIdentity.errorRequired')}</li>`;
-                        getDialogElement().querySelector('#verify-email-change-error-container').style.display = 'block';
+                        errorList.innerHTML = `<li>${window.getTranslation('dialogs.verifyIdentity.errorRequired')}</li>`;
+                        errorContainer.style.display = 'block';
                         return;
                     }
+                    
+                    errorContainer.style.display = 'none';
 
                     const formData = new FormData();
                     formData.append('action_type', 'verify_password');
@@ -456,8 +470,8 @@ export async function showVerifyPasswordForEmailChangeDialog() {
                         document.getElementById('email-view-mode').style.display = 'none';
                         document.getElementById('email-edit-mode').style.display = 'block';
                     } else {
-                        getDialogElement().querySelector('#verify-email-change-error-list').innerHTML = `<li>${response.data.message || window.getTranslation('dialogs.verifyIdentity.errorIncorrect')}</li>`;
-                        getDialogElement().querySelector('#verify-email-change-error-container').style.display = 'block';
+                        errorList.innerHTML = `<li>${response.data.message || window.getTranslation('dialogs.verifyIdentity.errorIncorrect')}</li>`;
+                        errorContainer.style.display = 'block';
                     }
                 }
             }
