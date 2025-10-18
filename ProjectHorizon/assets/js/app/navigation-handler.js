@@ -279,14 +279,11 @@ async function renderManagePhotosView(gallery, appState) {
 export async function handleStateChange(view, section, pushState = true, data, appState) {
     const nonReturnableSections = ['photoView', 'photoComments', 'privateGalleryProxy', 'adView', 'accessCodePrompt', '404'];
 
-  // INICIO DE LA CORRECCIÓN
     if (appState.currentAppSection && !nonReturnableSections.includes(appState.currentAppSection)) {
-        // Guardar el historial anterior antes de actualizar
         appState.previousVisitedView = appState.lastVisitedView;
         appState.previousVisitedSection = appState.lastVisitedSection;
         appState.previousVisitedData = appState.lastVisitedData;
 
-        // Actualizar el último visitado
         appState.lastVisitedView = appState.currentAppView;
         appState.lastVisitedSection = appState.currentAppSection;
         appState.lastVisitedData = appState.currentAppSectionData;
@@ -739,6 +736,9 @@ export async function handleStateChange(view, section, pushState = true, data, a
                         });
                     }
                 }
+                // --- INICIO DE LA CORRECCIÓN ---
+                appState.initLoginSecuritySettings();
+                // --- FIN DE LA CORRECCIÓN ---
             }
             break;
         case 'login':
