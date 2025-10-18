@@ -20,6 +20,22 @@
             </div>
         </div>
 
+        <div class="content-section data-group-section">
+            <div class="data-item">
+                <div class="view-container active">
+                    <div class="item-details">
+                        <h4 data-i18n="settings.loginSecurity.twoFactorAuthTitle"></h4>
+                        <p data-i18n="settings.loginSecurity.twoFactorAuthDescription"></p>
+                    </div>
+                    <div class="item-actions">
+                        <div class="toggle-switch" data-setting="two-factor-auth">
+                            <div class="toggle-handle"><span class="material-symbols-rounded">check</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="content-section content-section-stacked">
             <div class="item-details">
                 <h4 data-i18n="settings.loginSecurity.deleteAccountTitle"></h4>

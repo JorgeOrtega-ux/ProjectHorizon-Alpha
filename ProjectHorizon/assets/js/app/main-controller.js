@@ -266,6 +266,7 @@ export async function initMainController() {
         activeScrollHandlers: [],
         initSettingsController,
         initHistoryPrivacySettings,
+        initLoginSecuritySettings,
         fetchUserFavorites,
         isFavorite,
         toggleFavorite,
@@ -834,6 +835,32 @@ export async function initMainController() {
         }
     }
 
+    function initLoginSecuritySettings() {
+        const twoFactorToggle = document.querySelector('[data-setting="two-factor-auth"]');
+        if (twoFactorToggle) {
+            // Initialize UI based on user preference (needs to be fetched first)
+            api.checkSession().then(response => {
+                if (response.ok && response.data.loggedin) {
+                    twoFactorToggle.classList.toggle('active', response.data.user.two_factor_enabled);
+                }
+            });
+
+            twoFactorToggle.addEventListener('click', async () => {
+                const isActive = twoFactorToggle.classList.contains('active');
+                const enable = !isActive;
+
+                const response = await api.toggleTwoFactorAuth(enable);
+
+                if (response.ok) {
+                    twoFactorToggle.classList.toggle('active', enable);
+                    showNotification('Configuración de 2FA actualizada', 'success');
+                } else {
+                    showNotification('Error al actualizar la configuración de 2FA', 'error');
+                }
+            });
+        }
+    }
+
     async function fetchUserFavorites() {
         const response = await api.getFavorites();
         if (response.ok) {
@@ -1244,7 +1271,7 @@ export async function initMainController() {
                     deselectFeedback();
                 }
             }
-
+            
             const profanityListContainer = document.getElementById('profanity-words-list');
             if (appState.currentAppSection === 'manageProfanity' && profanityListContainer) {
                 if (profanityListContainer.contains(event.target)) {

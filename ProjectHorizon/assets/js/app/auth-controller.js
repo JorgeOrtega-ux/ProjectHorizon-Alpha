@@ -160,12 +160,21 @@ async function handleLogin(form) {
     button.classList.remove('loading');
 
     if (response.ok) {
-        updateUserUI(response.data.user);
-        showNotification(window.getTranslation('auth.loginSuccess'), 'success');
-        
-        window.dispatchEvent(new CustomEvent('authSuccess'));
+        if (response.data.two_factor_required) {
+            form.querySelector('#password-group').style.display = 'none';
+            form.querySelector('#two-fa-group').style.display = 'block';
+            button.dataset.action = 'submit-2fa';
+            const buttonText = button.querySelector('.button-text');
+            buttonText.setAttribute('data-i18n', 'auth.verifyCodeButton');
+            applyTranslations(form);
+        } else {
+            updateUserUI(response.data.user);
+            showNotification(window.getTranslation('auth.loginSuccess'), 'success');
+            
+            window.dispatchEvent(new CustomEvent('authSuccess'));
 
-        window.dispatchEvent(new CustomEvent('navigateTo', { detail: { view: 'main', section: 'home' } }));
+            window.dispatchEvent(new CustomEvent('navigateTo', { detail: { view: 'main', section: 'home' } }));
+        }
     } else {
         const errorResult = response.data;
         let errorMessage = errorResult.message;
@@ -181,6 +190,41 @@ async function handleLogin(form) {
     }
 }
 
+async function handle2FAVerification(form) {
+    const email = form.querySelector('#login-email').value.trim();
+    const code = form.querySelector('#login-2fa-code').value.trim();
+    const csrfToken = form.querySelector('input[name="csrf_token"]').value;
+    const button = form.querySelector('[data-action="submit-2fa"]');
+
+    if (!code) {
+        displayAuthErrors('login-error-container', 'login-error-list', [window.getTranslation('auth.errors.codeRequired')]);
+        return;
+    }
+
+    displayAuthErrors('login-error-container', 'login-error-list', []);
+    button.classList.add('loading');
+
+    const formData = new FormData();
+    formData.append('action_type', 'verify_2fa_code');
+    formData.append('email', email);
+    formData.append('code', code);
+    formData.append('csrf_token', csrfToken);
+
+    const response = await api.loginUser(formData); // Reutilizamos la función de login, pero el backend debe manejar `verify_2fa_code`
+    button.classList.remove('loading');
+
+    if (response.ok) {
+        updateUserUI(response.data.user);
+        showNotification(window.getTranslation('auth.loginSuccess'), 'success');
+        
+        window.dispatchEvent(new CustomEvent('authSuccess'));
+
+        window.dispatchEvent(new CustomEvent('navigateTo', { detail: { view: 'main', section: 'home' } }));
+    } else {
+        displayAuthErrors('login-error-container', 'login-error-list', response.data.message);
+        fetchAndSetCsrfToken('login-form');
+    }
+}
 async function handleRegisterStep1(form) {
     let username = form.querySelector('#register-username').value.trim();
     const email = form.querySelector('#register-email').value.trim();
@@ -429,60 +473,6 @@ async function handleLogout() {
         console.error('Error logging out:', response.data);
     }
 }
-
-/**
- * --- EJEMPLO DE IMPLEMENTACIÓN PARA AJUSTES ---
- * Las siguientes funciones son un ejemplo de cómo podrías manejar
- * la actualización de contraseña y la eliminación de la cuenta desde la
- * página de ajustes, incluyendo el manejo de errores de límite de intentos.
- * Deberás integrarlas y adaptarlas a tu manejador de eventos de la UI de ajustes.
- */
-
-// async function handleUpdatePassword(currentPassword, newPassword) {
-//     const formData = new FormData();
-//     formData.append('action_type', 'verify_password');
-//     formData.append('password', currentPassword);
-//     // Asegúrate de añadir el token CSRF al formulario o a formData
-//     // formData.append('csrf_token', tu_token_csrf);
-// 
-//     const response = await api.verifyPassword(formData); // Asumiendo que existe en api-handler.js
-// 
-//     if (response.ok) {
-//         // La contraseña actual es correcta, ahora actualizamos a la nueva
-//         const updateFormData = new FormData();
-//         updateFormData.append('action_type', 'update_password');
-//         updateFormData.append('new_password', newPassword);
-//         // updateFormData.append('csrf_token', tu_token_csrf);
-//         
-//         const updateResponse = await api.updatePassword(updateFormData); // Asumiendo que existe
-//         if(updateResponse.ok) {
-//             showNotification('Contraseña actualizada con éxito.', 'success');
-//         } else {
-//             showNotification(updateResponse.data.message, 'error');
-//         }
-//     } else {
-//         // Error al verificar, podría ser 401 (incorrecta) o 429 (bloqueado)
-//         showNotification(response.data.message, 'error');
-//     }
-// }
-// 
-// async function handleDeleteAccount(currentPassword) {
-//     const formData = new FormData();
-//     formData.append('action_type', 'delete_account');
-//     formData.append('password', currentPassword);
-//     // formData.append('csrf_token', tu_token_csrf);
-// 
-//     const response = await api.deleteAccount(formData); // Asumiendo que existe
-// 
-//     if (response.ok) {
-//         showNotification('Cuenta eliminada con éxito.', 'success');
-//         updateUserUI(null); // Actualiza la UI para el usuario deslogueado
-//         window.dispatchEvent(new CustomEvent('navigateTo', { detail: { view: 'main', section: 'home' } }));
-//     } else {
-//         showNotification(response.data.message, 'error');
-//     }
-// }
-
 export function initAuthController(sessionData) {
     if (sessionData && sessionData.loggedin) {
         updateUserUI(sessionData.user);
@@ -509,6 +499,11 @@ export function initAuthController(sessionData) {
                 if (loginForm) handleLogin(loginForm);
                 break;
             }
+            case 'submit-2fa': {
+                const loginForm = document.getElementById('login-form');
+                if (loginForm) handle2FAVerification(loginForm);
+                break;
+            }
             case 'submit-register': {
                 const registerForm = document.getElementById('register-form');
                 if (registerForm) {
@@ -532,14 +527,6 @@ export function initAuthController(sessionData) {
             case 'logout':
                 handleLogout();
                 break;
-            
-            // Aquí puedes añadir los casos para las acciones de la página de ajustes
-            // case 'update-password':
-            //     // Lógica para mostrar un diálogo, pedir contraseñas y llamar a handleUpdatePassword
-            //     break;
-            // case 'delete-account':
-            //     // Lógica para mostrar un diálogo, pedir contraseña y llamar a handleDeleteAccount
-            //     break;
         }
     });
 

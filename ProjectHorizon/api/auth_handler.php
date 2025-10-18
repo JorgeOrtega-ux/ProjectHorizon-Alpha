@@ -146,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     $action_type = $_POST['action_type'] ?? '';
 
-    if (!in_array($action_type, ['register_user_step1', 'register_user_step2', 'verify_registration_code', 'login_user', 'logout_user', 'forgot_password', 'verify_reset_code', 'reset_password', 'verify_password', 'update_password', 'delete_account', 'update_username', 'update_email', 'update_profile_picture', 'delete_profile_picture'])) {
+    if (!in_array($action_type, ['register_user_step1', 'register_user_step2', 'verify_registration_code', 'login_user', 'logout_user', 'forgot_password', 'verify_reset_code', 'reset_password', 'verify_password', 'update_password', 'delete_account', 'update_username', 'update_email', 'update_profile_picture', 'delete_profile_picture', 'verify_2fa_code', 'toggle_2fa'])) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Acción no válida.']);
         exit;
@@ -352,7 +352,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-           $stmt = $conn->prepare("SELECT uuid, username, email, password_hash, role, status FROM users WHERE email = ?");
+           $stmt = $conn->prepare("SELECT uuid, username, email, password_hash, role, status, two_factor_enabled FROM users WHERE email = ?");
             $stmt->bind_param("s", $email);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -367,6 +367,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $message_key = 'account' . $status_key;
 
                         echo json_encode(['success' => false, 'message' => $message_key]);
+                        exit;
+                    }
+                    
+                    if ($user['two_factor_enabled']) {
+                        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                        $stmt_insert_code = $conn->prepare("INSERT INTO verification_codes (email, code, type) VALUES (?, ?, 'login')");
+                        $stmt_insert_code->bind_param("ss", $email, $code);
+                        $stmt_insert_code->execute();
+                        $stmt_insert_code->close();
+                        
+                        // Aquí iría la lógica para enviar el email
+                        
+                        echo json_encode(['success' => true, 'two_factor_required' => true]);
                         exit;
                     }
 
@@ -404,6 +417,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     http_response_code(401);
                     echo json_encode(['success' => false, 'message' => 'Credenciales incorrectas.']);
                 }
+            }
+            $stmt->close();
+            break;
+
+        case 'verify_2fa_code':
+            $email = trim($_POST['email'] ?? '');
+            $code = str_replace('-', '', trim($_POST['code'] ?? ''));
+
+            if (empty($email) || empty($code)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'El código es obligatorio.']);
+                exit;
+            }
+            
+            $stmt_check = $conn->prepare("SELECT id FROM verification_codes WHERE email = ? AND code = ? AND type = 'login' AND created_at > (NOW() - INTERVAL 15 MINUTE)");
+            $stmt_check->bind_param("ss", $email, $code);
+            $stmt_check->execute();
+            $stmt_check->store_result();
+
+            if ($stmt_check->num_rows > 0) {
+                $stmt = $conn->prepare("SELECT uuid, username, email, role FROM users WHERE email = ?");
+                $stmt->bind_param("s", $email);
+                $stmt->execute();
+                $user = $stmt->get_result()->fetch_assoc();
+
+                $_SESSION['loggedin'] = true;
+                $_SESSION['user_uuid'] = $user['uuid'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['email'] = $user['email'];
+                $_SESSION['user_role'] = $user['role'];
+
+                $stmt_delete = $conn->prepare("DELETE FROM verification_codes WHERE email = ? AND type = 'login'");
+                $stmt_delete->bind_param("s", $email);
+                $stmt_delete->execute();
+                $stmt_delete->close();
+                
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Inicio de sesión exitoso.',
+                    'user' => ['uuid' => $user['uuid'], 'username' => $user['username'], 'email' => $user['email'], 'role' => $user['role']]
+                ]);
+            } else {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'message' => 'El código es inválido o ha expirado.']);
+            }
+            $stmt_check->close();
+            break;
+            
+        case 'toggle_2fa':
+            if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'message' => 'No autorizado.']);
+                exit;
+            }
+            $enable = filter_var($_POST['enable'], FILTER_VALIDATE_BOOLEAN);
+            $user_uuid = $_SESSION['user_uuid'];
+            
+            $stmt = $conn->prepare("UPDATE users SET two_factor_enabled = ? WHERE uuid = ?");
+            $stmt->bind_param("is", $enable, $user_uuid);
+            if ($stmt->execute()) {
+                echo json_encode(['success' => true]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error al actualizar la configuración.']);
             }
             $stmt->close();
             break;

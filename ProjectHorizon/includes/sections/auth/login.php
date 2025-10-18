@@ -4,16 +4,24 @@
         <p data-i18n="auth.loginSubtitle"></p>
         <div class="auth-form" id="login-form">
             <input type="hidden" name="csrf_token" value="">
-            <div class="form-field">
-                <input type="email" id="login-email" class="auth-input" placeholder=" " autocomplete="email">
-                <label for="login-email" class="auth-label" data-i18n="auth.emailPlaceholder"></label>
+            <div id="password-group">
+                <div class="form-field">
+                    <input type="email" id="login-email" class="auth-input" placeholder=" " autocomplete="email">
+                    <label for="login-email" class="auth-label" data-i18n="auth.emailPlaceholder"></label>
+                </div>
+                <div class="form-field password-wrapper">
+                    <input type="password" id="login-password" class="auth-input" placeholder=" " autocomplete="current-password">
+                    <label for="login-password" class="auth-label" data-i18n="auth.passwordPlaceholder"></label>
+                    <button type="button" class="password-toggle-btn" data-action="toggle-password-visibility">
+                        <span class="material-symbols-rounded">visibility</span>
+                    </button>
+                </div>
             </div>
-            <div class="form-field password-wrapper">
-                <input type="password" id="login-password" class="auth-input" placeholder=" " autocomplete="current-password">
-                <label for="login-password" class="auth-label" data-i18n="auth.passwordPlaceholder"></label>
-                <button type="button" class="password-toggle-btn" data-action="toggle-password-visibility">
-                    <span class="material-symbols-rounded">visibility</span>
-                </button>
+            <div id="two-fa-group" style="display: none;">
+                <div class="form-field">
+                    <input type="text" id="login-2fa-code" class="auth-input" placeholder=" " autocomplete="one-time-code" maxlength="7">
+                    <label for="login-2fa-code" class="auth-label" data-i18n="auth.codePlaceholder"></label>
+                </div>
             </div>
             <div class="form-link-container">
                 <a href="#" class="form-link" data-action="toggleSectionForgotPassword" data-i18n="auth.forgotPasswordPrompt"></a>
