@@ -1138,6 +1138,22 @@ export function displayAdminComments(comments, listContainer, statusContainer, a
             const reportStatus = comment.pending_reports > 0 ? 'pending' : (comment.report_count > 0 ? 'reviewed' : 'active');
             const reportText = `${comment.report_count} (${comment.pending_reports} ${window.getTranslation('admin.manageComments.filter.pending')})`;
 
+            let reportsHTML = '';
+            if(comment.reports && comment.reports.length > 0) {
+                reportsHTML = `
+                    <div class="reports-details-container" style="display: none;">
+                        <hr>
+                        <h5>Reportes:</h5>
+                        ${comment.reports.map(report => `
+                            <div class="report-detail">
+                                <strong>${report.reporter_username}</strong> reportó por: <em>${report.reason}</em>
+                                <small>${new Date(report.report_date).toLocaleString()}</small>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
             item.innerHTML = `
                 <div class="admin-list-item-thumbnail">
                     <img src="${window.BASE_PATH}/${comment.photo_url}" style="width:100%; height:100%; object-fit:cover;">
@@ -1149,11 +1165,24 @@ export function displayAdminComments(comments, listContainer, statusContainer, a
                         <span class="status-badge status-report-${reportStatus}">${reportText}</span>
                         <span class="status-badge status-comment-${comment.status}">${comment.status}</span>
                         <span class="info-badge-admin">${createdDate}</span>
+                        ${comment.reports && comment.reports.length > 0 ? '<button class="toggle-reports-btn">Ver Reportes</button>' : ''}
                     </div>
+                    ${reportsHTML}
                 </div>
             `;
             listContainer.appendChild(item);
         });
+
+        listContainer.querySelectorAll('.toggle-reports-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const details = e.target.closest('.admin-list-item-details').querySelector('.reports-details-container');
+                if (details) {
+                    details.style.display = details.style.display === 'none' ? 'block' : 'none';
+                    e.target.textContent = details.style.display === 'none' ? 'Ver Reportes' : 'Ocultar Reportes';
+                }
+            });
+        });
+
     } else if (!append) {
         listContainer.classList.add('disabled');
         statusContainer.classList.remove('disabled');

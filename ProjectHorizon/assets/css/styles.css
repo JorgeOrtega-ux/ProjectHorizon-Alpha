@@ -1977,7 +1977,46 @@ h6 {
     background-color: var(--danger-color);
     color: var(--danger-text-color);
 }
+/* jorgeortega-ux/projecthorizon-alpha/ProjectHorizon-Alpha-0f17e10c8a1c24657ec1e44ab3691d5f606ad90b/ProjectHorizon/assets/css/styles-admin.css */
 
+/* ... (código existente) */
+
+.toggle-reports-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    margin-left: 8px;
+}
+
+.reports-details-container {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.report-detail {
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+}
+
+.report-detail strong {
+    color: var(--text-color);
+}
+
+.report-detail em {
+    color: var(--danger-color);
+}
+
+.report-detail small {
+    display: block;
+    color: var(--muted-text-color);
+}
+
+/* ... (código existente) */
 
 .content-section .item-icon {
     display: flex;

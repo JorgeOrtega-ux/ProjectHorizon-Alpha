@@ -280,7 +280,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         exit;
     }
 
-    // jorgeortega-ux/projecthorizon-alpha/ProjectHorizon-Alpha-fc87067100b15bb29529a9a66448679038ab9eac/ProjectHorizon/api/main_handler.php
     if ($request_type === 'check_session') {
         header('Content-Type: application/json');
         if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true && isset($_SESSION['user_uuid'])) {
@@ -782,6 +781,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $result = $stmt->get_result();
         $comments = $result->fetch_all(MYSQLI_ASSOC);
         $stmt->close();
+
+        $comment_ids = array_column($comments, 'id');
+        if (!empty($comment_ids)) {
+            $reports_sql = "
+                SELECT 
+                    cr.comment_id, 
+                    cr.reason, 
+                    cr.created_at AS report_date, 
+                    r.username AS reporter_username
+                FROM comment_reports cr
+                JOIN users r ON cr.reporter_uuid = r.uuid
+                WHERE cr.comment_id IN (" . implode(',', array_fill(0, count($comment_ids), '?')) . ")
+                ORDER BY cr.created_at DESC
+            ";
+            $stmt_reports = $conn->prepare($reports_sql);
+            $types = str_repeat('i', count($comment_ids));
+            $stmt_reports->bind_param($types, ...$comment_ids);
+            $stmt_reports->execute();
+            $reports_result = $stmt_reports->get_result();
+            $reports_by_comment_id = [];
+            while ($row = $reports_result->fetch_assoc()) {
+                $reports_by_comment_id[$row['comment_id']][] = $row;
+            }
+            $stmt_reports->close();
+
+            foreach ($comments as &$comment) {
+                $comment['reports'] = $reports_by_comment_id[$comment['id']] ?? [];
+            }
+        }
+        
         echo json_encode($comments);
         exit;
     }
@@ -2753,3 +2782,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 if (isset($conn) && $conn) {
     $conn->close();
 }
+
+?>

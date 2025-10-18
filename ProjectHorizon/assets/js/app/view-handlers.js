@@ -174,7 +174,6 @@ function renderContentActivityChart(data) {
     });
 }
 
-// --- INICIO DE LA MODIFICACIÓN ---
 function renderBrowserUsageChart(data) {
     const ctx = document.getElementById('browser-usage-chart');
     if (!ctx) return;
@@ -222,7 +221,6 @@ function renderBrowserUsageChart(data) {
         }
     });
 }
-// --- FIN DE LA MODIFICACIÓN ---
 
 export async function fetchAndDisplayDashboard() {
     const section = document.querySelector('[data-section="dashboard"]');
@@ -264,9 +262,7 @@ export async function fetchAndDisplayDashboard() {
 
         renderUserGrowthChart(stats.charts.user_growth);
         renderContentActivityChart(stats.charts.content_activity);
-        // --- INICIO DE LA MODIFICACIÓN ---
         renderBrowserUsageChart(stats.charts.browser_usage);
-        // --- FIN DE LA MODIFICACIÓN ---
 
     } else {
         loader.innerHTML = `<p>${window.getTranslation('general.connectionErrorMessage')}</p>`;
