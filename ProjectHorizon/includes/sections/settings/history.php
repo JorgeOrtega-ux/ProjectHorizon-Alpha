@@ -52,6 +52,7 @@
                     <div class="content-section header-section">
                         <div class="item-details">
                             <h2 data-i18n="settings.history.filterRecentViews"></h2>
+                            <p data-i18n="settings.history.recentViewsDescription"></p>
                         </div>
                     </div>
                     <div class="status-message-container disabled" id="history-views-status"></div>
@@ -64,6 +65,7 @@
                     <div class="content-section header-section">
                         <div class="item-details">
                             <h2 data-i18n="settings.history.recentSearches"></h2>
+                            <p data-i18n="settings.history.recentSearchesDescription"></p>
                         </div>
                     </div>
                      <div class="status-message-container disabled" id="history-searches-status"></div>

@@ -382,8 +382,8 @@ export async function displayHistory(historyProfilesShown, historyPhotosShown, h
 
                 if (itemDate !== lastDate) {
                     const dateSeparator = document.createElement('div');
-                    dateSeparator.className = 'content-section-title'; // Puedes crear un estilo específico para esto
-                    dateSeparator.textContent = itemDate;
+                    dateSeparator.className = 'content-section-title'; 
+                    dateSeparator.innerHTML = `<span class="material-symbols-rounded">history</span><span>${itemDate}</span>`;
                     viewsGrid.appendChild(dateSeparator);
                     lastDate = itemDate;
                 }

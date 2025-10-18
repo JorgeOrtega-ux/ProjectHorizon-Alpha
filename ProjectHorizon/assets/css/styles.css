@@ -1991,6 +1991,16 @@ h6 {
     border-radius: 8px;
 }
 
+.content-section-title {
+    border: 1px solid #00000020;
+    display: flex
+;
+    align-items: center;
+    border-radius: 8px;
+    gap: 4px;
+    justify-content: flex-start;
+    padding: 12px;
+}
 /* ================================================= */
 /* =========== NUEVOS ESTILOS PARA DIÁLOGOS ========== */
 /* ================================================= */
