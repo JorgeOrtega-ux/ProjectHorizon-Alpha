@@ -214,13 +214,17 @@ export function saveUserPreferences(preferences) {
     return postDataWithCsrf(formData);
 }
 
+// jorgeortega-ux/projecthorizon-alpha/ProjectHorizon-Alpha-fc87067100b15bb29529a9a66448679038ab9eac/ProjectHorizon/assets/js/core/api-handler.js
 export function toggleTwoFactorAuth(enable) {
     const formData = new FormData();
     formData.append('action_type', 'toggle_2fa');
     formData.append('enable', enable);
-    return postDataWithCsrf(formData);
+    // Corrección: La petición ahora se dirige a auth_handler.php
+    return fetchData(`${window.BASE_PATH}/api/auth_handler.php`, {
+        method: 'POST',
+        body: formData
+    });
 }
-
 // --- Authentication Requests (auth_handler.php) ---
 export function loginUser(formData) {
     return fetchData(`${window.BASE_PATH}/api/auth_handler.php`, {

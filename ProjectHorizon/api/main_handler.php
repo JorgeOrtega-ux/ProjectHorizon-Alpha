@@ -271,95 +271,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         exit;
     }
 
-    if ($request_type === 'check_session') {
-        header('Content-Type: application/json');
-        if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true && isset($_SESSION['user_uuid'])) {
-            
-            $client_theme = $_GET['theme'] ?? 'system';
-            $client_language = $_GET['language'] ?? 'es-419';
+   // jorgeortega-ux/projecthorizon-alpha/ProjectHorizon-Alpha-fc87067100b15bb29529a9a66448679038ab9eac/ProjectHorizon/api/main_handler.php
+if ($request_type === 'check_session') {
+    header('Content-Type: application/json');
+    if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true && isset($_SESSION['user_uuid'])) {
+        
+        $client_theme = $_GET['theme'] ?? 'system';
+        $client_language = $_GET['language'] ?? 'es-419';
 
-            $stmt_check_prefs = $conn->prepare("SELECT theme, language FROM user_preferences WHERE user_uuid = ?");
-            $stmt_check_prefs->bind_param("s", $_SESSION['user_uuid']);
-            $stmt_check_prefs->execute();
-            $prefs_result = $stmt_check_prefs->get_result()->fetch_assoc();
-            $stmt_check_prefs->close();
+        $stmt_check_prefs = $conn->prepare("SELECT theme, language FROM user_preferences WHERE user_uuid = ?");
+        $stmt_check_prefs->bind_param("s", $_SESSION['user_uuid']);
+        $stmt_check_prefs->execute();
+        $prefs_result = $stmt_check_prefs->get_result()->fetch_assoc();
+        $stmt_check_prefs->close();
 
-            if ($prefs_result) {
-                if ($prefs_result['theme'] === 'system' && $client_theme !== 'system') {
-                    $stmt_update_theme = $conn->prepare("UPDATE user_preferences SET theme = ? WHERE user_uuid = ?");
-                    $stmt_update_theme->bind_param("ss", $client_theme, $_SESSION['user_uuid']);
-                    $stmt_update_theme->execute();
-                    $stmt_update_theme->close();
-                }
-                if ($prefs_result['language'] === 'es-419' && $client_language !== 'es-419') {
-                    $stmt_update_lang = $conn->prepare("UPDATE user_preferences SET language = ? WHERE user_uuid = ?");
-                    $stmt_update_lang->bind_param("ss", $client_language, $_SESSION['user_uuid']);
-                    $stmt_update_lang->execute();
-                    $stmt_update_lang->close();
-                }
+        if ($prefs_result) {
+            if ($prefs_result['theme'] === 'system' && $client_theme !== 'system') {
+                $stmt_update_theme = $conn->prepare("UPDATE user_preferences SET theme = ? WHERE user_uuid = ?");
+                $stmt_update_theme->bind_param("ss", $client_theme, $_SESSION['user_uuid']);
+                $stmt_update_theme->execute();
+                $stmt_update_theme->close();
             }
+            if ($prefs_result['language'] === 'es-419' && $client_language !== 'es-419') {
+                $stmt_update_lang = $conn->prepare("UPDATE user_preferences SET language = ? WHERE user_uuid = ?");
+                $stmt_update_lang->bind_param("ss", $client_language, $_SESSION['user_uuid']);
+                $stmt_update_lang->execute();
+                $stmt_update_lang->close();
+            }
+        }
 
-            $stmt = $conn->prepare("
-                SELECT u.role, u.status, u.created_at, u.profile_picture_url,
-                       um.password_last_updated_at, um.username_last_updated_at, um.email_last_updated_at,
-                       p.theme, p.language, p.open_links_in_new_tab, p.longer_message_duration, p.enable_view_history, p.enable_search_history
-                FROM users u
-                LEFT JOIN user_metadata um ON u.uuid = um.user_uuid
-                LEFT JOIN user_preferences p ON u.uuid = p.user_uuid
-                WHERE u.uuid = ?
-            ");
+        $stmt = $conn->prepare("
+            SELECT u.role, u.status, u.created_at, u.profile_picture_url, u.two_factor_enabled,
+                   um.password_last_updated_at, um.username_last_updated_at, um.email_last_updated_at,
+                   p.theme, p.language, p.open_links_in_new_tab, p.longer_message_duration, p.enable_view_history, p.enable_search_history
+            FROM users u
+            LEFT JOIN user_metadata um ON u.uuid = um.user_uuid
+            LEFT JOIN user_preferences p ON u.uuid = p.user_uuid
+            WHERE u.uuid = ?
+        ");
 
-            $stmt->bind_param("s", $_SESSION['user_uuid']);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            
-            if ($user = $result->fetch_assoc()) {
-                if ($user['status'] !== 'active') {
-                    session_unset();
-                    session_destroy();
-                    echo json_encode(['loggedin' => false, 'status' => $user['status']]);
-                    $stmt->close();
-                    $conn->close();
-                    exit;
-                }
-                
-                $_SESSION['user_role'] = $user['role'];
-
-                echo json_encode([
-                    'loggedin' => true,
-                    'user' => [
-                        'uuid' => $_SESSION['user_uuid'],
-                        'username' => $_SESSION['username'],
-                        'email' => $_SESSION['email'],
-                        'role' => $_SESSION['user_role'],
-                        'created_at' => $user['created_at'],
-                        'password_last_updated_at' => $user['password_last_updated_at'],
-                        'username_last_updated_at' => $user['username_last_updated_at'],
-                        'email_last_updated_at' => $user['email_last_updated_at'],
-                        'profile_picture_url' => $user['profile_picture_url']
-                    ],
-                    'preferences' => [
-                        'theme' => $user['theme'],
-                        'language' => $user['language'],
-                        'open_links_in_new_tab' => (bool)$user['open_links_in_new_tab'],
-                        'longer_message_duration' => (bool)$user['longer_message_duration'],
-                        'enable_view_history' => (bool)$user['enable_view_history'],
-                        'enable_search_history' => (bool)$user['enable_search_history']
-                    ]
-                ]);
-
-            } else {
+        $stmt->bind_param("s", $_SESSION['user_uuid']);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($user = $result->fetch_assoc()) {
+            if ($user['status'] !== 'active') {
                 session_unset();
                 session_destroy();
-                echo json_encode(['loggedin' => false]);
+                echo json_encode(['loggedin' => false, 'status' => $user['status']]);
+                $stmt->close();
+                $conn->close();
+                exit;
             }
-            $stmt->close();
-            $conn->close();
+            
+            $_SESSION['user_role'] = $user['role'];
+
+            echo json_encode([
+                'loggedin' => true,
+                'user' => [
+                    'uuid' => $_SESSION['user_uuid'],
+                    'username' => $_SESSION['username'],
+                    'email' => $_SESSION['email'],
+                    'role' => $_SESSION['user_role'],
+                    'created_at' => $user['created_at'],
+                    'password_last_updated_at' => $user['password_last_updated_at'],
+                    'username_last_updated_at' => $user['username_last_updated_at'],
+                    'email_last_updated_at' => $user['email_last_updated_at'],
+                    'profile_picture_url' => $user['profile_picture_url'],
+                    'two_factor_enabled' => (bool)$user['two_factor_enabled']
+                ],
+                'preferences' => [
+                    'theme' => $user['theme'],
+                    'language' => $user['language'],
+                    'open_links_in_new_tab' => (bool)$user['open_links_in_new_tab'],
+                    'longer_message_duration' => (bool)$user['longer_message_duration'],
+                    'enable_view_history' => (bool)$user['enable_view_history'],
+                    'enable_search_history' => (bool)$user['enable_search_history']
+                ]
+            ]);
+
         } else {
+            session_unset();
+            session_destroy();
             echo json_encode(['loggedin' => false]);
         }
-        exit;
+        $stmt->close();
+        $conn->close();
+    } else {
+        echo json_encode(['loggedin' => false]);
     }
+    exit;
+}
 
     if ($request_type === 'section') {
         header('Content-Type: text/html');

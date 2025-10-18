@@ -835,31 +835,44 @@ export async function initMainController() {
         }
     }
 
-    function initLoginSecuritySettings() {
-        const twoFactorToggle = document.querySelector('[data-setting="two-factor-auth"]');
-        if (twoFactorToggle) {
-            // Initialize UI based on user preference (needs to be fetched first)
-            api.checkSession().then(response => {
-                if (response.ok && response.data.loggedin) {
-                    twoFactorToggle.classList.toggle('active', response.data.user.two_factor_enabled);
-                }
-            });
+    // jorgeortega-ux/projecthorizon-alpha/ProjectHorizon-Alpha-fc87067100b15bb29529a9a66448679038ab9eac/ProjectHorizon/assets/js/app/main-controller.js
+function initLoginSecuritySettings() {
+    const twoFactorToggle = document.querySelector('[data-setting="two-factor-auth"]');
+    if (twoFactorToggle) {
+        // Initialize UI based on user preference (needs to be fetched first)
+        api.checkSession().then(response => {
+            if (response.ok && response.data.loggedin) {
+                twoFactorToggle.classList.toggle('active', response.data.user.two_factor_enabled);
+            }
+        });
 
-            twoFactorToggle.addEventListener('click', async () => {
-                const isActive = twoFactorToggle.classList.contains('active');
-                const enable = !isActive;
+        twoFactorToggle.addEventListener('click', async () => {
+            const isActive = twoFactorToggle.classList.contains('active');
+            const enable = !isActive;
 
-                const response = await api.toggleTwoFactorAuth(enable);
+            // Se necesita el token CSRF para la petición a auth_handler.php
+            const tokenResponse = await api.getCsrfToken();
+            if (!tokenResponse.ok) {
+                showNotification('Error de seguridad. Inténtalo de nuevo.', 'error');
+                return;
+            }
 
-                if (response.ok) {
-                    twoFactorToggle.classList.toggle('active', enable);
-                    showNotification('Configuración de 2FA actualizada', 'success');
-                } else {
-                    showNotification('Error al actualizar la configuración de 2FA', 'error');
-                }
-            });
-        }
+            const formData = new FormData();
+            formData.append('action_type', 'toggle_2fa');
+            formData.append('enable', enable);
+            formData.append('csrf_token', tokenResponse.data.csrf_token);
+
+            const response = await api.toggleTwoFactorAuth(enable);
+
+            if (response.ok) {
+                twoFactorToggle.classList.toggle('active', enable);
+                showNotification('Configuración de 2FA actualizada', 'success');
+            } else {
+                showNotification('Error al actualizar la configuración de 2FA', 'error');
+            }
+        });
     }
+}
 
     async function fetchUserFavorites() {
         const response = await api.getFavorites();
