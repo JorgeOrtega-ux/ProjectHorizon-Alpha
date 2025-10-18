@@ -211,3 +211,5 @@ Stack trace:
 [18-Oct-2025 23:28:01 Europe/Berlin] PHP Warning:  Undefined variable $CURRENT_SECTION in E:\xampp\htdocs\ProjectHorizon\includes\sections\main\404.php on line 1
 [18-Oct-2025 23:28:45 Europe/Berlin] PHP Warning:  Undefined variable $CURRENT_SECTION in E:\xampp\htdocs\ProjectHorizon\includes\sections\main\404.php on line 1
 [18-Oct-2025 23:29:13 Europe/Berlin] PHP Warning:  Undefined variable $CURRENT_SECTION in E:\xampp\htdocs\ProjectHorizon\includes\sections\main\404.php on line 1
+[18-Oct-2025 23:29:43 Europe/Berlin] PHP Warning:  Undefined variable $CURRENT_SECTION in E:\xampp\htdocs\ProjectHorizon\includes\sections\main\404.php on line 1
+[18-Oct-2025 23:29:46 Europe/Berlin] PHP Warning:  Undefined variable $CURRENT_SECTION in E:\xampp\htdocs\ProjectHorizon\includes\sections\main\404.php on line 1

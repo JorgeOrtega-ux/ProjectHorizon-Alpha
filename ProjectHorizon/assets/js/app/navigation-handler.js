@@ -23,6 +23,7 @@ import {
     fetchAndDisplayUserProfile,
     fetchAndDisplayProfanityWords,
     fetchAndDisplayLogs,
+    fetchAndDisplayCommentReports,
     fetchAndDisplayBackups
 } from './view-handlers.js';
 import { showVerifyPasswordForEmailChangeDialog } from '../managers/dialog-manager.js';

@@ -398,7 +398,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'admin-manageProfanity',
             'admin-manageLogs',
             'admin-viewLog',
-            'admin-backup'
+            'admin-backup',
+            'admin-viewCommentReports'
         ];
         $section_key = $view . '-' . $section;
 
@@ -447,7 +448,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             'admin-manageProfanity' => '../includes/sections/admin/manage-profanity.php',
             'admin-manageLogs' => '../includes/sections/admin/manage-logs.php',
             'admin-viewLog' => '../includes/sections/admin/view-log.php',
-            'admin-backup' => '../includes/sections/admin/backup.php'
+            'admin-backup' => '../includes/sections/admin/backup.php',
+            'admin-viewCommentReports' => '../includes/sections/admin/view-comment-reports.php'
         ];
 
         if (array_key_exists($section_key, $allowed_sections)) {
@@ -1239,6 +1241,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             http_response_code(404);
             echo json_encode(['error' => 'Galería no encontrada.']);
         }
+    } elseif ($request_type === 'comment_reports') {
+        if (!isset($_SESSION['loggedin']) || !in_array($_SESSION['user_role'], ['administrator', 'moderator', 'founder'])) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Acción no autorizada.']);
+            exit;
+        }
+
+        $comment_id = $_GET['comment_id'] ?? 0;
+        if (empty($comment_id)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Falta el ID del comentario.']);
+            exit;
+        }
+
+        $response_data = [];
+
+        // Obtener detalles del comentario
+        $stmt_comment = $conn->prepare("
+            SELECT c.id, c.comment_text, c.created_at, u.username
+            FROM photo_comments c
+            JOIN users u ON c.user_uuid = u.uuid
+            WHERE c.id = ?
+        ");
+        $stmt_comment->bind_param("i", $comment_id);
+        $stmt_comment->execute();
+        $response_data['comment'] = $stmt_comment->get_result()->fetch_assoc();
+        $stmt_comment->close();
+
+        if (!$response_data['comment']) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Comentario no encontrado.']);
+            exit;
+        }
+
+        // Obtener los reportes asociados
+        $stmt_reports = $conn->prepare("
+            SELECT cr.reason, cr.created_at, r.username as reporter_username
+            FROM comment_reports cr
+            JOIN users r ON cr.reporter_uuid = r.uuid
+            WHERE cr.comment_id = ?
+            ORDER BY cr.created_at DESC
+        ");
+        $stmt_reports->bind_param("i", $comment_id);
+        $stmt_reports->execute();
+        $response_data['reports'] = $stmt_reports->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt_reports->close();
+
+        echo json_encode($response_data);
+        exit;
     } else {
         http_response_code(400);
         echo json_encode(['error' => 'Invalid GET request type']);
